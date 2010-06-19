@@ -1,0 +1,26 @@
+.icon{
+    width: 30px;
+    height: 30px;
+    background-repeat: no-repeat;
+    background-color: #ccc;
+    -webkit-box-shadow: 0px 0px 4px #000;
+    -webkit-border-radius: 15px;
+    background-position: center;
+    -webkit-transition: background-color 0.2s linear;
+    cursor: pointer;
+}
+.icon:hover{
+    background-color: #fff;
+}
+.icon:active{
+    background-color: #000;
+}
+.icon.disabled{
+    opacity: 0.5;
+}
+.icon.disabled:hover{
+    background-color: #ccc !important;
+}
+.icon.disabled:active{
+    background-color: #ccc !important;
+}
