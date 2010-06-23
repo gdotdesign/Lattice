@@ -10,6 +10,16 @@
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/theme.css"/>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Icon.js "></script>
+    <script type="text/javascript" src="../Source/Core/Core.Tip.js "></script>
+    <script>
+        window.addEvent('domready',function(){
+            var test=new Core.Icon({image:'brick_delete.png'});
+            document.body.grab(test.base);
+            var tip=new Core.Tip({text:'hey there'});
+            tip.attach(test)
+            
+        })
+    </script>
 </head>
 <body>
     <!-- Insert your content here -->
