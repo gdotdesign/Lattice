@@ -2,7 +2,10 @@ Core={};
 Core.Icon=new Class({
   Implements:[Events,
               Options,
-              Interfaces.Enabled],
+              Interfaces.Mux,
+              Interfaces.Draggable,
+              Interfaces.Enabled
+              ],
   options:{
     image:"",
     text:""
@@ -11,6 +14,7 @@ Core.Icon=new Class({
     this.setOptions(options);
     this.createDisplay();
     this.enabled=true;
+    this.mux();
   },
   createDisplay:function(){
     this.base=new Element('div').addClass(GDotUI.Theme.iconClass).set('text',this.options.text);

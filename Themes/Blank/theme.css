@@ -10,6 +10,7 @@
     background-color: #ccc;
     background-position: center;
     cursor: pointer;
+    -webkit-border-radius: 15px;
     
 }
 .icon:hover{

@@ -8,16 +8,22 @@
     <script type="text/javascript" src="../Source/GDotUI.js"></script>
     <script type="text/javascript" src="../Themes/Blank/theme.js"></script>
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/theme.css"/>
+    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Mux.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js "></script>
+    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Draggable.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Icon.js "></script>
+    <script type="text/javascript" src="../Source/Core/Core.IconGroup.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Tip.js "></script>
     <script>
         window.addEvent('domready',function(){
-            var test=new Core.Icon({image:'brick_delete.png'});
-            document.body.grab(test.base);
-            var tip=new Core.Tip({text:'hey there'});
-            tip.attach(test)
+          this.icg=new Core.IconGroup({mode:'circular', radius:50, degree:360, startAngle:90})
+          for(var i=0;i<6;i++){
+            this.icg.addIcon(new Core.Icon({image:'brick_delete.png'}));
             
+          }
+            document.body.grab(this.icg.base);
+            this.icg.positionIcons();
+  
         })
     </script>
 </head>

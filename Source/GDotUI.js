@@ -1,3 +1,5 @@
+Interfaces={}
+Core={}
 Selectors.Pseudo.disabled = function(){
   return (this.hasClass('disabled'));
 };
