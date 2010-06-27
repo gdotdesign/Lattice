@@ -20,6 +20,8 @@ GDotUI.Theme={
     },
     Slider:{
         barClass:'bar',
-        knobClass:'knob'
+        knobClass:'knob',
+        length: 80,
+        width: 12
     }
 }

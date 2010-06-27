@@ -7,32 +7,35 @@
     <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
     <script type="text/javascript" src="../Source/GDotUI.js"></script>
     <script type="text/javascript" src="../Themes/Blank/theme.js"></script>
+    <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/theme.css"/>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Mux.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Draggable.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Restoreable.js "></script>
+    <script type="text/javascript" src="../Source/Core/Core.Abstract.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Icon.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.IconGroup.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Tip.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Slider.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Float.js "></script>
+    <script type="text/javascript" src="../Source/Data/Data.Abstract.js "></script>
+    <script type="text/javascript" src="../Source/Data/Data.Text.js "></script>
+    <script type="text/javascript" src="../Source/Data/Data.Number.js "></script>
     <script>
         window.addEvent('domready',function(){
-            this.float=new Core.Float({editable:true,
-                                      resizeable:true,
+            this.float=new Core.Float({editable:false,
                                       draggable:true,
+                                      resizeable:true,
                                       cookieID:'test',
                                       useCookie:false});
+            this.text=new Data.Number();
+            this.float.setContent(this.text);
             this.float.show();
+            //this.text.deploy(document.body);
+            //document.body.grab(this.text.base);
             GDotUI.init();
-          /*this.icg=new Core.IconGroup({mode:'grid',columns:10})
-          for(var i=0;i<20;i++){
-            this.icg.addIcon(new Core.Icon({image:'brick_delete.png'}));
-            
-          }
-            document.body.grab(this.icg.base);
-            this.icg.positionIcons();*/
+
   
         })
     </script>
