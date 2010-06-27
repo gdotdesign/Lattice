@@ -2,22 +2,21 @@ Core.Float=new Class({
   Implements:[Events,
 	      Options,
 	      Interfaces.Draggable,
+	      Interfaces.Restoreable,
 	      Interfaces.Mux],
   Binds:['firstShow','resize','mouseEnter','mouseLeave','hide'],
   options:{
-	overlay:false,
-	closeable:true,
-	resizeable:false,
-	moveable:true,
-	restoreable:false,
-	editable:false
+		overlay:false,
+		closeable:true,
+		resizeable:false,
+		editable:false
   },
   initialize:function(options){
-	this.setOptions(options);
-	this.createDisplay();
-	this.mux();
-	this.addEvent('show',this.firstShow);
-	this.showSilder=false;
+		this.setOptions(options);
+		this.createDisplay();
+		this.mux();
+		this.addEvent('show',this.firstShow);
+		this.showSilder=false;
   },
   firstShow:function(){
     //need positionControls();
@@ -27,10 +26,10 @@ Core.Float=new Class({
     if(this.options.resizeable){
       this.slider.init();
       this.slider.addEvent('complete',function(){
-	this.scrolling=false;
+				this.scrolling=false;
       }.bindWithEvent(this));
       this.slider.addEvent('change',function(){
-	this.scrolling=true;
+				this.scrolling=true;
       }.bindWithEvent(this));
     }
     this.removeEvent('show',this.firstShow);
@@ -63,6 +62,7 @@ Core.Float=new Class({
     this.close.addEvent('invoked',function(){
       this.hide();
     }.bindWithEvent(this));
+		
     this.edit=new Core.Icon({'class':GDotUI.Theme.Float.editClass});
     this.edit.addEvent('invoked',function(){
       this.fireEvent('edit');
@@ -113,14 +113,14 @@ Core.Float=new Class({
   resize:function(){
     if(this.scrollBase.getScrollSize().y>this.scrollBase.getSize().y){
       if(!this.showSlider){
-	this.showSlider=true;
-	if(this.mouseisover)
-	  this.slider.show();
+				this.showSlider=true;
+				if(this.mouseisover)
+					this.slider.show();
       }
     }else{
       if(this.showSlider){
-	this.showSlider=false;
-	this.slider.hide();
+				this.showSlider=false;
+				this.slider.hide();
       }
     }
   },
@@ -129,21 +129,16 @@ Core.Float=new Class({
     if(!this.base.isVisible()){
       document.getElement('body').grab(this.base);
       if(this.options.overlay){
-	Overlay.show();
-	this.base.setStyle('z-index',801);
+				GDotUI.Misc.Overlay.show();
+				this.base.setStyle('z-index',801);
       }
     }
     this.fireEvent('show');
   },
 
   hide:function(){
-    if(this.options.overlay){
-      Overlay.hide();
-    }
-    window.localStorage.setItem(this.options.cookieID+'.state','hidden');
-    this.icons.hide();
-    this.slider.hide();
     this.base.dispose();
+    this.fireEvent('hide');
   },
 
   toggle:function(el){
@@ -158,13 +153,5 @@ Core.Float=new Class({
   },
   center:function(){
     this.base.position();
-  },
-  maximize:function(){
-    this.base.setStyles({
-      'top':0,
-      'left':0,
-      'right':0,
-      'bottom':0
-    })
   }
 });

@@ -11,6 +11,7 @@
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Mux.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Draggable.js "></script>
+    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Restoreable.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Icon.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.IconGroup.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Tip.js "></script>
@@ -18,8 +19,13 @@
     <script type="text/javascript" src="../Source/Core/Core.Float.js "></script>
     <script>
         window.addEvent('domready',function(){
-            this.float=new Core.Float({editable:true,resizeable:true});
+            this.float=new Core.Float({editable:true,
+                                      resizeable:true,
+                                      draggable:true,
+                                      cookieID:'test',
+                                      useCookie:false});
             this.float.show();
+            GDotUI.init();
           /*this.icg=new Core.IconGroup({mode:'grid',columns:10})
           for(var i=0;i<20;i++){
             this.icg.addIcon(new Core.Icon({image:'brick_delete.png'}));

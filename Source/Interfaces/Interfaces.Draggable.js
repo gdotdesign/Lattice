@@ -9,16 +9,19 @@ Drag.Float=new Class({
 	}
 });
 Interfaces.Draggable=new Class({
+	Implements:Options,
+	options:{
+		draggable:false
+	},
   _$Draggable:function(){
-    if(this.options.moveable){
-	console.log(this.base);
-      if(this.handle==null){
-        this.handle=this.base;
-      }
-      this.drag=new Drag.Float(this.base,{target:this.handle,handle:this.handle});
-      this.drag.addEvent('drop',function(){
-        this.fireEvent('dropped',this);
-        }.bindWithEvent(this));
-    }
+    if(this.options.draggable){
+			if(this.handle==null){
+				this.handle=this.base;
+			}
+			this.drag=new Drag.Float(this.base,{target:this.handle,handle:this.handle});
+			this.drag.addEvent('drop',function(){
+				this.fireEvent('dropped',this);
+				}.bindWithEvent(this));
+			}
   },
 })
