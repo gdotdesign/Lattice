@@ -1,3 +1,4 @@
+// TO Interfacse.Tip
 Core.Tip=new Class({
   Implements:[Events,
               Options],

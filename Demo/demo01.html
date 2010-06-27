@@ -14,15 +14,19 @@
     <script type="text/javascript" src="../Source/Core/Core.Icon.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.IconGroup.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Tip.js "></script>
+    <script type="text/javascript" src="../Source/Core/Core.Slider.js "></script>
+    <script type="text/javascript" src="../Source/Core/Core.Float.js "></script>
     <script>
         window.addEvent('domready',function(){
-          this.icg=new Core.IconGroup({mode:'circular', radius:50, degree:360, startAngle:90})
-          for(var i=0;i<6;i++){
+            this.float=new Core.Float({editable:true,resizeable:true});
+            this.float.show();
+          /*this.icg=new Core.IconGroup({mode:'grid',columns:10})
+          for(var i=0;i<20;i++){
             this.icg.addIcon(new Core.Icon({image:'brick_delete.png'}));
             
           }
             document.body.grab(this.icg.base);
-            this.icg.positionIcons();
+            this.icg.positionIcons();*/
   
         })
     </script>

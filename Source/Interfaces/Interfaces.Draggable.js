@@ -11,6 +11,7 @@ Drag.Float=new Class({
 Interfaces.Draggable=new Class({
   _$Draggable:function(){
     if(this.options.moveable){
+	console.log(this.base);
       if(this.handle==null){
         this.handle=this.base;
       }

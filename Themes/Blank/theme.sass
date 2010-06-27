@@ -1,0 +1,50 @@
+@import _mixins.sass
+body
+    :background-color #D3D3D3
+.float
+    +round_full(3px)
+    +box_shadow(0,0,3px,rgba(0,0,0,0.4))
+    .handle, .bottom
+        :height 10px
+    .handle
+        +linear_gradient(#87B5ED,#6692C4)
+        +round(3px,3px,0,0)
+    .bottom
+        +linear_gradient(#6692C4,#87B5ED)
+        +round(0,0,3px,3px)
+    .base
+        +linear_gradient(#F2F2F2,#E0E0E0)
+    .close, .edit
+        :width 15px
+        :height 15px
+        +round_full(5px)
+        :border 1px solid #DBDBDB
+        :background-color #F7F7F7
+        +box_shadow(0,0,1px,rgba(0,0,0,0.4))
+        :-webkit-transition-duration 0.1s
+        :cursor pointer
+    .close:hover, .edit:hover, .knob:hover
+        :background-color #EAEAEA
+        :border-color #aaaaaa
+        +box_shadow(0,0,1px,rgba(0,0,0,0.4))
+    .close:active, .edit:active
+        +box_shadow(0,0,3px,rgba(0,0,0,0.6))
+    .controls
+        :-webkit-transition-duration 0.5s
+.bar
+    :background-color #DBDBDB
+    :width 15px
+    :height 80px
+    :-webkit-transition-duration 0.5s
+    +round_full(5px)
+    :border 1px solid #DBDBDB
+    +box_shadow(0,0,1px,rgba(0,0,0,0.4))
+.knob
+    :background-color #fff
+    :width 15px
+    :height 30px
+    :cursor pointer
+    +round_full(5px)
+    +box_shadow(0,0,1px,rgba(0,0,0,0.4))
+    :-webkit-transition-duration 0.1s
+    :-webkit-transition-property background-color, border-color, -webkit-box-shadow

@@ -2,4 +2,24 @@ GDotUI.Theme={
     css:'theme.css',
     iconClass:'icon',
     tipClass:'tip',
+    Float:{
+        'class':'float',
+        bottomHandleClass:'bottom',
+        handleClass:'handle',
+        closeClass:'close',
+        baseClass:'base',
+        editClass:'edit',
+        iconsClass:'controls',
+        iconOptions:{
+            mode:'vertical',
+            spacing:{
+                x:0,
+                y:3
+            }
+        }
+    },
+    Slider:{
+        barClass:'bar',
+        knobClass:'knob'
+    }
 }
