@@ -1,41 +1,40 @@
 // TO Interfacse.Tip
 Core.Tip=new Class({
-  Implements:[Events,
-              Options],
-  Binds:['onEnter','onLeave'],
+  Extends:Core.Abstract,
+  Binds:['enter','leave'],
   options:{
     text:"",
     location:{x:"left",y:"bottom"},
     offset:5
   },
   initialize:function(options){
-    this.setOptions(options);
-    this.createTip();
+    this.parent(options);
+    this.create();
   },
   createTip:function(){
-    this.tip=new Element('div').addClass(GDotUI.Theme.tipClass);
-    this.tip.setStyle('position','absolute');
-    this.tip.setStyle('z-index',GDotUI.Config.tipZindex);
-    this.tip.set('html',this.options.text);
+    this.base.addClass(GDotUI.Theme.tipClass);
+    this.base.setStyle('position','absolute');
+    this.base.setStyle('z-index',GDotUI.Config.tipZindex);
+    this.base.set('html',this.options.text);
   },
   attach:function(item){
     if(this.attachedTo!=null)
         this.detach();
-    item.base.addEvent('mouseenter',this.onEnter);
-    item.base.addEvent('mouseleave',this.onLeave);
+    item.base.addEvent('mouseenter',this.enter);
+    item.base.addEvent('mouseleave',this.leave);
     this.attachedTo=item;
   },
   detach:function(){
-    item.base.removeEvent('mouseenter',this.onEnter);
-    item.base.removeEvent('mouseleave',this.onLeave);
+    item.base.removeEvent('mouseenter',this.enter);
+    item.base.removeEvent('mouseleave',this.leave);
     this.attachedTo=null;
   },
-  onEnter:function(){
+  enter:function(){
     if(this.attachedTo.enabled){
       this.showTip();
     }
   },
-  onLeave:function(){
+  leave:function(){
     if(this.attachedTo.enabled){
       this.hideTip();
     }
@@ -43,8 +42,8 @@ Core.Tip=new Class({
   showTip:function(){
     var p=this.attachedTo.base.getPosition();
 	var s=this.attachedTo.base.getSize();
-	$(document).getElement('body').grab(this.tip);
-	var s1=this.tip.measure(function(){
+	$(document).getElement('body').grab(this.base);
+	var s1=this.base.measure(function(){
 	  return this.getSize();
         });
     switch(this.options.location.x){
@@ -71,6 +70,6 @@ Core.Tip=new Class({
     }
   },
   hideTip:function(){
-    this.tip.dispose();
+    this.base.dispose();
   }
 });

@@ -17,7 +17,7 @@ GDotUI=new Class.Singleton({
   initialize:function(){
   },
   init:function(){
-    this.fireEvent('init');
+   // this.fireEvent('init');
   }
   });
 GDotUI.Config={

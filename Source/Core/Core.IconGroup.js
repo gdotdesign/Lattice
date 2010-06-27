@@ -1,7 +1,6 @@
 Core.IconGroup=new Class({
-  Implements:[Events,
-              Options,
-              Interfaces.Mux],
+  Extends:Core.Abstract,
+  Implements:Interfaces.Controls,
   options:{
     mode:"horizontal", // horizontal / vertical / circular / grid
     spacing: {x:20,y:20},
@@ -10,10 +9,11 @@ Core.IconGroup=new Class({
     degree:360 //degree
     },
   initialize:function(options){
-    this.setOptions(options);
+    this.parent(options);
     this.icons=[];
-    this.base=new Element('div').setStyle('position','relative');
-    this.mux();
+  },
+  create:function(){
+    this.base.setStyle('position','relative');
   },
   addIcon:function(icon){
     if(this.icons.indexOf(icon)==-1){
@@ -27,13 +27,7 @@ Core.IconGroup=new Class({
       this.icons.push(icon);
     }
   },
-  show:function(){
-    this.base.setStyle('opacity',1);
-  },
-  hide:function(){
-    this.base.setStyle('opacity',0);
-  },
-  positionIcons:function(){
+  ready:function(){
     x=0;
     y=0;
     size={x:0,y:0};
@@ -99,5 +93,5 @@ Core.IconGroup=new Class({
         item.base.setStyle('position','absolute');
       }.bind(this));
     }
-  },
+  }
   });

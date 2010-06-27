@@ -4,36 +4,27 @@ Core.Float=new Class({
 				  Interfaces.Restoreable],
   Binds:['resize','mouseEnter','mouseLeave','hide'],
   options:{
-		overlay:false,
-		closeable:true,
-		resizeable:false,
-		editable:false
+	 overlay:false,
+	 closeable:true,
+	 resizeable:false,
+	 editable:false
   },
   initialize:function(options){
-		this.parent(options);
-		this.showSilder=false;
+	 this.parent(options);
+	 this.showSilder=false;
   },
   ready:function(){
+	 this.loadPosition();
+	 this.base.grab(this.icons.base);
+    this.base.grab(this.slider.base);
     //need positionControls();
     this.icons.base.setStyle('right',0);
-	this.icons.base.setStyle('top',0);
-    this.icons.positionIcons();
-	this.slider.base.setStyle('right',-(this.slider.base.getSize().x));
-	this.slider.base.setStyle('top',this.icons.size.y);
-   /*if(this.options.resizeable){
-      this.slider.init();
-	*/ this.slider.addEvent('complete',function(){
-				this.scrolling=false;
-      }.bindWithEvent(this));
-      this.slider.addEvent('change',function(){
-				this.scrolling=true;
-      }.bindWithEvent(this));
-    //}
+	 this.icons.base.setStyle('top',0);
+	 this.slider.base.setStyle('right',-(this.slider.base.getSize().x));
+	 this.slider.base.setStyle('top',this.icons.size.y);
   },
-  
   create:function(){
     this.base.addClass(GDotUI.Theme.Float['class']).setStyle('position','absolute').setPosition({x:0,y:0});
-    //this.base.setStyles({width:250})
     
     this.content=new Element('div',{'class':GDotUI.Theme.Float.baseClass});
 
@@ -44,15 +35,18 @@ Core.Float=new Class({
     this.base.adopt(this.content);
     
     this.slider=new Core.Slider({scrollBase:this.content});
-	this.slider.base.setStyle('position','absolute');
+	 this.slider.base.setStyle('position','absolute');
+	 this.slider.addEvent('complete',function(){
+		this.scrolling=false;
+	 }.bindWithEvent(this));
+	 this.slider.addEvent('change',function(){
+		this.scrolling=true;
+	 }.bindWithEvent(this));
     this.slider.hide();
     
     this.icons=new Core.IconGroup(GDotUI.Theme.Float.iconOptions);
     this.icons.base.setStyle('position','absolute');
     this.icons.base.addClass(GDotUI.Theme.Float.iconsClass);
-    
-    this.base.grab(this.icons.base);
-    this.base.grab(this.slider.base);
     
     this.close=new Core.Icon({'class':GDotUI.Theme.Float.closeClass});
     this.close.addEvent('invoked',function(){
@@ -89,14 +83,12 @@ Core.Float=new Class({
     this.base.addEvent('mouseenter',this.mouseEnter)
     this.base.addEvent('mouseleave',this.mouseLeave)
   },
-
   mouseEnter:function(){
     if(this.showSlider)
       this.slider.show();
     this.icons.show();
     this.mouseisover=true;
   },
-
   mouseLeave:function(){
     if(!this.scrolling){
       if(this.showSlider)
@@ -105,7 +97,6 @@ Core.Float=new Class({
     }
     this.mouseisover=false;
   },
-
   resize:function(){
     if(this.scrollBase.getScrollSize().y>this.scrollBase.getSize().y){
       if(!this.showSlider){
@@ -120,30 +111,24 @@ Core.Float=new Class({
       }
     }
   },
-
   show:function(){
     if(!this.base.isVisible()){
       document.getElement('body').grab(this.base);
       if(this.options.overlay){
-				GDotUI.Misc.Overlay.show();
-				this.base.setStyle('z-index',801);
+		  GDotUI.Misc.Overlay.show();
+		  this.base.setStyle('z-index',801);
       }
     }
-	if(this.contentElement!=null)
-   this.contentElement.fireEvent('show');
   },
-
   hide:function(){
     this.base.dispose();
   },
-
   toggle:function(el){
     if(this.base.isVisible())
       this.hide(el);
     else
       this.show(el);
   },
-
   setContent:function(element){
 	this.contentElement=element;
     this.content.grab(element.base);

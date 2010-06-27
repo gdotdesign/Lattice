@@ -1,30 +1,20 @@
 Core.Icon=new Class({
-  Implements:[Events,
-              Options,
-              Interfaces.Mux,
-              Interfaces.Draggable,
-              Interfaces.Enabled
-              ],
+  Extends:Core.Abstract,
+  Implements:[Interfaces.Enabled,
+              Interfaces.Controls],
   options:{
-    image:"",
+    image:null,
     text:""
   },
   initialize:function(options){
-    this.setOptions(options);
-    this.createDisplay();
+    this.parent(options);
     this.enabled=true;
-    this.mux();
   },
-  show:function(){
-    this.base.setStyle('opacity',1);
-  },
-  hide:function(){
-    this.base.setStyle('opacity',0);
-  },
-  createDisplay:function(){
+  create:function(){
     var clas=(this.options['class']==null?GDotUI.Theme.iconClass:this.options['class']);
-    this.base=new Element('div').addClass(clas).set('text',this.options.text);
-    //this.base.setStyle('background-image','url('+this.options.image+')');
+    this.base.addClass(clas).set('text',this.options.text);
+    if(this.options.image!=null)
+      this.base.setStyle('background-image','url('+this.options.image+')');
     this.base.addEvent('click',function(e){
       if(this.enabled)
         this.fireEvent('invoked',this);

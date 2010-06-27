@@ -5,10 +5,10 @@ Core.Abstract=new Class({
     initialize:function(options){
 		this.setOptions(options);
       this.base=new Element('div');
-      this.base.addEventListener('DOMNodeInsertedIntoDocument',function(){
+      this.create();
+		this.base.addEventListener('DOMNodeInsertedIntoDocument',function(){
          this.ready();
       }.bindWithEvent(this));
-      this.create();
       this.mux();
    },
    create:function(){},

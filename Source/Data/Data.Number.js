@@ -7,12 +7,9 @@ Data.Number=new Class({
     this.text=new Element('input',{'type':'text'});
     this.text.set('value',0).setStyle('width',GDotUI.Theme.Slider.length);
     this.slider=new Core.Slider({reset:true,range:[-100,100],steps:200,mode:'horizontal'});
-    this.base.adopt(this.text,this.slider.base);
   },
   ready:function(){
-    this.slider.init();
-    this.removeEvents('show');
-    this.slider.set(0);
+    this.base.adopt(this.text,this.slider.base);
     this.slider.addEvent('complete',function(step){
       this.slider.setRange([step-100,Number(step)+100])
       this.slider.set(step);

@@ -13,12 +13,14 @@
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Draggable.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Restoreable.js "></script>
+    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Controls.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Abstract.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Icon.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.IconGroup.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Tip.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Slider.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Float.js "></script>
+    <script type="text/javascript" src="../Source/Core/Core.Button.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Abstract.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Text.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Number.js "></script>
@@ -29,11 +31,13 @@
                                       resizeable:true,
                                       cookieID:'test',
                                       useCookie:false});
-            this.text=new Data.Number();
+            this.text=new Data.Text();
             this.float.setContent(this.text);
             this.float.show();
+            this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
+            
             //this.text.deploy(document.body);
-            //document.body.grab(this.text.base);
+            document.body.grab(this.btn.base);
             GDotUI.init();
 
   

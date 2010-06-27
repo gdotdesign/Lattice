@@ -24,9 +24,8 @@ Class.Mutators.Delegates = function(delegations) {
 	});
 };
 Core.Slider=new Class({
-    Implements:[Options,
-                Events,
-                Interfaces.Mux],
+    Extends:Core.Abstract,
+    Implements:[Interfaces.Controls],
     Delegates:{
         slider:['set','setRange']
     },
@@ -36,12 +35,10 @@ Core.Slider=new Class({
         mode:'vertical'
     },
     initialize:function(options){
-      this.setOptions(options);
-      this.create();
+      this.parent(options);
     },
     create:function(options){
-      this.setOptions(options);
-      this.base=new Element('div',{'class':GDotUI.Theme.Slider.barClass});
+      this.base.addClass(GDotUI.Theme.Slider.barClass);
       this.knob=new Element('div',{'class':GDotUI.Theme.Slider.knobClass});
       if(this.options.mode=="vertical"){
         this.base.setStyles({
@@ -65,10 +62,11 @@ Core.Slider=new Class({
       this.scrollBase=this.options.scrollBase;
       this.base.grab(this.knob);
     },
-    init:function(){
-      if(this.options.reset)
+    ready:function(){
+      if(this.options.reset){
         this.slider=new ResetSlider(this.base,this.knob,{mode:this.options.mode,steps:this.options.steps,range:this.options.range});
-      else
+        this.slider.set(0);
+      }else
         this.slider=new Slider(this.base,this.knob,{mode:'vertical',steps:100});
       this.slider.addEvent('complete',function(step){
         this.fireEvent('complete',step);
@@ -78,11 +76,5 @@ Core.Slider=new Class({
         if(this.scrollBase!=null)
             this.scrollBase.scrollTop=(this.scrollBase.scrollHeight-this.scrollBase.getSize().y)/100*step;
       }.bindWithEvent(this));
-    },
-    hide:function(){
-      this.base.setStyle('opacity',0);
-    },
-    show:function(){
-      this.base.setStyle('opacity',1);
     }
 })

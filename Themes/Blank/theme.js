@@ -2,6 +2,10 @@ GDotUI.Theme={
     css:'theme.css',
     iconClass:'icon',
     tipClass:'tip',
+    button:{
+      'class':'button',
+      width: 200
+    },
     Float:{
         'class':'float',
         bottomHandleClass:'bottom',
