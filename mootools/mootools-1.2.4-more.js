@@ -5590,6 +5590,7 @@ var Sortables = new Class({
 	addItems: function(){
 		Array.flatten(arguments).each(function(element){
 			this.elements.push(element);
+
 			var start = element.retrieve('sortables:start', this.start.bindWithEvent(this, element));
 			(this.options.handle ? element.getElement(this.options.handle) || element : element).addEvent('mousedown', start);
 		}, this);

@@ -26,15 +26,21 @@
     <script type="text/javascript" src="../Source/Data/Data.Number.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Color.js "></script>
     <script type="text/javascript" src="../Source/Iterable/Iterable.ListItem.js "></script>
+    <script type="text/javascript" src="../Source/Iterable/Iterable.List.js "></script>
     <script>
         window.addEvent('domready',function(){
-            this.float=new Core.Float({editable:false,
+            this.float=new Core.Float({editable:true,
                                       draggable:true,
                                       resizeable:true,
                                       cookieID:'test',
                                       useCookie:false});
-            this.text=new Iterable.ListItem();
-            this.float.setContent(this.text);
+            this.list=new Iterable.List();
+            this.list.addItem(new Iterable.ListItem({title:'hey'}));
+            this.list.addItem(new Iterable.ListItem({title:'cool',subtitle:'yeah'}));
+            this.list.addItem(new Iterable.ListItem({title:'ftw'}));
+            this.list.addItem(new Iterable.ListItem({title:'wtf?'}));
+            this.color=new Data.Color();
+            this.float.setContent(this.list);
             this.float.show();
             this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
             

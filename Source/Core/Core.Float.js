@@ -55,6 +55,9 @@ Core.Float=new Class({
 		
     this.edit=new Core.Icon({'class':GDotUI.Theme.Float.editClass});
     this.edit.addEvent('invoked',function(){
+			if(this.contentElement!=null)
+				if(this.contentElement.toggleEdit!=null)
+					this.contentElement.toggleEdit();	
       this.fireEvent('edit');
     }.bindWithEvent(this));
   

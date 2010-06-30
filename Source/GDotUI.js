@@ -1,3 +1,27 @@
+Class.Mutators.DCollection=function(items){
+  var self=this;
+  new Hash(items).each(function(fns, target) {
+    $splat(fns).each(function(fn){
+      self.prototype[fn]=function(){
+        var args=arguments;
+        this[target].each(function(item){
+          item[fn].run(arguments,item);
+        });
+      };
+    });
+  });
+};
+Class.Mutators.Delegates = function(delegations) {
+	var self = this;
+	new Hash(delegations).each(function(delegates, target) {
+		$splat(delegates).each(function(delegate) {
+			self.prototype[delegate] = function() {
+				var ret = this[target][delegate].apply(this[target], arguments);
+				return (ret === this[target] ? this : ret);
+			};
+		});
+	});
+};
 Interfaces={}
 Core={}
 Data={}

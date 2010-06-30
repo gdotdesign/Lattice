@@ -6,6 +6,9 @@ GDotUI.Theme={
       'class':'button',
       width: 200
     },
+    List:{
+      'class':'list'  
+    },
     Float:{
         'class':'float',
         bottomHandleClass:'bottom',

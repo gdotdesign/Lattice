@@ -12,11 +12,14 @@ Iterable.ListItem=new Class({
      this.base.addClass(this.options['class']).setStyle('position','relative');;
      this.remove=new Core.Icon({image:GDotUI.Theme.Icons.remove});
      this.handle=new Core.Icon({image:GDotUI.Theme.Icons.handleVertical});
+     this.handle.base.addClass('list-handle');
      this.remove.base.setStyle('position','absolute');
      this.handle.base.setStyle('position','absolute');
-     this.title=new Element('div').addClass(GDotUI.Theme.ListItem.title).set('text','list item 1');
-     this.subtitle=new Element('div').addClass(GDotUI.Theme.ListItem.subTitle).set('text','subtitles 1');;
+     this.title=new Element('div').addClass(GDotUI.Theme.ListItem.title).set('text',this.options.title);
+     this.subtitle=new Element('div').addClass(GDotUI.Theme.ListItem.subTitle).set('text',this.options.subtitle);
      this.base.adopt(this.title,this.subtitle);
+     this.base.grab(this.remove.base);
+     this.base.grab(this.handle.base);
      //Invoked
      this.base.addEvent('click',function(){
         if(this.enabled)
@@ -47,18 +50,19 @@ Iterable.ListItem=new Class({
     }
   },
   ready:function(){
-    this.base.grab(this.remove.base);
-    this.base.grab(this.handle.base);
-    var handSize=this.handle.base.getSize();
-    var remSize=this.remove.base.getSize();
-    var baseSize=this.base.getSize();
-    this.remove.base.setStyles({
-      "right":-remSize.x,
-      "top":(baseSize.y-remSize.y)/2
-      })
-    this.handle.base.setStyles({
-      "left":-handSize.x,
-      "top":(baseSize.y-handSize.y)/2
-      })
+    if(!this.editing){
+      var handSize=this.handle.base.getSize();
+      var remSize=this.remove.base.getSize();
+      var baseSize=this.base.getSize();
+      this.remove.base.setStyles({
+        "right":-remSize.x,
+        "top":(baseSize.y-remSize.y)/2
+        })
+      this.handle.base.setStyles({
+        "left":-handSize.x,
+        "top":(baseSize.y-handSize.y)/2
+        })
+      this.parent();
+    }
   }
 })
