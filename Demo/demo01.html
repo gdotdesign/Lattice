@@ -24,6 +24,8 @@
     <script type="text/javascript" src="../Source/Data/Data.Abstract.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Text.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Number.js "></script>
+    <script type="text/javascript" src="../Source/Data/Data.Color.js "></script>
+    <script type="text/javascript" src="../Source/Iterable/Iterable.ListItem.js "></script>
     <script>
         window.addEvent('domready',function(){
             this.float=new Core.Float({editable:false,
@@ -31,7 +33,7 @@
                                       resizeable:true,
                                       cookieID:'test',
                                       useCookie:false});
-            this.text=new Data.Text();
+            this.text=new Iterable.ListItem();
             this.float.setContent(this.text);
             this.float.show();
             this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});

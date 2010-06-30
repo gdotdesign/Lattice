@@ -33,5 +33,6 @@ Data.Number=new Class({
   setValue:function(step){
     this.slider.setRange([step-100,Number(step)+100])
     this.slider.set(step);
+    
   }
 });

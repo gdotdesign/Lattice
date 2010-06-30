@@ -1,6 +1,8 @@
 Data.Abstract=new Class({
-   Implements:[Events],
-   initialize:function(){
+   Implements:[Events,Options],
+   options:{},
+   initialize:function(options){
+      this.setOptions();
       this.base=new Element('div');
       this.base.addEventListener('DOMNodeInsertedIntoDocument',function(){
          this.ready();

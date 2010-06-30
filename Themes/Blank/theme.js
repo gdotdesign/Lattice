@@ -22,6 +22,21 @@ GDotUI.Theme={
             }
         }
     },
+    ListItem:{
+      'class':'list-item',
+      title:'title',
+      subTitle:'subtitle'
+    },
+    Icons:{
+      remove:'../Themes/Blank/images/delete.png',
+      handleVertical:'../Themes/Blank/images/control_pause.png',
+      handleHorizontal:''
+    },
+    Color:{
+      width:300,
+      height:300,
+      'class':'color'
+    },
     Slider:{
         barClass:'bar',
         knobClass:'knob',
