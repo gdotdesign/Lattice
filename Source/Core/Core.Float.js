@@ -18,9 +18,9 @@ Core.Float=new Class({
 	 this.base.grab(this.icons.base);
     this.base.grab(this.slider.base);
     //need positionControls();
-    this.icons.base.setStyle('right',0);
+    this.icons.base.setStyle('right',-4);
 	 this.icons.base.setStyle('top',0);
-	 this.slider.base.setStyle('right',-(this.slider.base.getSize().x));
+	 this.slider.base.setStyle('right',-(this.slider.base.getSize().x)-4);
 	 this.slider.base.setStyle('top',this.icons.size.y);
   },
   create:function(){
@@ -87,6 +87,8 @@ Core.Float=new Class({
     this.base.addEvent('mouseleave',this.mouseLeave)
   },
   mouseEnter:function(){
+		$clear(this.iconsTimout);
+		$clear(this.sliderTimout);
     if(this.showSlider)
       this.slider.show();
     this.icons.show();
@@ -95,8 +97,8 @@ Core.Float=new Class({
   mouseLeave:function(){
     if(!this.scrolling){
       if(this.showSlider)
-	this.slider.hide();
-    this.icons.hide();
+				this.sliderTimout=this.slider.hide.delay(200,this.slider);
+    this.iconsTimout=this.icons.hide.delay(200,this.icons);
     }
     this.mouseisover=false;
   },
@@ -105,7 +107,7 @@ Core.Float=new Class({
       if(!this.showSlider){
 				this.showSlider=true;
 				if(this.mouseisover)
-					this.slider.show();
+					this.slider.show()
       }
     }else{
       if(this.showSlider){

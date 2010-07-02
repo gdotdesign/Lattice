@@ -38,14 +38,16 @@ Iterable.ListItem=new Class({
     if(this.editing){
       this.remove.base.setStyle('right',-this.remove.base.getSize().x);
       this.handle.base.setStyle('left',-this.handle.base.getSize().x);
-      this.base.setStyle('padding-left',0);
-      this.base.setStyle('padding-right',0);
+      this.base.setStyle('padding-left',this.base.retrieve('padding-left:old'));
+      this.base.setStyle('padding-right',this.base.retrieve('padding-right:old'));
       this.editing=false;
     }else{
-      this.remove.base.setStyle('right',0);
-      this.handle.base.setStyle('left',0);
-      this.base.setStyle('padding-left',this.handle.base.getSize().x);
-      this.base.setStyle('padding-right',this.remove.base.getSize().x);
+      this.remove.base.setStyle('right',GDotUI.Theme.ListItem.iconOffset);
+      this.handle.base.setStyle('left',GDotUI.Theme.ListItem.iconOffset);
+      this.base.store('padding-left:old',this.base.getStyle('padding-left'))
+      this.base.store('padding-right:old',this.base.getStyle('padding-left'))
+      this.base.setStyle('padding-left',Number(this.base.getStyle('padding-left').slice(0,-2))+this.handle.base.getSize().x);
+      this.base.setStyle('padding-right',Number(this.base.getStyle('padding-right').slice(0,-2))+this.remove.base.getSize().x);
       this.editing=true;
     }
   },

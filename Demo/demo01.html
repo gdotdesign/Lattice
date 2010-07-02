@@ -6,9 +6,9 @@
     <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
     <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
     <script type="text/javascript" src="../Source/GDotUI.js"></script>
-    <script type="text/javascript" src="../Themes/Blank/theme.js"></script>
+    <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
-    <link type="text/css" rel="stylesheet" href="../Themes/Blank/theme.css"/>
+    <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Mux.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Draggable.js "></script>
@@ -29,24 +29,38 @@
     <script type="text/javascript" src="../Source/Iterable/Iterable.List.js "></script>
     <script>
         window.addEvent('domready',function(){
-            this.float=new Core.Float({editable:true,
+           // GDotUI.loadTheme('../Themes/Blank/theme.js');
+            this.float=new Core.Float({editable:false,
+                                      draggable:true,
+                                      resizeable:false,
+                                      cookieID:'list',
+                                      useCookie:false});
+            this.lfloat=new Core.Float({editable:true,
                                       draggable:true,
                                       resizeable:true,
                                       cookieID:'test',
                                       useCookie:false});
             this.list=new Iterable.List();
-            this.list.addItem(new Iterable.ListItem({title:'hey'}));
-            this.list.addItem(new Iterable.ListItem({title:'cool',subtitle:'yeah'}));
-            this.list.addItem(new Iterable.ListItem({title:'ftw'}));
-            this.list.addItem(new Iterable.ListItem({title:'wtf?'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 1'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 2',subtitle:'Subtitle 2'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 3'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
+            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
             this.color=new Data.Color();
-            this.float.setContent(this.list);
+            this.float.setContent(this.color);
             this.float.show();
+            this.lfloat.setContent(this.list);
+            this.lfloat.show();
             this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
             
             //this.text.deploy(document.body);
             document.body.grab(this.btn.base);
-            GDotUI.init();
+           // GDotUI.init();
 
   
         })

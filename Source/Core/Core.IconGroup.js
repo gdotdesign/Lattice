@@ -1,8 +1,9 @@
 Core.IconGroup=new Class({
   Extends:Core.Abstract,
   DCollection:{
-    'icons':['show','hide','enable','disable']
+    'icons':['enable','disable']
   },
+  Implements:Interfaces.Controls,
   options:{
     mode:"horizontal", // horizontal / vertical / circular / grid
     spacing: {x:20,y:20},

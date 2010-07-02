@@ -1,0 +1,90 @@
+@import _mixins.sass
+@import color.css
+
+*
+  :font-family Verdana, Sans
+  :font-size 11px
+
+.list-item
+  :-webkit-transition-duration 0.3s
+  +linear_gradient(#E0E0E0,#D9D9D9)
+  :padding 8px
+  :cursor pointer
+  .icon
+    :-webkit-transition-duration 0.3s
+  .title
+    :font-size 11px
+  .subtitle
+    :margin-top 4px
+    :font-size 10px
+    :color #4F4F4F
+.list-item:hover
+  +linear_gradient(#E0E0E0,#C6D7F2)
+  
+
+textarea,input
+  :padding 0
+  :margin 0
+  :border none
+input
+  :text-align center
+.button
+  :background-color #87B5ED
+  :border none
+  :color #fff
+  :font-weight bold
+  :display inline-block
+  :padding 5px
+  :cursor pointer
+  .icon
+    :margin-right 5px
+.button:active
+  :position relative
+  :top 1px
+  :left 1px
+.icon
+  :width 16px
+  :height 16px
+body
+  :background-color #D3D3D3
+.float
+  +box_shadow(0,0,10px, rgba(0,0,0,0.2))
+  +round_full(5px)
+  .handle, .bottom
+    :height 10px
+  .handle
+    :background-color #87B5ED
+    :border-bottom 1px solid #7A9CDB
+    +linear_gradient(#799DE0,#85A7EA)
+    +round(5px,5px,0,0)
+  .bottom
+    :background-color #6F95DB
+    +linear_gradient(#85A7EA,#6F95DB)
+    +round(0,0,5px,5px)
+    :border-top 1px solid #7A9CDB
+  .base
+    :background-color #E0E0E0
+  .close, .edit
+    :width 15px
+    :height 15px
+    :cursor pointer
+    :background
+      :position center
+  .controls
+    :-webkit-transition-duration 0.3s 
+  .close
+    :background
+      :image url(images/delete.png)
+  .edit
+    :background
+      :image url(images/pencil.png)
+  .bar
+    :-webkit-transition-duration 0.3s
+.bar, .knob
+  +round_full(5px)
+.bar
+  :background-color #DBDBDB
+  +box_shadow(0,0,2px, rgba(0,0,0,0.4))
+.knob
+  :background-color #fff
+  :cursor pointer

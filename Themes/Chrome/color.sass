@@ -1,0 +1,61 @@
+@import _mixins.sass
+.color
+  .colorBox
+    :width 20px
+    :height 50px
+    :margin 2px
+    :margin-left 6px
+  label
+    :font-size 11px
+  .control
+    :padding 10px
+  dl
+    :width 100px
+    dt
+      :width 25px
+      :float left
+      :text-align right
+    dd
+      :width 70px
+      :float right
+      input
+        :width 65px
+  .format
+    :margin-top 5px
+    :margin-bottom 10px
+    dl
+      :width 228px
+      dd
+        :width 190px
+        input
+          :width 190px
+  .sb
+    :width 200px
+    :height 200px
+  .black, .white, .sb, .wrapper, .hue, .colorBox
+    +round_full(5px)
+  .black
+    :background-image -moz-linear-gradient(100% 100% 90deg, rgba(0,0,0,1), rgba(0,0,0,0))
+    :background-image -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(0,0,0,0)), to(rgba(0,0,0,1)))
+  .white
+    :background-image -moz-linear-gradient(100% 50%, rgba(255,255,255,0), rgba(255,255,255,1))
+    :background-image -webkit-gradient(linear, 0% 0%, 100% 0%, from(rgba(255,255,255,1)), to(rgba(255,255,255,0)))
+  .wrapper
+    :margin 10px
+  .hue, .wrapper, .colorBox
+    +box_shadow(0,0,5px,rgba(0,0,0,0.3))
+  .hue
+    :margin-top 10px
+    :margin-right 10px
+    :background-image -moz-linear-gradient(100% 100%, rgba(255,0,0,1), rgba(255,0,255,1), rgba(0,0,255,1), rgba(0,255,255,1), rgba(0,255,0,1), rgba(255,255,0,1), rgba(255,0,0,1))
+    :background-image -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,0,0,1)), color-stop(0.166666,rgba(255,255,0,1)),color-stop(0.333333,rgba(0,255,0,1)),color-stop(0.5,rgba(0,225,255,1)),color-stop(0.66666666,rgba(0,0,255,1)),color-stop(0.8333333,rgba(255,0,255,1)), to(rgba(255,0,0,1)))
+  #knob
+    :background-color rgba(255,255,255,0.4)
+  #xyknob
+    :width 10px
+    :corsor crossair
+    :height 10px
+  #xyknob, #knob
+    +round_full(5px)
+    :border 1px solid rgba(255,255,255,0.4)
+    +box_shadow(0,0,4px,rgba(0,0,0,0.4))

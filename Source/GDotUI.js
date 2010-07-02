@@ -40,9 +40,17 @@ Class.Singleton = new Class({
 GDotUI=new Class.Singleton({
   Implements:[Events],
   initialize:function(){
+    //this.loadTheme('../Themes/Blank/theme.js');
   },
-  init:function(){
-   // this.fireEvent('init');
+  loadTheme:function(url){
+    var uri=new URI(url);
+    var local=new URI(window.location);
+
+    //console.log();
+    var themejs = Asset.javascript(url);
+    themejs.addEvent('load',function(){
+      var themecss= Asset.css(new URI(uri.get('directory')+GDotUI.Theme.css).toRelative(local.get('directory')));
+      })
   }
   });
 GDotUI.Config={
