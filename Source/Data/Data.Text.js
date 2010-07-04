@@ -5,10 +5,10 @@ Data.Text=new Class({
     this.text=new Element('textarea');
     this.base.grab(this.text);
     this.addEvent('show',function(){
-        this.text.focus();
+      this.text.focus();
       }.bindWithEvent(this));
     this.text.addEvent('keyup',function(e){
-        this.fireEvent('change',[this.text.getValue,e]);
+      this.fireEvent('change',this.text.get('value'));
     }.bindWithEvent(this))
   },
   setValue:function(text){

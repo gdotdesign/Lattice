@@ -1,9 +1,11 @@
+//Todo Option classes
 Core.Float=new Class({
   Extends:Core.Abstract,
   Implements:[Interfaces.Draggable,
 				  Interfaces.Restoreable],
   Binds:['resize','mouseEnter','mouseLeave','hide'],
   options:{
+   'class':GDotUI.Theme.Float['class'],
 	 overlay:false,
 	 closeable:true,
 	 resizeable:false,
@@ -18,14 +20,15 @@ Core.Float=new Class({
 	 this.base.grab(this.icons.base);
     this.base.grab(this.slider.base);
     //need positionControls();
-    this.icons.base.setStyle('right',-4);
+    this.icons.base.setStyle('right',-6);
 	 this.icons.base.setStyle('top',0);
-	 this.slider.base.setStyle('right',-(this.slider.base.getSize().x)-4);
+	 this.slider.base.setStyle('right',-(this.slider.base.getSize().x)-6);
 	 this.slider.base.setStyle('top',this.icons.size.y);
+   this.parent();
   },
   create:function(){
-    this.base.addClass(GDotUI.Theme.Float['class']).setStyle('position','absolute').setPosition({x:0,y:0});
-    
+    this.base.addClass(this.options['class']).setStyle('position','absolute').setPosition({x:0,y:0});
+		this.base.toggleClass('inactive');
     this.content=new Element('div',{'class':GDotUI.Theme.Float.baseClass});
 
     this.handle=new Element('div',{'class':GDotUI.Theme.Float.handleClass});
@@ -87,6 +90,8 @@ Core.Float=new Class({
     this.base.addEvent('mouseleave',this.mouseLeave)
   },
   mouseEnter:function(){
+		this.base.toggleClass('active');
+		this.base.toggleClass('inactive');
 		$clear(this.iconsTimout);
 		$clear(this.sliderTimout);
     if(this.showSlider)
@@ -95,6 +100,8 @@ Core.Float=new Class({
     this.mouseisover=true;
   },
   mouseLeave:function(){
+		this.base.toggleClass('active');
+		this.base.toggleClass('inactive');
     if(!this.scrolling){
       if(this.showSlider)
 				this.sliderTimout=this.slider.hide.delay(200,this.slider);

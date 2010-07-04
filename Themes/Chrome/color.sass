@@ -37,6 +37,7 @@
   .black
     :background-image -moz-linear-gradient(100% 100% 90deg, rgba(0,0,0,1), rgba(0,0,0,0))
     :background-image -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(0,0,0,0)), to(rgba(0,0,0,1)))
+    :cursor crosshair 
   .white
     :background-image -moz-linear-gradient(100% 50%, rgba(255,255,255,0), rgba(255,255,255,1))
     :background-image -webkit-gradient(linear, 0% 0%, 100% 0%, from(rgba(255,255,255,1)), to(rgba(255,255,255,0)))
@@ -51,9 +52,10 @@
     :background-image -webkit-gradient(linear, 0% 0%, 0% 100%, from(rgba(255,0,0,1)), color-stop(0.166666,rgba(255,255,0,1)),color-stop(0.333333,rgba(0,255,0,1)),color-stop(0.5,rgba(0,225,255,1)),color-stop(0.66666666,rgba(0,0,255,1)),color-stop(0.8333333,rgba(255,0,255,1)), to(rgba(255,0,0,1)))
   #knob
     :background-color rgba(255,255,255,0.4)
+    :cursor pointer
   #xyknob
     :width 10px
-    :corsor crossair
+    :cursor crosshair
     :height 10px
   #xyknob, #knob
     +round_full(5px)

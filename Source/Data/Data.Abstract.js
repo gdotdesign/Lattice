@@ -4,12 +4,16 @@ Data.Abstract=new Class({
    initialize:function(options){
       this.setOptions();
       this.base=new Element('div');
-      this.base.addEventListener('DOMNodeInsertedIntoDocument',function(){
-         this.ready();
-      }.bindWithEvent(this));
+      fn=this.ready.bindWithEvent(this);
+      this.base.store('fn',fn);
+      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn);
       this.create();
    },
-   ready:function(){},
+   ready:function(){
+      this.base.removeEventListener('DOMNodeInsertedIntoDocument',this.base.retrieve('fn'),false);
+      this.base.eliminate('fn');
+   },
    create:function(){},
-   setValue:function(){}
+   setValue:function(){},
+   getValue:function(){}
 });

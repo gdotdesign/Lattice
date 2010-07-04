@@ -192,7 +192,7 @@ Data.Color=new Class({
     }.bindWithEvent(this));
     this.xy.addEvent('tick',this.change.bindWithEvent(this));
     this.xy.addEvent('change',this.change.bindWithEvent(this));
-    this.setValue('#fff');
+    this.setValue(this.value?this.value:'#fff');
   },
   setValue:function(hex){
     this.bgColor=new Color(hex);
@@ -206,7 +206,8 @@ Data.Color=new Class({
   setColor:function(){
     this.finalColor=this.bgColor.setSaturation(this.saturation).setBrightness(100-this.brightness);
     this.colorData.setValue(this.finalColor);
-    this.fireEvent('colorChange',[this.finalColor]);
+    this.fireEvent('change',[this.colorData.hex.input.get('value')]);
+    this.value=this.finalColor;
   },
   change:function(pos){
     this.saturation=pos.x;

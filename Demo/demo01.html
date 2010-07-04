@@ -21,6 +21,7 @@
     <script type="text/javascript" src="../Source/Core/Core.Slider.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Float.js "></script>
     <script type="text/javascript" src="../Source/Core/Core.Button.js "></script>
+    <script type="text/javascript" src="../Source/Core/Core.Picker.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Abstract.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Text.js "></script>
     <script type="text/javascript" src="../Source/Data/Data.Number.js "></script>
@@ -35,31 +36,59 @@
                                       resizeable:false,
                                       cookieID:'list',
                                       useCookie:false});
+            this.nfloat=new Core.Float({editable:false,
+                                      draggable:true,
+                                      resizeable:false,
+                                      cookieID:'text',
+                                      useCookie:false});
+             this.tfloat=new Core.Float({editable:false,
+                                      draggable:true,
+                                      resizeable:false,
+                                      cookieID:'number',
+                                      useCookie:false});
             this.lfloat=new Core.Float({editable:true,
                                       draggable:true,
                                       resizeable:true,
                                       cookieID:'test',
                                       useCookie:false});
             this.list=new Iterable.List();
-            this.list.addItem(new Iterable.ListItem({title:'List Item 1'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 2',subtitle:'Subtitle 2'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 3'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
-            this.list.addItem(new Iterable.ListItem({title:'List Item 4'}));
-            this.color=new Data.Color();
-            this.float.setContent(this.color);
+            for(var i=0;i<8;i++){
+                this.list.addItem(new Iterable.ListItem({title:'List Item '+i,subtitle:'Subtitle '+i}));
+            }
+            this.color=new Data.Text();
+            this.color1=new Data.Color();
+            this.number=new Data.Number();
+            this.number1=new Data.Number();
+            this.nfloat.setContent(this.number);
+            this.nfloat.show();
+            this.text=new Data.Text();
+            this.tfloat.setContent(this.text);
+            this.tfloat.show();
+            this.float.setContent(this.color1);
             this.float.show();
             this.lfloat.setContent(this.list);
             this.lfloat.show();
             this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
             
             //this.text.deploy(document.body);
-            document.body.grab(this.btn.base);
+            this.pick=new Core.Picker();
+            this.colorInput=new Element('input').inject(document.body);
+            this.pick.setContent(this.color);
+            this.pick.attach(this.colorInput);
+            new Element('br').inject(document.body);
+            this.pick1=new Core.Picker();
+            this.numberInput=new Element('input').inject(document.body);
+            this.pick1.setContent(this.number1);
+            this.pick1.attach(this.numberInput);
+            this.numberInput.setStyle('border','1px solid #000');
+            
+            this.numberInput.addEvent('change',function(value){
+              this.setStyle('border',value+'px solid #000');
+            });
+            this.colorInput.addEvent('change',function(value){
+              document.body.setStyle('background-color',value);
+            });
+            //document.body.grab(this.btn.base);
            // GDotUI.init();
 
   

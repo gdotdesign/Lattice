@@ -32,14 +32,16 @@ Core.Slider=new Class({
     options:{
         scrollBase:null,
         reset:false,
-        mode:'vertical'
+        mode:'vertical',
+				'class':GDotUI.Theme.Slider.barClass,
+				'knob':GDotUI.Theme.Slider.knobClass
     },
     initialize:function(options){
       this.parent(options);
     },
     create:function(options){
-      this.base.addClass(GDotUI.Theme.Slider.barClass);
-      this.knob=new Element('div',{'class':GDotUI.Theme.Slider.knobClass});
+      this.base.addClass(this.options['class']);
+      this.knob=new Element('div').addClass(this.options.knob);
       if(this.options.mode=="vertical"){
         this.base.setStyles({
           'width':GDotUI.Theme.Slider.width,
@@ -69,12 +71,15 @@ Core.Slider=new Class({
       }else
         this.slider=new Slider(this.base,this.knob,{mode:'vertical',steps:100});
       this.slider.addEvent('complete',function(step){
-        this.fireEvent('complete',step);
+				 this.fireEvent('complete',step+'');
       }.bindWithEvent(this));
       this.slider.addEvent('change',function(step){
-        this.fireEvent('change',step);
+				if(typeof(step)=='object')
+					step=0;
+        this.fireEvent('change',step+'');
         if(this.scrollBase!=null)
             this.scrollBase.scrollTop=(this.scrollBase.scrollHeight-this.scrollBase.getSize().y)/100*step;
       }.bindWithEvent(this));
+			this.parent();
     }
 })

@@ -6,6 +6,13 @@ GDotUI.Theme={
       'class':'button',
       width: 200
     },
+    Number:{
+        'class':'number'
+    },
+    Picker:{
+        'class':'picker',
+        offset:10
+    },
     List:{
       'class':'list'  
     },
@@ -21,7 +28,7 @@ GDotUI.Theme={
             mode:'vertical',
             spacing:{
                 x:0,
-                y:3
+                y:5
             }
         }
     },
@@ -37,7 +44,6 @@ GDotUI.Theme={
       handleHorizontal:''
     },
     Color:{
-       //saturation and brightness field
        sb:'sb',
        hue:'hue',
        black:'black',
