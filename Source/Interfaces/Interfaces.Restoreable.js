@@ -1,3 +1,18 @@
+/*
+---
+
+name: Interfaces.Restoreable
+
+description: 
+
+license: MIT-style license.
+
+requires: 
+
+provides: Interfaces.Restoreable
+
+...
+*/
 Interfaces.Restoreable=new Class({
     Impelments:[Options],
     options:{

@@ -26,6 +26,7 @@ Interfaces={}
 Core={}
 Data={}
 Iterable={}
+Pickers={}
 Selectors.Pseudo.disabled = function(){
   return (this.hasClass('disabled'));
 };

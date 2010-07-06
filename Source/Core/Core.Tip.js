@@ -1,3 +1,18 @@
+/*
+---
+
+name: Core.Tip
+
+description: Tip class.... (TODO Description)
+
+license: MIT-style license.
+
+requires: [Core.Abstract]
+
+provides: Core.Tip
+
+...
+*/
 // TO Interfacse.Tip
 Core.Tip=new Class({
   Extends:Core.Abstract,

@@ -1,3 +1,18 @@
+/*
+---
+
+name: Core.Abstract
+
+description: Abstract base class for Elements.
+
+license: MIT-style license.
+
+requires: Interfaces.Mux
+
+provides: [Core.Abstract]
+
+...
+*/
 Core.Abstract=new Class({
    Implements:[Events,
                Options,

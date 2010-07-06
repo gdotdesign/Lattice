@@ -65,7 +65,7 @@ Core.Picker=new Class({
     this.base.setStyle('top',ypos);
   },
   attach:function(input){
-    input.set('readonly',true);
+    //input.set('readonly',true);
     input.addEvent('click',this.show);
     this.contentElement.addEvent('change',function(value){
       this.attachedTo.set('value',value);

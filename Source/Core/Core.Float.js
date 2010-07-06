@@ -1,3 +1,18 @@
+/*
+---
+
+name: Core.Float
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider]
+
+provides: Core.Float
+
+...
+*/
 //Todo Option classes
 Core.Float=new Class({
   Extends:Core.Abstract,

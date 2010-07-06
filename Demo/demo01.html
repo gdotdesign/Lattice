@@ -10,7 +10,7 @@
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
     <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Mux.js "></script>
-    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js "></script>
+    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js"></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Draggable.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Restoreable.js "></script>
     <script type="text/javascript" src="../Source/Interfaces/Interfaces.Controls.js "></script>
@@ -28,6 +28,7 @@
     <script type="text/javascript" src="../Source/Data/Data.Color.js "></script>
     <script type="text/javascript" src="../Source/Iterable/Iterable.ListItem.js "></script>
     <script type="text/javascript" src="../Source/Iterable/Iterable.List.js "></script>
+    <script type="text/javascript" src="../Source/Pickers/Pickers.Color.js "></script>
     <script>
         window.addEvent('domready',function(){
            // GDotUI.loadTheme('../Themes/Blank/theme.js');
@@ -55,7 +56,7 @@
             for(var i=0;i<8;i++){
                 this.list.addItem(new Iterable.ListItem({title:'List Item '+i,subtitle:'Subtitle '+i}));
             }
-            this.color=new Data.Text();
+            this.color=new Data.Color();
             this.color1=new Data.Color();
             this.number=new Data.Number();
             this.number1=new Data.Number();
@@ -71,10 +72,10 @@
             this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
             
             //this.text.deploy(document.body);
-            this.pick=new Core.Picker();
-            this.colorInput=new Element('input').inject(document.body);
-            this.pick.setContent(this.color);
-            this.pick.attach(this.colorInput);
+            /*this.pick=new Core.Picker();
+            this.pick.setContent(this.color);*/
+            //this.colorInput=new Element('input').inject(document.body);
+            Pickers.Color.attach($('color'));
             new Element('br').inject(document.body);
             this.pick1=new Core.Picker();
             this.numberInput=new Element('input').inject(document.body);
@@ -85,9 +86,6 @@
             this.numberInput.addEvent('change',function(value){
               this.setStyle('border',value+'px solid #000');
             });
-            this.colorInput.addEvent('change',function(value){
-              document.body.setStyle('background-color',value);
-            });
             //document.body.grab(this.btn.base);
            // GDotUI.init();
 
@@ -96,6 +94,7 @@
     </script>
 </head>
 <body>
+  <input id="color" type="text"/>
     <!-- Insert your content here -->
 </body>
 </html>

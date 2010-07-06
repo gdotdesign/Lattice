@@ -1,0 +1,35 @@
+name: "G.UI"
+
+exports: "gdotui.js"
+
+web: ""
+
+description: ""
+
+license: ""
+
+copyright: ""
+
+authors: ""
+
+sources:
+  - "Source/Interfaces/Interfaces.Mux.js"
+  - "Source/Interfaces/Interfaces.Enabled.js"
+  - "Source/Interfaces/Interfaces.Draggable.js"
+  - "Source/Interfaces/Interfaces.Restoreable.js"
+  - "Source/Interfaces/Interfaces.Controls.js"
+  - "Source/Core/Core.Abstract.js"
+  - "Source/Core/Core.Icon.js"
+  - "Source/Core/Core.IconGroup.js"
+  - "Source/Core/Core.Tip.js"
+  - "Source/Core/Core.Slider.js"
+  - "Source/Core/Core.Float.js"
+  - "Source/Core/Core.Button.js"
+  - "Source/Core/Core.Picker.js"
+  - "Source/Data/Data.Abstract.js"
+  - "Source/Data/Data.Text.js"
+  - "Source/Data/Data.Number.js"
+  - "Source/Data/Data.Color.js"
+  - "Source/Iterable/Iterable.ListItem.js"
+  - "Source/Iterable/Iterable.List.js"
+  - "Source/Pickers/Pickers.Color.js"

@@ -1,8 +1,20 @@
+/*
+---
+
+name: Core.IconGroup
+
+description: Icon group with 4 types of layout.
+
+license: MIT-style license.
+
+requires: [Core.Abstract]
+
+provides: Core.IconGroup
+
+...
+*/
 Core.IconGroup=new Class({
   Extends:Core.Abstract,
-  DCollection:{
-    'icons':['enable','disable']
-  },
   Implements:Interfaces.Controls,
   options:{
     mode:"horizontal", // horizontal / vertical / circular / grid

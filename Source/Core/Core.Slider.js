@@ -1,3 +1,18 @@
+/*
+---
+
+name: Core.Slider
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Controls]
+
+provides: Core.Slider, ResetSlider
+
+...
+*/
 ResetSlider=new Class({
 	Extends:Slider,
 	initialize:function(element, knob, options){

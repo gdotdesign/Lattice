@@ -1,3 +1,18 @@
+/*
+---
+
+name: Interfaces.Draggable
+
+description: Porived dragging for elements that implements this.
+
+license: MIT-style license.
+
+requires: 
+
+provides: Interfaces.Draggable, Drag.Float
+
+...
+*/
 Drag.Float=new Class({
 	Extends: Drag.Move,
 	initialize:function(el,options){
