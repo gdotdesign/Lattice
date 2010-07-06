@@ -1,3 +1,18 @@
+/*
+---
+
+name: Core.Button
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls]
+
+provides: Core.Button
+
+...
+*/
 Core.Button=new Class({
    Extends:Core.Abstract,
    Implements:[Interfaces.Enabled,

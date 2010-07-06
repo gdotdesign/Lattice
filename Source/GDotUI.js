@@ -1,3 +1,18 @@
+/*
+---
+
+name: GDotUI
+
+description: 
+
+license: MIT-style license.
+
+requires: 
+
+provides: GDotUI
+
+...
+*/
 Class.Mutators.DCollection=function(items){
   var self=this;
   new Hash(items).each(function(fns, target) {
@@ -38,7 +53,9 @@ Class.Singleton = new Class({
 	}
 
 })
-GDotUI=new Class.Singleton({
+if(GDotUI==null)
+  GDotUI={};
+/*GDotUI=new Class.Singleton({
   Implements:[Events],
   initialize:function(){
     //this.loadTheme('../Themes/Blank/theme.js');
@@ -53,7 +70,7 @@ GDotUI=new Class.Singleton({
       var themecss= Asset.css(new URI(uri.get('directory')+GDotUI.Theme.css).toRelative(local.get('directory')));
       })
   }
-  });
+  });*/
 GDotUI.Config={
     tipZindex:100,
     floatZindex:0,

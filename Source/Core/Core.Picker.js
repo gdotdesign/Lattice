@@ -1,3 +1,18 @@
+/*
+---
+
+name: Core.Picker
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Abstract]
+
+provides: Core.Picker
+
+...
+*/
 Element.Events.outerClick = {
     
     base: 'click',

@@ -1,3 +1,18 @@
+/*
+---
+
+name: Data.Abstract
+
+description: 
+
+license: MIT-style license.
+
+requires: 
+
+provides: Data.Abstract
+
+...
+*/
 Data.Abstract=new Class({
    Implements:[Events,Options],
    options:{},

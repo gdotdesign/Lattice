@@ -1,3 +1,18 @@
+/*
+---
+
+name: Data.Number
+
+description: 
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Number
+
+...
+*/
 Data.Number=new Class({
   Extends:Data.Abstract,
   options:{

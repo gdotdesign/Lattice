@@ -1,3 +1,18 @@
+/*
+---
+
+name: Data.Text
+
+description: 
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Text
+
+...
+*/
 Data.Text=new Class({
   Implements:Events,
   initialize:function(){

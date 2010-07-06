@@ -1,3 +1,18 @@
+/*
+---
+
+name: Data.Color
+
+description: 
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Color
+
+...
+*/
 Field = new Class({
     Extends: Drag.Move,
     Implements: [Class.Occlude, Class.Binds],

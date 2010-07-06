@@ -1,3 +1,18 @@
+/*
+---
+
+name: Iterable.List
+
+description: 
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Iterable.List
+
+...
+*/
 Iterable.List=new Class({
   Extends:Core.Abstract,
   options:{

@@ -1,3 +1,18 @@
+/*
+---
+
+name: Iterable.ListItem
+
+description: 
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Iterable.ListItem
+
+...
+*/
 Iterable.ListItem=new Class({
   Extends:Core.Abstract,
   options:{

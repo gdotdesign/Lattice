@@ -61,5 +61,5 @@ Interfaces.Restoreable=new Class({
             this.hide();
         }
       }
-    },
+    }
 })

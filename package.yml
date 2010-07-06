@@ -13,6 +13,7 @@ copyright: ""
 authors: ""
 
 sources:
+  - "Source/GDotUI.js"
   - "Source/Interfaces/Interfaces.Mux.js"
   - "Source/Interfaces/Interfaces.Enabled.js"
   - "Source/Interfaces/Interfaces.Draggable.js"
@@ -32,4 +33,4 @@ sources:
   - "Source/Data/Data.Color.js"
   - "Source/Iterable/Iterable.ListItem.js"
   - "Source/Iterable/Iterable.List.js"
-  - "Source/Pickers/Pickers.Color.js"
+  - "Source/Pickers/Pickers.js"

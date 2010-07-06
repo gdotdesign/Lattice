@@ -38,5 +38,5 @@ Interfaces.Draggable=new Class({
 				this.fireEvent('dropped',this);
 				}.bindWithEvent(this));
 			}
-  },
+  }
 })

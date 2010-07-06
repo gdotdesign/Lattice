@@ -1,0 +1,8 @@
+Just a little help and note to self how to build and comiple G.UI
+using the packager and Closure Compiler
+
+Register if not registered
+./packager register /path/to/gdotui
+
+./packager build G.UI/* > gdotui.js
+java -jar compiler.jar --js gdotui.js --js_output_file gdotui-compressed.js --compilation_level SIMPLE_OPTIMIZATIONS
