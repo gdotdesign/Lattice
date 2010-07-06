@@ -9,7 +9,7 @@ license: MIT-style license.
 
 requires: 
 
-provides: Interfaces.Draggable, Drag.Float
+provides: [Interfaces.Draggable, Drag.Float]
 
 ...
 */

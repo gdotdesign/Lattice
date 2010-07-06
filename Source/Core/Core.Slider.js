@@ -9,7 +9,7 @@ license: MIT-style license.
 
 requires: [Core.Abstract, Interfaces.Controls]
 
-provides: Core.Slider, ResetSlider
+provides: [Core.Slider, ResetSlider]
 
 ...
 */

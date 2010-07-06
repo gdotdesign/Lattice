@@ -20,7 +20,7 @@ Interfaces.Restoreable=new Class({
         cookieID:null
     },
     _$Restoreable:function(){
-      GDotUI.addEvent('init',this.loadPosition.bindWithEvent(this));
+      //GDotUI.addEvent('init',this.loadPosition.bindWithEvent(this));
       this.addEvent('hide',function(){
         if($chk(this.options.cookieID)){
           if(this.options.useCookie){

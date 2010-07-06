@@ -17,6 +17,11 @@ GDotUI.Theme={
     List:{
       'class':'list'  
     },
+    Overlay:{
+      opacity:0.7,
+      zindex:800,
+      'class':'overlay'
+    },
     Float:{
         'class':'float',
         bottomHandleClass:'bottom',

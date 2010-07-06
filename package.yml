@@ -34,3 +34,5 @@ sources:
   - "Source/Iterable/Iterable.ListItem.js"
   - "Source/Iterable/Iterable.List.js"
   - "Source/Pickers/Pickers.js"
+  - "Source/Core/Core.Overlay.js"
+  

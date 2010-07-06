@@ -5,30 +5,10 @@
     <title>GDotUI.Demo</title>
     <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
     <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
-    <script type="text/javascript" src="../Source/GDotUI.js"></script>
     <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
     <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
-    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Mux.js "></script>
-    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Enabled.js"></script>
-    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Draggable.js "></script>
-    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Restoreable.js "></script>
-    <script type="text/javascript" src="../Source/Interfaces/Interfaces.Controls.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.Abstract.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.Icon.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.IconGroup.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.Tip.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.Slider.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.Float.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.Button.js "></script>
-    <script type="text/javascript" src="../Source/Core/Core.Picker.js "></script>
-    <script type="text/javascript" src="../Source/Data/Data.Abstract.js "></script>
-    <script type="text/javascript" src="../Source/Data/Data.Text.js "></script>
-    <script type="text/javascript" src="../Source/Data/Data.Number.js "></script>
-    <script type="text/javascript" src="../Source/Data/Data.Color.js "></script>
-    <script type="text/javascript" src="../Source/Iterable/Iterable.ListItem.js "></script>
-    <script type="text/javascript" src="../Source/Iterable/Iterable.List.js "></script>
-    <script type="text/javascript" src="../Source/Pickers/Pickers.js "></script>
+    <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
     <script>
         window.addEvent('domready',function(){
            // GDotUI.loadTheme('../Themes/Blank/theme.js');
@@ -52,6 +32,7 @@
                                       resizeable:true,
                                       cookieID:'test',
                                       useCookie:false});
+            this.overlay=new Core.Overlay();
             this.list=new Iterable.List();
             for(var i=0;i<8;i++){
                 this.list.addItem(new Iterable.ListItem({title:'List Item '+i,subtitle:'Subtitle '+i}));
