@@ -1,5 +1,6 @@
 @import _mixins.sass
 @import color.css
+@import date.css
 
 .picking
   +box_shadow(0,0,10px, rgba(60,120,255,0.4))
@@ -15,9 +16,13 @@
   :background-color rgba(255,255,255,0.8)
   +box_shadow(0,0,25px, rgba(0,0,0,0.5))
   +round_full(7px)
-
+  .date
+    :margin 5px
 .overlay
   :-webkit-transition-duration 0.3s
+  :-webkit-transition-timing-function ease-in-out
+  :background-color rgba(0,0,0,0.7)
+  :z-index 800
 
 *
   :font-family Verdana, Sans

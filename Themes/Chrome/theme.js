@@ -7,6 +7,12 @@ GDotUI.Theme={
       'class':'button',
       width: 200
     },
+    Date:{
+      'class':'date',
+      next:'next',
+      previous:'prev',
+      title:'title'
+    },
     Number:{
         'class':'number'
     },

@@ -1,0 +1,35 @@
+@import _mixins.sass
+.date
+  :width 200px
+  .title
+    :font-size 14px
+    :font-weight bold
+  .next, .prev,.title
+    :float left
+  .next
+    :background-image url(images/control_fastforward_blue.png)
+  .prev
+    :background-image url(images/control_rewind_blue.png)
+  .next, .prev
+    :margin 5px
+    :cursor pointer
+  .title
+    :width 148px
+    :text-align center
+    :margin-top 5px
+    :margin-bottom 15px
+  table
+    :margin-bottom 5px
+    th
+      :font-size 12px
+      :border-bottom 1px solid #ccc
+    td
+      :width 20px
+      :font-size 12px
+      :padding 5px
+      :text-align center
+      :cursor pointer
+.picked
+  +linear_gradient(#85A7EA,#6F95DB)
+  +round_full(3px)
+  +box_shadow(0,0,10px, rgba(0,0,0,0.2))

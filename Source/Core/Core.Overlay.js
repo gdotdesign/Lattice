@@ -16,8 +16,6 @@ provides: Core.Overlay
 Core.Overlay=new Class({
   Extends:Core.Abstract,
   options:{
-    opacity:GDotUI.Theme.Overlay.opacity,
-    zIndex:GDotUI.Theme.Overlay.zindex,
     'class':GDotUI.Theme.Overlay['class']
     },
   initialize:function(options){
@@ -29,9 +27,7 @@ Core.Overlay=new Class({
       "top":0,
       "left":0,
       "right":0,
-      "bottom":0,
-      "z-index":this.options.zIndex,
-      "background-color":"rgba(0,0,0,"+this.options.opacity+")"
+      "bottom":0
       }).addClass(this.options['class']);
     this.base.setStyle('opacity',0);
     document.getElement('body').grab(this.base);
