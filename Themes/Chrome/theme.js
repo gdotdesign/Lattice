@@ -11,7 +11,10 @@ GDotUI.Theme={
       'class':'date',
       next:'next',
       previous:'prev',
-      title:'title'
+      title:'title',
+      Time:{
+        'class':'time'
+      }
     },
     Slot:{
       'class':'slot'  

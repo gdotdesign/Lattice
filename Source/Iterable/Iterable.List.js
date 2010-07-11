@@ -59,6 +59,7 @@ Iterable.List=new Class({
       this.selected.base.removeClass('selected');
     this.selected=item;
     this.selected.base.addClass('selected');
+    this.fireEvent('select',item);
   },
   /*toTheTop:function(item){
     //console.log(item);

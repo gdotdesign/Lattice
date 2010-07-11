@@ -32,3 +32,4 @@ Pickers.Color=new Pickers.Base({type:'Color'});
 Pickers.Number=new Pickers.Base({type:'Number'});
 Pickers.Text=new Pickers.Base({type:'Text'});
 Pickers.Date=new Pickers.Base({type:'Date'});
+Pickers.Time=new Pickers.Base({type:'Time'});

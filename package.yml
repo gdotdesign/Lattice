@@ -33,6 +33,7 @@ sources:
   - "Source/Data/Data.Number.js"
   - "Source/Data/Data.Color.js"
   - "Source/Data/Data.Date.js"
+  - "Source/Data/Data.Time.js"
   - "Source/Iterable/Iterable.ListItem.js"
   - "Source/Iterable/Iterable.List.js"
   - "Source/Pickers/Pickers.js"

@@ -14,7 +14,9 @@ Core.Slot=new Class({
     this.base.addClass(this.options['class']);
     this.overlay=new Element('div',{'text':' '}).addClass('over');
     this.list=new Iterable.List();
-    
+    this.list.addEvent('select',function(item){
+      this.fireEvent('change',item);
+    }.bindWithEvent(this))
     this.base.adopt(this.list.base,this.overlay);
   },
   check:function(el,e){
@@ -25,7 +27,6 @@ Core.Slot=new Class({
      if(distance<lastDistance && distance>0 && distance<(this.base.getSize().y/2)){
       this.list.select(item);
      }
-     
     }.bind(this));
   },
   ready:function(){
@@ -37,6 +38,7 @@ Core.Slot=new Class({
     this.base.setStyle('width',this.list.base.getSize().x);
     this.overlay.setStyle('width',this.base.getSize().x);
     this.overlay.addEvent('mousewheel',function(e){
+      e.stop();
       if(this.list.selected!=null){
         var index=this.list.items.indexOf(this.list.selected);
       }else{
@@ -47,6 +49,14 @@ Core.Slot=new Class({
       }
       if(index+e.wheel>=0 && index+e.wheel<this.list.items.length){
         this.list.select(this.list.items[index+e.wheel]);
+        this.update();
+      }
+      if(index+e.wheel<0){
+        this.list.select(this.list.items[this.list.items.length-1]);
+        this.update();
+      }
+      if(index+e.wheel>this.list.items.length-1){
+        this.list.select(this.list.items[0]);
         this.update();
       }
     }.bindWithEvent(this));

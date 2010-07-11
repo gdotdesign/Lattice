@@ -33,10 +33,10 @@
                                       cookieID:'test',
                                       useCookie:false});
             this.overlay=new Core.Overlay();
-            this.list=new Core.Slot();
-            for(var i=0;i<60;i++){
+            this.list=new Data.Time();
+           /* for(var i=0;i<60;i++){
                 this.list.addItem(new Iterable.ListItem({title:i}));
-            }
+            }*/
             //console.log(Data);
             this.color=new Data.Date();
             this.color1=new Data.Date();
@@ -49,21 +49,22 @@
             this.tfloat.show();
             this.float.setContent(this.color1);
             this.float.show();
-            this.lfloat.setContent(this.list);
-            this.lfloat.show();
+            //this.lfloat.setContent(this.list);
+            //this.lfloat.show();
             this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
             //this.list.base.inject(document.body);
             //this.text.deploy(document.body);
-            /*this.pick=new Core.Picker();
-            this.pick.setContent(this.color);*/
+            //this.pick=new Core.Picker();
+            //this.pick.setContent(this.list);
             //this.colorInput=new Element('input').inject(document.body);
             Pickers.Color.attach($('color'));
             new Element('br').inject(document.body);
             //this.pick1=new Core.Picker();
             this.numberInput=new Element('input').inject(document.body);
+            //this.pick.attach(this.numberInput);
             /*this.pick1.setContent(this.number1);
-            this.pick1.attach(this.numberInput);*/
-             Pickers.Date.attach(this.numberInput);
+            */
+            Pickers.Time.attach(this.numberInput);
             this.numberInput.setStyle('border','1px solid #000');
             
             this.numberInput.addEvent('change',function(value){

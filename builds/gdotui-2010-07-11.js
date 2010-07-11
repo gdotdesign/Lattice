@@ -973,7 +973,9 @@ Core.Slot=new Class({
     this.base.addClass(this.options['class']);
     this.overlay=new Element('div',{'text':' '}).addClass('over');
     this.list=new Iterable.List();
-    
+    this.list.addEvent('select',function(item){
+      this.fireEvent('change',item);
+    }.bindWithEvent(this))
     this.base.adopt(this.list.base,this.overlay);
   },
   check:function(el,e){
@@ -984,7 +986,6 @@ Core.Slot=new Class({
      if(distance<lastDistance && distance>0 && distance<(this.base.getSize().y/2)){
       this.list.select(item);
      }
-     
     }.bind(this));
   },
   ready:function(){
@@ -993,10 +994,10 @@ Core.Slot=new Class({
     this.base.setStyle('position','relative');
     this.list.base.setStyle('position','absolute');
     this.list.base.setStyle('top','0');
-    //console.log(this.list.base.getSize().x);
     this.base.setStyle('width',this.list.base.getSize().x);
     this.overlay.setStyle('width',this.base.getSize().x);
     this.overlay.addEvent('mousewheel',function(e){
+      e.stop();
       if(this.list.selected!=null){
         var index=this.list.items.indexOf(this.list.selected);
       }else{
@@ -1007,6 +1008,14 @@ Core.Slot=new Class({
       }
       if(index+e.wheel>=0 && index+e.wheel<this.list.items.length){
         this.list.select(this.list.items[index+e.wheel]);
+        this.update();
+      }
+      if(index+e.wheel<0){
+        this.list.select(this.list.items[this.list.items.length-1]);
+        this.update();
+      }
+      if(index+e.wheel>this.list.items.length-1){
+        this.list.select(this.list.items[0]);
         this.update();
       }
     }.bindWithEvent(this));
@@ -1565,6 +1574,61 @@ Data.Date=new Class({
 /*
 ---
 
+name: Data.Time
+
+description: 
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Time
+
+...
+*/
+Data.Time=new Class({
+  Extends:Data.Abstract,
+  options:{
+    'class':GDotUI.Theme.Date.Time['class']
+  },
+  initilaize:function(options){
+    this.parent(options);
+  },
+  create:function(){
+    this.time=new Date();
+    this.base.addClass(this.options['class']);
+    this.hourList=new Core.Slot();
+    this.minuteList=new Core.Slot();
+    this.hourList.addEvent('change',function(item){
+      this.time.setHours(item.value);
+      this.fireEvent('change',this.time.format('%H:%M'));
+    }.bindWithEvent(this));
+    this.minuteList.addEvent('change',function(item){
+      this.time.setMinutes(item.value);
+      this.fireEvent('change',this.time.format('%H:%M'));
+    }.bindWithEvent(this));
+    for(var i=0;i<24;i++){
+      var item=new Iterable.ListItem({title:i});
+      item.value=i;
+     this.hourList.addItem(item);
+    }
+    for(var i=0;i<60;i++){
+      var item=new Iterable.ListItem({title:i<10?'0'+i:i});
+      item.value=i;
+      this.minuteList.addItem(item);
+    }
+    this.base.adopt(this.hourList.base,this.minuteList.base);
+  },
+  ready:function(){
+    $$(this.hourList.base,this.minuteList.base).setStyles({'float':'left'});
+    this.base.setStyle('height',this.hourList.base.getSize().y);
+    this.parent();
+  }
+  })
+
+/*
+---
+
 name: Iterable.ListItem
 
 description: 
@@ -1710,6 +1774,7 @@ Iterable.List=new Class({
       this.selected.base.removeClass('selected');
     this.selected=item;
     this.selected.base.addClass('selected');
+    this.fireEvent('select',item);
   },
   /*toTheTop:function(item){
     //console.log(item);
@@ -1775,6 +1840,7 @@ Pickers.Color=new Pickers.Base({type:'Color'});
 Pickers.Number=new Pickers.Base({type:'Number'});
 Pickers.Text=new Pickers.Base({type:'Text'});
 Pickers.Date=new Pickers.Base({type:'Date'});
+Pickers.Time=new Pickers.Base({type:'Time'});
 
 /*
 ---
