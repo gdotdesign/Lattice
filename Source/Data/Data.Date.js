@@ -14,7 +14,7 @@ provides: Data.Date
 ...
 */
 MooTools.lang.set('en-US', 'Date', {
-    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday','Sunday'],
+    days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday','Sunday']
 });
 Data.Date=new Class({
   Extends:Data.Abstract,
@@ -105,5 +105,80 @@ Data.Date=new Class({
         item.addClass('picked');
     });
     this.fireEvent('change',this.date.format());
+  }
+});
+Data.DateSlot=new Class({
+  Extends:Data.Abstract,
+  options:{
+    'class':GDotUI.Theme.Date.Slot['class']
+  },
+  initialize:function(options){
+    this.parent(options);
+  },
+  create:function(){
+    this.base.addClass(this.options['class']);
+    this.days=new Core.Slot();
+    this.month=new Core.Slot();
+    this.years=new Core.Slot();
+    this.years.addEvent('change',function(item){
+      this.date.setYear(item.value);
+      this.setValue();
+    }.bindWithEvent(this));
+    this.month.addEvent('change',function(item){
+      this.date.setMonth(item.value);
+      this.setValue();
+    }.bindWithEvent(this));
+     this.days.addEvent('change',function(item){
+      this.date.setDate(item.value);
+      this.setValue();
+    }.bindWithEvent(this));
+    for(var i=0;i<30;i++){
+      var item=new Iterable.ListItem({title:i+1});
+      item.value=i+1;
+      this.days.addItem(item);
+    }
+    for(var i=0;i<12;i++){
+      var item=new Iterable.ListItem({title:i+1});
+      item.value=i;
+      this.month.addItem(item);
+    }
+    for(var i=1980;i<2012;i++){
+      var item=new Iterable.ListItem({title:i});
+      item.value=i;
+      this.years.addItem(item);
+    }
+  },
+  ready:function(){
+    this.base.adopt(this.years.base,this.month.base,this.days.base);
+    this.setValue(new Date());
+    this.base.setStyle('height',this.days.base.getSize().y);
+    $$(this.days.base,this.month.base,this.years.base).setStyles({'float':'left'});
+    this.parent();
+  },
+  setValue:function(date){
+    if(date!=null){
+      this.date=date;
+    }
+    this.update();
+    this.fireEvent('change',this.date.format());
+  },
+  update:function(){
+    var cdays=this.date.get('lastdayofmonth');
+    var listlength=this.days.list.items.length;
+    if(cdays>listlength){
+      for(var i=listlength+1;i<=cdays;i++){
+        var item=new Iterable.ListItem({title:i});
+        item.value=i;
+        this.days.addItem(item);
+      }
+    }else if(cdays<listlength){
+      for(var i=listlength;i>cdays;i--){
+        this.days.list.removeItem(this.days.list.items[i-1]);
+      }
+    }
+    this.days.select(this.days.list.items[this.date.getDate()-1]);
+    this.month.select(this.month.list.items[this.date.getMonth()]);
+    this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
+    //this.years.select(this)
   }
 });

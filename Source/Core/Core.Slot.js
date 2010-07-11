@@ -2,7 +2,7 @@ Core.Slot=new Class({
   Extends:Core.Abstract,
   Binds:['check','complete'],
   Delegates:{
-    'list':['addItem']
+    'list':['addItem','removeAll','select']
   },
   options:{
     'class':GDotUI.Theme.Slot['class']
@@ -15,6 +15,7 @@ Core.Slot=new Class({
     this.overlay=new Element('div',{'text':' '}).addClass('over');
     this.list=new Iterable.List();
     this.list.addEvent('select',function(item){
+      this.update();
       this.fireEvent('change',item);
     }.bindWithEvent(this))
     this.base.adopt(this.list.base,this.overlay);
@@ -49,15 +50,12 @@ Core.Slot=new Class({
       }
       if(index+e.wheel>=0 && index+e.wheel<this.list.items.length){
         this.list.select(this.list.items[index+e.wheel]);
-        this.update();
       }
       if(index+e.wheel<0){
         this.list.select(this.list.items[this.list.items.length-1]);
-        this.update();
       }
       if(index+e.wheel>this.list.items.length-1){
         this.list.select(this.list.items[0]);
-        this.update();
       }
     }.bindWithEvent(this));
     this.drag=new Drag(this.list.base,{modifiers:{x:'',y:'top'},handle:this.overlay});

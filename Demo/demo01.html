@@ -38,8 +38,8 @@
                 this.list.addItem(new Iterable.ListItem({title:i}));
             }*/
             //console.log(Data);
-            this.color=new Data.Date();
-            this.color1=new Data.Date();
+            this.color=new Data.DateSlot();
+            this.color1=new Data.DateSlot();
             this.number=new Data.Number();
             this.number1=new Data.Number();
             this.nfloat.setContent(this.number);
@@ -64,7 +64,7 @@
             //this.pick.attach(this.numberInput);
             /*this.pick1.setContent(this.number1);
             */
-            Pickers.Time.attach(this.numberInput);
+            Pickers.DateSlot.attach(this.numberInput);
             this.numberInput.setStyle('border','1px solid #000');
             
             this.numberInput.addEvent('change',function(value){

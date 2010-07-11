@@ -14,6 +14,9 @@ GDotUI.Theme={
       title:'title',
       Time:{
         'class':'time'
+      },
+      Slot:{
+        'class':'time-slot'
       }
     },
     Slot:{

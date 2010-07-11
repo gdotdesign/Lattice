@@ -31,9 +31,11 @@ Iterable.List=new Class({
   removeItem:function(li){
     li.removeEvents('invoked','edit','delete');
     li.base.destroy();
+    this.items.erase(li);
     delete li;
   },
   removeAll:function(){
+    this.selected=null;
     this.items.each(function(item){
       this.removeItem(item);
       delete item;
@@ -54,12 +56,21 @@ Iterable.List=new Class({
       this.editing=true;
     }
   },
+  getItemFromTitle:function(title){
+    return this.items.filter(function(item){
+      if(item.title.get('text')==title)
+        return true
+      else return false;
+    })[0];
+  },
   select:function(item){
-    if(this.selected!=null)
-      this.selected.base.removeClass('selected');
-    this.selected=item;
-    this.selected.base.addClass('selected');
-    this.fireEvent('select',item);
+    if(this.selected!=item){
+      if(this.selected!=null)
+        this.selected.base.removeClass('selected');
+      this.selected=item;
+      this.selected.base.addClass('selected');
+      this.fireEvent('select',item);
+    }
   },
   /*toTheTop:function(item){
     //console.log(item);
