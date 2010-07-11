@@ -34,19 +34,29 @@ Core.Slot=new Class({
     this.base.setStyle('position','relative');
     this.list.base.setStyle('position','absolute');
     this.list.base.setStyle('top','0');
-    //console.log(this.list.base.getSize().x);
     this.base.setStyle('width',this.list.base.getSize().x);
     this.overlay.setStyle('width',this.base.getSize().x);
+    this.overlay.addEvent('mousewheel',function(e){
+      if(this.list.selected!=null){
+        var index=this.list.items.indexOf(this.list.selected);
+      }else{
+        if(e.wheel==1)
+          var index=0;
+        else
+          var index=1;
+      }
+      if(index+e.wheel>=0 && index+e.wheel<this.list.items.length){
+        this.list.select(this.list.items[index+e.wheel]);
+        this.update();
+      }
+    }.bindWithEvent(this));
     this.drag=new Drag(this.list.base,{modifiers:{x:'',y:'top'},handle:this.overlay});
     this.drag.addEvent('drag',this.check);
     this.drag.addEvent('beforeStart',function(){
       this.list.base.setStyle('-webkit-transition-duration','0s');
     }.bindWithEvent(this));
     this.drag.addEvent('complete',function(){
-      this.list.base.setStyle('-webkit-transition-duration','0.3s');
-      if(this.list.selected!=null){
-        this.list.base.setStyle('top',-this.list.selected.base.getPosition(this.list.base).y+this.base.getSize().y/2-this.list.selected.base.getSize().y/2)
-      }
+      this.update();
       /*if(this.list.base.getPosition(this.base).y>0){
         this.list.base.setStyle('top',0);
       }
@@ -54,5 +64,11 @@ Core.Slot=new Class({
         this.list.base.setStyle('top',-(this.list.base.getSize().y-this.base.getSize().y));
       }*/
     }.bindWithEvent(this));
+  },
+  update:function(){
+    this.list.base.setStyle('-webkit-transition-duration','0.3s');
+    if(this.list.selected!=null){
+      this.list.base.setStyle('top',-this.list.selected.base.getPosition(this.list.base).y+this.base.getSize().y/2-this.list.selected.base.getSize().y/2)
+    }
   }
 });
