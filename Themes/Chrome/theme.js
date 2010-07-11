@@ -13,6 +13,9 @@ GDotUI.Theme={
       previous:'prev',
       title:'title'
     },
+    Slot:{
+      'class':'slot'  
+    },
     Number:{
         'class':'number'
     },

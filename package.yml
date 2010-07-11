@@ -27,6 +27,7 @@ sources:
   - "Source/Core/Core.Float.js"
   - "Source/Core/Core.Button.js"
   - "Source/Core/Core.Picker.js"
+  - "Source/Core/Core.Slot.js"
   - "Source/Data/Data.Abstract.js"
   - "Source/Data/Data.Text.js"
   - "Source/Data/Data.Number.js"

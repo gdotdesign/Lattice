@@ -33,10 +33,11 @@
                                       cookieID:'test',
                                       useCookie:false});
             this.overlay=new Core.Overlay();
-            this.list=new Iterable.List();
-            for(var i=0;i<8;i++){
-                this.list.addItem(new Iterable.ListItem({title:'List Item '+i,subtitle:'Subtitle '+i}));
+            this.list=new Core.Slot();
+            for(var i=0;i<60;i++){
+                this.list.addItem(new Iterable.ListItem({title:i}));
             }
+            //console.log(Data);
             this.color=new Data.Date();
             this.color1=new Data.Date();
             this.number=new Data.Number();
@@ -51,7 +52,7 @@
             this.lfloat.setContent(this.list);
             this.lfloat.show();
             this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
-            
+            //this.list.base.inject(document.body);
             //this.text.deploy(document.body);
             /*this.pick=new Core.Picker();
             this.pick.setContent(this.color);*/

@@ -5,6 +5,22 @@
 .picking
   +box_shadow(0,0,10px, rgba(60,120,255,0.4))
 
+.slot
+  :height 150px
+  .list
+    :left 0
+    :z-index 1
+    .list-item
+      :text-align center
+  .over
+    :z-index 2
+    :position absolute
+    :top 0
+    :left 0
+    :height inherit
+    :background-image -webkit-gradient(linear, left bottom, left top, color-stop(0, rgba(21,59,117,0.5)), color-stop(0.4, rgba(255,255,255,0)), color-stop(0.6, rgba(255,255,255,0)), color-stop(1, rgba(21,59,117,0.5)))
+    :cursor pointer 
+
 .number
   :padding 5px
   input
@@ -43,6 +59,11 @@
     :color #4F4F4F
 .list-item:hover
   +linear_gradient(#E0E0E0,#C6D7F2)
+.list-item.selected
+  +linear_gradient(#85A8DD,#6894D6)
+  :color #fff
+  +box_shadow(0,0,5px, rgba(0,0,0,0.4))
+  :z-index 888
 
 textarea,input
   :padding 0

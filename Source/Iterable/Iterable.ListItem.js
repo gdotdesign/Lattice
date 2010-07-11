@@ -22,6 +22,7 @@ Iterable.ListItem=new Class({
   },
   initialize:function(options){
      this.parent(options);
+     this.enabled=true;
   },
   create:function(){
      this.base.addClass(this.options['class']).setStyle('position','relative');;
@@ -38,7 +39,7 @@ Iterable.ListItem=new Class({
      //Invoked
      this.base.addEvent('click',function(){
         if(this.enabled)
-           this.fireEvent('invoked');
+           this.fireEvent('invoked',this);
      }.bindWithEvent(this));
      //Edit
      this.base.addEvent('dblclick',function(){

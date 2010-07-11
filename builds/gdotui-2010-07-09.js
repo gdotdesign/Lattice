@@ -957,6 +957,40 @@ Core.Picker=new Class({
   }
 });
 
+Core.Slot=new Class({
+  Extends:Core.Abstract,
+  Binds:['check','complete'],
+  Delegates:{
+    'list':['addItem']
+  },
+  options:{
+    'class':GDotUI.Theme.Slot['class']
+  },
+  initilaize:function(options){
+    this.parent(options);
+  },
+  create:function(){
+    this.base.addClass(this.options['class']);
+    this.list=new Iterable.List();
+    //this.drag.addEvent('complete',this.complete);
+    this.base.grab(this.list.base);
+  },
+  check:function(el,e){
+    /*this.list.items.each(function(item,i){
+      console.log(this.list.base.scrollTop+item.base.getPosition().y);
+    }.bind(this));*/
+  },
+  ready:function(){
+    this.parent();
+    this.base.setStyle('overflow','hidden');
+    this.base.setStyle('position','relative');
+    this.list.base.setStyle('position','absolute');
+    this.list.base.setStyle('top','0');
+    this.drag=new Drag(this.list.base,{modifiers:{x:'',y:'top'}});
+    this.drag.addEvent('drag',this.check);
+  }
+});
+
 /*
 ---
 
