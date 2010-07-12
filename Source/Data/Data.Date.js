@@ -22,7 +22,8 @@ Data.Date=new Class({
     'class':GDotUI.Theme.Date['class'],
     nextClass:GDotUI.Theme.Date.next,
     prevClass:GDotUI.Theme.Date.previous,
-    titleClass:GDotUI.Theme.Date.title
+    titleClass:GDotUI.Theme.Date.title,
+    format:GDotUI.Theme.Date.format
   },
   initialize:function(options){
     this.parent(options);
@@ -49,7 +50,6 @@ Data.Date=new Class({
     }
     this.base.adopt(this.wrapper,this.table);
     this.table.element.addEvent('click:relay(td)',this.select.bindWithEvent(this));
-    this.setValue(new Date());
   },
   select:function(e){
     var day=e.target.get('text');
@@ -61,6 +61,10 @@ Data.Date=new Class({
       this.selected=e.target;*/
       this.setValue();
     }	
+  },
+  ready:function(){
+    this.setValue(new Date());
+    this.parent();
   },
   populate:function(start){
     var j=1;
@@ -104,13 +108,14 @@ Data.Date=new Class({
       if(item.get('text')==day)
         item.addClass('picked');
     });
-    this.fireEvent('change',this.date.format());
+    this.fireEvent('change',this.date.format(this.options.format));
   }
 });
 Data.DateSlot=new Class({
   Extends:Data.Abstract,
   options:{
-    'class':GDotUI.Theme.Date.Slot['class']
+    'class':GDotUI.Theme.Date.Slot['class'],
+    format:GDotUI.Theme.Date.format
   },
   initialize:function(options){
     this.parent(options);
@@ -160,7 +165,7 @@ Data.DateSlot=new Class({
       this.date=date;
     }
     this.update();
-    this.fireEvent('change',this.date.format());
+    this.fireEvent('change',this.date.format(this.options.format));
   },
   update:function(){
     var cdays=this.date.get('lastdayofmonth');
@@ -180,5 +185,44 @@ Data.DateSlot=new Class({
     this.month.select(this.month.list.items[this.date.getMonth()]);
     this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
     //this.years.select(this)
+  }
+});
+Data.DateTime=new Class({
+  Extends:Data.Abstract,
+  options:{
+    'class':GDotUI.Theme.Date.DateTime['class'],
+    format:GDotUI.Theme.Date.DateTime.format
+  },
+  initialize:function(options){
+    this.parent(options);
+  },
+  create:function(){
+    this.base.addClass(this.options['class']);
+    this.datea=new Data.DateSlot();
+    this.time=new Data.Time();
+  },
+  ready:function(){
+    this.base.adopt(this.datea.base,this.time.base);
+    this.setValue(new Date());
+    this.datea.addEvent('change',function(){
+      this.date.setYear(this.datea.date.getFullYear());
+      this.date.setMonth(this.datea.date.getMonth());
+      this.date.setDate(this.datea.date.getDate());
+      this.fireEvent('change',this.date.format(this.options.format));
+    }.bindWithEvent(this));
+    this.time.addEvent('change',function(){
+      this.date.setHours(this.time.time.getHours());
+      this.date.setMinutes(this.time.time.getMinutes());
+      this.fireEvent('change',this.date.format(this.options.format));
+    }.bindWithEvent(this))
+    this.parent();
+  },
+  setValue:function(date){
+    if(date!=null){
+      this.date=date;
+    }
+    this.datea.setValue(this.date);
+    this.time.setValue(this.date);
+    this.fireEvent('change',this.date.format(this.options.format));
   }
 });

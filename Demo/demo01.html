@@ -14,7 +14,7 @@
            // GDotUI.loadTheme('../Themes/Blank/theme.js');
             this.float=new Core.Float({editable:false,
                                       draggable:true,
-                                      resizeable:false,
+                                      resizeable:true,
                                       cookieID:'list',
                                       useCookie:false});
             this.nfloat=new Core.Float({editable:false,
@@ -39,7 +39,7 @@
             }
             //console.log(Data);
             this.color=new Data.DateSlot();
-            this.color1=new Data.DateSlot();
+            this.color1=new Data.DateTime();
             this.number=new Data.Number();
             this.number1=new Data.Number();
             this.nfloat.setContent(this.number);

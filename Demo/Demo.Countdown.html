@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+    <title>GDotUI.Demo</title>
+    <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
+    <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
+    <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
+    <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
+    <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
+    <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
+    <script>
+        window.addEvent('domready',function(){
+            this.hours=new Core.Slot();
+            this.minutes=new Core.Slot();
+            this.seconds=new Core.Slot();
+            this.hours.base.addClass('hours');
+            this.minutes.base.addClass('minutes');
+            this.seconds.base.addClass('seconds');
+            this.end=new Date();
+            this.end.setDate(this.end.getDate()+1);
+            this.end.setHours(0);
+            this.end.setMinutes(0);
+            this.end.setSeconds(0);
+            var hours=new Date().diff(this.end, 'hour');
+            for(var i=0;i<60;i++){
+                var item=new Iterable.ListItem({title:i<10?'0'+i:i});
+               this.hours.addItem(item);
+            }
+            for(var i=0;i<60;i++){
+                var item=new Iterable.ListItem({title:i});
+                var item1=new Iterable.ListItem({title:i});
+                this.minutes.addItem(item);
+                this.seconds.addItem(item1);
+            }
+            this.update=function(){
+                var hours=new Date().diff(this.end, 'hour');
+                var mins=new Date().diff(this.end, 'minute');
+                var seconds=new Date().diff(this.end, 'second');
+                this.hours.select(this.hours.list.items[hours])
+                this.minutes.select(this.minutes.list.items[mins-hours*60])
+                this.seconds.select(this.seconds.list.items[seconds-mins*60])
+                if(min==0 && hours==0 && seconds==0){
+                    this.end=new Date();
+                    this.end.setDate(this.end.getDate()+1);
+                    this.end.setHours(0);
+                    this.end.setMinutes(0);
+                    this.end.setSeconds(0);
+                }
+            }.bind(this);
+            $("wrap").adopt(this.hours.base,this.minutes.base,this.seconds.base,new Element('div',{id:"overlay",html:'&nbsp;'}));
+            this.update.periodical(1000);
+        });
+    </script>
+    <style>
+        html{
+            height: 100%;
+            overflow: hidden;
+        }
+        body{
+            background-color: #595959;
+            height: 100%;
+        }
+        .list-item.selected{
+            -webkit-transition-duration: 0.8s !important;
+            -webkit-transition-timing-function: cubic-bezier(0, 0, 0.8, 1.0);
+            text-shadow: 0 4px 2px rgba(0,0,0,0.6);
+            background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#606060), to(#3A3A3A));
+        }
+        .hours, .minutes{
+            border-right: 3px solid #262626;
+        }
+        .minutes .list{
+            -webkit-transition-duration: 5s !important;
+        }
+        .minutes .list{
+            -webkit-transition-duration: 2s !important;
+        }
+        .slot{
+          float:left;
+          height: 300px;
+        }
+        .list{
+            -webkit-transition-duration: 0.8s !important;
+        }
+        .list-item{
+            text-shadow: 0 2px 1px rgba(255,255,255,0.6);
+            background: none;
+            -webkit-transition-duration: s !important;
+        }
+        .slot .over{
+            background-image: -webkit-gradient(linear, left bottom, left top, color-stop(0, #353535), color-stop(0.3, rgba(255, 255, 255, 0)),color-stop(0.59, rgba(255, 255, 255, 0.6)),color-stop(0.6, rgba(255, 255, 255, 0.65)), color-stop(0.601, rgba(255, 255, 255, 0.55)),color-stop(0.7, rgba(255, 255, 255, 0.3)), color-stop(1, #7F7F7F));
+        }
+        .slot .list .list-item{
+            padding: 20px
+        }
+        .slot .list .list-item .title{
+            font-size: 40px;
+        }
+        .hours, .hours .over{
+            -webkit-border-top-left-radius: 20px;
+            -webkit-border-bottom-left-radius: 20px;
+        }
+        .seconds, .seconds .over{
+            -webkit-border-top-right-radius: 20px;
+            -webkit-border-bottom-right-radius: 20px;
+        }
+        #wrap, #overlay{
+            -webkit-border-radius: 20px;  
+        }
+        #wrap{
+            margin: 0 auto;
+            margin-bottom: 60px;
+            width: 276px;
+            height: 300px;
+            position: relative;
+             -webkit-box-shadow: 0 0 30px rgba(0,0,0,0.6);
+        }
+        #overlay{
+            border-top: 2px solid #939393;
+            border-bottom: 2px solid #262626;
+            border-right: 2px solid #515151;
+            border-left: 2px solid #515151;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 274px;
+            height: 298px;
+            -webkit-box-shadow: 0 0 60px rgba(0,0,0,0.3);
+        }
+        h3{
+            font-size: 12px;
+            font-weight: normal;
+            color: #2B2B2B;
+            text-align: center;
+        }
+        a{
+            color: #2B2B2B;
+        }
+        h2{
+            font-size: 14px;
+            color: #ccc;
+            text-align: center;
+            text-shadow: 0 4px 2px rgba(0,0,0,0.6);
+            margin-bottom: 60px;
+            line-height: 27px;
+        }
+        h1{
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+            font-size: 40px;
+            margin-top: 50px;
+            color: #eee;
+            text-align: center;
+            text-shadow: 0 4px 2px rgba(0,0,0,0.6);
+            -webkit-text-stroke: 1px #fff;
+        }
+    </style>
+</head>
+<body>
+    <h1>
+        Countdown until midnight!
+    </h1>
+    <h2>
+       A G.UI demo page. No images, just CSS and javascript!
+       <br/>
+       No javascript effects, just CSS transitions.
+    </h2>
+    <div id="wrap">
+    </div>
+     <h3>
+       Powered by
+       <a href="http://gdotdesign.github.com/gdotui/">G.UI</a>
+       .
+    </h3>
+</body>
+</html>

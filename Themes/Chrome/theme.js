@@ -12,8 +12,14 @@ GDotUI.Theme={
       next:'next',
       previous:'prev',
       title:'title',
+      format:'%Y %B %d - %A',
+      DateTime:{
+        'class':'date-time',
+        format:'%Y %B %d - %A %H:%M'
+      },
       Time:{
-        'class':'time'
+        'class':'time',
+        format:'%H:%M'
       },
       Slot:{
         'class':'time-slot'
@@ -72,6 +78,7 @@ GDotUI.Theme={
        color:'color',
        wrapper:'wrapper',
       'class':'color',
+       format: 'hsl', //[hsl,rgb,hex]
        controls:{
           'class':'control',
           format:'format',

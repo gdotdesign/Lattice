@@ -138,7 +138,8 @@ Data.Color=new Class({
     'hue':GDotUI.Theme.Color.hue,
     'wrapper':GDotUI.Theme.Color.wrapper,
     white:GDotUI.Theme.Color.white,
-    black:GDotUI.Theme.Color.black
+    black:GDotUI.Theme.Color.black,
+    format:GDotUI.Theme.Color.format
   },
   initialize:function(options){
     this.parent();
@@ -221,7 +222,15 @@ Data.Color=new Class({
   setColor:function(){
     this.finalColor=this.bgColor.setSaturation(this.saturation).setBrightness(100-this.brightness);
     this.colorData.setValue(this.finalColor);
-    this.fireEvent('change',[this.colorData.hex.input.get('value')]);
+    var ret='';
+    if(this.options.format=="hsl"){
+        ret=this.colorData.hsb.input.get('value');
+    }else if(this.options.format=="rgb"){
+        ret=this.colorData.rgb.input.get('value');
+    }else{
+        ret=this.colorData.hex.input.get('value');
+    }
+    this.fireEvent('change',[ret]);
     this.value=this.finalColor;
   },
   change:function(pos){

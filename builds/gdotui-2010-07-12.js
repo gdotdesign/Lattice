@@ -1310,7 +1310,8 @@ Data.Color=new Class({
     'hue':GDotUI.Theme.Color.hue,
     'wrapper':GDotUI.Theme.Color.wrapper,
     white:GDotUI.Theme.Color.white,
-    black:GDotUI.Theme.Color.black
+    black:GDotUI.Theme.Color.black,
+    format:GDotUI.Theme.Color.format
   },
   initialize:function(options){
     this.parent();
@@ -1393,7 +1394,15 @@ Data.Color=new Class({
   setColor:function(){
     this.finalColor=this.bgColor.setSaturation(this.saturation).setBrightness(100-this.brightness);
     this.colorData.setValue(this.finalColor);
-    this.fireEvent('change',[this.colorData.hex.input.get('value')]);
+    var ret='';
+    if(this.options.format=="hsl"){
+        ret=this.colorData.hsb.input.get('value');
+    }else if(this.options.format=="rgb"){
+        ret=this.colorData.rgb.input.get('value');
+    }else{
+        ret=this.colorData.hex.input.get('value');
+    }
+    this.fireEvent('change',[ret]);
     this.value=this.finalColor;
   },
   change:function(pos){
@@ -1487,7 +1496,8 @@ Data.Date=new Class({
     'class':GDotUI.Theme.Date['class'],
     nextClass:GDotUI.Theme.Date.next,
     prevClass:GDotUI.Theme.Date.previous,
-    titleClass:GDotUI.Theme.Date.title
+    titleClass:GDotUI.Theme.Date.title,
+    format:GDotUI.Theme.Date.format
   },
   initialize:function(options){
     this.parent(options);
@@ -1514,7 +1524,6 @@ Data.Date=new Class({
     }
     this.base.adopt(this.wrapper,this.table);
     this.table.element.addEvent('click:relay(td)',this.select.bindWithEvent(this));
-    this.setValue(new Date());
   },
   select:function(e){
     var day=e.target.get('text');
@@ -1526,6 +1535,10 @@ Data.Date=new Class({
       this.selected=e.target;*/
       this.setValue();
     }	
+  },
+  ready:function(){
+    this.setValue(new Date());
+    this.parent();
   },
   populate:function(start){
     var j=1;
@@ -1569,13 +1582,14 @@ Data.Date=new Class({
       if(item.get('text')==day)
         item.addClass('picked');
     });
-    this.fireEvent('change',this.date.format());
+    this.fireEvent('change',this.date.format(this.options.format));
   }
 });
 Data.DateSlot=new Class({
   Extends:Data.Abstract,
   options:{
-    'class':GDotUI.Theme.Date.Slot['class']
+    'class':GDotUI.Theme.Date.Slot['class'],
+    format:GDotUI.Theme.Date.format
   },
   initialize:function(options){
     this.parent(options);
@@ -1625,7 +1639,7 @@ Data.DateSlot=new Class({
       this.date=date;
     }
     this.update();
-    this.fireEvent('change',this.date.format());
+    this.fireEvent('change',this.date.format(this.options.format));
   },
   update:function(){
     var cdays=this.date.get('lastdayofmonth');
@@ -1647,6 +1661,45 @@ Data.DateSlot=new Class({
     //this.years.select(this)
   }
 });
+Data.DateTime=new Class({
+  Extends:Data.Abstract,
+  options:{
+    'class':GDotUI.Theme.Date.DateTime['class'],
+    format:GDotUI.Theme.Date.DateTime.format
+  },
+  initialize:function(options){
+    this.parent(options);
+  },
+  create:function(){
+    this.base.addClass(this.options['class']);
+    this.datea=new Data.DateSlot();
+    this.time=new Data.Time();
+  },
+  ready:function(){
+    this.base.adopt(this.datea.base,this.time.base);
+    this.setValue(new Date());
+    this.datea.addEvent('change',function(){
+      this.date.setYear(this.datea.date.getFullYear());
+      this.date.setMonth(this.datea.date.getMonth());
+      this.date.setDate(this.datea.date.getDate());
+      this.fireEvent('change',this.date.format(this.options.format));
+    }.bindWithEvent(this));
+    this.time.addEvent('change',function(){
+      this.date.setHours(this.time.time.getHours());
+      this.date.setMinutes(this.time.time.getMinutes());
+      this.fireEvent('change',this.date.format(this.options.format));
+    }.bindWithEvent(this))
+    this.parent();
+  },
+  setValue:function(date){
+    if(date!=null){
+      this.date=date;
+    }
+    this.datea.setValue(this.date);
+    this.time.setValue(this.date);
+    this.fireEvent('change',this.date.format(this.options.format));
+  }
+});
 
 /*
 ---
@@ -1666,23 +1719,23 @@ provides: Data.Time
 Data.Time=new Class({
   Extends:Data.Abstract,
   options:{
-    'class':GDotUI.Theme.Date.Time['class']
+    'class':GDotUI.Theme.Date.Time['class'],
+    format:GDotUI.Theme.Date.Time.format
   },
   initilaize:function(options){
     this.parent(options);
   },
   create:function(){
-    this.time=new Date();
     this.base.addClass(this.options['class']);
     this.hourList=new Core.Slot();
     this.minuteList=new Core.Slot();
     this.hourList.addEvent('change',function(item){
       this.time.setHours(item.value);
-      this.fireEvent('change',this.time.format('%H:%M'));
+      this.setValue();
     }.bindWithEvent(this));
     this.minuteList.addEvent('change',function(item){
       this.time.setMinutes(item.value);
-      this.fireEvent('change',this.time.format('%H:%M'));
+      this.setValue();
     }.bindWithEvent(this));
     for(var i=0;i<24;i++){
       var item=new Iterable.ListItem({title:i});
@@ -1694,11 +1747,20 @@ Data.Time=new Class({
       item.value=i;
       this.minuteList.addItem(item);
     }
-    this.base.adopt(this.hourList.base,this.minuteList.base);
+  },
+  setValue:function(date){
+    if(date!=null){
+      this.time=date;
+    }
+    this.hourList.select(this.hourList.list.items[this.time.getHours()]);
+    this.minuteList.select(this.minuteList.list.items[this.time.getMinutes()]);
+    this.fireEvent('change',this.time.format(this.options.format));
   },
   ready:function(){
+    this.base.adopt(this.hourList.base,this.minuteList.base);
     $$(this.hourList.base,this.minuteList.base).setStyles({'float':'left'});
     this.base.setStyle('height',this.hourList.base.getSize().y);
+    this.setValue(new Date());
     this.parent();
   }
   })
@@ -1929,6 +1991,7 @@ Pickers.Number=new Pickers.Base({type:'Number'});
 Pickers.Text=new Pickers.Base({type:'Text'});
 Pickers.Date=new Pickers.Base({type:'Date'});
 Pickers.DateSlot=new Pickers.Base({type:'DateSlot'});
+Pickers.DateTime=new Pickers.Base({type:'DateTime'});
 Pickers.Time=new Pickers.Base({type:'Time'});
 
 /*
