@@ -284,11 +284,12 @@ Core.Abstract=new Class({
       this.create();
       fn=this.ready.bindWithEvent(this);
       this.base.store('fn',fn);
-      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn);
+      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn,false);
       this.mux();
    },
    create:function(){},
    ready:function(){
+      console.log('ready');
       this.base.removeEventListener('DOMNodeInsertedIntoDocument',this.base.retrieve('fn'),false);
       this.base.eliminate('fn');
    }
@@ -1067,7 +1068,7 @@ Data.Abstract=new Class({
       this.base=new Element('div');
       fn=this.ready.bindWithEvent(this);
       this.base.store('fn',fn);
-      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn);
+      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn,false);
       this.create();
    },
    ready:function(){

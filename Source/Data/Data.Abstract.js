@@ -21,7 +21,7 @@ Data.Abstract=new Class({
       this.base=new Element('div');
       fn=this.ready.bindWithEvent(this);
       this.base.store('fn',fn);
-      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn);
+      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn,false);
       this.create();
    },
    ready:function(){

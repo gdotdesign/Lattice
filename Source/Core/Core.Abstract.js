@@ -23,7 +23,7 @@ Core.Abstract=new Class({
       this.create();
       fn=this.ready.bindWithEvent(this);
       this.base.store('fn',fn);
-      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn);
+      this.base.addEventListener('DOMNodeInsertedIntoDocument',fn,false);
       this.mux();
    },
    create:function(){},

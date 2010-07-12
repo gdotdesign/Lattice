@@ -40,7 +40,7 @@
                 this.hours.select(this.hours.list.items[hours])
                 this.minutes.select(this.minutes.list.items[mins-hours*60])
                 this.seconds.select(this.seconds.list.items[seconds-mins*60])
-                if(min==0 && hours==0 && seconds==0){
+                if(mins==0 && hours==0 && seconds==0){
                     this.end=new Date();
                     this.end.setDate(this.end.getDate()+1);
                     this.end.setHours(0);
