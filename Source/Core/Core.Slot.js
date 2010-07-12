@@ -21,6 +21,7 @@ Core.Slot=new Class({
     this.base.adopt(this.list.base,this.overlay);
   },
   check:function(el,e){
+    this.dragging=true;
     var lastDistance=1000;
     var lastOne=null;
     this.list.items.each(function(item,i){
@@ -64,6 +65,7 @@ Core.Slot=new Class({
       this.list.base.setStyle('-webkit-transition-duration','0s');
     }.bindWithEvent(this));
     this.drag.addEvent('complete',function(){
+      this.dragging=false;
       this.update();
       /*if(this.list.base.getPosition(this.base).y>0){
         this.list.base.setStyle('top',0);
@@ -74,9 +76,11 @@ Core.Slot=new Class({
     }.bindWithEvent(this));
   },
   update:function(){
-    this.list.base.setStyle('-webkit-transition-duration','0.3s');
-    if(this.list.selected!=null){
-      this.list.base.setStyle('top',-this.list.selected.base.getPosition(this.list.base).y+this.base.getSize().y/2-this.list.selected.base.getSize().y/2)
+    if(!this.dragging){
+      this.list.base.setStyle('-webkit-transition-duration','0.3s');
+      if(this.list.selected!=null){
+        this.list.base.setStyle('top',-this.list.selected.base.getPosition(this.list.base).y+this.base.getSize().y/2-this.list.selected.base.getSize().y/2)
+      }
     }
   }
 });
