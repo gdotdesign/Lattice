@@ -66,8 +66,9 @@ GDotUI.Theme={
       iconOffset:2
     },
     Icons:{
-      remove:'../Themes/Blank/images/delete.png',
-      handleVertical:'../Themes/Blank/images/control_pause.png',
+      add:'../Themes/Chrome/images/add.png',  
+      remove:'../Themes/Chrome/images/delete.png',
+      handleVertical:'../Themes/Chrome/images/control_pause.png',
       handleHorizontal:''
     },
     Color:{

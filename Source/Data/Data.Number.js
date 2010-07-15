@@ -25,10 +25,14 @@ Data.Number=new Class({
     this.base.addClass(this.options['class']);
     this.text=new Element('input',{'type':'text'});
     this.text.set('value',0).setStyle('width',GDotUI.Theme.Slider.length);
-    this.slider=new Core.Slider({reset:true,range:[-100,100],steps:200,mode:'horizontal'});
+    this.slider=new Core.Slider({reset:true,range:[-100,100],steps:200,mode:'vertical'});
   },
   ready:function(){
-    this.base.adopt(this.text,this.slider.base);
+    this.slider.knob.grab(this.text);
+    this.base.adopt(this.slider.base);
+    this.slider.knob.addEvent('click',function(){
+      this.text.focus(); 
+    }.bindWithEvent(this))
     this.slider.addEvent('complete',function(step){
       this.slider.setRange([step-100,Number(step)+100])
       this.slider.set(step);

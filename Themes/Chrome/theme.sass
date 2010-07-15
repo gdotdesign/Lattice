@@ -21,12 +21,24 @@
     :cursor pointer 
 
 .number
-  :padding 5px
+  :padding 2px
+  :width 55px
+  :position relative
+  :left 14px
   input
-    :margin-bottom 5px
-    :width 150px !important
+    :width 51px !important
+    :font-size 14px
+    +box_shadow(0,1px,5px, rgba(0,0,0,0.5))
   .bar
-    :width 150px !important
+    :width 25px !important
+    +linear_gradient(#85A7EA,#6F95DB)
+    :border none
+    .knob 
+      :position relative
+      :left -13px
+      :width 51px !important
+      :height 18px !important
+      :background none
 .picker
   :background-color rgba(255,255,255,0.8)
   +box_shadow(0,0,15px, rgba(0,0,0,0.5))

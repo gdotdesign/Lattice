@@ -1,0 +1,4 @@
+#!/bin/bash
+/home/gdotdesign/kamicane-packager-fc36b28/packager build G.UI/* > builds/gdotui-$(date +%Y-%m-%d).js
+#java -jar /home/gdotdesign/kamicane-packager-fc36b28/compiler.jar --js builds/gdotui-$(date +%Y-%m-%d).js --js_output_file builds/gdotui-compressed-$(date +%Y-%m-%d).js --compilation_level SIMPLE_OPTIMIZATIONS
+cp builds/gdotui-$(date +%Y-%m-%d).js builds/gdotui-latest.js
