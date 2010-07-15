@@ -47,6 +47,7 @@ Core.Icon: new Class {
     x: 0
     y: 0
     size: {x:0, y:0}
+    spacing: @options.spacing
     switch @options.mode
       when 'grid'
         if @options.columns?
@@ -58,38 +59,35 @@ Core.Icon: new Class {
         icpos: @icons.map (item,i) ->
           if i%columns == 0
             x: 0
-            y: if i==0 then y else y+item.base.getSize().y+@options.spacing.y
+            y: if i==0 then y else y+item.base.getSize().y+spacing.y
           else
-            x: if i==0 then x else x+item.base.getSize().x+@options.spacing.x
+            x: if i==0 then x else x+item.base.getSize().x+spacing.x
           {x:x,y:y}
-          .bind this
       when 'horizontal'
         icpos: @icons.map (item,i) ->
-          x: if i==0 then x+x else x+item.base.getSize().x+@options.spacing.x
-          y: if i==0 then y else y+@options.spacing.y
+          x: if i==0 then x+x else x+item.base.getSize().x+spacing.x
+          y: if i==0 then y else y+spacing.y
           {x:x,y:y}
-          .bind this
       when 'vertical'
         icpos: @icons.map (item,i) ->
-          x: if i==0 then x else x+@options.spacing.x
-          y: if i==0 then y+y else y+item.base.getSize().y+@options.spacing.y
+          x: if i==0 then x else x+spacing.x
+          y: if i==0 then y+y else y+item.base.getSize().y+spacing.y
           {x:x,y:y}
-          .bind this
       when 'circular'
         n: @icons.length
         radius: @options.radius
+        startAngle: @options.startAngle
         ker: 2*@radius*Math.PI
         fok: @options.degree/n
         icpos: @icons.map (item,i) ->
           if i==0
-            foks: @options.startAngle*(Math.PI/180)
+            foks: startAngle*(Math.PI/180)
             x: -Math.round radius*Math.cos(foks)
             y: Math.round radius*Math.sin(foks)
           else
-            x: -Math.round radius*Math.cos(((fok*i)+@options.startAngle)*(Math.PI/180))
-            y: Math.round radius*Math.sin(((fok*i)+@options.startAngle)*(Math.PI/180))
+            x: -Math.round radius*Math.cos(((fok*i)+startAngle)*(Math.PI/180))
+            y: Math.round radius*Math.sin(((fok*i)+startAngle)*(Math.PI/180))
           {x:x,y:y}
-          .bind this
     @icons.each (item,i) ->
       item.base.setStyle 'top', icpos[i].y
       item.base.setStyle 'left', icpos[i].x

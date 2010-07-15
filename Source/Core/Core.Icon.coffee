@@ -31,7 +31,8 @@ Core.Icon: new Class {
     @base.addClass @options.class
     if @options.image?
       @base.setStyle 'background-image', 'url('+@options.image+')'
-    @base.addEvent 'click', (e) ->
+    @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [this, e]
+      ).bindWithEvent this
 }
