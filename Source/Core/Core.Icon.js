@@ -29,7 +29,7 @@ Core.Icon=new Class({
   create:function(){
     this.base.addClass(this.options['class'])
     if(this.options.image!=null)
-    this.base.setStyle('background-image','url('+this.options.image+')');
+      this.base.setStyle('background-image','url('+this.options.image+')');
     this.base.addEvent('click',function(e){
       if(this.enabled)
         this.fireEvent('invoked',this);

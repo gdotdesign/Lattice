@@ -1,30 +1,29 @@
 ###
 ---
 
-name: Core.Abstract
+name: Data.Abstract
 
 description: 
 
 license: MIT-style license.
 
-requires: [Interfaces.Enabled, Interfaces.Controls]
+requires: 
 
-provides: Core.Abstract
+provides: Data.Abstract
 
 ...
 ###
-Core.Abstract: new Class {
+Data.Abstract: new Class {
   Implements:[Events
-              Options
-              Interfaces.Mux]
+              Options]
+  options:{}
   initialize: (options) ->
     @setOptions options
     @base: new Element 'div'
-    @create()
     fn: @ready.bindWithEvent this
     @base.store 'fn', fn
     @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
-    @mux()
+    @create()
     this
   create: ->
   ready: ->
@@ -32,4 +31,6 @@ Core.Abstract: new Class {
     @base.eliminate 'fn'
   toElement: ->
     @base
+  setValue: ->
+  getValue: ->
 }
