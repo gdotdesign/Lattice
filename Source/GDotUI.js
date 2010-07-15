@@ -26,17 +26,7 @@ Class.Mutators.DCollection=function(items){
     });
   });
 };
-Class.Mutators.Delegates = function(delegations) {
-	var self = this;
-	new Hash(delegations).each(function(delegates, target) {
-		$splat(delegates).each(function(delegate) {
-			self.prototype[delegate] = function() {
-				var ret = this[target][delegate].apply(this[target], arguments);
-				return (ret === this[target] ? this : ret);
-			};
-		});
-	});
-};
+
 Interfaces={}
 Core={}
 Data={}

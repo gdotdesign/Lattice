@@ -17,6 +17,8 @@
                                       resizeable:true,
                                       cookieID:'list',
                                       useCookie:false});
+            this.float.content.set('text','hello');
+            this.float.show();
             this.nfloat=new Core.Float({editable:false,
                                       draggable:true,
                                       resizeable:false,
@@ -33,7 +35,7 @@
                                       cookieID:'test',
                                       useCookie:false});
             this.overlay=new Core.Overlay();
-            this.list=new Iterable.List();
+            /*this.list=new Iterable.List();
             for(var i=0;i<7;i++){
                 this.list.addItem(new Iterable.ListItem({title:'List-item'+i}));
             }
@@ -63,13 +65,13 @@
             this.numberInput=new Element('input').inject(document.body);
             //this.pick.attach(this.numberInput);
             /*this.pick1.setContent(this.number1);
-            */
+            
             Pickers.DateSlot.attach(this.numberInput);
             this.numberInput.setStyle('border','1px solid #000');
             
             this.numberInput.addEvent('change',function(value){
               this.setStyle('border',value+'px solid #000');
-            });
+            });*/
             //document.body.grab(this.number.base);
            // GDotUI.init();
 

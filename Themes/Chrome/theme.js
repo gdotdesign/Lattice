@@ -1,9 +1,11 @@
 GDotUI={}
 GDotUI.Theme={
     css:'theme.css',
-    iconClass:'icon',
+    Icon:{
+      'class':'icon'
+    },
     tipClass:'tip',
-    button:{
+    Button:{
       'class':'button',
       width: 200
     },

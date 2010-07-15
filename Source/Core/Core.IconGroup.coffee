@@ -13,7 +13,7 @@ provides: Core.IconGroup
 
 ...
 ###
-Core.Icon: new Class {
+Core.IconGroup: new Class {
   Extends: Core.Abstract
   Implements: Interfaces.Controls
   options:{
@@ -46,7 +46,7 @@ Core.Icon: new Class {
   ready: ->
     x: 0
     y: 0
-    size: {x:0, y:0}
+    @size: {x:0, y:0}
     spacing: @options.spacing
     switch @options.mode
       when 'grid'
@@ -69,10 +69,14 @@ Core.Icon: new Class {
           y: if i==0 then y else y+spacing.y
           {x:x,y:y}
       when 'vertical'
-        icpos: @icons.map (item,i) ->
+        icpos: @icons.map ((item,i) ->
           x: if i==0 then x else x+spacing.x
           y: if i==0 then y+y else y+item.base.getSize().y+spacing.y
+          if item.base.getSize().x > @size.x
+            @size.x: item.base.getSize().x
+            @size.y: y+item.base.getSize().y
           {x:x,y:y}
+          ).bind this
       when 'circular'
         n: @icons.length
         radius: @options.radius
