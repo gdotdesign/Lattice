@@ -39,4 +39,8 @@ sources:
   - "Source/Iterable/Iterable.List.coffee"
   - "Source/Pickers/Pickers.coffee"
   - "Source/Core/Core.Overlay.coffee"
+  - "Source/Forms/Forms.Field.coffee"
+  - "Source/Forms/Forms.Input.coffee"
+  - "Source/Forms/Forms.Fieldset.coffee"
+  - "Source/Forms/Forms.Form.coffee"
   

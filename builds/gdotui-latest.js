@@ -1,4 +1,5 @@
-var Core, Data, GDotUI, Interfaces, Iterable, Pickers, ResetSlider;
+var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider;
+var __hasProp = Object.prototype.hasOwnProperty;
 /*
 ---
 
@@ -19,6 +20,7 @@ Core = {};
 Data = {};
 Iterable = {};
 Pickers = {};
+Forms = {};
 !(typeof GDotUI !== "undefined" && GDotUI !== null) ? (GDotUI = {}) : null;
 GDotUI.Config = {
   tipZindex: 100,
@@ -1081,7 +1083,7 @@ description:
 
 license: MIT-style license.
 
-requires: [Data.Abstrac, Core.Slider]
+requires: [Data.Abstract, Core.Slider]
 
 provides: Data.Number
 
@@ -1881,6 +1883,266 @@ Core.Overlay = new Class({
     return this.base.setStyles({
       'visiblity': 'visible',
       'opacity': 1
+    });
+  }
+});
+/*
+---
+
+name: Forms.Input
+
+description:
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Forms.Input
+
+...
+*/
+Forms.Input = new Class({
+  Extends: Core.Abstract,
+  options: {
+    structure: GDotUI.Theme.Forms.Field.struct,
+    type: 'checkbox'
+  },
+  initialize: function(options) {
+    this.parent(options);
+    return this;
+  },
+  create: function() {
+    var _a;
+    delete this.base;
+    (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'checkbox' || this.options.type === 'button') ? (this.base = new Element('input', {
+      type: this.options.type,
+      name: this.options.name
+    })) : null;
+    this.options.type === "textarea" ? (this.base = new Element('textarea', {
+      name: this.options.name
+    })) : null;
+    if (this.options.type === "select") {
+      this.base = new Element('select', {
+        name: this.options.name
+      });
+      this.options.options.each((function(item) {
+        return this.base.grab(new Element('option', {
+          value: item.value,
+          text: item.label
+        }));
+      }).bind(this));
+    }
+    if (this.options.type === "radio") {
+      this.base = document.createDocumentFragment();
+      this.options.texts.each((function(it, i) {
+        var input, label;
+        label = new Element('label', {
+          'text': it
+        });
+        input = new Element('input', {
+          type: 'radio',
+          name: item.name,
+          'value': item.values[i]
+        });
+        return this.base.appendChild(input, label);
+      }).bind(this));
+    }
+    (typeof (_a = this.options.validate) !== "undefined" && _a !== null) ? $splat(this.options.validate).each((function(val) {
+      return this.base.addClass(val);
+    }).bind(this)) : null;
+    return this.base;
+  }
+});
+/*
+---
+
+name: Forms.Field
+
+description:
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Forms.Input]
+
+provides: Forms.Field
+
+...
+*/
+Forms.Field = new Class({
+  Extends: Core.Abstract,
+  options: {
+    structure: GDotUI.Theme.Forms.Field.struct,
+    label: 'hello'
+  },
+  initialize: function(options) {
+    this.parent(options);
+    return this;
+  },
+  create: function() {
+    var _a, h, key;
+    h = new Hash(this.options.structure);
+    _a = h;
+    for (key in _a) { if (__hasProp.call(_a, key)) {
+      this.base = new Element(key);
+      this.createS(h.get(key), this.base);
+      break;
+    }}
+    return this.options.hidden ? this.base.setStyle('display', 'none') : null;
+  },
+  createS: function(item, parent) {
+    var _a, _b, _c, data, el, key;
+    if (!(typeof parent !== "undefined" && parent !== null)) {
+      return null;
+    }
+    if ((_a = $type(item)) === "object") {
+      _b = []; _c = item;
+      for (key in _c) { if (__hasProp.call(_c, key)) {
+        _b.push((function() {
+          data = new Hash(item).get(key);
+          if (key === 'input') {
+            this.input = new Forms.Input(this.options);
+            el = this.input;
+          } else if (key === 'label') {
+            this.label = new Element('label', {
+              'text': this.options.label
+            });
+            el = this.label;
+          } else {
+            el = new Element(key);
+          }
+          parent.grab(el);
+          return this.createS(data, el);
+        }).call(this));
+      }}
+      return _b;
+    }
+  }
+});
+/*
+---
+
+name: Forms.Fieldset
+
+description:
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Forms.Field]
+
+provides: Forms.Fieldset
+
+...
+*/
+Forms.Fieldset = new Class({
+  Extends: Core.Abstract,
+  options: {
+    name: '',
+    inputs: []
+  },
+  initialize: function(options) {
+    this.parent(options);
+    return this;
+  },
+  create: function() {
+    delete this.base;
+    this.base = new Element('fieldset');
+    this.legend = new Element('legend', {
+      text: this.options.name
+    });
+    this.base.grab(this.legend);
+    return this.options.inputs.each((function(item) {
+      return this.base.grab(new Forms.Field(item));
+    }).bindWithEvent(this));
+  }
+});
+/*
+---
+
+name: Forms.Form
+
+description:
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Forms.Fieldset]
+
+provides: Forms.Form
+
+...
+*/
+Forms.Form = new Class({
+  Extends: Core.Abstract,
+  Binds: ['success', 'faliure'],
+  options: {
+    data: {}
+  },
+  initialize: function(options) {
+    this.fieldsets = [];
+    this.parent(options);
+    return this;
+  },
+  create: function() {
+    var _a;
+    delete this.base;
+    this.base = new Element('form');
+    (typeof (_a = this.options.data) !== "undefined" && _a !== null) ? this.options.data.each((function(fs) {
+      return this.addFieldset(new Forms.Fieldset(fs));
+    }).bind(this)) : null;
+    this.extra = this.options.extra;
+    this.useRequest = this.options.useRequest;
+    if (this.useRequest) {
+      this.request = new Request.JSON({
+        url: this.options.action,
+        resetForm: false,
+        method: this.options.method
+      });
+      this.request.addEvent('success', this.success);
+      this.request.addEvent('faliure', this.faliure);
+    } else {
+      this.base.set('action', this.options.action);
+      this.base.set('method', this.options.method);
+    }
+    this.submit = new Element('input', {
+      type: 'button',
+      value: this.options.submit
+    });
+    this.base.grab(this.submit);
+    this.validator = new Form.Validator(this.base, {
+      serial: false
+    });
+    this.validator.start();
+    return this.submit.addEvent('click', (function() {
+      return this.validator.validate() ? this.useRequest ? this.send() : this.fireEvent('passed', this.geatherdata()) : this.fireEvent('failed', {
+        message: 'Validation failed'
+      });
+    }).bindWithEvent(this));
+  },
+  addFieldset: function(fieldset) {
+    if (this.fieldsets.indexOf(fieldset) === -1) {
+      this.fieldsets.push(fieldset);
+      return this.base.grab(fieldset);
+    }
+  },
+  geatherdata: function() {
+    var data;
+    data = {};
+    this.base.getElements('select, input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each(function(item) {
+      data[item.get('name')] = item.get('type') === "checkbox" ? true : item.get('value');
+      return data[item.get('name')];
+    });
+    return data;
+  },
+  send: function() {
+    return this.request.send({
+      data: $extend(this.geatherdata(), this.extra)
+    });
+  },
+  success: function(data) {
+    return this.fireEvent('success', data);
+  },
+  faliure: function() {
+    return this.fireEvent('failed', {
+      message: 'Request error!'
     });
   }
 });

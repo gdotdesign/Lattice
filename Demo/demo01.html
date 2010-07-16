@@ -11,14 +11,107 @@
     <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
     <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
     <script>
+        Forms.Settings={
+            action:'test.php',
+            method:'POST',
+            title:'Login',
+            submit:'Save',
+            useRequest:true,
+            createSubmit:true,
+            data:[
+            {
+              name:'Account Details',
+              inputs:[
+              {
+                name:'email',
+                type:'text',
+                label:'E-mail',
+                validate:['validate-email','required']
+              },
+              {
+                name:'pass',
+                type:'password',
+                label:'New Password',
+                validate: 'required'
+              },
+              {
+                name:'passre',
+                type:'password',
+                label:'Confirm new password'
+              }
+              ]
+            },
+            {
+              name:"Editor",
+              inputs:[
+              {
+                name:'style',
+                type:'select',
+                label:'Skin',
+                options:[]
+              }
+              ]
+            },
+            {
+              name:'Web Storage',
+              inputs:[
+              {
+                name:'provider',
+                type:'select',
+                label:'Provider',
+                options:[
+                {
+                  label:'',
+                  value:''
+                },
+                {
+                  label:'Dropbox',
+                  value:'dropbox'
+                },
+                {
+                  label:'FTP',
+                  value:'ftp'
+                }
+                ]
+              },
+              {
+                name:"host",
+                type:'text',
+                label:'Host',
+                hidden:false    
+              },
+              {
+                name:'wsuser',
+                type:'text',
+                label:'Username',
+                hidden:false
+              },
+              {
+                name:'wspass',
+                type:'password',
+                label:'Password',
+                hidden:false
+              },
+              {
+                name:"passive",
+                type:'checkbox',
+                label:'Use passive connection',
+                hidden:false
+              }
+              ]
+            }
+            ]
+        }
         window.addEvent('domready',function(){
+            var a=new Forms.Form(Forms.Settings);
+            document.body.grab(a);
            // GDotUI.loadTheme('../Themes/Blank/theme.js');
             this.float=new Core.Float({editable:false,
                                       draggable:true,
                                       resizeable:true,
                                       cookieID:'list',
                                       useCookie:false});
-            this.nfloat=new Core.Float({editable:false,
+            /*this.nfloat=new Core.Float({editable:false,
                                       draggable:true,
                                       resizeable:false,
                                       cookieID:'text',
@@ -39,8 +132,8 @@
             for(var i=0;i<7;i++){
                 this.list.addItem(new Iterable.ListItem({title:'List-item'+i}));
             }
-            //console.log(Data);*/
-            this.color=new Data.Date();
+            //console.log(Data);
+           
             this.color1=new Data.DateTime();
             this.number=new Data.Number();
             this.number1=new Data.Number();
@@ -48,11 +141,11 @@
             this.nfloat.show();
             this.text=new Data.Text();
             this.tfloat.setContent(this.text);
-            this.tfloat.show();
-            
+            this.tfloat.show();*/
+             this.color=new Data.Date();
             this.float.setContent(this.color);
             this.float.show();
-            this.lfloat.setContent(this.list);
+            /*this.lfloat.setContent(this.list);
             this.lfloat.show();
             //this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
             //this.list.base.inject(document.body);
@@ -75,7 +168,7 @@
             });
             //document.body.grab(this.number.base);
            // GDotUI.init();
-
+            */
   
         })
     </script>

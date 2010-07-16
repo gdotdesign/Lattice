@@ -7,7 +7,7 @@ description:
 
 license: MIT-style license.
 
-requires: [Data.Abstrac, Core.Slider]
+requires: [Data.Abstract, Core.Slider]
 
 provides: Data.Number
 

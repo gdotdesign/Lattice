@@ -18,6 +18,7 @@ Core: {}
 Data: {}
 Iterable: {}
 Pickers: {}
+Forms: {}
 
 if !GDotUI?
   GDotUI: {}
@@ -981,7 +982,7 @@ description:
 
 license: MIT-style license.
 
-requires: [Data.Abstrac, Core.Slider]
+requires: [Data.Abstract, Core.Slider]
 
 provides: Data.Number
 
@@ -1676,4 +1677,213 @@ Core.Overlay: new Class {
       'visiblity': 'visible'
       'opacity': 1
     }
+}
+
+###
+---
+
+name: Forms.Input
+
+description: 
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Forms.Input
+
+...
+###
+Forms.Input: new Class {
+  Extends:Core.Abstract
+  options:{
+    structure: GDotUI.Theme.Forms.Field.struct
+    type: 'checkbox'
+  }
+  initialize: (options) ->
+    @parent options
+    this
+  create: () ->
+    delete @base  
+    if (@options.type=='text' || @options.type=='password' || @options.type=='checkbox' || @options.type=='button')
+      @base: new Element 'input', { type:@options.type, name:@options.name}
+    if @options.type == "textarea"
+      @base: new Element 'textarea', {name:@options.name}
+    if @options.type == "select"
+      @base: new Element 'select', {name:@options.name}
+      @options.options.each ( (item) ->
+        @base.grab new Element('option', {value:item.value,text:item.label})
+      ).bind this
+    if @options.type =="radio"
+      @base: document.createDocumentFragment()
+      @options.texts.each ( (it,i) ->
+        label: new Element 'label', {'text':it}
+        input: new Element 'input', {type:'radio',name:item.name,'value':item.values[i]}
+        @base.appendChild input, label
+        ).bind this
+    if @options.validate?
+      $splat(@options.validate).each ( (val) ->
+        @base.addClass val
+      ).bind this
+    @base
+}
+
+###
+---
+
+name: Forms.Field
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Forms.Input]
+
+provides: Forms.Field
+
+...
+###
+Forms.Field: new Class {
+  Extends:Core.Abstract
+  options:{
+    structure: GDotUI.Theme.Forms.Field.struct
+    label: 'hello'
+  }
+  initialize: (options) ->
+    @parent options
+    this
+  create: ->
+    h: new Hash @options.structure
+    for key of h
+      @base: new Element key
+      @createS h.get( key ), @base
+      break
+    if @options.hidden
+      @base.setStyle 'display', 'none'
+  createS: (item,parent) ->
+    if not parent?
+      return null
+    switch $type(item)
+      when "object"
+        for key of item
+          data: new Hash(item).get key
+          if key == 'input'
+            @input: new Forms.Input @options  ## @createinput
+            el: @input
+          else if key == 'label'
+            @label: new Element 'label', {'text':@options.label}
+            el: @label
+          else
+            el: new Element key 
+          parent.grab el
+          @createS data , el
+          
+}
+
+###
+---
+
+name: Forms.Fieldset
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Forms.Field]
+
+provides: Forms.Fieldset
+
+...
+###
+Forms.Fieldset: new Class {
+  Extends:Core.Abstract
+  options:{
+    name:''
+    inputs:[]
+  }
+  initialize: (options) ->
+    @parent options
+    this
+  create: () ->
+    delete @base
+    @base: new Element 'fieldset'
+    @legend: new Element 'legend', {text:@options.name}
+    @base.grab(@legend)
+    @options.inputs.each( ( (item) ->
+      @base.grab new Forms.Field(item)
+    ).bindWithEvent this )
+}
+
+###
+---
+
+name: Forms.Form
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Forms.Fieldset]
+
+provides: Forms.Form
+
+...
+###
+Forms.Form: new Class {
+  Extends:Core.Abstract
+  Binds:['success', 'faliure']
+  options:{
+    data: {}
+  }
+  initialize: (options) ->
+    @fieldsets: []
+    @parent options
+    this
+  create: ->
+    delete @base
+    @base: new Element 'form'
+    if @options.data?
+      @options.data.each( ( (fs) ->
+        @addFieldset(new Forms.Fieldset(fs))
+      ).bind this )
+    @extra=@options.extra;
+    @useRequest=@options.useRequest;
+    if @useRequest
+      @request: new Request.JSON {url:@options.action, resetForm:false, method: @options.method }
+      @request.addEvent 'success', @success
+      @request.addEvent 'faliure', @faliure
+    else
+      @base.set 'action', @options.action
+      @base.set 'method', @options.method
+      
+    @submit: new Element 'input', {type:'button', value:@options.submit}
+    @base.grab @submit
+    # Set up and start the validatior
+    @validator: new Form.Validator @base, {serial:false}
+    @validator.start();
+    # Handle validation and fire events accordingly
+    @submit.addEvent 'click', ( ->
+      if @validator.validate()
+        if @useRequest
+          @send()
+        else
+          @fireEvent 'passed', @geatherdata()
+      else
+        @fireEvent 'failed', {message:'Validation failed'}
+    ).bindWithEvent this
+  addFieldset: (fieldset)->
+    if @fieldsets.indexOf(fieldset) == -1
+      @fieldsets.push fieldset
+      @base.grab fieldset
+  geatherdata: ->
+    data: {}
+    @base.getElements('select, input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each (item) ->
+      data[item.get('name')]: if item.get('type')=="checkbox" then true else item.get('value')
+    data
+  send: ->
+    @request.send {data: $extend(@geatherdata(), this.extra)}
+  success: (data) ->
+    @fireEvent 'success', data
+  faliure: ->
+    @fireEvent 'failed', {message:'Request error!'}
 }

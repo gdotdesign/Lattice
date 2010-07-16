@@ -18,6 +18,7 @@ Core: {}
 Data: {}
 Iterable: {}
 Pickers: {}
+Forms: {}
 
 if !GDotUI?
   GDotUI: {}

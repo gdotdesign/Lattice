@@ -1,5 +1,19 @@
 GDotUI={}
 GDotUI.Theme={
+    Forms:{
+        Field:{
+            struct:{
+                "dl":{
+                    "dt":{
+                        "label":''
+                    },
+                    "dd":{
+                        "input":''
+                    }
+                }
+            }
+        }
+    },
     css:'theme.css',
     Icon:{
       'class':'icon'
