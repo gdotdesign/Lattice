@@ -57,7 +57,7 @@ Core.Float: new Class {
 			@scrolling: on
 		).bindWithEvent this
 		
-		@slider.hide();
+		@slider.hide()
 		
 		@icons: new Core.IconGroup GDotUI.Theme.Float.iconOptions
 		@icons.base.setStyle 'position','absolute'
@@ -70,8 +70,8 @@ Core.Float: new Class {
 
 		@edit: new Core.Icon {'class':GDotUI.Theme.Float.editClass}
 		@edit.addEvent 'invoked', ( ->
-			if not @contentElement?
-				if not @contentElement.toggleEdit?
+			if @contentElement?
+				if @contentElement.toggleEdit?
 					@contentElement.toggleEdit()
 				@fireEvent('edit')
 		).bindWithEvent this
@@ -81,7 +81,7 @@ Core.Float: new Class {
 		if @options.editable
 			@icons.addIcon @edit
 		
-		@icons.hide
+		@icons.hide()
 		
 		if $chk @options.scrollBase
 			@scrollBase: @options.scrollBase

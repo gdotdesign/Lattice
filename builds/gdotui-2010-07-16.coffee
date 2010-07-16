@@ -459,25 +459,17 @@ ResetSlider: new Class {
 	initialize: (element, knob, options) ->
 		@parent(element, knob, options)
 	setRange: (range) ->
-		@min = $chk(range[0]) ? range[0] : 0;
-		@max = $chk(range[1]) ? range[1] : @.steps;
+		@min = if  $chk(range[0]) then range[0] else 0
+		@max = if $chk(range[1]) then range[1] else @options.steps;
 		@range = @max - @min;
 		@steps = @options.steps || @full;
 		@stepSize = Math.abs(@range) / @steps;
 		@stepWidth = @stepSize * @full / Math.abs(@range) ;
 }
-Class.Mutators.Delegates: (delegations) ->
-	self = this;
-	(new Hash delegations).each (delegates, target) ->
-		($splat delegates).each (delegate) ->
-			self.prototype[delegate]: ->
-				ret: @[target][delegate].apply @[target], arguments
-				if ret == @[target] then this else ret
-
 Core.Slider: new Class {
 	Extends:Core.Abstract
 	Implements:[Interfaces.Controls]
-	Delegates:{ slider:[
+	Delegates:{ 'slider':[
 		'set'
 		'setRange'
 	]}
@@ -575,7 +567,6 @@ Core.Float: new Class {
 		@icons.base.setStyle 'top', 0
 		@slider.base.setStyle 'right', -(@slider.base.getSize().x)-6
 		@slider.base.setStyle 'top', @icons.size.y
-		console.log(@icons.size.y)
 		@parent()
 	create: ->
 		@base.addClass @options.class
@@ -597,7 +588,7 @@ Core.Float: new Class {
 			@scrolling: on
 		).bindWithEvent this
 		
-		@slider.hide();
+		@slider.hide()
 		
 		@icons: new Core.IconGroup GDotUI.Theme.Float.iconOptions
 		@icons.base.setStyle 'position','absolute'
@@ -621,7 +612,7 @@ Core.Float: new Class {
 		if @options.editable
 			@icons.addIcon @edit
 		
-		@icons.hide
+		@icons.hide()
 		
 		if $chk @options.scrollBase
 			@scrollBase: @options.scrollBase
@@ -817,7 +808,7 @@ Core.Picker: new Class {
       @attachedTo.removeClass 'picking'
       @base.dispose()
   setContent: (element) ->
-    @contentElement element
+    @contentElement: element
 }
 
 ###
@@ -849,6 +840,7 @@ Core.Slot: new Class {
   }
   initilaize: (options) ->
     @parent options
+    this
   create: ->
     @base.addClass @options.class
     @overlay: new Element 'div', {'text':' '}
@@ -946,11 +938,285 @@ Data.Abstract: new Class {
 }
 
 
+###
+---
 
+name: Data.Text
 
+description: 
 
+license: MIT-style license.
 
+requires: Data.Abstract
 
+provides: Data.Text
+
+...
+###
+Data.Text: new Class {
+  Implements:Events
+  initialize: ->
+    @base: new Element 'div' 
+    @text: new Element 'textarea'
+    @base.grab @text
+    @addEvent 'show', ( ->
+      @text.focus()
+      ).bindWithEvent this
+    @text.addEvent 'keyup',( (e) ->
+      @fireEvent 'change', @text.get('value')
+    ).bindWithEvent this
+    this
+  setValue: (text) ->
+    @text.set('value',text);
+  toElement: ->
+    @base
+}
+
+###
+---
+
+name: Data.Number
+
+description: 
+
+license: MIT-style license.
+
+requires: [Data.Abstrac, Core.Slider]
+
+provides: Data.Number
+
+...
+###
+Data.Number: new Class {
+  Extends:Data.Abstract
+  options:{
+    class: GDotUI.Theme.Number.class
+  }
+  initialize: (options) ->
+    @parent options
+    this
+  create: ->
+    @base.addClass @options.class
+    @text: new Element 'input', {'type':'text'}
+    @text.set('value',0).setStyle 'width',GDotUI.Theme.Slider.length
+    @slider: new Core.Slider {reset: on
+                              range:[-100,100]
+                              steps:200
+                              mode:'vertical'}
+  ready: ->
+    @slider.knob.grab @text
+    @base.adopt @slider
+    @slider.knob.addEvent 'click', ( ->
+      @text.focus()
+    ).bindWithEvent this
+    @slider.addEvent 'complete', ( (step) ->
+      @slider.setRange [step-100, Number(step)+100]
+      @slider.set step
+      ).bindWithEvent this
+    @slider.addEvent 'change', ( (step) ->
+      if typeof(step) == 'object'
+        @text.set 'value', 0
+      else
+        @text.set 'value', step
+      @fireEvent 'change', step
+      ).bindWithEvent this
+    @text.addEvent 'change', ( ->
+      step: Number @text.get('value')
+      @slider.setRange [step-100,Number(step)+100]
+      @slider.set step
+    ).bindWithEvent this
+    @text.addEvent 'mousewheel', ( (e) ->
+      @slider.set Number(@text.get('value'))+e.wheel
+    ).bindWithEvent this
+    @parent()
+  setValue: (step) ->
+    @slider.setRange [step-100,Number(step)+100]
+    @slider.set step
+}
+
+###
+---
+
+name: Data.Color
+
+description: 
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Color
+
+...
+###
+Data.Color: new Class {
+  Extends:Data.Abstract
+  Binds: ['change']
+  options:{
+    class: GDotUI.Theme.Color.class
+    sb: GDotUI.Theme.Color.sb
+    hue: GDotUI.Theme.Color.hue 
+    wrapper: GDotUI.Theme.Color.wrapper
+    white: GDotUI.Theme.Color.white
+    black: GDotUI.Theme.Color.black
+    format: GDotUI.Theme.Color.format
+  }
+  initialize: (options) ->
+    @parent(options)
+    this
+  create: ->
+    @base.addClass @options.class
+    # SB Start
+    @wrapper: new Element('div').addClass @options.wrapper
+    @white: new Element('div').addClass @options.white
+    @black: new Element('div').addClass @options.black
+    @color: new Element('div').addClass @options.sb
+   
+    @xyKnob=new Element('div').set 'id', 'xyknob'
+    @xyKnob.setStyles {
+      'position':'absolute'
+      'top':0
+      'left':0
+      }
+    
+    @wrapper.adopt @color, @white, @black, @xyKnob
+    # SB END 
+    # Hue Start 
+    @color_linear: new Element('div').addClass @options.hue
+    @colorKnob: new Element 'div', {'id':'knob'}
+    @color_linear.grab @colorKnob
+    # Hue End 
+    
+   
+    @colorData=new Data.Color.Controls()
+    @base.adopt @wrapper, @color_linear, @colorData.base
+  ready: ->
+    sbSize: @color.getSize()
+    @wrapper.setStyles {
+      width: sbSize.x
+      height: sbSize.y
+      'position': 'relative'
+      'float': 'left'
+      }
+    $$(@white,@black,@color).setStyles {
+      'position': 'absolute'
+      'top': 0
+      'left': 0
+      'width': 'inherit'
+      'height': 'inherit'
+      }
+    @color_linear.setStyles {
+      height: sbSize.y 
+      width: sbSize.x/11.25 
+      'float': 'left'
+    }
+    @colorKnob.setStyles {
+      height: (sbSize.y/11.25+8)/2.8
+      width: sbSize.x/11.25+8
+    }
+    @colorKnob.setStyle 'left', (@color_linear.getSize().x-@colorKnob.getSize().x)/2
+    @xy: new Field @.black, @.xyKnob, {setOnClick:true, x:[0,1,100],y:[0,1,100]}
+    @slide: new Slider @color_linear, @colorKnob, {mode:'vertical',steps:360}
+    @slide.addEvent 'change',( (step) ->
+      if typeof(step) == "object"
+        step: 0
+      @bgColor: @bgColor.setHue step
+      colr: new $HSB @bgColor.hsb[0], 100, 100
+      @color.setStyle 'background-color', colr
+      @setColor()
+    ).bindWithEvent this
+    @xy.addEvent 'tick', @change
+    @xy.addEvent 'change', @change
+    @setValue( if @value then @value else '#fff' )
+  setValue: (hex) -> 
+    @bgColor: new Color hex
+    @slide.set @bgColor.hsb[0]
+    @xy.set {x:@bgColor.hsb[1]
+             y:100-@bgColor.hsb[2]
+             }
+    @saturation: @bgColor.hsb[1]
+    @brightness: (100-@bgColor.hsb[2])
+    @hue: @bgColor.hsb[0]
+    @setColor()
+  setColor: ->
+    @finalColor: @bgColor.setSaturation(@saturation).setBrightness (100-@brightness)
+    @colorData.setValue @finalColor
+    ret: ''
+    switch @options.format
+      when "hsl"
+        ret: @colorData.hsb.input.get 'value'
+      when "rgb"
+        ret: @colorData.rgb.input.get 'value'
+      else
+        ret: @colorData.hex.input.get 'value'
+    @fireEvent 'change', [ret]
+    @value: @finalColor
+  change: (pos) ->
+    @saturation: pos.x
+    @brightness: pos.y
+    @setColor()
+}
+Data.Color.Controls: new Class {
+    Extends:Data.Abstract
+    options:{
+        class: GDotUI.Theme.Color.controls.class
+        format: GDotUI.Theme.Color.controls.format
+        colorBox: GDotUI.Theme.Color.controls.colorBox
+    }
+    initialize: (options) ->
+        @parent(options)
+        this
+    create: ->
+        @base.addClass @options.class
+        
+        @left: new Element('div').setStyles {'float': 'left'}
+        @red: new Data.Color.Controls.Field 'R'
+        @green: new Data.Color.Controls.Field 'G'
+        @blue: new Data.Color.Controls.Field 'B'
+        @left.adopt @red, @green, @blue
+        
+        @right: new Element 'div'
+        @right.setStyles {'float':'left'}
+        @hue: new Data.Color.Controls.Field 'H'
+        @saturation: new Data.Color.Controls.Field 'S'
+        @brightness: new Data.Color.Controls.Field 'B'
+        @right.adopt @hue, @saturation, @brightness
+        
+        @color: new Element('div').setStyles({'float':'left'}).addClass @options.colorBox
+        
+        @format: new Element('div').setStyles({'float':'left'}).addClass @options.format
+        @hex: new Data.Color.Controls.Field 'Hex'
+        @rgb: new Data.Color.Controls.Field 'RGB'
+        @hsb: new Data.Color.Controls.Field 'HSL'
+        @format.adopt @hex, @rgb, @hsb
+        
+        @base.adopt @left, @right, @color, new Element('div').setStyle('clear','both'), @format
+    setValue: (color) ->
+        @color.setStyle 'background-color', color
+        @red.input.set 'value', color.rgb[0]
+        @green.input.set 'value', color.rgb[1]
+        @blue.input.set 'value', color.rgb[2]
+        @rgb.input.set 'value', "rgb("+(color.rgb[0])+", "+(color.rgb[1])+", "+(color.rgb[2])+")"
+        @hue.input.set 'value', color.hsb[0]
+        @saturation.input.set 'value', color.hsb[1]
+        @brightness.input.set 'value', color.hsb[2]
+        @hsb.input.set 'value', "hsl("+(color.hsb[0])+", "+(color.hsb[1])+"%, "+(color.hsb[2])+"%)"
+        @hex.input.set 'value', "#"+color.hex.slice(1,7)
+}
+# to be replaced by Form.Field
+Data.Color.Controls.Field: new Class {
+  initialize: (label) ->
+    @base: new Element 'dl'
+    @input: new Element 'input', {type:'text'
+                                  readonly:true}
+    @label: new Element 'label', {text:label+": "}
+    @dt: new Element('dt').grab @label
+    @dd: new Element('dd').grab @input
+    @base.adopt @dt,@dd
+    this
+  toElement: ->
+    @base
+}
 
 ###
 ---
@@ -1042,7 +1308,118 @@ Data.Date: new Class {
     @years.select @years.list.getItemFromTitle(@date.getFullYear())
 }
 
+###
+---
 
+name: Data.Time
+
+description: 
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Time
+
+...
+###
+Data.Time: new Class {
+  Extends:Data.Abstract
+  options:{
+    class: GDotUI.Theme.Date.Time.class
+    format: GDotUI.Theme.Date.Time.format
+  }
+  initilaize: (options) ->
+    @parent options
+    this
+  create: ->
+    @base.addClass @options.class
+    @hourList: new Core.Slot()
+    @minuteList: new Core.Slot()
+    @hourList.addEvent 'change', ( (item) ->
+      @time.setHours item.value
+      @setValue()
+    ).bindWithEvent this
+    @minuteList.addEvent 'change', ( (item) ->
+      @time.setMinutes item.value
+      @setValue()
+    ).bindWithEvent this
+    i: 0
+    while i<24
+      item: new Iterable.ListItem {title:i}
+      item.value: i
+      @hourList.addItem item
+      i++;
+    i: 0
+    while i<60
+      item: new Iterable.ListItem {title: if i<10 then '0'+i else i}
+      item.value: i
+      @minuteList.addItem item
+      i++
+  setValue: (date) ->
+    if date?
+      @time: date
+    @hourList.select @hourList.list.items[@time.getHours()]
+    @minuteList.select @minuteList.list.items[@time.getMinutes()]
+    @fireEvent 'change', @time.format(@options.format)
+  ready: ->
+    @base.adopt @hourList, @minuteList
+    $$(@hourList.base,@minuteList.base).setStyles {'float':'left'}
+    @base.setStyle 'height', @hourList.base.getSize().y
+    @setValue new Date()
+    @parent()
+}
+
+###
+---
+
+name: Data.DateTime
+
+description: 
+
+license: MIT-style license.
+
+requires: [Data.Abstract, Data.Date, Data.Time]
+
+provides: Data.DateTime
+
+...
+###
+Data.DateTime: new Class {
+  Extends:Data.Abstract
+  options:{
+    class: GDotUI.Theme.Date.DateTime.class
+    format: GDotUI.Theme.Date.DateTime.format
+  }
+  initialize: (options) ->
+    @parent options
+    this
+  create: ->
+    @base.addClass @options.class
+    @datea: new Data.Date()
+    @time: new Data.Time()
+  ready: ->
+    @base.adopt @datea, @time
+    @setValue new Date()
+    @datea.addEvent 'change',( ->
+      @date.setYear @datea.date.getFullYear()
+      @date.setMonth @datea.date.getMonth()
+      @date.setDate @datea.date.getDate()
+      @fireEvent 'change', @date.format(@options.format)
+    ).bindWithEvent this
+    @time.addEvent 'change',( ->
+      @date.setHours @time.time.getHours()
+      @date.setMinutes @time.time.getMinutes()
+      @fireEvent 'change', @date.format(@options.format)
+    ).bindWithEvent this
+    @parent()
+  setValue: (date) ->
+    if date?
+      @date: date
+    @datea.setValue @date
+    @time.setValue @date
+    @fireEvent 'change', @date.format(@options.format)
+}
 
 ###
 ---
@@ -1141,6 +1518,7 @@ Iterable.List: new Class {
   }
   initialize: (options) ->
     @parent options
+    this
   create: ->
     @base.addClass @options.class
     @sortable: new Sortables null, {handle:'.list-handle'}
@@ -1215,7 +1593,43 @@ update:function(){
 },
 ###
 
+###
+---
 
+name: Pickers
+
+description: 
+
+license: MIT-style license.
+
+requires: [Core.Picker, Data.Color]
+
+provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text]
+
+...
+###
+Pickers.Base: new Class {
+  Implements:Options
+  Delegates:{
+    picker:['attach'
+            'detach']
+  }
+  options:{
+    type:''
+  }
+  initialize: (options) ->
+    @setOptions options
+    @picker: new Core.Picker()
+    @data: new Data[@options.type]()
+    @picker.setContent @data
+    this
+}
+Pickers.Color: new Pickers.Base {type:'Color'}
+Pickers.Number: new Pickers.Base {type:'Number'}
+Pickers.Time: new Pickers.Base {type:'Time'}
+Pickers.Text: new Pickers.Base {type:'Text'}
+Pickers.Date: new Pickers.Base {type:'Date'}
+Pickers.DateTime: new Pickers.Base {type:'DateTime'}
 
 ###
 ---

@@ -86,5 +86,5 @@ Core.Picker: new Class {
       @attachedTo.removeClass 'picking'
       @base.dispose()
   setContent: (element) ->
-    @contentElement element
+    @contentElement: element
 }

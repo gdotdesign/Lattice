@@ -5,6 +5,7 @@
     <title>GDotUI.Demo</title>
     <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
     <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
+    <script type="text/javascript" src="../mootools/Field.js"></script>
     <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
     <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
@@ -17,8 +18,6 @@
                                       resizeable:true,
                                       cookieID:'list',
                                       useCookie:false});
-            this.float.content.set('text','hello');
-            this.float.show();
             this.nfloat=new Core.Float({editable:false,
                                       draggable:true,
                                       resizeable:false,
@@ -35,12 +34,13 @@
                                       cookieID:'test',
                                       useCookie:false});
             this.overlay=new Core.Overlay();
-            /*this.list=new Iterable.List();
+            
+            this.list=new Iterable.List();
             for(var i=0;i<7;i++){
                 this.list.addItem(new Iterable.ListItem({title:'List-item'+i}));
             }
-            //console.log(Data);
-            this.color=new Data.DateSlot();
+            //console.log(Data);*/
+            this.color=new Data.Date();
             this.color1=new Data.DateTime();
             this.number=new Data.Number();
             this.number1=new Data.Number();
@@ -49,29 +49,30 @@
             this.text=new Data.Text();
             this.tfloat.setContent(this.text);
             this.tfloat.show();
-            this.float.setContent(this.color1);
+            
+            this.float.setContent(this.color);
             this.float.show();
             this.lfloat.setContent(this.list);
             this.lfloat.show();
-            this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
+            //this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
             //this.list.base.inject(document.body);
             //this.text.deploy(document.body);
             //this.pick=new Core.Picker();
             //this.pick.setContent(this.list);
             //this.colorInput=new Element('input').inject(document.body);
             Pickers.Color.attach($('color'));
-            new Element('br').inject(document.body);
+            //new Element('br').inject(document.body);
             //this.pick1=new Core.Picker();
             this.numberInput=new Element('input').inject(document.body);
             //this.pick.attach(this.numberInput);
-            /*this.pick1.setContent(this.number1);
+            //this.pick1.setContent(this.number1);
             
-            Pickers.DateSlot.attach(this.numberInput);
+            Pickers.Date.attach(this.numberInput);
             this.numberInput.setStyle('border','1px solid #000');
             
             this.numberInput.addEvent('change',function(value){
               this.setStyle('border',value+'px solid #000');
-            });*/
+            });
             //document.body.grab(this.number.base);
            // GDotUI.init();
 

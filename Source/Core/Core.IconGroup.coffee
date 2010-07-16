@@ -72,9 +72,8 @@ Core.IconGroup: new Class {
         icpos: @icons.map ((item,i) ->
           x: if i==0 then x else x+spacing.x
           y: if i==0 then y+y else y+item.base.getSize().y+spacing.y
-          if item.base.getSize().x > @size.x
-            @size.x: item.base.getSize().x
-            @size.y: y+item.base.getSize().y
+          @size.x: item.base.getSize().x
+          @size.y: y+item.base.getSize().y
           {x:x,y:y}
           ).bind this
       when 'circular'

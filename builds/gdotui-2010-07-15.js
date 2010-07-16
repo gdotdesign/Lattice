@@ -370,10 +370,8 @@ Core.IconGroup = new Class({
       icpos = this.icons.map((function(item, i) {
         x = i === 0 ? x : x + spacing.x;
         y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
-        if (item.base.getSize().x > this.size.x) {
-          this.size.x = item.base.getSize().x;
-          this.size.y = y + item.base.getSize().y;
-        }
+        this.size.x = item.base.getSize().x;
+        this.size.y = y + item.base.getSize().y;
         return {
           x: x,
           y: y
@@ -642,6 +640,7 @@ Core.Float = new Class({
     this.icons.base.setStyle('top', 0);
     this.slider.base.setStyle('right', -(this.slider.base.getSize().x) - 6);
     this.slider.base.setStyle('top', this.icons.size.y);
+    console.log(this.icons.size.y);
     return this.parent();
   },
   create: function() {
@@ -689,8 +688,8 @@ Core.Float = new Class({
     });
     this.edit.addEvent('invoked', (function() {
       var _a, _b;
-      if (!(typeof (_b = this.contentElement) !== "undefined" && _b !== null)) {
-        !(typeof (_a = this.contentElement.toggleEdit) !== "undefined" && _a !== null) ? this.contentElement.toggleEdit() : null;
+      if ((typeof (_b = this.contentElement) !== "undefined" && _b !== null)) {
+        (typeof (_a = this.contentElement.toggleEdit) !== "undefined" && _a !== null) ? this.contentElement.toggleEdit() : null;
         return this.fireEvent('edit');
       }
     }).bindWithEvent(this));
@@ -917,6 +916,97 @@ Core.Picker = new Class({
 /*
 ---
 
+name: Core.Slot
+
+description: Generic icon element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract]
+
+provides: Core.Slot
+
+...
+*/
+Core.Slot = new Class({
+  Extends: Core.Abstract,
+  Binds: ['check', 'complete'],
+  Delegates: {
+    'list': ['addItem', 'removeAll', 'select']
+  },
+  options: {
+    'class': GDotUI.Theme.Slot['class']
+  },
+  initilaize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options['class']);
+    this.overlay = new Element('div', {
+      'text': ' '
+    });
+    this.overlay.addClass('over');
+    this.list = new Iterable.List();
+    this.list.addEvent('select', (function(item) {
+      this.update();
+      return this.fireEvent('change', item);
+    }).bindWithEvent(this));
+    return this.base.adopt(this.list.base, this.overlay);
+  },
+  check: function(el, e) {
+    var lastDistance, lastOne;
+    this.dragging = true;
+    lastDistance = 1000;
+    lastOne = null;
+    return this.list.items.each((function(item, i) {
+      var distance;
+      distance = -item.base.getPosition(this.base).y + this.base.getSize().y / 2;
+      return distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2 ? this.list.select(item) : null;
+    }).bind(this));
+  },
+  ready: function() {
+    this.parent();
+    this.base.setStyle('overflow', 'hidden');
+    this.base.setStyle('position', 'relative');
+    this.list.base.setStyle('position', 'absolute');
+    this.list.base.setStyle('top', '0');
+    this.base.setStyle('width', this.list.base.getSize().x);
+    this.overlay.setStyle('width', this.base.getSize().x);
+    this.overlay.addEvent('mousewheel', (function(e) {
+      var _a, index;
+      e.stop();
+      (typeof (_a = this.list.selected) !== "undefined" && _a !== null) ? (index = this.list.items.indexOf(this.list.selected)) : e.wheel === 1 ? (index = 0) : (index = 1);
+      index + e.wheel >= 0 && index + e.wheel < this.list.items.length ? this.list.select(this.list.items[index + e.wheel]) : null;
+      index + e.wheel < 0 ? this.list.select(this.list.items[this.list.items.length - 1]) : null;
+      return index + e.wheel > this.list.items.length - 1 ? this.list.select(this.list.items[0]) : null;
+    }).bindWithEvent(this));
+    this.drag = new Drag(this.list.base, {
+      modifiers: {
+        x: '',
+        y: 'top'
+      },
+      handle: this.overlay
+    });
+    this.drag.addEvent('drag', this.check);
+    this.drag.addEvent('beforeStart', (function() {
+      return this.list.base.setStyle('-webkit-transition-duration', '0s');
+    }).bindWithEvent(this));
+    return this.drag.addEvent('complete', (function() {
+      this.dragging = false;
+      return this.update();
+    }).bindWithEvent(this));
+  },
+  update: function() {
+    var _a;
+    if (!this.dragging) {
+      this.list.base.setStyle('-webkit-transition-duration', '0.3s');
+      return (typeof (_a = this.list.selected) !== "undefined" && _a !== null) ? this.list.base.setStyle('top', -this.list.selected.base.getPosition(this.list.base).y + this.base.getSize().y / 2 - this.list.selected.base.getSize().y / 2) : null;
+    }
+  }
+});
+/*
+---
+
 name: Data.Abstract
 
 description:
@@ -953,6 +1043,315 @@ Data.Abstract = new Class({
   setValue: function() {  },
   getValue: function() {  }
 });
+/*
+---
+
+name: Data.Date
+
+description:
+
+license: MIT-style license.
+
+requires: [Data.Abstract, Core.Slot]
+
+provides: Data.Date
+
+...
+*/
+Data.Date = new Class({
+  Extends: Data.Abstract,
+  options: {
+    'class': GDotUI.Theme.Date.Slot['class'],
+    format: GDotUI.Theme.Date.format
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    var i, item;
+    this.base.addClass(this.options['class']);
+    this.days = new Core.Slot();
+    this.month = new Core.Slot();
+    this.years = new Core.Slot();
+    this.years.addEvent('change', (function(item) {
+      this.date.setYear(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    this.month.addEvent('change', (function(item) {
+      this.date.setMonth(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    this.days.addEvent('change', (function(item) {
+      this.date.setDate(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    i = 0;
+    while (i < 30) {
+      item = new Iterable.ListItem({
+        title: i + 1
+      });
+      item.value = i + 1;
+      this.days.addItem(item);
+      i++;
+    }
+    i = 0;
+    while (i < 12) {
+      item = new Iterable.ListItem({
+        title: i + 1
+      });
+      item.value = i;
+      this.month.addItem(item);
+      i++;
+    }
+    i = 1950;
+    while (i < 2012) {
+      item = new Iterable.ListItem({
+        title: i
+      });
+      item.value = i;
+      this.years.addItem(item);
+      i++;
+    }
+    return this;
+  },
+  ready: function() {
+    this.base.adopt(this.years, this.month, this.days);
+    this.setValue(new Date());
+    this.base.setStyle('height', this.days.base.getSize().y);
+    $$(this.days.base, this.month.base, this.years.base).setStyles({
+      'float': 'left'
+    });
+    return this.parent();
+  },
+  setValue: function(date) {
+    (typeof date !== "undefined" && date !== null) ? (this.date = date) : null;
+    this.update();
+    return this.fireEvent('change', this.date.format(this.options.format));
+  },
+  update: function() {
+    var cdays, i, item, listlength;
+    cdays = this.date.get('lastdayofmonth');
+    listlength = this.days.list.items.length;
+    if (cdays > listlength) {
+      i = listlength + 1;
+      while (i <= cdays) {
+        item = new Iterable.ListItem({
+          title: i
+        });
+        item.value = i;
+        this.days.addItem(item);
+        i++;
+      }
+    } else if (cdays < listlength) {
+      i = listlength;
+      while (i > cdays) {
+        this.days.list.removeItem(this.days.list.items[i - 1]);
+        i--;
+      }
+    }
+    this.days.select(this.days.list.items[this.date.getDate() - 1]);
+    this.month.select(this.month.list.items[this.date.getMonth()]);
+    return this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
+  }
+});
+/*
+---
+
+name: Iterable.ListItem
+
+description:
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Iterable.ListItem
+
+...
+*/
+Iterable.ListItem = new Class({
+  Extends: Core.Abstract,
+  options: {
+    'class': GDotUI.Theme.ListItem['class'],
+    title: '',
+    subtitle: ''
+  },
+  initialize: function(options) {
+    this.parent(options);
+    this.enabled = true;
+    return this.enabled;
+  },
+  create: function() {
+    this.base.addClass(this.options['class']).setStyle('position', 'relative');
+    this.remove = new Core.Icon({
+      image: GDotUI.Theme.Icons.remove
+    });
+    this.handle = new Core.Icon({
+      image: GDotUI.Theme.Icons.handleVertical
+    });
+    this.handle.base.addClass('list-handle');
+    $$(this.remove.base, this.handle.base).setStyle('position', 'absolute');
+    this.title = new Element('div').addClass(GDotUI.Theme.ListItem.title).set('text', this.options.title);
+    this.subtitle = new Element('div').addClass(GDotUI.Theme.ListItem.subTitle).set('text', this.options.subtitle);
+    this.base.adopt(this.title, this.subtitle, this.remove, this.handle);
+    this.base.addEvent('click', (function() {
+      return this.enabled ? this.fireEvent('invoked', this) : null;
+    }).bindWithEvent(this));
+    return this.base.addEvent('dblclick', (function() {
+      return this.enabled ? this.editing ? this.fireEvent('edit', this) : null : null;
+    }).bindWithEvent(this));
+  },
+  toggleEdit: function() {
+    if (this.editing) {
+      this.remove.base.setStyle('right', -this.remove.base.getSize().x);
+      this.handle.base.setStyle('left', -this.handle.base.getSize().x);
+      this.base.setStyle('padding-left', this.base.retrieve('padding-left:old'));
+      this.base.setStyle('padding-right', this.base.retrieve('padding-right:old'));
+      this.editing = false;
+      return this.editing;
+    } else {
+      this.remove.base.setStyle('right', GDotUI.Theme.ListItem.iconOffset);
+      this.handle.base.setStyle('left', GDotUI.Theme.ListItem.iconOffset);
+      this.base.store('padding-left:old', this.base.getStyle('padding-left'));
+      this.base.store('padding-right:old', this.base.getStyle('padding-left'));
+      this.base.setStyle('padding-left', Number(this.base.getStyle('padding-left').slice(0, -2)) + this.handle.base.getSize().x);
+      this.base.setStyle('padding-right', Number(this.base.getStyle('padding-right').slice(0, -2)) + this.remove.base.getSize().x);
+      this.editing = true;
+      return this.editing;
+    }
+  },
+  ready: function() {
+    var baseSize, handSize, remSize;
+    if (!this.editing) {
+      handSize = this.handle.base.getSize();
+      remSize = this.remove.base.getSize();
+      baseSize = this.base.getSize();
+      this.remove.base.setStyles({
+        "right": -remSize.x,
+        "top": (baseSize.y - remSize.y) / 2
+      });
+      this.handle.base.setStyles({
+        "left": -handSize.x,
+        "top": (baseSize.y - handSize.y) / 2
+      });
+      return this.parent();
+    }
+  }
+});
+/*
+---
+
+name: Iterable.List
+
+description:
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Iterable.List
+
+...
+*/
+Iterable.List = new Class({
+  Extends: Core.Abstract,
+  options: {
+    'class': GDotUI.Theme.List['class']
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options['class']);
+    this.sortable = new Sortables(null, {
+      handle: '.list-handle'
+    });
+    this.editing = false;
+    this.items = [];
+    return this.items;
+  },
+  removeItem: function(li) {
+    li.removeEvents('invoked', 'edit', 'delete');
+    li.base.destroy();
+    this.items.erase(li);
+    return delete li;
+  },
+  removeAll: function() {
+    this.selected = null;
+    this.items.each((function() {
+      return this.removeItem(item);
+    }).bind(this));
+    delete this.items;
+    this.items = [];
+    return this.items;
+  },
+  toggleEdit: function() {
+    var bases;
+    bases = this.items.map(function(item) {
+      return item.base;
+    });
+    if (this.editing) {
+      this.sortable.removeItems(bases);
+      this.items.each(function(item) {
+        return item.toggleEdit();
+      });
+      this.editing = false;
+      return this.editing;
+    } else {
+      this.sortable.addItems(bases);
+      this.items.each(function(item) {
+        return item.toggleEdit();
+      });
+      this.editing = true;
+      return this.editing;
+    }
+  },
+  getItemFromTitle: function(title) {
+    var filtered;
+    filtered = this.items.filter(function(item) {
+      return item.title.get('text') === String(title) ? true : false;
+    });
+    return filtered[0];
+  },
+  select: function(item) {
+    var _a;
+    if (this.selected !== item) {
+      (typeof (_a = this.selected) !== "undefined" && _a !== null) ? this.selected.base.removeClass('selected') : null;
+      this.selected = item;
+      this.selected.base.addClass('selected');
+      return this.fireEvent('select', item);
+    }
+  },
+  addItem: function(li) {
+    this.items.push(li);
+    this.base.grab(li);
+    li.addEvent('invoked', (function(item) {
+      this.select(item);
+      return this.fireEvent('invoked', [item]);
+    }).bindWithEvent(this));
+    li.addEvent('edit', (function() {
+      return this.fireEvent('edit', arguments);
+    }).bindWithEvent(this));
+    return li.addEvent('delete', (function() {
+      return this.fireEvent('delete', arguments);
+    }).bindWithEvent(this));
+  }
+});
+/*
+toTheTop:function(item){
+  //console.log(item);
+  //@base.setStyle('top',@base.getPosition().y-item.base.getSize().y);
+  @items.erase(item);
+  @items.unshift(item);
+
+},
+update:function(){
+  @items.each(function(item,i){
+    item.base.dispose();
+    @base.grab(item.base,'top');
+  }.bind(this))
+},
+*/
 /*
 ---
 

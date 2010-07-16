@@ -5,18 +5,19 @@
     <title>GDotUI.Demo</title>
     <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
     <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
+    <script type="text/javascript" src="../mootools/Field.js"></script>
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
     <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
     <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
     <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
     <script>
         window.addEvent('domready',function(){
-          Pickers.Color.attach($('color'));
-          Pickers.Text.attach($('text'));
-          Pickers.Number.attach($('number'));
-          Pickers.Date.attach($('date'));
-          Pickers.Time.attach($('time'));
-          Pickers.DateTime.attach($('date-slot'));
+           Pickers.Color.attach($('color'));
+           Pickers.Number.attach($('number'));
+           Pickers.Time.attach($('time'));
+           Pickers.Text.attach($('text'));
+           Pickers.Date.attach($('date'));
+           Pickers.DateTime.attach($('date-slot'));
         });
     </script>
     <style>
@@ -47,7 +48,7 @@
     <input id="text" type="text"/>
     <h4>Date</h4>
     <input id="date" type="text"/>
-    <h4>Date - Slot</h4>
+    <h4>Date & Time</h4>
     <input id="date-slot" type="text"/>
     <h4>Time</h4>
     <input id="time" type="text"/>

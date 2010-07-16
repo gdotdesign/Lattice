@@ -18,25 +18,17 @@ ResetSlider: new Class {
 	initialize: (element, knob, options) ->
 		@parent(element, knob, options)
 	setRange: (range) ->
-		@min = $chk(range[0]) ? range[0] : 0;
-		@max = $chk(range[1]) ? range[1] : @.steps;
+		@min = if  $chk(range[0]) then range[0] else 0
+		@max = if $chk(range[1]) then range[1] else @options.steps;
 		@range = @max - @min;
 		@steps = @options.steps || @full;
 		@stepSize = Math.abs(@range) / @steps;
 		@stepWidth = @stepSize * @full / Math.abs(@range) ;
 }
-Class.Mutators.Delegates: (delegations) ->
-	self = this;
-	(new Hash delegations).each (delegates, target) ->
-		($splat delegates).each (delegate) ->
-			self.prototype[delegate]: ->
-				ret: @[target][delegate].apply @[target], arguments
-				if ret == @[target] then this else ret
-
 Core.Slider: new Class {
 	Extends:Core.Abstract
 	Implements:[Interfaces.Controls]
-	Delegates:{ slider:[
+	Delegates:{ 'slider':[
 		'set'
 		'setRange'
 	]}
