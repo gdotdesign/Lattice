@@ -103,6 +103,11 @@
             ]
         }
         window.addEvent('domready',function(){
+            var t=new Core.Tabs();
+            for(var i=0;i<7;i++){
+                t.add(new Core.Tab({label:'tab'+i}));
+            }
+            document.body.grab(t);
             var a=new Forms.Form(Forms.Settings);
             //document.body.grab(a);
            // GDotUI.loadTheme('../Themes/Blank/theme.js');
@@ -174,7 +179,6 @@
     </script>
 </head>
 <body>
-  <input id="color" type="text"/>
     <!-- Insert your content here -->
 </body>
 </html>

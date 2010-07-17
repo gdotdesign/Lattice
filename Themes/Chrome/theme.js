@@ -14,6 +14,12 @@ GDotUI.Theme={
             }
         }
     },
+    Tab:{
+        'class':'tab'
+    },
+    Tabs:{
+        'class':'tabs'
+    },
     css:'theme.css',
     Icon:{
       'class':'icon'

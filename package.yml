@@ -43,4 +43,6 @@ sources:
   - "Source/Forms/Forms.Input.coffee"
   - "Source/Forms/Forms.Fieldset.coffee"
   - "Source/Forms/Forms.Form.coffee"
+  - "Source/Core/Core.Tab.coffee"
+  - "Source/Core/Core.Tabs.coffee"
   
