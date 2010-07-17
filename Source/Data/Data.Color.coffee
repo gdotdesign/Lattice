@@ -120,6 +120,25 @@ Data.Color: new Class {
     @brightness: pos.y
     @setColor()
 }
+Data.Color.SlotControls: new Class {
+  Extends:Data.Abstract
+  options:{
+    
+  }
+  initialize: (options) ->
+    @parent(options)
+    this
+  create: ->
+    @typeslot: new Core.Slot();
+    @typeslot.addItem(new Iterable.ListItem({title:'RGB'}));
+    @typeslot.addItem(new Iterable.ListItem({title:'HSL'}));
+    @typeslot.addItem(new Iterable.ListItem({title:'HEX'}));
+    @red: new Data.Number {range:[0,255],reset: off, steps: [255]}
+    @green: new Data.Number {range:[0,255],reset: off, steps: [255]}
+    @blue: new Data.Number {range:[0,255],reset: off, steps: [255]}
+  ready: ->
+    @base.adopt @typeslot, @red, @blue, @green
+}
 Data.Color.Controls: new Class {
     Extends:Data.Abstract
     options:{

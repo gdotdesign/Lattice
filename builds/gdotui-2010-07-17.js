@@ -27,6 +27,22 @@ GDotUI.Config = {
   floatZindex: 0,
   cookieDuration: 7 * 1000
 };
+GDotUI.clone = function(o) {
+  var _a, _b, _c, i, newO;
+  if (typeof (o) !== 'object') {
+    return o;
+  } else if (typeof o !== "undefined" && o !== null) {
+    return o;
+  } else {
+    newO = new Object();
+    _b = o;
+    for (_a = 0, _c = _b.length; _a < _c; _a++) {
+      i = _b[_a];
+      newO[i] = clone(o[i]);
+    }
+    return newO;
+  }
+};
 /*
 ---
 
@@ -538,6 +554,8 @@ Core.Slider = new Class({
   options: {
     scrollBase: null,
     reset: false,
+    steps: 0,
+    range: [0, 0],
     mode: 'vertical',
     'class': GDotUI.Theme.Slider.barClass,
     knob: GDotUI.Theme.Slider.knobClass
@@ -582,7 +600,8 @@ Core.Slider = new Class({
     } else {
       this.slider = new Slider(this.base, this.knob, {
         mode: this.options.mode,
-        steps: 100
+        range: this.options.range,
+        steps: this.options.steps
       });
     }
     this.slider.addEvent('complete', (function(step) {
@@ -1100,7 +1119,10 @@ provides: Data.Number
 Data.Number = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Number['class']
+    'class': GDotUI.Theme.Number['class'],
+    range: GDotUI.Theme.Number.range,
+    reset: GDotUI.Theme.Number.reset,
+    steps: GDotUI.Theme.Number.steps
   },
   initialize: function(options) {
     this.parent(options);
@@ -1113,9 +1135,9 @@ Data.Number = new Class({
     });
     this.text.set('value', 0).setStyle('width', GDotUI.Theme.Slider.length);
     this.slider = new Core.Slider({
-      reset: true,
-      range: [-100, 100],
-      steps: 200,
+      reset: this.options.reset,
+      range: this.options.range,
+      steps: this.options.steps,
       mode: 'vertical'
     });
     return this.slider;
@@ -1127,7 +1149,7 @@ Data.Number = new Class({
       return this.text.focus();
     }).bindWithEvent(this));
     this.slider.addEvent('complete', (function(step) {
-      this.slider.setRange([step - 100, Number(step) + 100]);
+      this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
       return this.slider.set(step);
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function(step) {
@@ -1137,7 +1159,7 @@ Data.Number = new Class({
     this.text.addEvent('change', (function() {
       var step;
       step = Number(this.text.get('value'));
-      this.slider.setRange([step - 100, Number(step) + 100]);
+      this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
       return this.slider.set(step);
     }).bindWithEvent(this));
     this.text.addEvent('mousewheel', (function(e) {
@@ -1146,7 +1168,7 @@ Data.Number = new Class({
     return this.parent();
   },
   setValue: function(step) {
-    this.slider.setRange([step - 100, Number(step) + 100]);
+    this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
     return this.slider.set(step);
   }
 });
@@ -1283,6 +1305,45 @@ Data.Color = new Class({
     return this.setColor();
   }
 });
+Data.Color.SlotControls = new Class({
+  Extends: Data.Abstract,
+  options: {},
+  initialize: function(options) {
+    this.parent(options);
+    return this;
+  },
+  create: function() {
+    this.typeslot = new Core.Slot();
+    this.typeslot.addItem(new Iterable.ListItem({
+      title: 'RGB'
+    }));
+    this.typeslot.addItem(new Iterable.ListItem({
+      title: 'HSL'
+    }));
+    this.typeslot.addItem(new Iterable.ListItem({
+      title: 'HEX'
+    }));
+    this.red = new Data.Number({
+      range: [0, 255],
+      reset: false,
+      steps: [255]
+    });
+    this.green = new Data.Number({
+      range: [0, 255],
+      reset: false,
+      steps: [255]
+    });
+    this.blue = new Data.Number({
+      range: [0, 255],
+      reset: false,
+      steps: [255]
+    });
+    return this.blue;
+  },
+  ready: function() {
+    return this.base.adopt(this.typeslot, this.red, this.blue, this.green);
+  }
+});
 Data.Color.Controls = new Class({
   Extends: Data.Abstract,
   options: {
@@ -1380,7 +1441,6 @@ Data.Date = new Class({
     return this.parent(options);
   },
   create: function() {
-    var i, item;
     this.base.addClass(this.options['class']);
     this.days = new Core.Slot();
     this.month = new Core.Slot();
@@ -1397,6 +1457,10 @@ Data.Date = new Class({
       this.date.setDate(item.value);
       return this.setValue();
     }).bindWithEvent(this));
+    return this;
+  },
+  ready: function() {
+    var i, item;
     i = 0;
     while (i < 30) {
       item = new Iterable.ListItem({
@@ -1424,9 +1488,6 @@ Data.Date = new Class({
       this.years.addItem(item);
       i++;
     }
-    return this;
-  },
-  ready: function() {
     this.base.adopt(this.years, this.month, this.days);
     this.setValue(new Date());
     this.base.setStyle('height', this.days.base.getSize().y);

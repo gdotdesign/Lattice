@@ -26,8 +26,7 @@ GDotUI.Theme={
     },
     tipClass:'tip',
     Button:{
-      'class':'button',
-      width: 200
+      'class':'button'
     },
     Date:{
       'class':'date',
@@ -51,7 +50,10 @@ GDotUI.Theme={
       'class':'slot'  
     },
     Number:{
-        'class':'number'
+        'class':'number',
+        range:[-100,100],
+        steps:200,
+        reset: true
     },
     Picker:{
         'class':'picker',

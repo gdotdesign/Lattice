@@ -17,6 +17,9 @@ Data.Number: new Class {
   Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Number.class
+    range: GDotUI.Theme.Number.range
+    reset: GDotUI.Theme.Number.reset
+    steps: GDotUI.Theme.Number.steps
   }
   initialize: (options) ->
     @parent options
@@ -25,9 +28,9 @@ Data.Number: new Class {
     @base.addClass @options.class
     @text: new Element 'input', {'type':'text'}
     @text.set('value',0).setStyle 'width',GDotUI.Theme.Slider.length
-    @slider: new Core.Slider {reset: on
-                              range:[-100,100]
-                              steps:200
+    @slider: new Core.Slider {reset: @options.reset
+                              range: @options.range
+                              steps: @options.steps
                               mode:'vertical'}
   ready: ->
     @slider.knob.grab @text
@@ -36,7 +39,8 @@ Data.Number: new Class {
       @text.focus()
     ).bindWithEvent this
     @slider.addEvent 'complete', ( (step) ->
-      @slider.setRange [step-100, Number(step)+100]
+      if @options.reset
+        @slider.setRange [step-@options.steps/2, Number(step)+@options.steps/2]
       @slider.set step
       ).bindWithEvent this
     @slider.addEvent 'change', ( (step) ->
@@ -48,7 +52,8 @@ Data.Number: new Class {
       ).bindWithEvent this
     @text.addEvent 'change', ( ->
       step: Number @text.get('value')
-      @slider.setRange [step-100,Number(step)+100]
+      if @options.reset
+        @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
       @slider.set step
     ).bindWithEvent this
     @text.addEvent 'mousewheel', ( (e) ->
@@ -56,6 +61,7 @@ Data.Number: new Class {
     ).bindWithEvent this
     @parent()
   setValue: (step) ->
-    @slider.setRange [step-100,Number(step)+100]
+    if @options.reset
+      @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
     @slider.set step
 }

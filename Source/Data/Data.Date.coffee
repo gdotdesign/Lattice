@@ -38,6 +38,8 @@ Data.Date: new Class {
       @date.setDate item.value
       @setValue()
     ).bindWithEvent this
+    this
+  ready: ->
     i: 0
     while i < 30
       item: new Iterable.ListItem {title:i+1}
@@ -56,8 +58,6 @@ Data.Date: new Class {
       item.value: i;
       @years.addItem item
       i++
-    this
-  ready: -> 
     @base.adopt @years, @month, @days
     @setValue new Date()
     @base.setStyle 'height', @days.base.getSize().y

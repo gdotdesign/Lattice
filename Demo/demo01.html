@@ -108,15 +108,15 @@
                 t.add(new Core.Tab({label:'tab'+i}));
             }
             document.body.grab(t);
+            var col= new Data.Color.SlotControls()
+            document.body.grab(col);
             var a=new Forms.Form(Forms.Settings);
-            //document.body.grab(a);
-           // GDotUI.loadTheme('../Themes/Blank/theme.js');
             this.float=new Core.Float({editable:true,
                                       draggable:true,
                                       resizeable:true,
                                       cookieID:'list',
                                       useCookie:false});
-            /*this.nfloat=new Core.Float({editable:false,
+            this.nfloat=new Core.Float({editable:false,
                                       draggable:true,
                                       resizeable:false,
                                       cookieID:'text',
@@ -146,9 +146,9 @@
             this.nfloat.show();
             this.text=new Data.Text();
             this.tfloat.setContent(this.text);
-            this.tfloat.show();*/
+            this.tfloat.show();
              this.color=new Data.Date();
-            this.float.setContent(a);
+            this.float.setContent(this.list);
             this.float.show();
             /*this.lfloat.setContent(this.list);
             this.lfloat.show();

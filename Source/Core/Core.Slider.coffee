@@ -35,12 +35,14 @@ Core.Slider: new Class {
 	options:{
 		scrollBase: null
 		reset: off
+		steps: 0
+		range: [0,0]
 		mode: 'vertical'
 		class: GDotUI.Theme.Slider.barClass
 		knob: GDotUI.Theme.Slider.knobClass
 	}
 	initialize: (options) ->
-		@parent(options)
+		@parent options
 		this
 	create: ->
 		@base.addClass @options.class
@@ -66,14 +68,15 @@ Core.Slider: new Class {
 		@scrollBase: @options.scrollBase
 		@base.grab @knob
 	ready: ->
-		if @options.reset
+		if @options.reset 
 			@slider: new ResetSlider @base, @knob, {mode:@options.mode
 																							steps:@options.steps
 																							range:@options.range}
 			@slider.set 0
 		else
 			@slider=new Slider @base, @knob, {mode:@options.mode
-																				steps:100}
+																				range:@options.range
+																				steps:@options.steps}
 		@slider.addEvent 'complete', ((step) ->
 			@fireEvent 'complete', step+''
 		).bindWithEvent this

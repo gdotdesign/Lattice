@@ -28,6 +28,14 @@ GDotUI.Config:{
     floatZindex: 0
     cookieDuration: 7*1000
 }
+GDotUI.clone: (o) ->
+  if typeof(o) isnt 'object' then o
+  else if o? then o
+  else
+    newO: new Object()
+    for i in o
+        newO[i]: clone o[i]
+    newO
 
 ###
 ---
@@ -477,12 +485,14 @@ Core.Slider: new Class {
 	options:{
 		scrollBase: null
 		reset: off
+		steps: 0
+		range: [0,0]
 		mode: 'vertical'
 		class: GDotUI.Theme.Slider.barClass
 		knob: GDotUI.Theme.Slider.knobClass
 	}
 	initialize: (options) ->
-		@parent(options)
+		@parent options
 		this
 	create: ->
 		@base.addClass @options.class
@@ -508,14 +518,15 @@ Core.Slider: new Class {
 		@scrollBase: @options.scrollBase
 		@base.grab @knob
 	ready: ->
-		if @options.reset
+		if @options.reset 
 			@slider: new ResetSlider @base, @knob, {mode:@options.mode
 																							steps:@options.steps
 																							range:@options.range}
 			@slider.set 0
 		else
 			@slider=new Slider @base, @knob, {mode:@options.mode
-																				steps:100}
+																				range:@options.range
+																				steps:@options.steps}
 		@slider.addEvent 'complete', ((step) ->
 			@fireEvent 'complete', step+''
 		).bindWithEvent this
@@ -999,6 +1010,9 @@ Data.Number: new Class {
   Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Number.class
+    range: GDotUI.Theme.Number.range
+    reset: GDotUI.Theme.Number.reset
+    steps: GDotUI.Theme.Number.steps
   }
   initialize: (options) ->
     @parent options
@@ -1007,9 +1021,9 @@ Data.Number: new Class {
     @base.addClass @options.class
     @text: new Element 'input', {'type':'text'}
     @text.set('value',0).setStyle 'width',GDotUI.Theme.Slider.length
-    @slider: new Core.Slider {reset: on
-                              range:[-100,100]
-                              steps:200
+    @slider: new Core.Slider {reset: @options.reset
+                              range: @options.range
+                              steps: @options.steps
                               mode:'vertical'}
   ready: ->
     @slider.knob.grab @text
@@ -1018,7 +1032,8 @@ Data.Number: new Class {
       @text.focus()
     ).bindWithEvent this
     @slider.addEvent 'complete', ( (step) ->
-      @slider.setRange [step-100, Number(step)+100]
+      if @options.reset
+        @slider.setRange [step-@options.steps/2, Number(step)+@options.steps/2]
       @slider.set step
       ).bindWithEvent this
     @slider.addEvent 'change', ( (step) ->
@@ -1030,7 +1045,8 @@ Data.Number: new Class {
       ).bindWithEvent this
     @text.addEvent 'change', ( ->
       step: Number @text.get('value')
-      @slider.setRange [step-100,Number(step)+100]
+      if @options.reset
+        @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
       @slider.set step
     ).bindWithEvent this
     @text.addEvent 'mousewheel', ( (e) ->
@@ -1038,7 +1054,8 @@ Data.Number: new Class {
     ).bindWithEvent this
     @parent()
   setValue: (step) ->
-    @slider.setRange [step-100,Number(step)+100]
+    if @options.reset
+      @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
     @slider.set step
 }
 
@@ -1164,6 +1181,25 @@ Data.Color: new Class {
     @brightness: pos.y
     @setColor()
 }
+Data.Color.SlotControls: new Class {
+  Extends:Data.Abstract
+  options:{
+    
+  }
+  initialize: (options) ->
+    @parent(options)
+    this
+  create: ->
+    @typeslot: new Core.Slot();
+    @typeslot.addItem(new Iterable.ListItem({title:'RGB'}));
+    @typeslot.addItem(new Iterable.ListItem({title:'HSL'}));
+    @typeslot.addItem(new Iterable.ListItem({title:'HEX'}));
+    @red: new Data.Number {range:[0,255],reset: off, steps: [255]}
+    @green: new Data.Number {range:[0,255],reset: off, steps: [255]}
+    @blue: new Data.Number {range:[0,255],reset: off, steps: [255]}
+  ready: ->
+    @base.adopt @typeslot, @red, @blue, @green
+}
 Data.Color.Controls: new Class {
     Extends:Data.Abstract
     options:{
@@ -1266,6 +1302,8 @@ Data.Date: new Class {
       @date.setDate item.value
       @setValue()
     ).bindWithEvent this
+    this
+  ready: ->
     i: 0
     while i < 30
       item: new Iterable.ListItem {title:i+1}
@@ -1284,8 +1322,6 @@ Data.Date: new Class {
       item.value: i;
       @years.addItem item
       i++
-    this
-  ready: -> 
     @base.adopt @years, @month, @days
     @setValue new Date()
     @base.setStyle 'height', @days.base.getSize().y
