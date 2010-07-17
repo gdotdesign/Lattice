@@ -57,7 +57,7 @@ Core.Float: new Class {
 
 		@base.adopt @handle, @content
 
-		@slider: new Core.Slider {scrollBase:@content}
+		@slider: new Core.Slider {scrollBase:@content, range:[0,100], steps: 100}
 		@slider.addEvent 'complete', ( ->
 			@scrolling: off
 		).bindWithEvent this

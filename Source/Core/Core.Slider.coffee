@@ -46,25 +46,8 @@ Core.Slider: new Class {
 		this
 	create: ->
 		@base.addClass @options.class
+		@base.addClass @options.mode
 		@knob: (new Element 'div').addClass @options.knob
-		if @options.mode=="vertical"
-			@base.setStyles {
-				'width':GDotUI.Theme.Slider.width
-				'height':GDotUI.Theme.Slider.length
-			} 
-			@knob.setStyles {
-				'width':GDotUI.Theme.Slider.width
-				'height':GDotUI.Theme.Slider.width*2
-			}
-		else
-			@base.setStyles {
-				'width':GDotUI.Theme.Slider.length
-				'height':GDotUI.Theme.Slider.width
-			}
-			@knob.setStyles {
-				'width':GDotUI.Theme.Slider.width*2
-				'height':GDotUI.Theme.Slider.width
-			}
 		@scrollBase: @options.scrollBase
 		@base.grab @knob
 	ready: ->
@@ -84,8 +67,8 @@ Core.Slider: new Class {
 			if typeof(step) == 'object'
 				step=0;
 			@fireEvent 'change', step+''
-			if @scrollBase != null
-					@scrollBase.scrollTop: (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
+			if @scrollBase?
+				@scrollBase.scrollTop: (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
 		).bindWithEvent this
 		@parent()
 }

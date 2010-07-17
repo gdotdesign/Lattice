@@ -31,7 +31,7 @@ Data.Number: new Class {
     @slider: new Core.Slider {reset: @options.reset
                               range: @options.range
                               steps: @options.steps
-                              mode:'vertical'}
+                              mode:'horizontal'}
   ready: ->
     @slider.knob.grab @text
     @base.adopt @slider
@@ -60,6 +60,8 @@ Data.Number: new Class {
       @slider.set Number(@text.get('value'))+e.wheel
     ).bindWithEvent this
     @parent()
+  getValue: ->
+    @slider.slider.step
   setValue: (step) ->
     if @options.reset
       @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]

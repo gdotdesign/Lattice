@@ -496,25 +496,8 @@ Core.Slider: new Class {
 		this
 	create: ->
 		@base.addClass @options.class
+		@base.addClass @options.mode
 		@knob: (new Element 'div').addClass @options.knob
-		if @options.mode=="vertical"
-			@base.setStyles {
-				'width':GDotUI.Theme.Slider.width
-				'height':GDotUI.Theme.Slider.length
-			} 
-			@knob.setStyles {
-				'width':GDotUI.Theme.Slider.width
-				'height':GDotUI.Theme.Slider.width*2
-			}
-		else
-			@base.setStyles {
-				'width':GDotUI.Theme.Slider.length
-				'height':GDotUI.Theme.Slider.width
-			}
-			@knob.setStyles {
-				'width':GDotUI.Theme.Slider.width*2
-				'height':GDotUI.Theme.Slider.width
-			}
 		@scrollBase: @options.scrollBase
 		@base.grab @knob
 	ready: ->
@@ -534,8 +517,8 @@ Core.Slider: new Class {
 			if typeof(step) == 'object'
 				step=0;
 			@fireEvent 'change', step+''
-			if @scrollBase != null
-					@scrollBase.scrollTop: (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
+			if @scrollBase?
+				@scrollBase.scrollTop: (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
 		).bindWithEvent this
 		@parent()
 }
@@ -600,7 +583,7 @@ Core.Float: new Class {
 
 		@base.adopt @handle, @content
 
-		@slider: new Core.Slider {scrollBase:@content}
+		@slider: new Core.Slider {scrollBase:@content, range:[0,100], steps: 100}
 		@slider.addEvent 'complete', ( ->
 			@scrolling: off
 		).bindWithEvent this
@@ -1024,7 +1007,7 @@ Data.Number: new Class {
     @slider: new Core.Slider {reset: @options.reset
                               range: @options.range
                               steps: @options.steps
-                              mode:'vertical'}
+                              mode:'horizontal'}
   ready: ->
     @slider.knob.grab @text
     @base.adopt @slider
@@ -1053,6 +1036,8 @@ Data.Number: new Class {
       @slider.set Number(@text.get('value'))+e.wheel
     ).bindWithEvent this
     @parent()
+  getValue: ->
+    @slider.slider.step
   setValue: (step) ->
     if @options.reset
       @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
@@ -1184,21 +1169,26 @@ Data.Color: new Class {
 Data.Color.SlotControls: new Class {
   Extends:Data.Abstract
   options:{
-    
+    class:GDotUI.Theme.Color.slotControls.class
   }
   initialize: (options) ->
     @parent(options)
     this
   create: ->
+    @base.addClass @options.class
     @typeslot: new Core.Slot();
     @typeslot.addItem(new Iterable.ListItem({title:'RGB'}));
     @typeslot.addItem(new Iterable.ListItem({title:'HSL'}));
     @typeslot.addItem(new Iterable.ListItem({title:'HEX'}));
-    @red: new Data.Number {range:[0,255],reset: off, steps: [255]}
-    @green: new Data.Number {range:[0,255],reset: off, steps: [255]}
-    @blue: new Data.Number {range:[0,255],reset: off, steps: [255]}
+  
+    @red: new Data.Number {range:[0,360],reset: off, steps: [360]}
+    @red.addEvent 'change', ((value) ->
+        @green.slider.base.setStyle 'background-color', new $HSB(value,100,100)
+      ).bindWithEvent this
+    @green: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @blue: new Data.Number {range:[0,100],reset: off, steps: [100]}
   ready: ->
-    @base.adopt @typeslot, @red, @blue, @green
+    @base.adopt @typeslot,@red, @green, @blue
 }
 Data.Color.Controls: new Class {
     Extends:Data.Abstract

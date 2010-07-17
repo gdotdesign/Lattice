@@ -123,21 +123,26 @@ Data.Color: new Class {
 Data.Color.SlotControls: new Class {
   Extends:Data.Abstract
   options:{
-    
+    class:GDotUI.Theme.Color.slotControls.class
   }
   initialize: (options) ->
     @parent(options)
     this
   create: ->
+    @base.addClass @options.class
     @typeslot: new Core.Slot();
     @typeslot.addItem(new Iterable.ListItem({title:'RGB'}));
     @typeslot.addItem(new Iterable.ListItem({title:'HSL'}));
     @typeslot.addItem(new Iterable.ListItem({title:'HEX'}));
-    @red: new Data.Number {range:[0,255],reset: off, steps: [255]}
-    @green: new Data.Number {range:[0,255],reset: off, steps: [255]}
-    @blue: new Data.Number {range:[0,255],reset: off, steps: [255]}
+  
+    @red: new Data.Number {range:[0,360],reset: off, steps: [360]}
+    @red.addEvent 'change', ((value) ->
+        @green.slider.base.setStyle 'background-color', new $HSB(value,100,100)
+      ).bindWithEvent this
+    @green: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @blue: new Data.Number {range:[0,100],reset: off, steps: [100]}
   ready: ->
-    @base.adopt @typeslot, @red, @blue, @green
+    @base.adopt @typeslot,@red, @green, @blue
 }
 Data.Color.Controls: new Class {
     Extends:Data.Abstract

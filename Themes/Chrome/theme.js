@@ -107,6 +107,9 @@ GDotUI.Theme={
           'class':'control',
           format:'format',
           colorBox:'colorBox'
+       },
+       slotControls:{
+        'class':'slotcontrol'
        }
     },
     Slider:{

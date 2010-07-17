@@ -566,26 +566,8 @@ Core.Slider = new Class({
   },
   create: function() {
     this.base.addClass(this.options['class']);
+    this.base.addClass(this.options.mode);
     this.knob = (new Element('div')).addClass(this.options.knob);
-    if (this.options.mode === "vertical") {
-      this.base.setStyles({
-        'width': GDotUI.Theme.Slider.width,
-        'height': GDotUI.Theme.Slider.length
-      });
-      this.knob.setStyles({
-        'width': GDotUI.Theme.Slider.width,
-        'height': GDotUI.Theme.Slider.width * 2
-      });
-    } else {
-      this.base.setStyles({
-        'width': GDotUI.Theme.Slider.length,
-        'height': GDotUI.Theme.Slider.width
-      });
-      this.knob.setStyles({
-        'width': GDotUI.Theme.Slider.width * 2,
-        'height': GDotUI.Theme.Slider.width
-      });
-    }
     this.scrollBase = this.options.scrollBase;
     return this.base.grab(this.knob);
   },
@@ -608,9 +590,10 @@ Core.Slider = new Class({
       return this.fireEvent('complete', step + '');
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function(step) {
+      var _a;
       typeof (step) === 'object' ? (step = 0) : null;
       this.fireEvent('change', step + '');
-      return this.scrollBase !== null ? (this.scrollBase.scrollTop = (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100 * step) : null;
+      return (typeof (_a = this.scrollBase) !== "undefined" && _a !== null) ? (this.scrollBase.scrollTop = (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100 * step) : null;
     }).bindWithEvent(this));
     return this.parent();
   }
@@ -684,7 +667,9 @@ Core.Float = new Class({
     });
     this.base.adopt(this.handle, this.content);
     this.slider = new Core.Slider({
-      scrollBase: this.content
+      scrollBase: this.content,
+      range: [0, 100],
+      steps: 100
     });
     this.slider.addEvent('complete', (function() {
       this.scrolling = false;
@@ -1138,7 +1123,7 @@ Data.Number = new Class({
       reset: this.options.reset,
       range: this.options.range,
       steps: this.options.steps,
-      mode: 'vertical'
+      mode: 'horizontal'
     });
     return this.slider;
   },
@@ -1166,6 +1151,9 @@ Data.Number = new Class({
       return this.slider.set(Number(this.text.get('value')) + e.wheel);
     }).bindWithEvent(this));
     return this.parent();
+  },
+  getValue: function() {
+    return this.slider.slider.step;
   },
   setValue: function(step) {
     this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
@@ -1307,12 +1295,15 @@ Data.Color = new Class({
 });
 Data.Color.SlotControls = new Class({
   Extends: Data.Abstract,
-  options: {},
+  options: {
+    'class': GDotUI.Theme.Color.slotControls['class']
+  },
   initialize: function(options) {
     this.parent(options);
     return this;
   },
   create: function() {
+    this.base.addClass(this.options['class']);
     this.typeslot = new Core.Slot();
     this.typeslot.addItem(new Iterable.ListItem({
       title: 'RGB'
@@ -1324,24 +1315,27 @@ Data.Color.SlotControls = new Class({
       title: 'HEX'
     }));
     this.red = new Data.Number({
-      range: [0, 255],
+      range: [0, 360],
       reset: false,
-      steps: [255]
+      steps: [360]
     });
+    this.red.addEvent('change', (function(value) {
+      return this.green.slider.base.setStyle('background-color', new $HSB(value, 100, 100));
+    }).bindWithEvent(this));
     this.green = new Data.Number({
-      range: [0, 255],
+      range: [0, 100],
       reset: false,
-      steps: [255]
+      steps: [100]
     });
     this.blue = new Data.Number({
-      range: [0, 255],
+      range: [0, 100],
       reset: false,
-      steps: [255]
+      steps: [100]
     });
     return this.blue;
   },
   ready: function() {
-    return this.base.adopt(this.typeslot, this.red, this.blue, this.green);
+    return this.base.adopt(this.typeslot, this.red, this.green, this.blue);
   }
 });
 Data.Color.Controls = new Class({
