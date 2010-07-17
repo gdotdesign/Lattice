@@ -19,37 +19,45 @@ Core.Float: new Class {
 							Interfaces.Restoreable]
 	Binds:['resize','mouseEnter','mouseLeave','hide']
 	options:{
-	 class:GDotUI.Theme.Float.class
-	 overlay: off
-	 closeable: on
-	 resizeable: off
-	 editable: off
-	 }
+		classes:{
+			controls: GDotUI.Theme.Float.controls
+			content: GDotUI.Theme.Float.content
+			handle: GDotUI.Theme.Float.topHandle
+			bottom: GDotUI.Theme.Float.bottomHandle
+		}
+		iconOptions:GDotUI.Theme.Float.iconOptions
+		icons:{
+			remove: GDotUI.Theme.Icons.remove
+			edit: GDotUI.Theme.Icons.edit
+		}
+		class:GDotUI.Theme.Float.class
+		overlay: off
+		closeable: on
+		resizeable: off
+		editable: off
+	}
 	initialize: (options) ->
 		@parent(options)
 		@showSilder: off
 		this
 	ready: ->
 		@loadPosition()
-		@base.adopt @icons, @slider
-		@icons.base.setStyle 'right', -6
-		@icons.base.setStyle 'top', 0
-		@slider.base.setStyle 'right', -(@slider.base.getSize().x)-6
-		@slider.base.setStyle 'top', @icons.size.y
+		@base.adopt @controls
 		@parent()
 	create: ->
 		@base.addClass @options.class
 		@base.setStyle 'position', 'absolute'
 		@base.setPosition {x:0,y:0}
 		@base.toggleClass 'inactive'
-		@content: new Element 'div', {'class':GDotUI.Theme.Float.baseClass}
-		@handle: new Element 'div', {'class':GDotUI.Theme.Float.handleClass}
-		@bottom: new Element 'div', {'class':GDotUI.Theme.Float.bottomHandleClass}
+		
+		@controls:  new Element 'div', {class:@options.classes.controls}
+		@content: new Element 'div', {'class':@options.classes.content}
+		@handle: new Element 'div', {'class':@options.classes.handle}
+		@bottom: new Element 'div', {'class':@options.classes.bottom}
 
 		@base.adopt @handle, @content
 
 		@slider: new Core.Slider {scrollBase:@content}
-		@slider.base.setStyle 'position', 'absolute'
 		@slider.addEvent 'complete', ( ->
 			@scrolling: off
 		).bindWithEvent this
@@ -59,16 +67,15 @@ Core.Float: new Class {
 		
 		@slider.hide()
 		
-		@icons: new Core.IconGroup GDotUI.Theme.Float.iconOptions
-		@icons.base.setStyle 'position','absolute'
-		@icons.base.addClass GDotUI.Theme.Float.iconsClass
+		@icons: new Core.IconGroup @options.iconOptions
+		@controls.adopt @icons, @slider
 		
-		@close: new Core.Icon {'class':GDotUI.Theme.Float.closeClass}
+		@close: new Core.Icon {image:@options.icons.remove}
 		@close.addEvent 'invoked', ( ->
 			@hide()
 		).bindWithEvent this
 
-		@edit: new Core.Icon {'class':GDotUI.Theme.Float.editClass}
+		@edit: new Core.Icon {image:@options.icons.edit}
 		@edit.addEvent 'invoked', ( ->
 			if @contentElement?
 				if @contentElement.toggleEdit?

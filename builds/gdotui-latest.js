@@ -616,6 +616,17 @@ Core.Float = new Class({
   Implements: [Interfaces.Draggable, Interfaces.Restoreable],
   Binds: ['resize', 'mouseEnter', 'mouseLeave', 'hide'],
   options: {
+    classes: {
+      controls: GDotUI.Theme.Float.controls,
+      content: GDotUI.Theme.Float.content,
+      handle: GDotUI.Theme.Float.topHandle,
+      bottom: GDotUI.Theme.Float.bottomHandle
+    },
+    iconOptions: GDotUI.Theme.Float.iconOptions,
+    icons: {
+      remove: GDotUI.Theme.Icons.remove,
+      edit: GDotUI.Theme.Icons.edit
+    },
     'class': GDotUI.Theme.Float['class'],
     overlay: false,
     closeable: true,
@@ -629,11 +640,7 @@ Core.Float = new Class({
   },
   ready: function() {
     this.loadPosition();
-    this.base.adopt(this.icons, this.slider);
-    this.icons.base.setStyle('right', -6);
-    this.icons.base.setStyle('top', 0);
-    this.slider.base.setStyle('right', -(this.slider.base.getSize().x) - 6);
-    this.slider.base.setStyle('top', this.icons.size.y);
+    this.base.adopt(this.controls);
     return this.parent();
   },
   create: function() {
@@ -644,20 +651,22 @@ Core.Float = new Class({
       y: 0
     });
     this.base.toggleClass('inactive');
+    this.controls = new Element('div', {
+      'class': this.options.classes.controls
+    });
     this.content = new Element('div', {
-      'class': GDotUI.Theme.Float.baseClass
+      'class': this.options.classes.content
     });
     this.handle = new Element('div', {
-      'class': GDotUI.Theme.Float.handleClass
+      'class': this.options.classes.handle
     });
     this.bottom = new Element('div', {
-      'class': GDotUI.Theme.Float.bottomHandleClass
+      'class': this.options.classes.bottom
     });
     this.base.adopt(this.handle, this.content);
     this.slider = new Core.Slider({
       scrollBase: this.content
     });
-    this.slider.base.setStyle('position', 'absolute');
     this.slider.addEvent('complete', (function() {
       this.scrolling = false;
       return this.scrolling;
@@ -667,17 +676,16 @@ Core.Float = new Class({
       return this.scrolling;
     }).bindWithEvent(this));
     this.slider.hide();
-    this.icons = new Core.IconGroup(GDotUI.Theme.Float.iconOptions);
-    this.icons.base.setStyle('position', 'absolute');
-    this.icons.base.addClass(GDotUI.Theme.Float.iconsClass);
+    this.icons = new Core.IconGroup(this.options.iconOptions);
+    this.controls.adopt(this.icons, this.slider);
     this.close = new Core.Icon({
-      'class': GDotUI.Theme.Float.closeClass
+      image: this.options.icons.remove
     });
     this.close.addEvent('invoked', (function() {
       return this.hide();
     }).bindWithEvent(this));
     this.edit = new Core.Icon({
-      'class': GDotUI.Theme.Float.editClass
+      image: this.options.icons.edit
     });
     this.edit.addEvent('invoked', (function() {
       var _a, _b;

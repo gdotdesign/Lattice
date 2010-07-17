@@ -67,12 +67,10 @@ GDotUI.Theme={
     },
     Float:{
         'class':'float',
-        bottomHandleClass:'bottom',
-        handleClass:'handle',
-        closeClass:'close',
-        baseClass:'base',
-        editClass:'edit',
-        iconsClass:'controls',
+        bottomHandle:'bottom',
+        topHandle:'handle',
+        content:'base',
+        controls:'controls',
         iconOptions:{
             mode:'vertical',
             spacing:{
@@ -90,6 +88,7 @@ GDotUI.Theme={
     Icons:{
       add:'../Themes/Chrome/images/add.png',  
       remove:'../Themes/Chrome/images/delete.png',
+      edit: '../Themes/Chrome/images/pencil.png',
       handleVertical:'../Themes/Chrome/images/control_pause.png',
       handleHorizontal:''
     },
