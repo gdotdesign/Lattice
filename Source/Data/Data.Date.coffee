@@ -3,7 +3,7 @@
 
 name: Data.Date
 
-description: 
+description: Date picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -16,8 +16,9 @@ provides: Data.Date
 Data.Date: new Class {
   Extends:Data.Abstract
   options:{
-    class:GDotUI.Theme.Date.Slot.class
-    format:GDotUI.Theme.Date.format
+    class: GDotUI.Theme.Date.class
+    format: GDotUI.Theme.Date.format
+    yearFrom: GDotUI.Theme.Date.yearFrom
   }
   initialize: (options) ->
     @parent options
@@ -38,7 +39,6 @@ Data.Date: new Class {
       @date.setDate item.value
       @setValue()
     ).bindWithEvent this
-    this
   ready: ->
     i: 0
     while i < 30
@@ -52,17 +52,17 @@ Data.Date: new Class {
       item.value: i
       @month.addItem item
       i++
-    i: 1950
-    while i < 2012
+    i: @options.yearFrom
+    while i < new Date().getFullYear()
       item: new Iterable.ListItem {title:i}
       item.value: i;
       @years.addItem item
       i++
     @base.adopt @years, @month, @days
     @setValue new Date()
-    @base.setStyle 'height', @days.base.getSize().y
-    $$(@days.base,@month.base,@years.base).setStyles {'float':'left'}
     @parent()
+  getValue: ->
+    @date.format(@options.format)
   setValue: (date) ->
     if date?
       @date: date
@@ -71,16 +71,16 @@ Data.Date: new Class {
   update: ->
     cdays: @date.get 'lastdayofmonth'
     listlength: @days.list.items.length
-    if cdays>listlength
+    if cdays > listlength
       i: listlength+1
-      while i<=cdays
+      while i <= cdays
         item=new Iterable.ListItem {title:i}
         item.value: i
         @days.addItem item
         i++
-    else if cdays<listlength
+    else if cdays < listlength
       i: listlength
-      while i>cdays
+      while i > cdays
         @days.list.removeItem @days.list.items[i-1]
         i--
     @days.select @days.list.items[@date.getDate()-1]

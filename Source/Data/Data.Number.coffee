@@ -3,7 +3,7 @@
 
 name: Data.Number
 
-description: 
+description: Number data element.
 
 license: MIT-style license.
 
@@ -23,11 +23,9 @@ Data.Number: new Class {
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @text: new Element 'input', {'type':'text'}
-    @text.set('value',0).setStyle 'width',GDotUI.Theme.Slider.length
     @slider: new Core.Slider {reset: @options.reset
                               range: @options.range
                               steps: @options.steps

@@ -3,7 +3,7 @@
 
 name: Data.Time
 
-description: 
+description: Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -21,7 +21,6 @@ Data.Time: new Class {
   }
   initilaize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @hourList: new Core.Slot()
@@ -34,18 +33,8 @@ Data.Time: new Class {
       @time.setMinutes item.value
       @setValue()
     ).bindWithEvent this
-    i: 0
-    while i<24
-      item: new Iterable.ListItem {title:i}
-      item.value: i
-      @hourList.addItem item
-      i++;
-    i: 0
-    while i<60
-      item: new Iterable.ListItem {title: if i<10 then '0'+i else i}
-      item.value: i
-      @minuteList.addItem item
-      i++
+  getValue: ->
+    @time.format(@options.format)
   setValue: (date) ->
     if date?
       @time: date
@@ -53,9 +42,19 @@ Data.Time: new Class {
     @minuteList.select @minuteList.list.items[@time.getMinutes()]
     @fireEvent 'change', @time.format(@options.format)
   ready: ->
+    i: 0
+    while i < 24
+      item: new Iterable.ListItem {title:i}
+      item.value: i
+      @hourList.addItem item
+      i++;
+    i: 0
+    while i < 60
+      item: new Iterable.ListItem {title: if i<10 then '0'+i else i}
+      item.value: i
+      @minuteList.addItem item
+      i++
     @base.adopt @hourList, @minuteList
-    $$(@hourList.base,@minuteList.base).setStyles {'float':'left'}
-    @base.setStyle 'height', @hourList.base.getSize().y
     @setValue new Date()
     @parent()
 }

@@ -3,13 +3,13 @@
 
 name: Interfaces.Draggable
 
-description: Porived dragging for elements that implements this.
+description: Porived dragging for elements that implements it.
 
 license: MIT-style license.
 
 requires: 
 
-provides: [Interfaces.Draggable, Drag.Float]
+provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
 ...
 ###
@@ -24,8 +24,8 @@ Drag.Float: new Class {
 Drag.Ghost: new Class {
 	Extends: Drag.Move
 	options: { opacity: 0.65
-						 pos:false
-						 remove:''}
+						 pos: false
+						 remove: ''}
 	start: (event) ->
 		if  not event.rightClick
 			@droppables = $$(@options.droppables)
@@ -46,7 +46,7 @@ Drag.Ghost: new Class {
 		).setStyles({
 			'opacity': @options.opacity,
 			'position': 'absolute',
-			'z-index':5003,
+			'z-index': 5003, # todo zindexing
 			'top': @element.getCoordinates()['top'],
 			'left': @element.getCoordinates()['left']
 			'-webkit-transition-duration': '0s'

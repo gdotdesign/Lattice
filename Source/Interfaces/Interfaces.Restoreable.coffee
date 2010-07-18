@@ -3,7 +3,7 @@
 
 name: Interfaces.Restoreable
 
-description: 
+description: Interface to store and restore elements status and position after refresh.
 
 license: MIT-style license.
 
@@ -15,23 +15,24 @@ provides: Interfaces.Restoreable
 ###
 Interfaces.Restoreable: new Class {
   Impelments:[Options]
+  Binds: ['savePosition']
   options:{
     useCookie:true
     cookieID:null
   }
   _$Restoreable: ->
-    @addEvent 'hide', ( ->
+    @base.addEventListener 'DOMNodeRemovedFromDocument', ( ->
       if $chk @options.cookieID
         if @options.useCookie
           Cookie.write @options.cookieID+'.state', 'hidden', {duration:GDotUI.Config.cookieDuration}
         else
           window.localStorage.setItem @options.cookieID+'.state', 'hidden'
-    ).bindWithEvent this
-    @addEvent 'dropped', @savePosition.bindWithEvent this
+    ).bindWithEvent(this), off
+    @addEvent 'dropped', @savePosition
   savePosition: ->
     if $chk @options.cookieID
       position: @base.getPosition();
-      state: if @base.isVisible() then 'visible' else'hidden'
+      state: if @base.isVisible() then 'visible' else 'hidden'
       if @options.useCookie
         Cookie.write @options.cookieID+'.x', position.x, {duration:GDotUI.Config.cookieDuration}
         Cookie.write @options.cookieID+'.y', position.y, {duration:GDotUI.Config.cookieDuration}

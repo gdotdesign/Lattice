@@ -175,7 +175,7 @@ Interfaces.Draggable: new Class {
 
 name: Interfaces.Restoreable
 
-description: 
+description: Interface to store and restore elements status and position after refresh.
 
 license: MIT-style license.
 
@@ -187,23 +187,24 @@ provides: Interfaces.Restoreable
 ###
 Interfaces.Restoreable: new Class {
   Impelments:[Options]
+  Binds: ['savePosition']
   options:{
     useCookie:true
     cookieID:null
   }
   _$Restoreable: ->
-    @addEvent 'hide', ( ->
+    @base.addEventListener 'DOMNodeRemovedFromDocument', ( ->
       if $chk @options.cookieID
         if @options.useCookie
           Cookie.write @options.cookieID+'.state', 'hidden', {duration:GDotUI.Config.cookieDuration}
         else
           window.localStorage.setItem @options.cookieID+'.state', 'hidden'
-    ).bindWithEvent this
-    @addEvent 'dropped', @savePosition.bindWithEvent this
+    ).bindWithEvent(this), off
+    @addEvent 'dropped', @savePosition
   savePosition: ->
     if $chk @options.cookieID
       position: @base.getPosition();
-      state: if @base.isVisible() then 'visible' else'hidden'
+      state: if @base.isVisible() then 'visible' else 'hidden'
       if @options.useCookie
         Cookie.write @options.cookieID+'.x', position.x, {duration:GDotUI.Config.cookieDuration}
         Cookie.write @options.cookieID+'.y', position.y, {duration:GDotUI.Config.cookieDuration}
@@ -231,7 +232,7 @@ Interfaces.Restoreable: new Class {
 
 name: Interfaces.Controls
 
-description: 
+description: Some control functions.
 
 license: MIT-style license.
 
@@ -430,7 +431,7 @@ Core.IconGroup: new Class {
 
 name: Core.Tip
 
-description: Tip class.... (TODO Description)
+description: Tip class
 
 license: MIT-style license.
 
@@ -445,20 +446,19 @@ Core.Tip: new Class {
   Binds:['enter'
          'leave']
   options:{
+    class: GDotUI.Theme.Tip.class
     text:""
-    location: {x:"left"
-               y:"bottom"}
-    offset:5
+    location: GDotUI.Theme.Tip.location
+    offset: GDotUI.Theme.Tip.offset
+    zindex: GDotUI.Theme.Tip.zindex
   }
   initialize: (options) ->
     @parent options
-    @create();
-    this
   create:  ->
-    @base.addClass GDotUI.Theme.tipClass
-    @base.setStyle 'position','absolute'
-    @base.setStyle 'z-index', GDotUI.Config.tipZindex
-    @base.set 'html', this.options.text
+    @base.addClass @options.class
+    @base.setStyle 'position', 'absolute'
+    @base.setStyle 'z-index', @options.tipZindex
+    @base.set 'html', @options.text
   attach: (item) ->
     if not @attachedTo?
       @detach()
@@ -471,32 +471,32 @@ Core.Tip: new Class {
     @attachedTo: null
   enter: ->
     if @attachedTo.enabled
-      @showTip()
+      @show()
   leave: ->
     if @attachedTo.enabled
-      this.hideTip()
-  showTip: ->
+      @hide()
+  ready: ->
     p: @attachedTo.base.getPosition()
-    s: @attachedTo.base.getSize();
-    document.getElement('body').grab(@base)
-    s1: @base.measure ->
-          @getSize()
+    s: @attachedTo.base.getSize()
+    s1: @base.getSize()
     switch @options.location.x
       when "left"
-        @tip.setStyle 'left', p.x+(s.x+this.options.offset)
+        @tip.setStyle 'left', p.x+(s.x+@options.offset)
       when "right"
-        @tip.setStyle 'left', p.x+(s.x+this.options.offset)
+        @tip.setStyle 'left', p.x+(s.x+@options.offset)
       when "center"
         @tip.setStyle 'left', p.x-s1.x/2+s.x/2
     switch @options.location.y
       when "top"
-        @tip.setStyle 'top', p.y-(s.y+this.options.offset)
+        @tip.setStyle 'top', p.y-(s.y+@options.offset)
       when "bottom"
-        @tip.setStyle 'top', p.y+(s.y+this.options.offset)
+        @tip.setStyle 'top', p.y+(s.y+@options.offset)
       when "center"
         @tip.setStyle 'top', p.y-s1.y/2+s.y/2
-  hideTip: ->
+  hide: ->
     @base.dispose()
+  show: ->
+    document.getElement('body').grab(@base)
 }
 
 ###
@@ -1056,7 +1056,7 @@ Core.Slot: new Class {
 
 name: Data.Abstract
 
-description: 
+description: "Abstract" base class for data elements.
 
 license: MIT-style license.
 
@@ -1094,7 +1094,7 @@ Data.Abstract: new Class {
 
 name: Data.Text
 
-description: 
+description: Text data element.
 
 license: MIT-style license.
 
@@ -1105,9 +1105,10 @@ provides: Data.Text
 ...
 ###
 Data.Text: new Class {
-  Implements:Events
-  initialize: ->
-    @base: new Element 'div' 
+  Extends: Data.Abstract
+  initialize: (options) ->
+    @parent options
+  create: ->
     @text: new Element 'textarea'
     @base.grab @text
     @addEvent 'show', ( ->
@@ -1116,11 +1117,10 @@ Data.Text: new Class {
     @text.addEvent 'keyup',( (e) ->
       @fireEvent 'change', @text.get('value')
     ).bindWithEvent this
-    this
+  getValue: ->
+    @text.get('value')
   setValue: (text) ->
     @text.set('value',text);
-  toElement: ->
-    @base
 }
 
 ###
@@ -1128,7 +1128,7 @@ Data.Text: new Class {
 
 name: Data.Number
 
-description: 
+description: Number data element.
 
 license: MIT-style license.
 
@@ -1148,11 +1148,9 @@ Data.Number: new Class {
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @text: new Element 'input', {'type':'text'}
-    @text.set('value',0).setStyle 'width',GDotUI.Theme.Slider.length
     @slider: new Core.Slider {reset: @options.reset
                               range: @options.range
                               steps: @options.steps
@@ -1407,7 +1405,7 @@ Data.Color.Controls.Field: new Class {
 
 name: Data.Date
 
-description: 
+description: Date picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -1420,8 +1418,9 @@ provides: Data.Date
 Data.Date: new Class {
   Extends:Data.Abstract
   options:{
-    class:GDotUI.Theme.Date.Slot.class
-    format:GDotUI.Theme.Date.format
+    class: GDotUI.Theme.Date.class
+    format: GDotUI.Theme.Date.format
+    yearFrom: GDotUI.Theme.Date.yearFrom
   }
   initialize: (options) ->
     @parent options
@@ -1442,7 +1441,6 @@ Data.Date: new Class {
       @date.setDate item.value
       @setValue()
     ).bindWithEvent this
-    this
   ready: ->
     i: 0
     while i < 30
@@ -1456,17 +1454,17 @@ Data.Date: new Class {
       item.value: i
       @month.addItem item
       i++
-    i: 1950
-    while i < 2012
+    i: @options.yearFrom
+    while i < new Date().getFullYear()
       item: new Iterable.ListItem {title:i}
       item.value: i;
       @years.addItem item
       i++
     @base.adopt @years, @month, @days
     @setValue new Date()
-    @base.setStyle 'height', @days.base.getSize().y
-    $$(@days.base,@month.base,@years.base).setStyles {'float':'left'}
     @parent()
+  getValue: ->
+    @date.format(@options.format)
   setValue: (date) ->
     if date?
       @date: date
@@ -1475,16 +1473,16 @@ Data.Date: new Class {
   update: ->
     cdays: @date.get 'lastdayofmonth'
     listlength: @days.list.items.length
-    if cdays>listlength
+    if cdays > listlength
       i: listlength+1
-      while i<=cdays
+      while i <= cdays
         item=new Iterable.ListItem {title:i}
         item.value: i
         @days.addItem item
         i++
-    else if cdays<listlength
+    else if cdays < listlength
       i: listlength
-      while i>cdays
+      while i > cdays
         @days.list.removeItem @days.list.items[i-1]
         i--
     @days.select @days.list.items[@date.getDate()-1]
@@ -1497,7 +1495,7 @@ Data.Date: new Class {
 
 name: Data.Time
 
-description: 
+description: Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -1515,7 +1513,6 @@ Data.Time: new Class {
   }
   initilaize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @hourList: new Core.Slot()
@@ -1528,18 +1525,8 @@ Data.Time: new Class {
       @time.setMinutes item.value
       @setValue()
     ).bindWithEvent this
-    i: 0
-    while i<24
-      item: new Iterable.ListItem {title:i}
-      item.value: i
-      @hourList.addItem item
-      i++;
-    i: 0
-    while i<60
-      item: new Iterable.ListItem {title: if i<10 then '0'+i else i}
-      item.value: i
-      @minuteList.addItem item
-      i++
+  getValue: ->
+    @time.format(@options.format)
   setValue: (date) ->
     if date?
       @time: date
@@ -1547,9 +1534,19 @@ Data.Time: new Class {
     @minuteList.select @minuteList.list.items[@time.getMinutes()]
     @fireEvent 'change', @time.format(@options.format)
   ready: ->
+    i: 0
+    while i < 24
+      item: new Iterable.ListItem {title:i}
+      item.value: i
+      @hourList.addItem item
+      i++;
+    i: 0
+    while i < 60
+      item: new Iterable.ListItem {title: if i<10 then '0'+i else i}
+      item.value: i
+      @minuteList.addItem item
+      i++
     @base.adopt @hourList, @minuteList
-    $$(@hourList.base,@minuteList.base).setStyles {'float':'left'}
-    @base.setStyle 'height', @hourList.base.getSize().y
     @setValue new Date()
     @parent()
 }
@@ -1559,7 +1556,7 @@ Data.Time: new Class {
 
 name: Data.DateTime
 
-description: 
+description:  Date & Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -1577,7 +1574,6 @@ Data.DateTime: new Class {
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @datea: new Data.Date()
@@ -1597,6 +1593,8 @@ Data.DateTime: new Class {
       @fireEvent 'change', @date.format(@options.format)
     ).bindWithEvent this
     @parent()
+  getValue: ->
+    @date.format(@options.format)
   setValue: (date) ->
     if date?
       @date: date

@@ -3,7 +3,7 @@
 
 name: Data.Text
 
-description: 
+description: Text data element.
 
 license: MIT-style license.
 
@@ -14,9 +14,10 @@ provides: Data.Text
 ...
 ###
 Data.Text: new Class {
-  Implements:Events
-  initialize: ->
-    @base: new Element 'div' 
+  Extends: Data.Abstract
+  initialize: (options) ->
+    @parent options
+  create: ->
     @text: new Element 'textarea'
     @base.grab @text
     @addEvent 'show', ( ->
@@ -25,9 +26,8 @@ Data.Text: new Class {
     @text.addEvent 'keyup',( (e) ->
       @fireEvent 'change', @text.get('value')
     ).bindWithEvent this
-    this
+  getValue: ->
+    @text.get('value')
   setValue: (text) ->
     @text.set('value',text);
-  toElement: ->
-    @base
 }

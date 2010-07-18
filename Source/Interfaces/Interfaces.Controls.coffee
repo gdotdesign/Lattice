@@ -3,7 +3,7 @@
 
 name: Interfaces.Controls
 
-description: 
+description: Some control functions.
 
 license: MIT-style license.
 

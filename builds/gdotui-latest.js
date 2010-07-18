@@ -191,7 +191,7 @@ Interfaces.Draggable = new Class({
 
 name: Interfaces.Restoreable
 
-description:
+description: Interface to store and restore elements status and position after refresh.
 
 license: MIT-style license.
 
@@ -203,17 +203,18 @@ provides: Interfaces.Restoreable
 */
 Interfaces.Restoreable = new Class({
   Impelments: [Options],
+  Binds: ['savePosition'],
   options: {
     useCookie: true,
     cookieID: null
   },
   _$Restoreable: function() {
-    this.addEvent('hide', (function() {
+    this.base.addEventListener('DOMNodeRemovedFromDocument', (function() {
       return $chk(this.options.cookieID) ? this.options.useCookie ? Cookie.write(this.options.cookieID + '.state', 'hidden', {
         duration: GDotUI.Config.cookieDuration
       }) : window.localStorage.setItem(this.options.cookieID + '.state', 'hidden') : null;
-    }).bindWithEvent(this));
-    return this.addEvent('dropped', this.savePosition.bindWithEvent(this));
+    }).bindWithEvent(this), false);
+    return this.addEvent('dropped', this.savePosition);
   },
   savePosition: function() {
     var position, state;
@@ -256,7 +257,7 @@ Interfaces.Restoreable = new Class({
 
 name: Interfaces.Controls
 
-description:
+description: Some control functions.
 
 license: MIT-style license.
 
@@ -486,7 +487,7 @@ Core.IconGroup = new Class({
 
 name: Core.Tip
 
-description: Tip class.... (TODO Description)
+description: Tip class
 
 license: MIT-style license.
 
@@ -500,22 +501,19 @@ Core.Tip = new Class({
   Extends: Core.Abstract,
   Binds: ['enter', 'leave'],
   options: {
+    'class': GDotUI.Theme.Tip['class'],
     text: "",
-    location: {
-      x: "left",
-      y: "bottom"
-    },
-    offset: 5
+    location: GDotUI.Theme.Tip.location,
+    offset: GDotUI.Theme.Tip.offset,
+    zindex: GDotUI.Theme.Tip.zindex
   },
   initialize: function(options) {
-    this.parent(options);
-    this.create();
-    return this;
+    return this.parent(options);
   },
   create: function() {
-    this.base.addClass(GDotUI.Theme.tipClass);
+    this.base.addClass(this.options['class']);
     this.base.setStyle('position', 'absolute');
-    this.base.setStyle('z-index', GDotUI.Config.tipZindex);
+    this.base.setStyle('z-index', this.options.tipZindex);
     return this.base.set('html', this.options.text);
   },
   attach: function(item) {
@@ -533,19 +531,16 @@ Core.Tip = new Class({
     return this.attachedTo;
   },
   enter: function() {
-    return this.attachedTo.enabled ? this.showTip() : null;
+    return this.attachedTo.enabled ? this.show() : null;
   },
   leave: function() {
-    return this.attachedTo.enabled ? this.hideTip() : null;
+    return this.attachedTo.enabled ? this.hide() : null;
   },
-  showTip: function() {
+  ready: function() {
     var _a, _b, p, s, s1;
     p = this.attachedTo.base.getPosition();
     s = this.attachedTo.base.getSize();
-    document.getElement('body').grab(this.base);
-    s1 = this.base.measure(function() {
-      return this.getSize();
-    });
+    s1 = this.base.getSize();
     if ((_a = this.options.location.x) === "left") {
       this.tip.setStyle('left', p.x + (s.x + this.options.offset));
     } else if (_a === "right") {
@@ -561,8 +556,11 @@ Core.Tip = new Class({
       return this.tip.setStyle('top', p.y - s1.y / 2 + s.y / 2);
     }
   },
-  hideTip: function() {
+  hide: function() {
     return this.base.dispose();
+  },
+  show: function() {
+    return document.getElement('body').grab(this.base);
   }
 });
 /*
@@ -1175,7 +1173,7 @@ Core.Slot = new Class({
 
 name: Data.Abstract
 
-description:
+description: "Abstract" base class for data elements.
 
 license: MIT-style license.
 
@@ -1214,7 +1212,7 @@ Data.Abstract = new Class({
 
 name: Data.Text
 
-description:
+description: Text data element.
 
 license: MIT-style license.
 
@@ -1225,24 +1223,25 @@ provides: Data.Text
 ...
 */
 Data.Text = new Class({
-  Implements: Events,
-  initialize: function() {
-    this.base = new Element('div');
+  Extends: Data.Abstract,
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
     this.text = new Element('textarea');
     this.base.grab(this.text);
     this.addEvent('show', (function() {
       return this.text.focus();
     }).bindWithEvent(this));
-    this.text.addEvent('keyup', (function(e) {
+    return this.text.addEvent('keyup', (function(e) {
       return this.fireEvent('change', this.text.get('value'));
     }).bindWithEvent(this));
-    return this;
+  },
+  getValue: function() {
+    return this.text.get('value');
   },
   setValue: function(text) {
     return this.text.set('value', text);
-  },
-  toElement: function() {
-    return this.base;
   }
 });
 /*
@@ -1250,7 +1249,7 @@ Data.Text = new Class({
 
 name: Data.Number
 
-description:
+description: Number data element.
 
 license: MIT-style license.
 
@@ -1269,15 +1268,13 @@ Data.Number = new Class({
     steps: GDotUI.Theme.Number.steps
   },
   initialize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
     this.base.addClass(this.options['class']);
     this.text = new Element('input', {
       'type': 'text'
     });
-    this.text.set('value', 0).setStyle('width', GDotUI.Theme.Slider.length);
     this.slider = new Core.Slider({
       reset: this.options.reset,
       range: this.options.range,
@@ -1559,7 +1556,7 @@ Data.Color.Controls.Field = new Class({
 
 name: Data.Date
 
-description:
+description: Date picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -1572,8 +1569,9 @@ provides: Data.Date
 Data.Date = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Date.Slot['class'],
-    format: GDotUI.Theme.Date.format
+    'class': GDotUI.Theme.Date['class'],
+    format: GDotUI.Theme.Date.format,
+    yearFrom: GDotUI.Theme.Date.yearFrom
   },
   initialize: function(options) {
     return this.parent(options);
@@ -1591,11 +1589,10 @@ Data.Date = new Class({
       this.date.setMonth(item.value);
       return this.setValue();
     }).bindWithEvent(this));
-    this.days.addEvent('change', (function(item) {
+    return this.days.addEvent('change', (function(item) {
       this.date.setDate(item.value);
       return this.setValue();
     }).bindWithEvent(this));
-    return this;
   },
   ready: function() {
     var i, item;
@@ -1617,8 +1614,8 @@ Data.Date = new Class({
       this.month.addItem(item);
       i++;
     }
-    i = 1950;
-    while (i < 2012) {
+    i = this.options.yearFrom;
+    while (i < new Date().getFullYear()) {
       item = new Iterable.ListItem({
         title: i
       });
@@ -1628,11 +1625,10 @@ Data.Date = new Class({
     }
     this.base.adopt(this.years, this.month, this.days);
     this.setValue(new Date());
-    this.base.setStyle('height', this.days.base.getSize().y);
-    $$(this.days.base, this.month.base, this.years.base).setStyles({
-      'float': 'left'
-    });
     return this.parent();
+  },
+  getValue: function() {
+    return this.date.format(this.options.format);
   },
   setValue: function(date) {
     (typeof date !== "undefined" && date !== null) ? (this.date = date) : null;
@@ -1670,7 +1666,7 @@ Data.Date = new Class({
 
 name: Data.Time
 
-description:
+description: Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -1687,11 +1683,9 @@ Data.Time = new Class({
     format: GDotUI.Theme.Date.Time.format
   },
   initilaize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
-    var _a, i, item;
     this.base.addClass(this.options['class']);
     this.hourList = new Core.Slot();
     this.minuteList = new Core.Slot();
@@ -1699,10 +1693,22 @@ Data.Time = new Class({
       this.time.setHours(item.value);
       return this.setValue();
     }).bindWithEvent(this));
-    this.minuteList.addEvent('change', (function(item) {
+    return this.minuteList.addEvent('change', (function(item) {
       this.time.setMinutes(item.value);
       return this.setValue();
     }).bindWithEvent(this));
+  },
+  getValue: function() {
+    return this.time.format(this.options.format);
+  },
+  setValue: function(date) {
+    (typeof date !== "undefined" && date !== null) ? (this.time = date) : null;
+    this.hourList.select(this.hourList.list.items[this.time.getHours()]);
+    this.minuteList.select(this.minuteList.list.items[this.time.getMinutes()]);
+    return this.fireEvent('change', this.time.format(this.options.format));
+  },
+  ready: function() {
+    var i, item;
     i = 0;
     while (i < 24) {
       item = new Iterable.ListItem({
@@ -1713,31 +1719,15 @@ Data.Time = new Class({
       i++;
     }
     i = 0;
-    _a = [];
     while (i < 60) {
-      _a.push((function() {
-        item = new Iterable.ListItem({
-          title: i < 10 ? '0' + i : i
-        });
-        item.value = i;
-        this.minuteList.addItem(item);
-        return i++;
-      }).call(this));
+      item = new Iterable.ListItem({
+        title: i < 10 ? '0' + i : i
+      });
+      item.value = i;
+      this.minuteList.addItem(item);
+      i++;
     }
-    return _a;
-  },
-  setValue: function(date) {
-    (typeof date !== "undefined" && date !== null) ? (this.time = date) : null;
-    this.hourList.select(this.hourList.list.items[this.time.getHours()]);
-    this.minuteList.select(this.minuteList.list.items[this.time.getMinutes()]);
-    return this.fireEvent('change', this.time.format(this.options.format));
-  },
-  ready: function() {
     this.base.adopt(this.hourList, this.minuteList);
-    $$(this.hourList.base, this.minuteList.base).setStyles({
-      'float': 'left'
-    });
-    this.base.setStyle('height', this.hourList.base.getSize().y);
     this.setValue(new Date());
     return this.parent();
   }
@@ -1747,7 +1737,7 @@ Data.Time = new Class({
 
 name: Data.DateTime
 
-description:
+description:  Date & Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -1764,8 +1754,7 @@ Data.DateTime = new Class({
     format: GDotUI.Theme.Date.DateTime.format
   },
   initialize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
     this.base.addClass(this.options['class']);
@@ -1788,6 +1777,9 @@ Data.DateTime = new Class({
       return this.fireEvent('change', this.date.format(this.options.format));
     }).bindWithEvent(this));
     return this.parent();
+  },
+  getValue: function() {
+    return this.date.format(this.options.format);
   },
   setValue: function(date) {
     (typeof date !== "undefined" && date !== null) ? (this.date = date) : null;

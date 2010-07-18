@@ -3,7 +3,7 @@
 
 name: Data.DateTime
 
-description: 
+description:  Date & Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
@@ -21,7 +21,6 @@ Data.DateTime: new Class {
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @datea: new Data.Date()
@@ -41,6 +40,8 @@ Data.DateTime: new Class {
       @fireEvent 'change', @date.format(@options.format)
     ).bindWithEvent this
     @parent()
+  getValue: ->
+    @date.format(@options.format)
   setValue: (date) ->
     if date?
       @date: date

@@ -61,6 +61,25 @@ GDotUI.Theme={
         location: { x:"left",
                     y:"bottom" }
     },
+    Date:{
+      'class':'date',
+      yearFrom: 1980,
+      format:'%Y %B %d - %A',
+      DateTime:{
+        'class':'date-time',
+        format:'%Y %B %d - %A %H:%M'
+      },
+      Time:{
+        'class':'time',
+        format:'%H:%M'
+      }
+    },
+    Number:{
+        'class':'number',
+        range:[-100,100],
+        steps:200,
+        reset: true
+    },
     Forms:{
         Field:{
             struct:{
@@ -74,31 +93,6 @@ GDotUI.Theme={
                 }
             }
         }
-    },
-    css:'theme.css',
-    Date:{
-      'class':'date',
-      next:'next',
-      previous:'prev',
-      title:'title',
-      format:'%Y %B %d - %A',
-      DateTime:{
-        'class':'date-time',
-        format:'%Y %B %d - %A %H:%M'
-      },
-      Time:{
-        'class':'time',
-        format:'%H:%M'
-      },
-      Slot:{
-        'class':'time-slot'
-      }
-    },
-    Number:{
-        'class':'number',
-        range:[-100,100],
-        steps:200,
-        reset: true
     },
     List:{
       'class':'list'  
