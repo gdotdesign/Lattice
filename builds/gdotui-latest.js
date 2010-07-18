@@ -275,11 +275,11 @@ Interfaces.Controls = new Class({
 
 name: Core.Abstract
 
-description:
+description: "Abstract" base class for Core U.I. elements.
 
 license: MIT-style license.
 
-requires: [Interfaces.Enabled, Interfaces.Controls]
+requires: [Interfaces.Mux]
 
 provides: Core.Abstract
 
@@ -830,7 +830,7 @@ Core.Float = new Class({
 
 name: Core.Button
 
-description:
+description: Basic button element.
 
 license: MIT-style license.
 
@@ -844,14 +844,13 @@ Core.Button = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Controls],
   options: {
-    image: '',
-    text: '',
+    image: GDotUI.Theme.Button.defaultIcon,
+    text: GDotUI.Theme.Button.defaultText,
     'class': GDotUI.Theme.Button['class']
   },
   initialize: function(options) {
-    this.parent(options);
     this.enabled = true;
-    return this;
+    return this.parent(options);
   },
   create: function() {
     delete this.base;
@@ -866,7 +865,6 @@ Core.Button = new Class({
   },
   ready: function() {
     this.base.grab(this.icon);
-    this.icon.base.setStyle('float', 'left');
     return this.parent();
   }
 });

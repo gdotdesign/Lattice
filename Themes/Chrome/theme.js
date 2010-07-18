@@ -1,5 +1,35 @@
 GDotUI={}
 GDotUI.Theme={
+    Global:{
+        active: 'active',
+        inactive: 'inactive'
+    },
+    Icons:{
+      add:'../Themes/Chrome/images/add.png',  
+      remove:'../Themes/Chrome/images/delete.png',
+      edit: '../Themes/Chrome/images/pencil.png',
+      handleVertical:'../Themes/Chrome/images/control_pause.png',
+      handleHorizontal:''
+    },
+    Button:{
+      'class':'button',
+      defaultText: 'Button',
+      defaultIcon: '../Themes/Chrome/images/pencil.png'
+    },
+    Float:{
+        'class':'float',
+        bottomHandle:'bottom',
+        topHandle:'handle',
+        content:'base',
+        controls:'controls',
+        iconOptions:{
+            mode:'vertical',
+            spacing:{
+                x:0,
+                y:5
+            }
+        }
+    },
     Forms:{
         Field:{
             struct:{
@@ -25,9 +55,6 @@ GDotUI.Theme={
       'class':'icon'
     },
     tipClass:'tip',
-    Button:{
-      'class':'button'
-    },
     Date:{
       'class':'date',
       next:'next',
@@ -67,32 +94,11 @@ GDotUI.Theme={
       zindex:800,
       'class':'overlay'
     },
-    Float:{
-        'class':'float',
-        bottomHandle:'bottom',
-        topHandle:'handle',
-        content:'base',
-        controls:'controls',
-        iconOptions:{
-            mode:'vertical',
-            spacing:{
-                x:0,
-                y:5
-            }
-        }
-    },
     ListItem:{
       'class':'list-item',
       title:'title',
       subTitle:'subtitle',
       iconOffset:2
-    },
-    Icons:{
-      add:'../Themes/Chrome/images/add.png',  
-      remove:'../Themes/Chrome/images/delete.png',
-      edit: '../Themes/Chrome/images/pencil.png',
-      handleVertical:'../Themes/Chrome/images/control_pause.png',
-      handleHorizontal:''
     },
     Color:{
        sb:'sb',

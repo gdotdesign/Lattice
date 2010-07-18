@@ -103,6 +103,8 @@
             ]
         }
         window.addEvent('domready',function(){
+            var b=new Core.Button();
+            document.body.grab(b);
             var t=new Core.Tabs();
             for(var i=0;i<7;i++){
                 t.add(new Core.Tab({label:'tab'+i}));

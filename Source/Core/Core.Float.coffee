@@ -3,7 +3,7 @@
 
 name: Core.Float
 
-description: 
+description: Core.Float is a "floating" panel, with controls. Think of it as a window, just more awesome.
 
 license: MIT-style license.
 
@@ -17,21 +17,26 @@ Core.Float: new Class {
 	Extends:Core.Abstract
 	Implements:[Interfaces.Draggable
 							Interfaces.Restoreable]
-	Binds:['resize','mouseEnter','mouseLeave','hide']
+	Binds:['resize'
+				 'mouseEnter'
+				 'mouseLeave'
+				 'hide'
+				 ]
 	options:{
 		classes:{
+			class: GDotUI.Theme.Float.class
 			controls: GDotUI.Theme.Float.controls
 			content: GDotUI.Theme.Float.content
 			handle: GDotUI.Theme.Float.topHandle
 			bottom: GDotUI.Theme.Float.bottomHandle
+			active: GDotUI.Theme.Global.active
+			inactive: GDotUI.Theme.Global.inactive
 		}
-		iconOptions:GDotUI.Theme.Float.iconOptions
+		iconOptions: GDotUI.Theme.Float.iconOptions
 		icons:{
 			remove: GDotUI.Theme.Icons.remove
 			edit: GDotUI.Theme.Icons.edit
 		}
-		class:GDotUI.Theme.Float.class
-		overlay: off
 		closeable: on
 		resizeable: off
 		editable: off
@@ -39,23 +44,22 @@ Core.Float: new Class {
 		ghost: off
 	}
 	initialize: (options) ->
-		@parent(options)
 		@showSilder: off
-		this
+		@parent options
 	ready: ->
 		@loadPosition()
 		@base.adopt @controls
 		@parent()
 	create: ->
-		@base.addClass @options.class
+		@base.addClass @options.classes.class
 		@base.setStyle 'position', 'absolute'
 		@base.setPosition {x:0,y:0}
-		@base.toggleClass 'inactive'
+		@base.toggleClass @options.classes.inactive
 		
-		@controls:  new Element 'div', {class:@options.classes.controls}
-		@content: new Element 'div', {'class':@options.classes.content}
-		@handle: new Element 'div', {'class':@options.classes.handle}
-		@bottom: new Element 'div', {'class':@options.classes.bottom}
+		@controls:  new Element 'div', {class: @options.classes.controls}
+		@content: new Element 'div', {'class': @options.classes.content}
+		@handle: new Element 'div', {'class': @options.classes.handle}
+		@bottom: new Element 'div', {'class': @options.classes.bottom}
 
 		@base.adopt @handle, @content
 
@@ -72,7 +76,7 @@ Core.Float: new Class {
 		@icons: new Core.IconGroup @options.iconOptions
 		@controls.adopt @icons, @slider
 		
-		@close: new Core.Icon {image:@options.icons.remove}
+		@close: new Core.Icon {image: @options.icons.remove}
 		@close.addEvent 'invoked', ( ->
 			@hide()
 		).bindWithEvent this
@@ -92,7 +96,7 @@ Core.Float: new Class {
 		
 		@icons.hide()
 		
-		if $chk @options.scrollBase
+		if @options.scrollBase? 
 			@scrollBase: @options.scrollBase
 		else
 			@scrollBase: @content
@@ -107,8 +111,8 @@ Core.Float: new Class {
 		@base.addEvent 'mouseenter', @mouseEnter
 		@base.addEvent 'mouseleave', @mouseLeave
 	mouseEnter: ->
-		@base.toggleClass 'active'
-		@base.toggleClass 'inactive'
+		@base.toggleClass @options.classes.active
+		@base.toggleClass @options.classes.inactive
 		$clear @iconsTimout
 		$clear @sliderTimout
 		if @showSlider
@@ -116,12 +120,12 @@ Core.Float: new Class {
 		@icons.show()
 		@mouseisover: on
 	mouseLeave: ->
-		@base.toggleClass('active');
-		@base.toggleClass('inactive');
+		@base.toggleClass @options.classes.active
+		@base.toggleClass @options.classes.inactive
 		if not @scrolling
 			if @showSlider
-				@sliderTimout: @slider.hide.delay 200,@slider
-		@iconsTimout: @icons.hide.delay 200,@icons
+				@sliderTimout: @slider.hide.delay 200, @slider
+		@iconsTimout: @icons.hide.delay 200, @icons
 		@mouseisover: off
 	resize: ->
 		if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
@@ -135,10 +139,7 @@ Core.Float: new Class {
 				@slider.hide()
 	show: ->
 		if not @base.isVisible()
-			document.getElement('body').grab @base
-			if @options.overlay
-				GDotUI.Misc.Overlay.show()
-				@base.setStyle 'z-index', 801
+			document.getElement('body').grab @base1
 	hide: ->
 		@base.dispose()
 	toggle: (el) ->
@@ -148,7 +149,7 @@ Core.Float: new Class {
 			@show el
 	setContent: (element) -> 
 		@contentElement: element
-		@content.grab element.base
+		@content.grab element
 	center: ->
 		@base.position()
 }

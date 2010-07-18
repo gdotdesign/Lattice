@@ -5,6 +5,26 @@
 @import tabs.css
 @import float.css
 
+.button
+  +linear_gradient(#85A7EA,#6F95DB)
+  +box_shadow(0,0,5px, rgba(0,0,0,0.3))
+  +round_full(3px)
+  :border none
+  :padding 10px
+  :padding-top 7px
+  :font-size 14px
+  :color #eee
+  :font-weight bold
+  :text-shadow 0 0 5px rgba(0,0,0,0.2)
+  :cursor pointer
+  .icon
+    :margin-right 5px
+    :float left
+.button:active
+  :position relative
+  :top 1px
+  :left 1px
+  
 .picking
   +box_shadow(0,0,10px, rgba(60,120,255,0.4))
 

@@ -251,11 +251,11 @@ Interfaces.Controls: new Class {
 
 name: Core.Abstract
 
-description: 
+description: "Abstract" base class for Core U.I. elements.
 
 license: MIT-style license.
 
-requires: [Interfaces.Enabled, Interfaces.Controls]
+requires: [Interfaces.Mux]
 
 provides: Core.Abstract
 
@@ -731,7 +731,7 @@ Core.Float: new Class {
 
 name: Core.Button
 
-description: 
+description: Basic button element.
 
 license: MIT-style license.
 
@@ -748,27 +748,25 @@ Core.Button: new Class {
     Interfaces.Controls
   ]
   options:{
-    image: ''
-    text: ''
+    image: GDotUI.Theme.Button.defaultIcon
+    text: GDotUI.Theme.Button.defaultText
     class: GDotUI.Theme.Button.class
   }
   initialize: (options) ->
-    @parent(options)
     @enabled: on
-    this
+    @parent options 
   create: ->
     delete @base
     @base: new Element 'button'
-    @base.addClass(this.options['class']).set 'text', @options.text
-    @icon: new Core.Icon {image:@options.image}
+    @base.addClass(@options.class).set 'text', @options.text
+    @icon: new Core.Icon {image: @options.image}
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [this, e]
       ).bindWithEvent this
   ready: ->
       @base.grab @icon
-      @icon.base.setStyle 'float', 'left'
-      @parent();
+      @parent()
 }
 
 ###

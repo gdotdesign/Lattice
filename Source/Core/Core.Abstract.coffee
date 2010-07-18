@@ -3,11 +3,11 @@
 
 name: Core.Abstract
 
-description: 
+description: "Abstract" base class for Core U.I. elements.
 
 license: MIT-style license.
 
-requires: [Interfaces.Enabled, Interfaces.Controls]
+requires: [Interfaces.Mux]
 
 provides: Core.Abstract
 
