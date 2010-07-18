@@ -53,7 +53,7 @@ Data.Date: new Class {
       @month.addItem item
       i++
     i: @options.yearFrom
-    while i < new Date().getFullYear()
+    while i <= new Date().getFullYear()
       item: new Iterable.ListItem {title:i}
       item.value: i;
       @years.addItem item

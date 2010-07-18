@@ -936,7 +936,7 @@ Iterable.List: new Class {
   addItem: (li) -> 
     @items.push li
     @base.grab li
-    li.addEvent 'invoked', (  ->
+    li.addEvent 'invoked', ( (item) ->
       @select item
       @fireEvent 'invoked', arguments
       ).bindWithEvent this
@@ -1380,7 +1380,7 @@ Data.Date: new Class {
       @month.addItem item
       i++
     i: @options.yearFrom
-    while i < new Date().getFullYear()
+    while i <= new Date().getFullYear()
       item: new Iterable.ListItem {title:i}
       item.value: i;
       @years.addItem item
@@ -1563,7 +1563,7 @@ Iterable.ListItem: new Class {
     subtitle:''
     draggable: on
     ghost: on
-    removeClasses: GDotUI.Theme.Icon.class
+    removeClasses: '.'+GDotUI.Theme.Icon.class
   }
   initialize: (options) ->
     @parent options

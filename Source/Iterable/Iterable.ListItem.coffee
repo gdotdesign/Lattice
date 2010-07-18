@@ -33,7 +33,7 @@ Iterable.ListItem: new Class {
     subtitle:''
     draggable: on
     ghost: on
-    removeClasses: GDotUI.Theme.Icon.class
+    removeClasses: '.'+GDotUI.Theme.Icon.class
   }
   initialize: (options) ->
     @parent options

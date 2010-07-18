@@ -1048,7 +1048,7 @@ Iterable.List = new Class({
   addItem: function(li) {
     this.items.push(li);
     this.base.grab(li);
-    li.addEvent('invoked', (function() {
+    li.addEvent('invoked', (function(item) {
       this.select(item);
       return this.fireEvent('invoked', arguments);
     }).bindWithEvent(this));
@@ -1536,7 +1536,7 @@ Data.Date = new Class({
       i++;
     }
     i = this.options.yearFrom;
-    while (i < new Date().getFullYear()) {
+    while (i <= new Date().getFullYear()) {
       item = new Iterable.ListItem({
         title: i
       });
@@ -1743,7 +1743,7 @@ Iterable.ListItem = new Class({
     subtitle: '',
     draggable: true,
     ghost: true,
-    removeClasses: GDotUI.Theme.Icon['class']
+    removeClasses: '.' + GDotUI.Theme.Icon['class']
   },
   initialize: function(options) {
     return this.parent(options);
