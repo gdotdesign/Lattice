@@ -3,7 +3,7 @@
 
 name: Core.Tab
 
-description: 
+description: Tab element for Core.Tabs.
 
 license: MIT-style license.
 
@@ -18,24 +18,25 @@ Core.Tab: new Class {
   options:{
     class: GDotUI.Theme.Tab.class
     label: ''
+    image: GDotUI.Theme.Icons.remove
+    active: GDotUI.Theme.Global.active
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @base.addEvent 'click', ( ->
       @fireEvent 'activate', this
     ).bindWithEvent this
-    @label: new Element 'div', {text:@options.label}
-    @icon: new Core.Icon {image:image:GDotUI.Theme.Icons.remove}
+    @label: new Element 'div', {text: @options.label}
+    @icon: new Core.Icon {image: @options.image}
     @icon.addEvent 'invoked', ( (ic,e) ->
       e.stop()
       @fireEvent 'remove', this
     ).bindWithEvent this
-    @base.adopt @label,@icon
+    @base.adopt @label, @icon
   activate: ->
-    @base.addClass 'active'
+    @base.addClass @options.active 
   deactivate: ->
-    @base.removeClass 'active'
+    @base.removeClass @options.active
 }

@@ -7,7 +7,7 @@ description: Generic icon element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract]
+requires: [Core.Abstract, Iterable.List]
 
 provides: Core.Slot
 
@@ -27,7 +27,6 @@ Core.Slot: new Class {
   }
   initilaize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
     @overlay: new Element 'div', {'text':' '}
@@ -82,7 +81,7 @@ Core.Slot: new Class {
     ).bindWithEvent this
   update: ->
     if not @dragging
-      @list.base.setStyle '-webkit-transition-duration', '0.3s'
+      @list.base.setStyle '-webkit-transition-duration', '0.3s' # get the property and store and retrieve it
       if @list.selected?
         @list.base.setStyle 'top',-@list.selected.base.getPosition(@list.base).y+@base.getSize().y/2-@list.selected.base.getSize().y/2
 }

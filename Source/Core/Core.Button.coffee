@@ -25,7 +25,6 @@ Core.Button: new Class {
     class: GDotUI.Theme.Button.class
   }
   initialize: (options) ->
-    @enabled: on
     @parent options 
   create: ->
     delete @base
@@ -37,6 +36,6 @@ Core.Button: new Class {
         @fireEvent 'invoked', [this, e]
       ).bindWithEvent this
   ready: ->
-      @base.grab @icon
-      @parent()
+    @base.grab @icon
+    @parent()
 }

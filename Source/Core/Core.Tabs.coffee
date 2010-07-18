@@ -3,7 +3,7 @@
 
 name: Core.Tabs
 
-description: 
+description: Tab navigation element.
 
 license: MIT-style license.
 
@@ -23,15 +23,14 @@ Core.Tabs: new Class {
     @tabs: []
     @active: null
     @parent options
-    this
   create: ->
     @base.addClass @options.class
   add: (tab) ->
     if @tabs.indexOf(tab) == -1
       @tabs.push tab
       @base.grab tab
-      tab.addEvent 'remove', this.remove
-      tab.addEvent 'activate', this.change
+      tab.addEvent 'remove', @remove
+      tab.addEvent 'activate', @change
   remove: (tab) ->
     if @tabs.indexOf(tab) != -1
       @tabs.erase tab

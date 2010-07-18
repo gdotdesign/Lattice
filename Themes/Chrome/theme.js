@@ -12,9 +12,9 @@ GDotUI.Theme={
       handleHorizontal:''
     },
     Button:{
-      'class':'button',
-      defaultText: 'Button',
-      defaultIcon: '../Themes/Chrome/images/pencil.png'
+        'class':'button',
+        defaultText: 'Button',
+        defaultIcon: '../Themes/Chrome/images/pencil.png'
     },
     Float:{
         'class':'float',
@@ -30,6 +30,37 @@ GDotUI.Theme={
             }
         }
     },
+    Icon:{
+        'class':'icon'
+    },
+    Overlay:{
+        'class':'overlay'
+    },
+    Picker:{
+        'class':'picker',
+        event: 'click',
+        picking: 'picking',
+        offset: 10
+    },
+    Slider:{
+        barClass:'bar',
+        knobClass:'knob'
+    },
+    Slot:{
+        'class':'slot'  
+    },
+    Tab:{
+        'class':'tab'
+    },
+    Tabs:{
+        'class':'tabs'
+    },
+    Tip:{
+        'class':'tip',
+        offset: 5,
+        location: { x:"left",
+                    y:"bottom" }
+    },
     Forms:{
         Field:{
             struct:{
@@ -44,17 +75,7 @@ GDotUI.Theme={
             }
         }
     },
-    Tab:{
-        'class':'tab'
-    },
-    Tabs:{
-        'class':'tabs'
-    },
     css:'theme.css',
-    Icon:{
-      'class':'icon'
-    },
-    tipClass:'tip',
     Date:{
       'class':'date',
       next:'next',
@@ -73,26 +94,14 @@ GDotUI.Theme={
         'class':'time-slot'
       }
     },
-    Slot:{
-      'class':'slot'  
-    },
     Number:{
         'class':'number',
         range:[-100,100],
         steps:200,
         reset: true
     },
-    Picker:{
-        'class':'picker',
-        offset:10
-    },
     List:{
       'class':'list'  
-    },
-    Overlay:{
-      opacity:0.7,
-      zindex:800,
-      'class':'overlay'
     },
     ListItem:{
       'class':'list-item',
@@ -117,11 +126,5 @@ GDotUI.Theme={
        slotControls:{
         'class':'slotcontrol'
        }
-    },
-    Slider:{
-        barClass:'bar',
-        knobClass:'knob',
-        length: 80,
-        width: 12
     }
 }

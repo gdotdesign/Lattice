@@ -77,6 +77,10 @@ provides: Interfaces.Enabled
 ...
 */
 Interfaces.Enabled = new Class({
+  _$Enabled: function() {
+    this.enabled = true;
+    return this.enabled;
+  },
   enable: function() {
     this.enabled = true;
     this.base.removeClass('disabled');
@@ -330,9 +334,7 @@ Core.Icon = new Class({
     'class': GDotUI.Theme.Icon['class']
   },
   initialize: function(options) {
-    this.parent(options);
-    this.enabled = true;
-    return this;
+    return this.parent(options);
   },
   create: function() {
     var _a;
@@ -352,7 +354,7 @@ description: Icon group with 4 types of layout.
 
 license: MIT-style license.
 
-requires: [Core.Abstract]
+requires: [Core.Abstract, Interfaces.Controls]
 
 provides: Core.IconGroup
 
@@ -364,17 +366,16 @@ Core.IconGroup = new Class({
   options: {
     mode: "horizontal",
     spacing: {
-      x: 20,
-      y: 20
+      x: 0,
+      y: 0
     },
     startAngle: 0,
     radius: 0,
     degree: 360
   },
   initialize: function(options) {
-    this.parent(options);
     this.icons = [];
-    return this;
+    return this.parent(options);
   },
   create: function() {
     return this.base.setStyle('position', 'relative');
@@ -422,6 +423,8 @@ Core.IconGroup = new Class({
         } else {
           x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
         }
+        this.size.x = x + item.base.getSize().x;
+        this.size.y = y + item.base.getSize().y;
         return {
           x: x,
           y: y
@@ -431,6 +434,8 @@ Core.IconGroup = new Class({
       icpos = this.icons.map(function(item, i) {
         x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
         y = i === 0 ? y : y + spacing.y;
+        this.size.x = x + item.base.getSize().x;
+        this.size.y = item.base.getSize().y;
         return {
           x: x,
           y: y
@@ -565,7 +570,7 @@ Core.Tip = new Class({
 
 name: Core.Slider
 
-description:
+description: Slider element for other elements.
 
 license: MIT-style license.
 
@@ -582,19 +587,12 @@ ResetSlider = new Class({
   },
   setRange: function(range) {
     this.min = $chk(range[0]) ? range[0] : 0;
-    this.max = (function() {
-      if ($chk(range[1])) {
-        return range[1];
-      } else {
-        this.options.steps;
-        this.range = this.max - this.min;
-        this.steps = this.options.steps || this.full;
-        this.stepSize = Math.abs(this.range) / this.steps;
-        this.stepWidth = this.stepSize * this.full / Math.abs(this.range);
-        return this.stepWidth;
-      }
-    }).call(this);
-    return this.max;
+    this.max = $chk(range[1]) ? range[1] : this.options.steps;
+    this.range = this.max - this.min;
+    this.steps = this.options.steps || this.full;
+    this.stepSize = Math.abs(this.range) / this.steps;
+    this.stepWidth = this.stepSize * this.full / Math.abs(this.range);
+    return this.stepWidth;
   }
 });
 Core.Slider = new Class({
@@ -613,8 +611,7 @@ Core.Slider = new Class({
     knob: GDotUI.Theme.Slider.knobClass
   },
   initialize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
     this.base.addClass(this.options['class']);
@@ -655,11 +652,11 @@ Core.Slider = new Class({
 
 name: Core.Float
 
-description:
+description: Core.Float is a "floating" panel, with controls. Think of it as a window, just more awesome.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider]
+requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider, Core.IconGroup]
 
 provides: Core.Float
 
@@ -671,18 +668,19 @@ Core.Float = new Class({
   Binds: ['resize', 'mouseEnter', 'mouseLeave', 'hide'],
   options: {
     classes: {
+      'class': GDotUI.Theme.Float['class'],
       controls: GDotUI.Theme.Float.controls,
       content: GDotUI.Theme.Float.content,
       handle: GDotUI.Theme.Float.topHandle,
-      bottom: GDotUI.Theme.Float.bottomHandle
+      bottom: GDotUI.Theme.Float.bottomHandle,
+      active: GDotUI.Theme.Global.active,
+      inactive: GDotUI.Theme.Global.inactive
     },
     iconOptions: GDotUI.Theme.Float.iconOptions,
     icons: {
       remove: GDotUI.Theme.Icons.remove,
       edit: GDotUI.Theme.Icons.edit
     },
-    'class': GDotUI.Theme.Float['class'],
-    overlay: false,
     closeable: true,
     resizeable: false,
     editable: false,
@@ -690,9 +688,8 @@ Core.Float = new Class({
     ghost: false
   },
   initialize: function(options) {
-    this.parent(options);
     this.showSilder = false;
-    return this;
+    return this.parent(options);
   },
   ready: function() {
     this.loadPosition();
@@ -700,13 +697,14 @@ Core.Float = new Class({
     return this.parent();
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    var _a;
+    this.base.addClass(this.options.classes['class']);
     this.base.setStyle('position', 'absolute');
     this.base.setPosition({
       x: 0,
       y: 0
     });
-    this.base.toggleClass('inactive');
+    this.base.toggleClass(this.options.classes.inactive);
     this.controls = new Element('div', {
       'class': this.options.classes.controls
     });
@@ -755,7 +753,7 @@ Core.Float = new Class({
     this.options.closeable ? this.icons.addIcon(this.close) : null;
     this.options.editable ? this.icons.addIcon(this.edit) : null;
     this.icons.hide();
-    $chk(this.options.scrollBase) ? (this.scrollBase = this.options.scrollBase) : (this.scrollBase = this.content);
+    (typeof (_a = this.options.scrollBase) !== "undefined" && _a !== null) ? (this.scrollBase = this.options.scrollBase) : (this.scrollBase = this.content);
     this.scrollBase.setStyle('overflow', 'hidden');
     if (this.options.resizeable) {
       this.base.grab(this.bottom);
@@ -772,8 +770,8 @@ Core.Float = new Class({
     return this.base.addEvent('mouseleave', this.mouseLeave);
   },
   mouseEnter: function() {
-    this.base.toggleClass('active');
-    this.base.toggleClass('inactive');
+    this.base.toggleClass(this.options.classes.active);
+    this.base.toggleClass(this.options.classes.inactive);
     $clear(this.iconsTimout);
     $clear(this.sliderTimout);
     this.showSlider ? this.slider.show() : null;
@@ -782,8 +780,8 @@ Core.Float = new Class({
     return this.mouseisover;
   },
   mouseLeave: function() {
-    this.base.toggleClass('active');
-    this.base.toggleClass('inactive');
+    this.base.toggleClass(this.options.classes.active);
+    this.base.toggleClass(this.options.classes.inactive);
     !this.scrolling ? this.showSlider ? (this.sliderTimout = this.slider.hide.delay(200, this.slider)) : null : null;
     this.iconsTimout = this.icons.hide.delay(200, this.icons);
     this.mouseisover = false;
@@ -803,13 +801,7 @@ Core.Float = new Class({
     }
   },
   show: function() {
-    if (!this.base.isVisible()) {
-      document.getElement('body').grab(this.base);
-      if (this.options.overlay) {
-        GDotUI.Misc.Overlay.show();
-        return this.base.setStyle('z-index', 801);
-      }
-    }
+    return !this.base.isVisible() ? document.getElement('body').grab(this.base) : null;
   },
   hide: function() {
     return this.base.dispose();
@@ -819,7 +811,7 @@ Core.Float = new Class({
   },
   setContent: function(element) {
     this.contentElement = element;
-    return this.content.grab(element.base);
+    return this.content.grab(element);
   },
   center: function() {
     return this.base.position();
@@ -849,7 +841,6 @@ Core.Button = new Class({
     'class': GDotUI.Theme.Button['class']
   },
   initialize: function(options) {
-    this.enabled = true;
     return this.parent(options);
   },
   create: function() {
@@ -873,13 +864,13 @@ Core.Button = new Class({
 
 name: Core.Picker
 
-description:
+description: Data picker class.
 
 license: MIT-style license.
 
 requires: [Core.Abstract]
 
-provides: Core.Picker
+provides: [Core.Picker, outerClick]
 
 ...
 */
@@ -901,11 +892,13 @@ Core.Picker = new Class({
   Binds: ['show', 'hide'],
   options: {
     'class': GDotUI.Theme.Picker['class'],
-    offset: GDotUI.Theme.Picker.offset
+    offset: GDotUI.Theme.Picker.offset,
+    event: GDotUI.Theme.Picker.event,
+    picking: GDotUI.Theme.Picker.picking
   },
   initialize: function(options) {
-    this.parent(options);
-    return this;
+    this;
+    return this.parent(options);
   },
   create: function() {
     this.base.addClass(this.options['class']);
@@ -946,7 +939,7 @@ Core.Picker = new Class({
     });
   },
   attach: function(input) {
-    input.addEvent('click', this.show);
+    input.addEvent(this.options.event, this.show);
     this.contentElement.addEvent('change', (function(value) {
       this.attachedTo.set('value', value);
       return this.attachedTo.fireEvent('change', value);
@@ -956,13 +949,13 @@ Core.Picker = new Class({
   },
   show: function(e) {
     document.getElement('body').grab(this.base);
-    this.attachedTo.addClass('picking');
+    this.attachedTo.addClass(this.options.picking);
     e.stop();
     return this.base.addEvent('outerClick', this.hide);
   },
   hide: function() {
     if (this.base.isVisible()) {
-      this.attachedTo.removeClass('picking');
+      this.attachedTo.removeClass(this.options.picking);
       return this.base.dispose();
     }
   },
@@ -974,13 +967,128 @@ Core.Picker = new Class({
 /*
 ---
 
+name: Iterable.List
+
+description:
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Iterable.List
+
+...
+*/
+Iterable.List = new Class({
+  Extends: Core.Abstract,
+  options: {
+    'class': GDotUI.Theme.List['class']
+  },
+  initialize: function(options) {
+    this.parent(options);
+    return this;
+  },
+  create: function() {
+    this.base.addClass(this.options['class']);
+    this.sortable = new Sortables(null, {
+      handle: '.list-handle'
+    });
+    this.editing = false;
+    this.items = [];
+    return this.items;
+  },
+  removeItem: function(li) {
+    li.removeEvents('invoked', 'edit', 'delete');
+    li.base.destroy();
+    this.items.erase(li);
+    return delete li;
+  },
+  removeAll: function() {
+    this.selected = null;
+    this.items.each((function() {
+      return this.removeItem(item);
+    }).bind(this));
+    delete this.items;
+    this.items = [];
+    return this.items;
+  },
+  toggleEdit: function() {
+    var bases;
+    bases = this.items.map(function(item) {
+      return item.base;
+    });
+    if (this.editing) {
+      this.sortable.removeItems(bases);
+      this.items.each(function(item) {
+        return item.toggleEdit();
+      });
+      this.editing = false;
+      return this.editing;
+    } else {
+      this.sortable.addItems(bases);
+      this.items.each(function(item) {
+        return item.toggleEdit();
+      });
+      this.editing = true;
+      return this.editing;
+    }
+  },
+  getItemFromTitle: function(title) {
+    var filtered;
+    filtered = this.items.filter(function(item) {
+      return item.title.get('text') === String(title) ? true : false;
+    });
+    return filtered[0];
+  },
+  select: function(item) {
+    var _a;
+    if (this.selected !== item) {
+      (typeof (_a = this.selected) !== "undefined" && _a !== null) ? this.selected.base.removeClass('selected') : null;
+      this.selected = item;
+      this.selected.base.addClass('selected');
+      return this.fireEvent('select', item);
+    }
+  },
+  addItem: function(li) {
+    this.items.push(li);
+    this.base.grab(li);
+    li.addEvent('invoked', (function(item) {
+      this.select(item);
+      return this.fireEvent('invoked', [item]);
+    }).bindWithEvent(this));
+    li.addEvent('edit', (function() {
+      return this.fireEvent('edit', arguments);
+    }).bindWithEvent(this));
+    return li.addEvent('delete', (function() {
+      return this.fireEvent('delete', arguments);
+    }).bindWithEvent(this));
+  }
+});
+/*
+toTheTop:function(item){
+  //console.log(item);
+  //@base.setStyle('top',@base.getPosition().y-item.base.getSize().y);
+  @items.erase(item);
+  @items.unshift(item);
+
+},
+update:function(){
+  @items.each(function(item,i){
+    item.base.dispose();
+    @base.grab(item.base,'top');
+  }.bind(this))
+},
+*/
+/*
+---
+
 name: Core.Slot
 
 description: Generic icon element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract]
+requires: [Core.Abstract, Iterable.List]
 
 provides: Core.Slot
 
@@ -996,8 +1104,7 @@ Core.Slot = new Class({
     'class': GDotUI.Theme.Slot['class']
   },
   initilaize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
     this.base.addClass(this.options['class']);
@@ -1780,121 +1887,6 @@ Iterable.ListItem = new Class({
 /*
 ---
 
-name: Iterable.List
-
-description:
-
-license: MIT-style license.
-
-requires: Core.Abstract
-
-provides: Iterable.List
-
-...
-*/
-Iterable.List = new Class({
-  Extends: Core.Abstract,
-  options: {
-    'class': GDotUI.Theme.List['class']
-  },
-  initialize: function(options) {
-    this.parent(options);
-    return this;
-  },
-  create: function() {
-    this.base.addClass(this.options['class']);
-    this.sortable = new Sortables(null, {
-      handle: '.list-handle'
-    });
-    this.editing = false;
-    this.items = [];
-    return this.items;
-  },
-  removeItem: function(li) {
-    li.removeEvents('invoked', 'edit', 'delete');
-    li.base.destroy();
-    this.items.erase(li);
-    return delete li;
-  },
-  removeAll: function() {
-    this.selected = null;
-    this.items.each((function() {
-      return this.removeItem(item);
-    }).bind(this));
-    delete this.items;
-    this.items = [];
-    return this.items;
-  },
-  toggleEdit: function() {
-    var bases;
-    bases = this.items.map(function(item) {
-      return item.base;
-    });
-    if (this.editing) {
-      this.sortable.removeItems(bases);
-      this.items.each(function(item) {
-        return item.toggleEdit();
-      });
-      this.editing = false;
-      return this.editing;
-    } else {
-      this.sortable.addItems(bases);
-      this.items.each(function(item) {
-        return item.toggleEdit();
-      });
-      this.editing = true;
-      return this.editing;
-    }
-  },
-  getItemFromTitle: function(title) {
-    var filtered;
-    filtered = this.items.filter(function(item) {
-      return item.title.get('text') === String(title) ? true : false;
-    });
-    return filtered[0];
-  },
-  select: function(item) {
-    var _a;
-    if (this.selected !== item) {
-      (typeof (_a = this.selected) !== "undefined" && _a !== null) ? this.selected.base.removeClass('selected') : null;
-      this.selected = item;
-      this.selected.base.addClass('selected');
-      return this.fireEvent('select', item);
-    }
-  },
-  addItem: function(li) {
-    this.items.push(li);
-    this.base.grab(li);
-    li.addEvent('invoked', (function(item) {
-      this.select(item);
-      return this.fireEvent('invoked', [item]);
-    }).bindWithEvent(this));
-    li.addEvent('edit', (function() {
-      return this.fireEvent('edit', arguments);
-    }).bindWithEvent(this));
-    return li.addEvent('delete', (function() {
-      return this.fireEvent('delete', arguments);
-    }).bindWithEvent(this));
-  }
-});
-/*
-toTheTop:function(item){
-  //console.log(item);
-  //@base.setStyle('top',@base.getPosition().y-item.base.getSize().y);
-  @items.erase(item);
-  @items.unshift(item);
-
-},
-update:function(){
-  @items.each(function(item,i){
-    item.base.dispose();
-    @base.grab(item.base,'top');
-  }.bind(this))
-},
-*/
-/*
----
-
 name: Pickers
 
 description:
@@ -1946,7 +1938,7 @@ Pickers.DateTime = new Pickers.Base({
 
 name: Core.Overlay
 
-description: Abstract base class for Elements.
+description: Overlay for modal dialogs and stuff.
 
 license: MIT-style license.
 
@@ -1962,8 +1954,7 @@ Core.Overlay = new Class({
     'class': GDotUI.Theme.Overlay['class']
   },
   initialize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
     this.base.setStyles({
@@ -1975,7 +1966,7 @@ Core.Overlay = new Class({
       "opacity": 0
     });
     this.base.addClass(this.options['class']);
-    (document.getElement('body')).grab(this.base);
+    document.getElement('body').grab(this.base);
     return this.base.addEventListener('webkitTransitionEnd', (function(e) {
       return e.propertyName === "opacity" && this.base.getStyle('opacity') === 0 ? this.base.setStyle('visiblity', 'hidden') : null;
     }).bindWithEvent(this));
@@ -2255,7 +2246,7 @@ Forms.Form = new Class({
 
 name: Core.Tab
 
-description:
+description: Tab element for Core.Tabs.
 
 license: MIT-style license.
 
@@ -2269,14 +2260,14 @@ Core.Tab = new Class({
   Extends: Core.Abstract,
   options: {
     'class': GDotUI.Theme.Tab['class'],
-    label: ''
+    label: '',
+    image: GDotUI.Theme.Icons.remove,
+    active: GDotUI.Theme.Global.active
   },
   initialize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
-    var image;
     this.base.addClass(this.options['class']);
     this.base.addEvent('click', (function() {
       return this.fireEvent('activate', this);
@@ -2285,7 +2276,7 @@ Core.Tab = new Class({
       text: this.options.label
     });
     this.icon = new Core.Icon({
-      image: (image = GDotUI.Theme.Icons.remove)
+      image: this.options.image
     });
     this.icon.addEvent('invoked', (function(ic, e) {
       e.stop();
@@ -2294,10 +2285,10 @@ Core.Tab = new Class({
     return this.base.adopt(this.label, this.icon);
   },
   activate: function() {
-    return this.base.addClass('active');
+    return this.base.addClass(this.options.active);
   },
   deactivate: function() {
-    return this.base.removeClass('active');
+    return this.base.removeClass(this.options.active);
   }
 });
 /*
@@ -2305,7 +2296,7 @@ Core.Tab = new Class({
 
 name: Core.Tabs
 
-description:
+description: Tab navigation element.
 
 license: MIT-style license.
 
@@ -2324,8 +2315,7 @@ Core.Tabs = new Class({
   initialize: function(options) {
     this.tabs = [];
     this.active = null;
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
     return this.base.addClass(this.options['class']);

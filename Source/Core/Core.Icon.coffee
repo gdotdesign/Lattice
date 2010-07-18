@@ -24,9 +24,7 @@ Core.Icon: new Class {
     class: GDotUI.Theme.Icon.class
   }
   initialize: (options) ->
-    @parent(options)
-    @enabled: on
-    this
+    @parent options
   create: ->
     @base.addClass @options.class
     if @options.image?

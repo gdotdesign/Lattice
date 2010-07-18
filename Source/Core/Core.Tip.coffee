@@ -3,7 +3,7 @@
 
 name: Core.Tip
 
-description: Tip class.... (TODO Description)
+description: Tip class
 
 license: MIT-style license.
 
@@ -18,20 +18,19 @@ Core.Tip: new Class {
   Binds:['enter'
          'leave']
   options:{
+    class: GDotUI.Theme.Tip.class
     text:""
-    location: {x:"left"
-               y:"bottom"}
-    offset:5
+    location: GDotUI.Theme.Tip.location
+    offset: GDotUI.Theme.Tip.offset
+    zindex: GDotUI.Theme.Tip.zindex
   }
   initialize: (options) ->
     @parent options
-    @create();
-    this
   create:  ->
-    @base.addClass GDotUI.Theme.tipClass
-    @base.setStyle 'position','absolute'
-    @base.setStyle 'z-index', GDotUI.Config.tipZindex
-    @base.set 'html', this.options.text
+    @base.addClass @options.class
+    @base.setStyle 'position', 'absolute'
+    @base.setStyle 'z-index', @options.tipZindex
+    @base.set 'html', @options.text
   attach: (item) ->
     if not @attachedTo?
       @detach()
@@ -44,30 +43,30 @@ Core.Tip: new Class {
     @attachedTo: null
   enter: ->
     if @attachedTo.enabled
-      @showTip()
+      @show()
   leave: ->
     if @attachedTo.enabled
-      this.hideTip()
-  showTip: ->
+      @hide()
+  ready: ->
     p: @attachedTo.base.getPosition()
-    s: @attachedTo.base.getSize();
-    document.getElement('body').grab(@base)
-    s1: @base.measure ->
-          @getSize()
+    s: @attachedTo.base.getSize()
+    s1: @base.getSize()
     switch @options.location.x
       when "left"
-        @tip.setStyle 'left', p.x+(s.x+this.options.offset)
+        @tip.setStyle 'left', p.x+(s.x+@options.offset)
       when "right"
-        @tip.setStyle 'left', p.x+(s.x+this.options.offset)
+        @tip.setStyle 'left', p.x+(s.x+@options.offset)
       when "center"
         @tip.setStyle 'left', p.x-s1.x/2+s.x/2
     switch @options.location.y
       when "top"
-        @tip.setStyle 'top', p.y-(s.y+this.options.offset)
+        @tip.setStyle 'top', p.y-(s.y+@options.offset)
       when "bottom"
-        @tip.setStyle 'top', p.y+(s.y+this.options.offset)
+        @tip.setStyle 'top', p.y+(s.y+@options.offset)
       when "center"
         @tip.setStyle 'top', p.y-s1.y/2+s.y/2
-  hideTip: ->
+  hide: ->
     @base.dispose()
+  show: ->
+    document.getElement('body').grab(@base)
 }

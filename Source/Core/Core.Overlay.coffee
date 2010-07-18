@@ -3,7 +3,7 @@
 
 name: Core.Overlay
 
-description: Abstract base class for Elements.
+description: Overlay for modal dialogs and stuff.
 
 license: MIT-style license.
 
@@ -19,8 +19,7 @@ Core.Overlay: new Class {
     class: GDotUI.Theme.Overlay.class
   }
   initialize: (options) ->
-    @parent(options)
-    this
+    @parent options 
   create: ->
     @base.setStyles {
       "position":"fixed"
@@ -31,9 +30,9 @@ Core.Overlay: new Class {
       "opacity":0
       }
     @base.addClass @options.class
-    (document.getElement 'body' ).grab @.base
+    document.getElement('body').grab @.base
     @base.addEventListener 'webkitTransitionEnd', ((e) ->
-      if e.propertyName=="opacity" and @base.getStyle('opacity') == 0
+      if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
         @base.setStyle 'visiblity', 'hidden'
       ).bindWithEvent this
   hide: ->

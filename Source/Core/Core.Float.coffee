@@ -7,7 +7,7 @@ description: Core.Float is a "floating" panel, with controls. Think of it as a w
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider]
+requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider, Core.IconGroup]
 
 provides: Core.Float
 
@@ -139,7 +139,7 @@ Core.Float: new Class {
 				@slider.hide()
 	show: ->
 		if not @base.isVisible()
-			document.getElement('body').grab @base1
+			document.getElement('body').grab @base
 	hide: ->
 		@base.dispose()
 	toggle: (el) ->

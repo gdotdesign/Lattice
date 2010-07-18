@@ -12,6 +12,8 @@ provides: Interfaces.Enabled
 ...
 ###
 Interfaces.Enabled: new Class {
+  _$Enabled: ->
+    @enabled: on
   enable: ->
     @enabled: on
     @base.removeClass 'disabled'
