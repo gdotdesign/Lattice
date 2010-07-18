@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Komodo Project File - DO NOT EDIT -->
 <project id="e4968390-4571-4dba-aa17-6f27fb690bad" kpf_version="4" name="gdotui.kpf">
+<snippet id="59a83d60-e1c7-4a37-a053-264af34c7ce6" idref="e4968390-4571-4dba-aa17-6f27fb690bad/Source/Core" indent_relative="false" name="log $('circle" set_selection="true">
+!@#_anchorlog 
+      $('circle!@#_currentPos</snippet>
 <preference-set idref="e4968390-4571-4dba-aa17-6f27fb690bad">
   <boolean id="import_live">1</boolean>
 </preference-set>
