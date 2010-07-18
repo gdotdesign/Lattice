@@ -3,11 +3,9 @@
 
 name: GDotUI
 
-description: 
+description: G.UI
 
 license: MIT-style license.
-
-requires: 
 
 provides: GDotUI
 
@@ -28,14 +26,7 @@ GDotUI.Config:{
     floatZindex: 0
     cookieDuration: 7*1000
 }
-GDotUI.clone: (o) ->
-  if typeof(o) isnt 'object' then o
-  else if o? then o
-  else
-    newO: new Object()
-    for i in o
-        newO[i]: clone o[i]
-    newO
+
 
 ###
 ---
@@ -808,7 +799,6 @@ Core.Picker: new Class {
     picking: GDotUI.Theme.Picker.picking
   }
   initialize: (options) ->
-    this
     @parent options
   create: ->
     @base.addClass @options.class

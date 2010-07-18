@@ -34,7 +34,6 @@ Core.Picker: new Class {
     picking: GDotUI.Theme.Picker.picking
   }
   initialize: (options) ->
-    this
     @parent options
   create: ->
     @base.addClass @options.class

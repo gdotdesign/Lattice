@@ -1,3 +1,0 @@
-window.addEvet('domready',function(){
-
-});

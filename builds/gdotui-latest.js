@@ -5,11 +5,9 @@ var __hasProp = Object.prototype.hasOwnProperty;
 
 name: GDotUI
 
-description:
+description: G.UI
 
 license: MIT-style license.
-
-requires:
 
 provides: GDotUI
 
@@ -26,22 +24,6 @@ GDotUI.Config = {
   tipZindex: 100,
   floatZindex: 0,
   cookieDuration: 7 * 1000
-};
-GDotUI.clone = function(o) {
-  var _a, _b, _c, i, newO;
-  if (typeof (o) !== 'object') {
-    return o;
-  } else if (typeof o !== "undefined" && o !== null) {
-    return o;
-  } else {
-    newO = new Object();
-    _b = o;
-    for (_a = 0, _c = _b.length; _a < _c; _a++) {
-      i = _b[_a];
-      newO[i] = clone(o[i]);
-    }
-    return newO;
-  }
 };
 /*
 ---
@@ -895,7 +877,6 @@ Core.Picker = new Class({
     picking: GDotUI.Theme.Picker.picking
   },
   initialize: function(options) {
-    this;
     return this.parent(options);
   },
   create: function() {
