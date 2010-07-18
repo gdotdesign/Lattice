@@ -191,12 +191,14 @@ Interfaces.Restoreable = new Class({
     cookieID: null
   },
   _$Restoreable: function() {
-    this.base.addEventListener('DOMNodeRemovedFromDocument', (function() {
-      return $chk(this.options.cookieID) ? this.options.useCookie ? Cookie.write(this.options.cookieID + '.state', 'hidden', {
-        duration: GDotUI.Config.cookieDuration
-      }) : window.localStorage.setItem(this.options.cookieID + '.state', 'hidden') : null;
-    }).bindWithEvent(this), false);
     return this.addEvent('dropped', this.savePosition);
+  },
+  saveState: function() {
+    var state;
+    state = this.base.isVisible() ? 'visible' : 'hidden';
+    return $chk(this.options.cookieID) ? this.options.useCookie ? Cookie.write(this.options.cookieID + '.state', state, {
+      duration: GDotUI.Config.cookieDuration
+    }) : window.localStorage.setItem(this.options.cookieID + '.state', state) : null;
   },
   savePosition: function() {
     var position, state;
@@ -220,7 +222,7 @@ Interfaces.Restoreable = new Class({
       }
     }
   },
-  loadPosition: function() {
+  loadPosition: function(loadstate) {
     if ($chk(this.options.cookieID)) {
       if (this.options.useCookie) {
         this.base.setStyle('top', Cookie.read(this.options.cookieID + '.y') + "px");
@@ -781,10 +783,12 @@ Core.Float = new Class({
     }
   },
   show: function() {
-    return document.getElement('body').grab(this.base);
+    document.getElement('body').grab(this.base);
+    return this.saveState();
   },
   hide: function() {
-    return this.base.dispose();
+    this.base.dispose();
+    return this.saveState();
   },
   toggle: function(el) {
     return this.base.isVisible() ? this.hide(el) : this.show(el);

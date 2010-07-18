@@ -91,6 +91,7 @@ App = new Class({
       window.localStorage.setItem('float-text-note', 'Set notes here that will remain in your local storage...');
       this.textFel.setValue('Set notes here that will remain in your local storage...');
     } else {
+      this.textFloat.show();
       this.textFel.setValue(a);
     }
     return this.textFel.addEvent('change', (function(value) {

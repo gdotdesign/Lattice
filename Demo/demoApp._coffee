@@ -66,6 +66,7 @@ App: new Class {
       window.localStorage.setItem 'float-text-note', 'Set notes here that will remain in your local storage...'
       @textFel.setValue 'Set notes here that will remain in your local storage...'
     else
+      @textFloat.show()
       @textFel.setValue a
     @textFel.addEvent 'change', ( (value) ->
       window.localStorage.setItem 'float-text-note',value

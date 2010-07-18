@@ -139,8 +139,10 @@ Core.Float: new Class {
 				@slider.hide()
 	show: ->
 		document.getElement('body').grab @base
+		@saveState()
 	hide: ->
 		@base.dispose()
+		@saveState()
 	toggle: (el) ->
 		if @base.isVisible()
 			@hide el

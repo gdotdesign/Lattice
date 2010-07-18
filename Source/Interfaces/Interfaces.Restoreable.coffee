@@ -21,14 +21,14 @@ Interfaces.Restoreable: new Class {
     cookieID:null
   }
   _$Restoreable: ->
-    @base.addEventListener 'DOMNodeRemovedFromDocument', ( ->
-      if $chk @options.cookieID
-        if @options.useCookie
-          Cookie.write @options.cookieID+'.state', 'hidden', {duration:GDotUI.Config.cookieDuration}
-        else
-          window.localStorage.setItem @options.cookieID+'.state', 'hidden'
-    ).bindWithEvent(this), off
     @addEvent 'dropped', @savePosition
+  saveState: ->
+    state: if @base.isVisible() then 'visible' else 'hidden'
+    if $chk @options.cookieID
+      if @options.useCookie
+        Cookie.write @options.cookieID+'.state', state, {duration:GDotUI.Config.cookieDuration}
+      else
+        window.localStorage.setItem @options.cookieID+'.state', state
   savePosition: ->
     if $chk @options.cookieID
       position: @base.getPosition();
@@ -41,7 +41,7 @@ Interfaces.Restoreable: new Class {
         window.localStorage.setItem @options.cookieID+'.x', position.x
         window.localStorage.setItem @options.cookieID+'.y', position.y
         window.localStorage.setItem @options.cookieID+'.state', state
-  loadPosition: ->
+  loadPosition: (loadstate)->
     if $chk @options.cookieID
       if @options.useCookie
         @base.setStyle 'top', Cookie.read(this.options.cookieID+'.y')+"px"
