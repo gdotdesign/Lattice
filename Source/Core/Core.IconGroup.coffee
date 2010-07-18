@@ -65,12 +65,13 @@ Core.IconGroup: new Class {
           @size.y: y+item.base.getSize().y
           {x:x, y:y}
       when 'horizontal'
-        icpos: @icons.map (item,i) ->
+        icpos: @icons.map ((item,i) ->
           x: if i==0 then x+x else x+item.base.getSize().x+spacing.x
           y: if i==0 then y else y+spacing.y
           @size.x: x+item.base.getSize().x
           @size.y: item.base.getSize().y
           {x:x, y:y}
+          ).bind this
       when 'vertical'
         icpos: @icons.map ((item,i) ->
           x: if i==0 then x else x+spacing.x

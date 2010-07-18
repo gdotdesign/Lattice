@@ -19,7 +19,7 @@ Core.Tip: new Class {
          'leave']
   options:{
     class: GDotUI.Theme.Tip.class
-    text:""
+    label:""
     location: GDotUI.Theme.Tip.location
     offset: GDotUI.Theme.Tip.offset
     zindex: GDotUI.Theme.Tip.zindex
@@ -30,9 +30,9 @@ Core.Tip: new Class {
     @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
     @base.setStyle 'z-index', @options.tipZindex
-    @base.set 'html', @options.text
+    @base.set 'html', @options.label
   attach: (item) ->
-    if not @attachedTo?
+    if @attachedTo?
       @detach()
     item.base.addEvent 'mouseenter', @enter
     item.base.addEvent 'mouseleave', @leave
@@ -53,18 +53,18 @@ Core.Tip: new Class {
     s1: @base.getSize()
     switch @options.location.x
       when "left"
-        @tip.setStyle 'left', p.x+(s.x+@options.offset)
+        @base.setStyle 'left', p.x-(s1.x+@options.offset)
       when "right"
-        @tip.setStyle 'left', p.x+(s.x+@options.offset)
+        @base.setStyle 'left', p.x+(s.x+@options.offset)
       when "center"
-        @tip.setStyle 'left', p.x-s1.x/2+s.x/2
+        @base.setStyle 'left', p.x-s1.x/2+s.x/2
     switch @options.location.y
       when "top"
-        @tip.setStyle 'top', p.y-(s.y+@options.offset)
+        @base.setStyle 'top', p.y-(s.y+@options.offset)
       when "bottom"
-        @tip.setStyle 'top', p.y+(s.y+@options.offset)
+        @base.setStyle 'top', p.y+(s.y+@options.offset)
       when "center"
-        @tip.setStyle 'top', p.y-s1.y/2+s.y/2
+        @base.setStyle 'top', p.y-s1.y/2+s.y/2
   hide: ->
     @base.dispose()
   show: ->

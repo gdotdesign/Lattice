@@ -9,7 +9,10 @@
     <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
     <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
     <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
+    <link type="text/css" rel="stylesheet" href="css/960.css"/>
+    <link type="text/css" rel="stylesheet" href="css/demoapp.css"/>
     <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
+    <script type="text/javascript" src="demoApp.js"></script>
     <script>
         Forms.Settings={
             action:'test.php',
@@ -103,14 +106,15 @@
             ]
         }
         window.addEvent('domready',function(){
-            var b=new Core.Button();
+            var a=new App();
+            /*var b=new Core.Button();
             document.body.grab(b);
             var t=new Core.Tabs();
             for(var i=0;i<7;i++){
                 t.add(new Core.Tab({label:'tab'+i}));
             }
-            document.body.grab(t);
-            var a=new Forms.Form(Forms.Settings);
+            document.body.grab(t);*/
+            /*var a=new Forms.Form(Forms.Settings);
             this.float=new Core.Float({editable:true,
                                       draggable:true,
                                       resizeable:true,
@@ -179,6 +183,47 @@
     </script>
 </head>
 <body>
-    <!-- Insert your content here -->
+    <div id="center">
+        <div class="container_12">
+            <div id="tabs"></div>
+        </div>
+    </div>
+    <div id="content" class="container_12">
+        <div id="about" class="panel">
+            <h1>Welcome to the demo page for G.UI!</h1>
+            <p>
+                You can navigate through the tabs at the top of the page
+            </p>
+            <p>
+                This is a offline web application showcasing the project.
+            </p>
+            <h2> Examples </h2>
+            <p>
+                Each example will feature an Element of the UI, with code examples like this:
+                <code>                  
+                var slot = new Core.Slot();
+                <br>
+                document.body.grab(slot);
+                </code>
+            </p>
+            <h2> Effects, transitions, shadows </h2>
+            <p>
+                Every effect, transition, or shadow you see is done with css. No javascript tweening no extra code to create shadows nothing.
+                This application uses the default theme of the project.
+            </p>
+        </div>
+        <div id="asd" class="panel">
+            <h1>asdasdasdasdad</h1>
+            <p>
+                You can navigate through the tabs at the top of the page
+                You can navigate through the tabs at the top of the page
+                You can navigate through the tabs at the top of the page
+                You can navigate through the tabs at the top of the page
+                You can navigate through the tabs at the top of the page
+                You can navigate through the tabs at the top of the page
+                You can navigate through the tabs at the top of the page
+            </p>
+        </div>
+    </div>
 </body>
 </html>

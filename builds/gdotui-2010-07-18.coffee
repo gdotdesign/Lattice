@@ -381,12 +381,13 @@ Core.IconGroup: new Class {
           @size.y: y+item.base.getSize().y
           {x:x, y:y}
       when 'horizontal'
-        icpos: @icons.map (item,i) ->
+        icpos: @icons.map ((item,i) ->
           x: if i==0 then x+x else x+item.base.getSize().x+spacing.x
           y: if i==0 then y else y+spacing.y
           @size.x: x+item.base.getSize().x
           @size.y: item.base.getSize().y
           {x:x, y:y}
+          ).bind this
       when 'vertical'
         icpos: @icons.map ((item,i) ->
           x: if i==0 then x else x+spacing.x
@@ -438,7 +439,7 @@ Core.Tip: new Class {
          'leave']
   options:{
     class: GDotUI.Theme.Tip.class
-    text:""
+    label:""
     location: GDotUI.Theme.Tip.location
     offset: GDotUI.Theme.Tip.offset
     zindex: GDotUI.Theme.Tip.zindex
@@ -449,9 +450,9 @@ Core.Tip: new Class {
     @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
     @base.setStyle 'z-index', @options.tipZindex
-    @base.set 'html', @options.text
+    @base.set 'html', @options.label
   attach: (item) ->
-    if not @attachedTo?
+    if @attachedTo?
       @detach()
     item.base.addEvent 'mouseenter', @enter
     item.base.addEvent 'mouseleave', @leave
@@ -472,18 +473,18 @@ Core.Tip: new Class {
     s1: @base.getSize()
     switch @options.location.x
       when "left"
-        @tip.setStyle 'left', p.x+(s.x+@options.offset)
+        @base.setStyle 'left', p.x-(s1.x+@options.offset)
       when "right"
-        @tip.setStyle 'left', p.x+(s.x+@options.offset)
+        @base.setStyle 'left', p.x+(s.x+@options.offset)
       when "center"
-        @tip.setStyle 'left', p.x-s1.x/2+s.x/2
+        @base.setStyle 'left', p.x-s1.x/2+s.x/2
     switch @options.location.y
       when "top"
-        @tip.setStyle 'top', p.y-(s.y+@options.offset)
+        @base.setStyle 'top', p.y-(s.y+@options.offset)
       when "bottom"
-        @tip.setStyle 'top', p.y+(s.y+@options.offset)
+        @base.setStyle 'top', p.y+(s.y+@options.offset)
       when "center"
-        @tip.setStyle 'top', p.y-s1.y/2+s.y/2
+        @base.setStyle 'top', p.y-s1.y/2+s.y/2
   hide: ->
     @base.dispose()
   show: ->
@@ -619,7 +620,7 @@ Core.Float: new Class {
 		@parent()
 	create: ->
 		@base.addClass @options.classes.class
-		@base.setStyle 'position', 'absolute'
+		@base.setStyle 'position', 'fixed'
 		@base.setPosition {x:0,y:0}
 		@base.toggleClass @options.classes.inactive
 		
@@ -705,8 +706,7 @@ Core.Float: new Class {
 				@showSlider: off
 				@slider.hide()
 	show: ->
-		if not @base.isVisible()
-			document.getElement('body').grab @base
+		document.getElement('body').grab @base
 	hide: ->
 		@base.dispose()
 	toggle: (el) ->
@@ -1921,6 +1921,7 @@ Core.Tab: new Class {
     label: ''
     image: GDotUI.Theme.Icons.remove
     active: GDotUI.Theme.Global.active
+    removeable: off
   }
   initialize: (options) ->
     @parent options
@@ -1935,7 +1936,9 @@ Core.Tab: new Class {
       e.stop()
       @fireEvent 'remove', this
     ).bindWithEvent this
-    @base.adopt @label, @icon
+    @base.adopt @label
+    if @options.removeable
+      @base.grab @icon
   activate: ->
     @base.addClass @options.active 
   deactivate: ->
@@ -1986,7 +1989,7 @@ Core.Tabs: new Class {
   change: (tab) ->
     if tab isnt @active
       @setActive tab
-      @fireEvent 'tabChanged', tab
+      @fireEvent 'change', tab
   setActive: (tab) ->
     if @active?
       @active.deactivate()

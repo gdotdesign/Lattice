@@ -52,7 +52,7 @@ Core.Float: new Class {
 		@parent()
 	create: ->
 		@base.addClass @options.classes.class
-		@base.setStyle 'position', 'absolute'
+		@base.setStyle 'position', 'fixed'
 		@base.setPosition {x:0,y:0}
 		@base.toggleClass @options.classes.inactive
 		
@@ -138,8 +138,7 @@ Core.Float: new Class {
 				@showSlider: off
 				@slider.hide()
 	show: ->
-		if not @base.isVisible()
-			document.getElement('body').grab @base
+		document.getElement('body').grab @base
 	hide: ->
 		@base.dispose()
 	toggle: (el) ->

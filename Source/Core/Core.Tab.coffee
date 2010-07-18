@@ -20,6 +20,7 @@ Core.Tab: new Class {
     label: ''
     image: GDotUI.Theme.Icons.remove
     active: GDotUI.Theme.Global.active
+    removeable: off
   }
   initialize: (options) ->
     @parent options
@@ -34,7 +35,9 @@ Core.Tab: new Class {
       e.stop()
       @fireEvent 'remove', this
     ).bindWithEvent this
-    @base.adopt @label, @icon
+    @base.adopt @label
+    if @options.removeable
+      @base.grab @icon
   activate: ->
     @base.addClass @options.active 
   deactivate: ->

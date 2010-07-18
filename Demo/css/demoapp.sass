@@ -1,0 +1,55 @@
+@import _mixins.sass
+
+textarea
+  :padding 5px
+
+code
+  :display block
+  :padding 10px
+  :font-family  Serif
+  :font-size 14px
+  :border 1px dotted #aaa
+  :background-color #ddd
+  :line-height 20px
+  :letter-spacing 1px
+  +round_full(10px)
+  
+p
+  :font-size 12px
+  :margin-bottom 10px
+h1
+  :font-size 20px
+  :margin-bottom 20px
+.h_menu_icon
+  :width 30px
+  :height 30px
+  :background
+    :position center
+    :repeat no-repeat
+  :background-color #eee
+  +round_full(5px)
+  :margin 5px
+  :cursor pointer
+ 
+#tabs
+  :position fixed
+  :top 0
+  :z-index 10
+
+.panel
+  :-webkit-transition-duration 1s
+  :position absolute
+  :top 0
+  :left 0
+  :right 0
+  :padding 20px
+  :margin-top 50px
+
+#asd
+  :opacity 1
+#about
+  :opacity 0
+.container_12
+  :position relative
+body
+  :background-color #ccc

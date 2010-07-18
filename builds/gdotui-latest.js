@@ -414,7 +414,7 @@ Core.IconGroup = new Class({
         };
       });
     } else if (_a === 'horizontal') {
-      icpos = this.icons.map(function(item, i) {
+      icpos = this.icons.map((function(item, i) {
         x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
         y = i === 0 ? y : y + spacing.y;
         this.size.x = x + item.base.getSize().x;
@@ -423,7 +423,7 @@ Core.IconGroup = new Class({
           x: x,
           y: y
         };
-      });
+      }).bind(this));
     } else if (_a === 'vertical') {
       icpos = this.icons.map((function(item, i) {
         x = i === 0 ? x : x + spacing.x;
@@ -484,7 +484,7 @@ Core.Tip = new Class({
   Binds: ['enter', 'leave'],
   options: {
     'class': GDotUI.Theme.Tip['class'],
-    text: "",
+    label: "",
     location: GDotUI.Theme.Tip.location,
     offset: GDotUI.Theme.Tip.offset,
     zindex: GDotUI.Theme.Tip.zindex
@@ -496,11 +496,11 @@ Core.Tip = new Class({
     this.base.addClass(this.options['class']);
     this.base.setStyle('position', 'absolute');
     this.base.setStyle('z-index', this.options.tipZindex);
-    return this.base.set('html', this.options.text);
+    return this.base.set('html', this.options.label);
   },
   attach: function(item) {
     var _a;
-    !(typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.detach() : null;
+    (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.detach() : null;
     item.base.addEvent('mouseenter', this.enter);
     item.base.addEvent('mouseleave', this.leave);
     this.attachedTo = item;
@@ -524,18 +524,18 @@ Core.Tip = new Class({
     s = this.attachedTo.base.getSize();
     s1 = this.base.getSize();
     if ((_a = this.options.location.x) === "left") {
-      this.tip.setStyle('left', p.x + (s.x + this.options.offset));
+      this.base.setStyle('left', p.x - (s1.x + this.options.offset));
     } else if (_a === "right") {
-      this.tip.setStyle('left', p.x + (s.x + this.options.offset));
+      this.base.setStyle('left', p.x + (s.x + this.options.offset));
     } else if (_a === "center") {
-      this.tip.setStyle('left', p.x - s1.x / 2 + s.x / 2);
+      this.base.setStyle('left', p.x - s1.x / 2 + s.x / 2);
     }
     if ((_b = this.options.location.y) === "top") {
-      return this.tip.setStyle('top', p.y - (s.y + this.options.offset));
+      return this.base.setStyle('top', p.y - (s.y + this.options.offset));
     } else if (_b === "bottom") {
-      return this.tip.setStyle('top', p.y + (s.y + this.options.offset));
+      return this.base.setStyle('top', p.y + (s.y + this.options.offset));
     } else if (_b === "center") {
-      return this.tip.setStyle('top', p.y - s1.y / 2 + s.y / 2);
+      return this.base.setStyle('top', p.y - s1.y / 2 + s.y / 2);
     }
   },
   hide: function() {
@@ -679,7 +679,7 @@ Core.Float = new Class({
   create: function() {
     var _a;
     this.base.addClass(this.options.classes['class']);
-    this.base.setStyle('position', 'absolute');
+    this.base.setStyle('position', 'fixed');
     this.base.setPosition({
       x: 0,
       y: 0
@@ -781,7 +781,7 @@ Core.Float = new Class({
     }
   },
   show: function() {
-    return !this.base.isVisible() ? document.getElement('body').grab(this.base) : null;
+    return document.getElement('body').grab(this.base);
   },
   hide: function() {
     return this.base.dispose();
@@ -2162,7 +2162,8 @@ Core.Tab = new Class({
     'class': GDotUI.Theme.Tab['class'],
     label: '',
     image: GDotUI.Theme.Icons.remove,
-    active: GDotUI.Theme.Global.active
+    active: GDotUI.Theme.Global.active,
+    removeable: false
   },
   initialize: function(options) {
     return this.parent(options);
@@ -2182,7 +2183,8 @@ Core.Tab = new Class({
       e.stop();
       return this.fireEvent('remove', this);
     }).bindWithEvent(this));
-    return this.base.adopt(this.label, this.icon);
+    this.base.adopt(this.label);
+    return this.options.removeable ? this.base.grab(this.icon) : null;
   },
   activate: function() {
     return this.base.addClass(this.options.active);
@@ -2239,7 +2241,7 @@ Core.Tabs = new Class({
   change: function(tab) {
     if (tab !== this.active) {
       this.setActive(tab);
-      return this.fireEvent('tabChanged', tab);
+      return this.fireEvent('change', tab);
     }
   },
   setActive: function(tab) {
