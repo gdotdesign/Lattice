@@ -3,7 +3,7 @@
 
 name: Data.Color
 
-description: 
+description: Color data element. ( color picker )
 
 license: MIT-style license.
 
@@ -27,10 +27,9 @@ Data.Color: new Class {
   }
   initialize: (options) ->
     @parent(options)
-    this
   create: ->
     @base.addClass @options.class
-    # SB Start
+    
     @wrapper: new Element('div').addClass @options.wrapper
     @white: new Element('div').addClass @options.white
     @black: new Element('div').addClass @options.black
@@ -44,13 +43,6 @@ Data.Color: new Class {
       }
     
     @wrapper.adopt @color, @white, @black, @xyKnob
-    # SB END 
-    # Hue Start 
-    # @color_linear: new Element('div').addClass @options.hue
-    # @colorKnob: new Element 'div', {'id':'knob'}
-    # @color_linear.grab @colorKnob
-    # Hue End 
-    
    
     @colorData: new Data.Color.SlotControls()
     @base.adopt @wrapper, @colorData
@@ -116,6 +108,16 @@ Data.Color: new Class {
         ret: "#"+@finalColor.hex.slice(1,7)
     @fireEvent 'change', [ret]
     @value: @finalColor
+  getValue: ->
+    ret: ''
+    switch @options.format
+      when "hsl"
+        ret: "hsl("+(@finalColor.hsb[0])+", "+(@finalColor.hsb[1])+"%, "+(@finalColor.hsb[2])+"%)"
+      when "rgb"
+        ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
+      else
+        ret: "#"+@finalColor.hex.slice(1,7)
+    ret
   change: (pos) ->
     @saturation.setValue pos.x
     @lightness.setValue 100-pos.y
@@ -124,11 +126,10 @@ Data.Color: new Class {
 Data.Color.SlotControls: new Class {
   Extends:Data.Abstract
   options:{
-    class:GDotUI.Theme.Color.slotControls.class
+    class:GDotUI.Theme.Color.controls.class
   }
   initialize: (options) ->
     @parent(options)
-    this
   create: ->
     @base.addClass @options.class  
     @hue: new Data.Number {range:[0,360],reset: off, steps: [360]}
@@ -139,65 +140,4 @@ Data.Color.SlotControls: new Class {
     @lightness: new Data.Number {range:[0,100],reset: off, steps: [100]}
   ready: ->
     @base.adopt @hue, @saturation, @lightness
-}
-Data.Color.Controls: new Class {
-    Extends:Data.Abstract
-    options:{
-        class: GDotUI.Theme.Color.controls.class
-        format: GDotUI.Theme.Color.controls.format
-        colorBox: GDotUI.Theme.Color.controls.colorBox
-    }
-    initialize: (options) ->
-        @parent(options)
-        this
-    create: ->
-        @base.addClass @options.class
-        
-        @left: new Element('div').setStyles {'float': 'left'}
-        @red: new Data.Color.Controls.Field 'R'
-        @green: new Data.Color.Controls.Field 'G'
-        @blue: new Data.Color.Controls.Field 'B'
-        @left.adopt @red, @green, @blue
-        
-        @right: new Element 'div'
-        @right.setStyles {'float':'left'}
-        @hue: new Data.Color.Controls.Field 'H'
-        @saturation: new Data.Color.Controls.Field 'S'
-        @brightness: new Data.Color.Controls.Field 'B'
-        @right.adopt @hue, @saturation, @brightness
-        
-        @color: new Element('div').setStyles({'float':'left'}).addClass @options.colorBox
-        
-        @format: new Element('div').setStyles({'float':'left'}).addClass @options.format
-        @hex: new Data.Color.Controls.Field 'Hex'
-        @rgb: new Data.Color.Controls.Field 'RGB'
-        @hsb: new Data.Color.Controls.Field 'HSL'
-        @format.adopt @hex, @rgb, @hsb
-        
-        @base.adopt @left, @right, @color, new Element('div').setStyle('clear','both'), @format
-    setValue: (color) ->
-        @color.setStyle 'background-color', color
-        @red.input.set 'value', color.rgb[0]
-        @green.input.set 'value', color.rgb[1]
-        @blue.input.set 'value', color.rgb[2]
-        @rgb.input.set 'value', "rgb("+(color.rgb[0])+", "+(color.rgb[1])+", "+(color.rgb[2])+")"
-        @hue.input.set 'value', color.hsb[0]
-        @saturation.input.set 'value', color.hsb[1]
-        @brightness.input.set 'value', color.hsb[2]
-        @hsb.input.set 'value', "hsl("+(color.hsb[0])+", "+(color.hsb[1])+"%, "+(color.hsb[2])+"%)"
-        @hex.input.set 'value', "#"+color.hex.slice(1,7)
-}
-# to be replaced by Form.Field
-Data.Color.Controls.Field: new Class {
-  initialize: (label) ->
-    @base: new Element 'dl'
-    @input: new Element 'input', {type:'text'
-                                  readonly:true}
-    @label: new Element 'label', {text:label+": "}
-    @dt: new Element('dt').grab @label
-    @dd: new Element('dd').grab @input
-    @base.adopt @dt,@dd
-    this
-  toElement: ->
-    @base
 }

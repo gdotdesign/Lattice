@@ -80,6 +80,17 @@ GDotUI.Theme={
         steps:200,
         reset: true
     },
+    List:{
+      'class':'list',
+      selected: 'selected'
+    },
+    ListItem:{
+      'class':'list-item',
+      title:'title',
+      subTitle:'subtitle',
+      handle:'list-handle',
+      offset:2
+    },
     Forms:{
         Field:{
             struct:{
@@ -94,31 +105,15 @@ GDotUI.Theme={
             }
         }
     },
-    List:{
-      'class':'list'  
-    },
-    ListItem:{
-      'class':'list-item',
-      title:'title',
-      subTitle:'subtitle',
-      iconOffset:2
-    },
     Color:{
        sb:'sb',
-       hue:'hue',
        black:'black',
        white:'white',
-       color:'color',
        wrapper:'wrapper',
       'class':'color',
-       format: 'hsl', //[hsl,rgb,hex]
+       format: 'hsl', 
        controls:{
-          'class':'control',
-          format:'format',
-          colorBox:'colorBox'
-       },
-       slotControls:{
-        'class':'slotcontrol'
+          'class':'slotcontrol'
        }
     }
 }

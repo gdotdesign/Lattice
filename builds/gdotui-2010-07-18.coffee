@@ -89,13 +89,13 @@ Interfaces.Enabled: new Class {
 
 name: Interfaces.Draggable
 
-description: Porived dragging for elements that implements this.
+description: Porived dragging for elements that implements it.
 
 license: MIT-style license.
 
 requires: 
 
-provides: [Interfaces.Draggable, Drag.Float]
+provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
 ...
 ###
@@ -110,8 +110,8 @@ Drag.Float: new Class {
 Drag.Ghost: new Class {
 	Extends: Drag.Move
 	options: { opacity: 0.65
-						 pos:false
-						 remove:''}
+						 pos: false
+						 remove: ''}
 	start: (event) ->
 		if  not event.rightClick
 			@droppables = $$(@options.droppables)
@@ -132,7 +132,7 @@ Drag.Ghost: new Class {
 		).setStyles({
 			'opacity': @options.opacity,
 			'position': 'absolute',
-			'z-index':5003,
+			'z-index': 5003, # todo zindexing
 			'top': @element.getCoordinates()['top'],
 			'left': @element.getCoordinates()['left']
 			'-webkit-transition-duration': '0s'
@@ -871,7 +871,7 @@ Core.Picker: new Class {
 
 name: Iterable.List
 
-description: 
+description: List element, with editing and sorting.
 
 license: MIT-style license.
 
@@ -885,13 +885,13 @@ Iterable.List: new Class {
   Extends:Core.Abstract
   options:{
     class: GDotUI.Theme.List.class
+    selected: GDotUI.Theme.List.selected
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
-    @sortable: new Sortables null, {handle:'.list-handle'}
+    @sortable: new Sortables null
     #TODO Sortable Events
     @editing: off
     @items: []
@@ -929,16 +929,16 @@ Iterable.List: new Class {
   select: (item) ->
     if @selected != item
       if @selected?
-        @selected.base.removeClass 'selected'
+        @selected.base.removeClass @options.selected
       @selected: item
-      @selected.base.addClass 'selected'
+      @selected.base.addClass @options.selected
       @fireEvent 'select', item
   addItem: (li) -> 
     @items.push li
     @base.grab li
-    li.addEvent 'invoked', ( (item) ->
+    li.addEvent 'invoked', (  ->
       @select item
-      @fireEvent 'invoked', [item]
+      @fireEvent 'invoked', arguments
       ).bindWithEvent this
     li.addEvent 'edit', ( -> 
       @fireEvent 'edit', arguments
@@ -947,21 +947,6 @@ Iterable.List: new Class {
       @fireEvent 'delete', arguments
       ).bindWithEvent this
 }
-###
-toTheTop:function(item){
-  //console.log(item);
-  //@base.setStyle('top',@base.getPosition().y-item.base.getSize().y);
-  @items.erase(item);
-  @items.unshift(item);
-  
-},
-update:function(){
-  @items.each(function(item,i){
-    item.base.dispose();
-    @base.grab(item.base,'top');
-  }.bind(this))
-},
-###
 
 ###
 ---
@@ -1201,7 +1186,7 @@ Data.Number: new Class {
 
 name: Data.Color
 
-description: 
+description: Color data element. ( color picker )
 
 license: MIT-style license.
 
@@ -1225,10 +1210,9 @@ Data.Color: new Class {
   }
   initialize: (options) ->
     @parent(options)
-    this
   create: ->
     @base.addClass @options.class
-    # SB Start
+    
     @wrapper: new Element('div').addClass @options.wrapper
     @white: new Element('div').addClass @options.white
     @black: new Element('div').addClass @options.black
@@ -1242,13 +1226,6 @@ Data.Color: new Class {
       }
     
     @wrapper.adopt @color, @white, @black, @xyKnob
-    # SB END 
-    # Hue Start 
-    # @color_linear: new Element('div').addClass @options.hue
-    # @colorKnob: new Element 'div', {'id':'knob'}
-    # @color_linear.grab @colorKnob
-    # Hue End 
-    
    
     @colorData: new Data.Color.SlotControls()
     @base.adopt @wrapper, @colorData
@@ -1314,6 +1291,16 @@ Data.Color: new Class {
         ret: "#"+@finalColor.hex.slice(1,7)
     @fireEvent 'change', [ret]
     @value: @finalColor
+  getValue: ->
+    ret: ''
+    switch @options.format
+      when "hsl"
+        ret: "hsl("+(@finalColor.hsb[0])+", "+(@finalColor.hsb[1])+"%, "+(@finalColor.hsb[2])+"%)"
+      when "rgb"
+        ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
+      else
+        ret: "#"+@finalColor.hex.slice(1,7)
+    ret
   change: (pos) ->
     @saturation.setValue pos.x
     @lightness.setValue 100-pos.y
@@ -1322,11 +1309,10 @@ Data.Color: new Class {
 Data.Color.SlotControls: new Class {
   Extends:Data.Abstract
   options:{
-    class:GDotUI.Theme.Color.slotControls.class
+    class:GDotUI.Theme.Color.controls.class
   }
   initialize: (options) ->
     @parent(options)
-    this
   create: ->
     @base.addClass @options.class  
     @hue: new Data.Number {range:[0,360],reset: off, steps: [360]}
@@ -1337,67 +1323,6 @@ Data.Color.SlotControls: new Class {
     @lightness: new Data.Number {range:[0,100],reset: off, steps: [100]}
   ready: ->
     @base.adopt @hue, @saturation, @lightness
-}
-Data.Color.Controls: new Class {
-    Extends:Data.Abstract
-    options:{
-        class: GDotUI.Theme.Color.controls.class
-        format: GDotUI.Theme.Color.controls.format
-        colorBox: GDotUI.Theme.Color.controls.colorBox
-    }
-    initialize: (options) ->
-        @parent(options)
-        this
-    create: ->
-        @base.addClass @options.class
-        
-        @left: new Element('div').setStyles {'float': 'left'}
-        @red: new Data.Color.Controls.Field 'R'
-        @green: new Data.Color.Controls.Field 'G'
-        @blue: new Data.Color.Controls.Field 'B'
-        @left.adopt @red, @green, @blue
-        
-        @right: new Element 'div'
-        @right.setStyles {'float':'left'}
-        @hue: new Data.Color.Controls.Field 'H'
-        @saturation: new Data.Color.Controls.Field 'S'
-        @brightness: new Data.Color.Controls.Field 'B'
-        @right.adopt @hue, @saturation, @brightness
-        
-        @color: new Element('div').setStyles({'float':'left'}).addClass @options.colorBox
-        
-        @format: new Element('div').setStyles({'float':'left'}).addClass @options.format
-        @hex: new Data.Color.Controls.Field 'Hex'
-        @rgb: new Data.Color.Controls.Field 'RGB'
-        @hsb: new Data.Color.Controls.Field 'HSL'
-        @format.adopt @hex, @rgb, @hsb
-        
-        @base.adopt @left, @right, @color, new Element('div').setStyle('clear','both'), @format
-    setValue: (color) ->
-        @color.setStyle 'background-color', color
-        @red.input.set 'value', color.rgb[0]
-        @green.input.set 'value', color.rgb[1]
-        @blue.input.set 'value', color.rgb[2]
-        @rgb.input.set 'value', "rgb("+(color.rgb[0])+", "+(color.rgb[1])+", "+(color.rgb[2])+")"
-        @hue.input.set 'value', color.hsb[0]
-        @saturation.input.set 'value', color.hsb[1]
-        @brightness.input.set 'value', color.hsb[2]
-        @hsb.input.set 'value', "hsl("+(color.hsb[0])+", "+(color.hsb[1])+"%, "+(color.hsb[2])+"%)"
-        @hex.input.set 'value', "#"+color.hex.slice(1,7)
-}
-# to be replaced by Form.Field
-Data.Color.Controls.Field: new Class {
-  initialize: (label) ->
-    @base: new Element 'dl'
-    @input: new Element 'input', {type:'text'
-                                  readonly:true}
-    @label: new Element 'label', {text:label+": "}
-    @dt: new Element('dt').grab @label
-    @dd: new Element('dd').grab @input
-    @base.adopt @dt,@dd
-    this
-  toElement: ->
-    @base
 }
 
 ###
@@ -1608,7 +1533,7 @@ Data.DateTime: new Class {
 
 name: Iterable.ListItem
 
-description: 
+description: List items for Iterable.List.
 
 license: MIT-style license.
 
@@ -1620,29 +1545,37 @@ provides: Iterable.ListItem
 ###
 Iterable.ListItem: new Class {
   Extends:Core.Abstract
-  Implements: Interfaces.Draggable
+  Implements: [ Interfaces.Draggable
+               Interfaces.Enabled ]
   options:{
-    class:GDotUI.Theme.ListItem.class
+    classes:{
+      class: GDotUI.Theme.ListItem.class
+      title: GDotUI.Theme.ListItem.title
+      subtitle: GDotUI.Theme.ListItem.subTitle
+      handle: GDotUI.Theme.ListItem.handle
+    }
+    icons:{
+      remove: GDotUI.Theme.Icons.remove
+      handle: GDotUI.Theme.Icons.handleVertical
+    }
+    offset: GDotUI.Theme.ListItem.offset
     title:''
     subtitle:''
     draggable: on
     ghost: on
-    removeClasses: '.icon'
+    removeClasses: GDotUI.Theme.Icon.class
   }
   initialize: (options) ->
     @parent options
-    @enabled: on
-    this
   create: ->
-    @base.addClass(@options.class).setStyle  'position','relative'
-    @remove: new Core.Icon {image:GDotUI.Theme.Icons.remove}
-    @handles: new Core.Icon {image:GDotUI.Theme.Icons.handleVertical}
-    @handles.base.addClass 'list-handle'
+    @base.addClass(@options.classes.class).setStyle  'position','relative'
+    @remove: new Core.Icon {image: @options.icons.remove}
+    @handles: new Core.Icon {image: @options.icons.handle}
+    @handles.base.addClass  @options.classes.handle
     $$(@remove.base,@handles.base).setStyle 'position','absolute'
-    @title: new Element('div').addClass(GDotUI.Theme.ListItem.title).set 'text', @options.title
-    @subtitle: new Element('div').addClass(GDotUI.Theme.ListItem.subTitle).set 'text', @options.subtitle
+    @title: new Element('div').addClass(@options.classes.title).set 'text', @options.title
+    @subtitle: new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
     @base.adopt @title,@subtitle, @remove, @handles
-    #Invoked
     @base.addEvent 'click', ( ->
       if @enabled
         @fireEvent 'invoked', this
@@ -1654,14 +1587,18 @@ Iterable.ListItem: new Class {
      ).bindWithEvent this
   toggleEdit: ->
     if @editing
+      if @options.draggable
+        @drag.attach()
       @remove.base.setStyle 'right', -@remove.base.getSize().x
       @handles.base.setStyle 'left', -@handles.base.getSize().x
       @base.setStyle 'padding-left', @base.retrieve('padding-left:old')
       @base.setStyle 'padding-right', @base.retrieve('padding-right:old')
       @editing: off
     else
-      @remove.base.setStyle 'right',GDotUI.Theme.ListItem.iconOffset
-      @handles.base.setStyle 'left',GDotUI.Theme.ListItem.iconOffset
+      if @options.draggable
+        @drag.detach()
+      @remove.base.setStyle 'right', @options.offset
+      @handles.base.setStyle 'left', @options.offset
       @base.store 'padding-left:old', @base.getStyle('padding-left')
       @base.store 'padding-right:old', @base.getStyle('padding-left')
       @base.setStyle 'padding-left', Number(@base.getStyle('padding-left').slice(0,-2))+@handles.base.getSize().x
@@ -1688,13 +1625,13 @@ Iterable.ListItem: new Class {
 
 name: Pickers
 
-description: 
+description: Pickers for Data classes.
 
 license: MIT-style license.
 
-requires: [Core.Picker, Data.Color]
+requires: [Core.Picker, Data.Color, Data.Number, Data.Text, Data.Date, Data.Time, Data.DateTime ]
 
-provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text]
+provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Time, Pickers.Date, Pickers.DateTime ] 
 
 ...
 ###
@@ -1772,7 +1709,7 @@ Core.Overlay: new Class {
 
 name: Forms.Input
 
-description: 
+description: Input elements for Forms.
 
 license: MIT-style license.
 
@@ -1785,20 +1722,19 @@ provides: Forms.Input
 Forms.Input: new Class {
   Extends:Core.Abstract
   options:{
-    structure: GDotUI.Theme.Forms.Field.struct
-    type: 'checkbox'
+    type: ''
+    name: ''
   }
   initialize: (options) ->
     @parent options
-    this
   create: () ->
     delete @base  
-    if (@options.type=='text' || @options.type=='password' || @options.type=='checkbox' || @options.type=='button')
-      @base: new Element 'input', { type:@options.type, name:@options.name}
+    if (@options.type=='text' or @options.type=='password' or @options.type=='checkbox' or @options.type=='button')
+      @base: new Element 'input', { type: @options.type, name: @options.name}
     if @options.type == "textarea"
-      @base: new Element 'textarea', {name:@options.name}
+      @base: new Element 'textarea', {name: @options.name}
     if @options.type == "select"
-      @base: new Element 'select', {name:@options.name}
+      @base: new Element 'select', {name: @options.name}
       @options.options.each ( (item) ->
         @base.grab new Element('option', {value:item.value,text:item.label})
       ).bind this
@@ -1821,7 +1757,7 @@ Forms.Input: new Class {
 
 name: Forms.Field
 
-description: 
+description: Field Element for Forms.Fieldset.
 
 license: MIT-style license.
 
@@ -1835,11 +1771,10 @@ Forms.Field: new Class {
   Extends:Core.Abstract
   options:{
     structure: GDotUI.Theme.Forms.Field.struct
-    label: 'hello'
+    label: ''
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     h: new Hash @options.structure
     for key of h
@@ -1856,7 +1791,7 @@ Forms.Field: new Class {
         for key of item
           data: new Hash(item).get key
           if key == 'input'
-            @input: new Forms.Input @options  ## @createinput
+            @input: new Forms.Input @options  
             el: @input
           else if key == 'label'
             @label: new Element 'label', {'text':@options.label}
@@ -1873,7 +1808,7 @@ Forms.Field: new Class {
 
 name: Forms.Fieldset
 
-description: 
+description: Fieldset for Forms.Form.
 
 license: MIT-style license.
 
@@ -1891,13 +1826,12 @@ Forms.Fieldset: new Class {
   }
   initialize: (options) ->
     @parent options
-    this
   create: () ->
     delete @base
     @base: new Element 'fieldset'
-    @legend: new Element 'legend', {text:@options.name}
-    @base.grab(@legend)
-    @options.inputs.each( ( (item) ->
+    @legend: new Element 'legend', {text: @options.name}
+    @base.grab @legend
+    @options.inputs.each ( ( (item) ->
       @base.grab new Forms.Field(item)
     ).bindWithEvent this )
 }
@@ -1907,7 +1841,7 @@ Forms.Fieldset: new Class {
 
 name: Forms.Form
 
-description: 
+description: Class for creating forms from javascript objects.
 
 license: MIT-style license.
 
@@ -1926,7 +1860,6 @@ Forms.Form: new Class {
   initialize: (options) ->
     @fieldsets: []
     @parent options
-    this
   create: ->
     delete @base
     @base: new Element 'form'
@@ -1946,10 +1879,10 @@ Forms.Form: new Class {
       
     @submit: new Element 'input', {type:'button', value:@options.submit}
     @base.grab @submit
-    # Set up and start the validatior
+
     @validator: new Form.Validator @base, {serial:false}
     @validator.start();
-    # Handle validation and fire events accordingly
+
     @submit.addEvent 'click', ( ->
       if @validator.validate()
         if @useRequest
@@ -1973,7 +1906,7 @@ Forms.Form: new Class {
   success: (data) ->
     @fireEvent 'success', data
   faliure: ->
-    @fireEvent 'failed', {message:'Request error!'}
+    @fireEvent 'failed', {message: 'Request error!'}
 }
 
 ###

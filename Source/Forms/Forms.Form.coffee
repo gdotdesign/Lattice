@@ -3,7 +3,7 @@
 
 name: Forms.Form
 
-description: 
+description: Class for creating forms from javascript objects.
 
 license: MIT-style license.
 
@@ -22,7 +22,6 @@ Forms.Form: new Class {
   initialize: (options) ->
     @fieldsets: []
     @parent options
-    this
   create: ->
     delete @base
     @base: new Element 'form'
@@ -42,10 +41,10 @@ Forms.Form: new Class {
       
     @submit: new Element 'input', {type:'button', value:@options.submit}
     @base.grab @submit
-    # Set up and start the validatior
+
     @validator: new Form.Validator @base, {serial:false}
     @validator.start();
-    # Handle validation and fire events accordingly
+
     @submit.addEvent 'click', ( ->
       if @validator.validate()
         if @useRequest
@@ -69,5 +68,5 @@ Forms.Form: new Class {
   success: (data) ->
     @fireEvent 'success', data
   faliure: ->
-    @fireEvent 'failed', {message:'Request error!'}
+    @fireEvent 'failed', {message: 'Request error!'}
 }

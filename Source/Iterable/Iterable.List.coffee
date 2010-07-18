@@ -3,7 +3,7 @@
 
 name: Iterable.List
 
-description: 
+description: List element, with editing and sorting.
 
 license: MIT-style license.
 
@@ -17,13 +17,13 @@ Iterable.List: new Class {
   Extends:Core.Abstract
   options:{
     class: GDotUI.Theme.List.class
+    selected: GDotUI.Theme.List.selected
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     @base.addClass @options.class
-    @sortable: new Sortables null, {handle:'.list-handle'}
+    @sortable: new Sortables null
     #TODO Sortable Events
     @editing: off
     @items: []
@@ -61,16 +61,16 @@ Iterable.List: new Class {
   select: (item) ->
     if @selected != item
       if @selected?
-        @selected.base.removeClass 'selected'
+        @selected.base.removeClass @options.selected
       @selected: item
-      @selected.base.addClass 'selected'
+      @selected.base.addClass @options.selected
       @fireEvent 'select', item
   addItem: (li) -> 
     @items.push li
     @base.grab li
-    li.addEvent 'invoked', ( (item) ->
+    li.addEvent 'invoked', (  ->
       @select item
-      @fireEvent 'invoked', [item]
+      @fireEvent 'invoked', arguments
       ).bindWithEvent this
     li.addEvent 'edit', ( -> 
       @fireEvent 'edit', arguments
@@ -79,18 +79,3 @@ Iterable.List: new Class {
       @fireEvent 'delete', arguments
       ).bindWithEvent this
 }
-###
-toTheTop:function(item){
-  //console.log(item);
-  //@base.setStyle('top',@base.getPosition().y-item.base.getSize().y);
-  @items.erase(item);
-  @items.unshift(item);
-  
-},
-update:function(){
-  @items.each(function(item,i){
-    item.base.dispose();
-    @base.grab(item.base,'top');
-  }.bind(this))
-},
-###

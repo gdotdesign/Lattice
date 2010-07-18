@@ -3,7 +3,7 @@
 
 name: Forms.Fieldset
 
-description: 
+description: Fieldset for Forms.Form.
 
 license: MIT-style license.
 
@@ -21,13 +21,12 @@ Forms.Fieldset: new Class {
   }
   initialize: (options) ->
     @parent options
-    this
   create: () ->
     delete @base
     @base: new Element 'fieldset'
-    @legend: new Element 'legend', {text:@options.name}
-    @base.grab(@legend)
-    @options.inputs.each( ( (item) ->
+    @legend: new Element 'legend', {text: @options.name}
+    @base.grab @legend
+    @options.inputs.each ( ( (item) ->
       @base.grab new Forms.Field(item)
     ).bindWithEvent this )
 }

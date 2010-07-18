@@ -3,7 +3,7 @@
 
 name: Forms.Field
 
-description: 
+description: Field Element for Forms.Fieldset.
 
 license: MIT-style license.
 
@@ -17,11 +17,10 @@ Forms.Field: new Class {
   Extends:Core.Abstract
   options:{
     structure: GDotUI.Theme.Forms.Field.struct
-    label: 'hello'
+    label: ''
   }
   initialize: (options) ->
     @parent options
-    this
   create: ->
     h: new Hash @options.structure
     for key of h
@@ -38,7 +37,7 @@ Forms.Field: new Class {
         for key of item
           data: new Hash(item).get key
           if key == 'input'
-            @input: new Forms.Input @options  ## @createinput
+            @input: new Forms.Input @options  
             el: @input
           else if key == 'label'
             @label: new Element 'label', {'text':@options.label}

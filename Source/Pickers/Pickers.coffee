@@ -3,13 +3,13 @@
 
 name: Pickers
 
-description: 
+description: Pickers for Data classes.
 
 license: MIT-style license.
 
-requires: [Core.Picker, Data.Color]
+requires: [Core.Picker, Data.Color, Data.Number, Data.Text, Data.Date, Data.Time, Data.DateTime ]
 
-provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text]
+provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Time, Pickers.Date, Pickers.DateTime ] 
 
 ...
 ###

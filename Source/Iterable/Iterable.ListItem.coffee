@@ -3,7 +3,7 @@
 
 name: Iterable.ListItem
 
-description: 
+description: List items for Iterable.List.
 
 license: MIT-style license.
 
@@ -15,29 +15,37 @@ provides: Iterable.ListItem
 ###
 Iterable.ListItem: new Class {
   Extends:Core.Abstract
-  Implements: Interfaces.Draggable
+  Implements: [ Interfaces.Draggable
+               Interfaces.Enabled ]
   options:{
-    class:GDotUI.Theme.ListItem.class
+    classes:{
+      class: GDotUI.Theme.ListItem.class
+      title: GDotUI.Theme.ListItem.title
+      subtitle: GDotUI.Theme.ListItem.subTitle
+      handle: GDotUI.Theme.ListItem.handle
+    }
+    icons:{
+      remove: GDotUI.Theme.Icons.remove
+      handle: GDotUI.Theme.Icons.handleVertical
+    }
+    offset: GDotUI.Theme.ListItem.offset
     title:''
     subtitle:''
     draggable: on
     ghost: on
-    removeClasses: '.icon'
+    removeClasses: GDotUI.Theme.Icon.class
   }
   initialize: (options) ->
     @parent options
-    @enabled: on
-    this
   create: ->
-    @base.addClass(@options.class).setStyle  'position','relative'
-    @remove: new Core.Icon {image:GDotUI.Theme.Icons.remove}
-    @handles: new Core.Icon {image:GDotUI.Theme.Icons.handleVertical}
-    @handles.base.addClass 'list-handle'
+    @base.addClass(@options.classes.class).setStyle  'position','relative'
+    @remove: new Core.Icon {image: @options.icons.remove}
+    @handles: new Core.Icon {image: @options.icons.handle}
+    @handles.base.addClass  @options.classes.handle
     $$(@remove.base,@handles.base).setStyle 'position','absolute'
-    @title: new Element('div').addClass(GDotUI.Theme.ListItem.title).set 'text', @options.title
-    @subtitle: new Element('div').addClass(GDotUI.Theme.ListItem.subTitle).set 'text', @options.subtitle
+    @title: new Element('div').addClass(@options.classes.title).set 'text', @options.title
+    @subtitle: new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
     @base.adopt @title,@subtitle, @remove, @handles
-    #Invoked
     @base.addEvent 'click', ( ->
       if @enabled
         @fireEvent 'invoked', this
@@ -49,14 +57,18 @@ Iterable.ListItem: new Class {
      ).bindWithEvent this
   toggleEdit: ->
     if @editing
+      if @options.draggable
+        @drag.attach()
       @remove.base.setStyle 'right', -@remove.base.getSize().x
       @handles.base.setStyle 'left', -@handles.base.getSize().x
       @base.setStyle 'padding-left', @base.retrieve('padding-left:old')
       @base.setStyle 'padding-right', @base.retrieve('padding-right:old')
       @editing: off
     else
-      @remove.base.setStyle 'right',GDotUI.Theme.ListItem.iconOffset
-      @handles.base.setStyle 'left',GDotUI.Theme.ListItem.iconOffset
+      if @options.draggable
+        @drag.detach()
+      @remove.base.setStyle 'right', @options.offset
+      @handles.base.setStyle 'left', @options.offset
       @base.store 'padding-left:old', @base.getStyle('padding-left')
       @base.store 'padding-right:old', @base.getStyle('padding-left')
       @base.setStyle 'padding-left', Number(@base.getStyle('padding-left').slice(0,-2))+@handles.base.getSize().x
