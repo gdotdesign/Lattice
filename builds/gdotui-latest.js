@@ -112,18 +112,70 @@ Drag.Float = new Class({
     return this.options.target === event.target ? this.parent(event) : null;
   }
 });
+Drag.Ghost = new Class({
+  Extends: Drag.Move,
+  options: {
+    opacity: 0.65,
+    pos: false,
+    remove: ''
+  },
+  start: function(event) {
+    if (!event.rightClick) {
+      this.droppables = $$(this.options.droppables);
+      this.ghost();
+      return this.parent(event);
+    }
+  },
+  cancel: function(event) {
+    event ? this.deghost() : null;
+    return this.parent(event);
+  },
+  stop: function(event) {
+    this.deghost();
+    return this.parent(event);
+  },
+  ghost: function() {
+    this.element = (this.element.clone()).setStyles({
+      'opacity': this.options.opacity,
+      'position': 'absolute',
+      'z-index': 5003,
+      'top': this.element.getCoordinates()['top'],
+      'left': this.element.getCoordinates()['left'],
+      '-webkit-transition-duration': '0s'
+    }).inject(document.body).store('parent', this.element);
+    return this.element.getElements(this.options.remove).dispose();
+  },
+  deghost: function() {
+    var e, newpos;
+    e = this.element.retrieve('parent');
+    newpos = this.element.getPosition(e.getParent());
+    this.options.pos && this.overed === null ? e.setStyles({
+      'top': newpos.y,
+      'left': newpos.x
+    }) : null;
+    this.element.destroy();
+    this.element = e;
+    return this.element;
+  }
+});
 Interfaces.Draggable = new Class({
   Implements: Options,
   options: {
-    draggable: false
+    draggable: false,
+    ghost: false,
+    removeClasses: ''
   },
   _$Draggable: function() {
     if (this.options.draggable) {
       this.handle === null ? (this.handle = this.base) : null;
-      this.drag = new Drag.Float(this.base, {
+      this.options.ghost ? (this.drag = new Drag.Ghost(this.base, {
+        target: this.handle,
+        handle: this.handle,
+        remove: this.options.removeClasses
+      })) : (this.drag = new Drag.Float(this.base, {
         target: this.handle,
         handle: this.handle
-      });
+      }));
       return this.drag.addEvent('drop', (function() {
         return this.fireEvent('dropped', this);
       }).bindWithEvent(this));
@@ -633,7 +685,9 @@ Core.Float = new Class({
     overlay: false,
     closeable: true,
     resizeable: false,
-    editable: false
+    editable: false,
+    draggable: true,
+    ghost: false
   },
   initialize: function(options) {
     this.parent(options);
@@ -1128,6 +1182,7 @@ Data.Number = new Class({
     return this.slider;
   },
   ready: function() {
+    this.justSet = false;
     this.slider.knob.grab(this.text);
     this.base.adopt(this.slider);
     this.slider.knob.addEvent('click', (function() {
@@ -1139,7 +1194,7 @@ Data.Number = new Class({
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function(step) {
       typeof (step) === 'object' ? this.text.set('value', 0) : this.text.set('value', step);
-      return this.fireEvent('change', step);
+      return !this.justSet ? this.fireEvent('change', step) : (this.justSet = false);
     }).bindWithEvent(this));
     this.text.addEvent('change', (function() {
       var step;
@@ -1156,6 +1211,7 @@ Data.Number = new Class({
     return this.slider.slider.step;
   },
   setValue: function(step) {
+    this.justSet = true;
     this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
     return this.slider.set(step);
   }
@@ -1204,13 +1260,8 @@ Data.Color = new Class({
       'left': 0
     });
     this.wrapper.adopt(this.color, this.white, this.black, this.xyKnob);
-    this.color_linear = new Element('div').addClass(this.options.hue);
-    this.colorKnob = new Element('div', {
-      'id': 'knob'
-    });
-    this.color_linear.grab(this.colorKnob);
-    this.colorData = new Data.Color.Controls();
-    return this.base.adopt(this.wrapper, this.color_linear, this.colorData.base);
+    this.colorData = new Data.Color.SlotControls();
+    return this.base.adopt(this.wrapper, this.colorData);
   },
   ready: function() {
     var sbSize;
@@ -1228,68 +1279,66 @@ Data.Color = new Class({
       'width': 'inherit',
       'height': 'inherit'
     });
-    this.color_linear.setStyles({
-      height: sbSize.y,
-      width: sbSize.x / 11.25,
-      'float': 'left'
-    });
-    this.colorKnob.setStyles({
-      height: (sbSize.y / 11.25 + 8) / 2.8,
-      width: sbSize.x / 11.25 + 8
-    });
-    this.colorKnob.setStyle('left', (this.color_linear.getSize().x - this.colorKnob.getSize().x) / 2);
     this.xy = new Field(this.black, this.xyKnob, {
       setOnClick: true,
       x: [0, 1, 100],
       y: [0, 1, 100]
     });
-    this.slide = new Slider(this.color_linear, this.colorKnob, {
-      mode: 'vertical',
-      steps: 360
-    });
-    this.slide.addEvent('change', (function(step) {
+    this.hue = this.colorData.hue;
+    this.saturation = this.colorData.saturation;
+    this.lightness = this.colorData.lightness;
+    this.hue.addEvent('change', (function(step) {
       var colr;
       typeof (step) === "object" ? (step = 0) : null;
-      this.bgColor = this.bgColor.setHue(step);
-      colr = new $HSB(this.bgColor.hsb[0], 100, 100);
+      this.bgColor.setHue(Number(step));
+      colr = new $HSB(step, 100, 100);
       this.color.setStyle('background-color', colr);
       return this.setColor();
+    }).bindWithEvent(this));
+    this.saturation.addEvent('change', (function(step) {
+      return this.xy.set({
+        x: step,
+        y: this.xy.get().y
+      });
+    }).bindWithEvent(this));
+    this.lightness.addEvent('change', (function(step) {
+      return this.xy.set({
+        x: this.xy.get().x,
+        y: 100 - step
+      });
     }).bindWithEvent(this));
     this.xy.addEvent('tick', this.change);
     this.xy.addEvent('change', this.change);
     return this.setValue(this.value ? this.value : '#fff');
   },
   setValue: function(hex) {
-    this.bgColor = new Color(hex);
-    this.slide.set(this.bgColor.hsb[0]);
-    this.xy.set({
-      x: this.bgColor.hsb[1],
-      y: 100 - this.bgColor.hsb[2]
-    });
-    this.saturation = this.bgColor.hsb[1];
-    this.brightness = (100 - this.bgColor.hsb[2]);
-    this.hue = this.bgColor.hsb[0];
+    var colr;
+    (typeof hex !== "undefined" && hex !== null) ? (this.bgColor = new Color(hex)) : null;
+    this.hue.setValue(this.bgColor.hsb[0]);
+    this.saturation.setValue(this.bgColor.hsb[1]);
+    this.lightness.setValue(this.bgColor.hsb[2]);
+    colr = new $HSB(this.bgColor.hsb[0], 100, 100);
+    this.color.setStyle('background-color', colr);
     return this.setColor();
   },
   setColor: function() {
     var _a, ret;
-    this.finalColor = this.bgColor.setSaturation(this.saturation).setBrightness(100 - this.brightness);
-    this.colorData.setValue(this.finalColor);
+    this.finalColor = this.bgColor.setSaturation(this.saturation.getValue()).setBrightness(this.lightness.getValue()).setHue(this.hue.getValue());
     ret = '';
     if ((_a = this.options.format) === "hsl") {
-      ret = this.colorData.hsb.input.get('value');
+      ret = "hsl(" + (this.finalColor.hsb[0]) + ", " + (this.finalColor.hsb[1]) + "%, " + (this.finalColor.hsb[2]) + "%)";
     } else if (_a === "rgb") {
-      ret = this.colorData.rgb.input.get('value');
+      ret = "rgb(" + (this.finalColor.rgb[0]) + ", " + (this.finalColor.rgb[1]) + ", " + (this.finalColor.rgb[2]) + ")";
     } else {
-      ret = this.colorData.hex.input.get('value');
+      ret = "#" + this.finalColor.hex.slice(1, 7);
     }
     this.fireEvent('change', [ret]);
     this.value = this.finalColor;
     return this.value;
   },
   change: function(pos) {
-    this.saturation = pos.x;
-    this.brightness = pos.y;
+    this.saturation.setValue(pos.x);
+    this.lightness.setValue(100 - pos.y);
     return this.setColor();
   }
 });
@@ -1304,38 +1353,28 @@ Data.Color.SlotControls = new Class({
   },
   create: function() {
     this.base.addClass(this.options['class']);
-    this.typeslot = new Core.Slot();
-    this.typeslot.addItem(new Iterable.ListItem({
-      title: 'RGB'
-    }));
-    this.typeslot.addItem(new Iterable.ListItem({
-      title: 'HSL'
-    }));
-    this.typeslot.addItem(new Iterable.ListItem({
-      title: 'HEX'
-    }));
-    this.red = new Data.Number({
+    this.hue = new Data.Number({
       range: [0, 360],
       reset: false,
       steps: [360]
     });
-    this.red.addEvent('change', (function(value) {
-      return this.green.slider.base.setStyle('background-color', new $HSB(value, 100, 100));
+    this.hue.addEvent('change', (function(value) {
+      return this.saturation.slider.base.setStyle('background-color', new $HSB(value, 100, 100));
     }).bindWithEvent(this));
-    this.green = new Data.Number({
+    this.saturation = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: [100]
     });
-    this.blue = new Data.Number({
+    this.lightness = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: [100]
     });
-    return this.blue;
+    return this.lightness;
   },
   ready: function() {
-    return this.base.adopt(this.typeslot, this.red, this.green, this.blue);
+    return this.base.adopt(this.hue, this.saturation, this.lightness);
   }
 });
 Data.Color.Controls = new Class({
@@ -1669,29 +1708,33 @@ provides: Iterable.ListItem
 */
 Iterable.ListItem = new Class({
   Extends: Core.Abstract,
+  Implements: Interfaces.Draggable,
   options: {
     'class': GDotUI.Theme.ListItem['class'],
     title: '',
-    subtitle: ''
+    subtitle: '',
+    draggable: true,
+    ghost: true,
+    removeClasses: '.icon'
   },
   initialize: function(options) {
     this.parent(options);
     this.enabled = true;
-    return this.enabled;
+    return this;
   },
   create: function() {
     this.base.addClass(this.options['class']).setStyle('position', 'relative');
     this.remove = new Core.Icon({
       image: GDotUI.Theme.Icons.remove
     });
-    this.handle = new Core.Icon({
+    this.handles = new Core.Icon({
       image: GDotUI.Theme.Icons.handleVertical
     });
-    this.handle.base.addClass('list-handle');
-    $$(this.remove.base, this.handle.base).setStyle('position', 'absolute');
+    this.handles.base.addClass('list-handle');
+    $$(this.remove.base, this.handles.base).setStyle('position', 'absolute');
     this.title = new Element('div').addClass(GDotUI.Theme.ListItem.title).set('text', this.options.title);
     this.subtitle = new Element('div').addClass(GDotUI.Theme.ListItem.subTitle).set('text', this.options.subtitle);
-    this.base.adopt(this.title, this.subtitle, this.remove, this.handle);
+    this.base.adopt(this.title, this.subtitle, this.remove, this.handles);
     this.base.addEvent('click', (function() {
       return this.enabled ? this.fireEvent('invoked', this) : null;
     }).bindWithEvent(this));
@@ -1702,17 +1745,17 @@ Iterable.ListItem = new Class({
   toggleEdit: function() {
     if (this.editing) {
       this.remove.base.setStyle('right', -this.remove.base.getSize().x);
-      this.handle.base.setStyle('left', -this.handle.base.getSize().x);
+      this.handles.base.setStyle('left', -this.handles.base.getSize().x);
       this.base.setStyle('padding-left', this.base.retrieve('padding-left:old'));
       this.base.setStyle('padding-right', this.base.retrieve('padding-right:old'));
       this.editing = false;
       return this.editing;
     } else {
       this.remove.base.setStyle('right', GDotUI.Theme.ListItem.iconOffset);
-      this.handle.base.setStyle('left', GDotUI.Theme.ListItem.iconOffset);
+      this.handles.base.setStyle('left', GDotUI.Theme.ListItem.iconOffset);
       this.base.store('padding-left:old', this.base.getStyle('padding-left'));
       this.base.store('padding-right:old', this.base.getStyle('padding-left'));
-      this.base.setStyle('padding-left', Number(this.base.getStyle('padding-left').slice(0, -2)) + this.handle.base.getSize().x);
+      this.base.setStyle('padding-left', Number(this.base.getStyle('padding-left').slice(0, -2)) + this.handles.base.getSize().x);
       this.base.setStyle('padding-right', Number(this.base.getStyle('padding-right').slice(0, -2)) + this.remove.base.getSize().x);
       this.editing = true;
       return this.editing;
@@ -1721,14 +1764,14 @@ Iterable.ListItem = new Class({
   ready: function() {
     var baseSize, handSize, remSize;
     if (!this.editing) {
-      handSize = this.handle.base.getSize();
+      handSize = this.handles.base.getSize();
       remSize = this.remove.base.getSize();
       baseSize = this.base.getSize();
       this.remove.base.setStyles({
         "right": -remSize.x,
         "top": (baseSize.y - remSize.y) / 2
       });
-      this.handle.base.setStyles({
+      this.handles.base.setStyles({
         "left": -handSize.x,
         "top": (baseSize.y - handSize.y) / 2
       });

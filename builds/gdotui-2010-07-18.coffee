@@ -105,20 +105,67 @@ Drag.Float: new Class {
 		if @options.target == event.target
 			@parent event
 }
+Drag.Ghost: new Class {
+	Extends: Drag.Move
+	options: { opacity: 0.65
+						 pos:false
+						 remove:''}
+	start: (event) ->
+		if  not event.rightClick
+			@droppables = $$(@options.droppables)
+			@ghost()
+			@parent(event)
 
+	cancel: (event) ->
+		if event
+			@deghost()
+		@parent(event)
+	
+	stop: (event) ->
+		@deghost()
+		@parent(event)
+
+	ghost: ->
+		@element: (@element.clone()
+		).setStyles({
+			'opacity': @options.opacity,
+			'position': 'absolute',
+			'z-index':5003,
+			'top': @element.getCoordinates()['top'],
+			'left': @element.getCoordinates()['left']
+			'-webkit-transition-duration': '0s'
+		}).inject(document.body).store('parent', @element)
+		@element.getElements(@options.remove).dispose()
+		
+	deghost: ->
+		e: @element.retrieve 'parent'
+		newpos: @element.getPosition e.getParent()
+		if @options.pos && @overed==null
+			e.setStyles({
+			'top': newpos.y,
+			'left': newpos.x
+			})
+		@element.destroy();
+		@element = e;
+}
 Interfaces.Draggable: new Class {
-  Implements: Options
-  options:{
-    draggable:false
-  }
-  _$Draggable: ->
-    if @options.draggable
-      if @handle==null
-      	@handle: @base
-      @drag: new Drag.Float @base, {target:@handle, handle:@handle}
-      @drag.addEvent 'drop', (->
-        @fireEvent 'dropped', this
-        ).bindWithEvent this
+	Implements: Options
+	options:{
+		draggable: off
+		ghost: off
+		removeClasses: ''
+	}
+	_$Draggable: ->
+		if @options.draggable
+			if @handle == null
+				@handle: @base
+			if @options.ghost
+				@drag: new Drag.Ghost @base, {target:@handle, handle:@handle, remove:@options.removeClasses}
+			else
+				@drag: new Drag.Float @base, {target:@handle, handle:@handle}
+			@drag.addEvent 'drop', (->
+				@fireEvent 'dropped', this
+			).bindWithEvent this
 }
 
 ###
@@ -561,6 +608,8 @@ Core.Float: new Class {
 		closeable: on
 		resizeable: off
 		editable: off
+		draggable: on
+		ghost: off
 	}
 	initialize: (options) ->
 		@parent(options)
@@ -1009,6 +1058,7 @@ Data.Number: new Class {
                               steps: @options.steps
                               mode:'horizontal'}
   ready: ->
+    @justSet: off
     @slider.knob.grab @text
     @base.adopt @slider
     @slider.knob.addEvent 'click', ( ->
@@ -1024,7 +1074,10 @@ Data.Number: new Class {
         @text.set 'value', 0
       else
         @text.set 'value', step
-      @fireEvent 'change', step
+      if not @justSet
+        @fireEvent 'change', step
+      else
+        @justSet: off
       ).bindWithEvent this
     @text.addEvent 'change', ( ->
       step: Number @text.get('value')
@@ -1039,6 +1092,7 @@ Data.Number: new Class {
   getValue: ->
     @slider.slider.step
   setValue: (step) ->
+    @justSet: on
     if @options.reset
       @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
     @slider.set step
@@ -1092,14 +1146,14 @@ Data.Color: new Class {
     @wrapper.adopt @color, @white, @black, @xyKnob
     # SB END 
     # Hue Start 
-    @color_linear: new Element('div').addClass @options.hue
-    @colorKnob: new Element 'div', {'id':'knob'}
-    @color_linear.grab @colorKnob
+    # @color_linear: new Element('div').addClass @options.hue
+    # @colorKnob: new Element 'div', {'id':'knob'}
+    # @color_linear.grab @colorKnob
     # Hue End 
     
    
-    @colorData=new Data.Color.Controls()
-    @base.adopt @wrapper, @color_linear, @colorData.base
+    @colorData: new Data.Color.SlotControls()
+    @base.adopt @wrapper, @colorData
   ready: ->
     sbSize: @color.getSize()
     @wrapper.setStyles {
@@ -1115,55 +1169,56 @@ Data.Color: new Class {
       'width': 'inherit'
       'height': 'inherit'
       }
-    @color_linear.setStyles {
-      height: sbSize.y 
-      width: sbSize.x/11.25 
-      'float': 'left'
-    }
-    @colorKnob.setStyles {
-      height: (sbSize.y/11.25+8)/2.8
-      width: sbSize.x/11.25+8
-    }
-    @colorKnob.setStyle 'left', (@color_linear.getSize().x-@colorKnob.getSize().x)/2
     @xy: new Field @.black, @.xyKnob, {setOnClick:true, x:[0,1,100],y:[0,1,100]}
-    @slide: new Slider @color_linear, @colorKnob, {mode:'vertical',steps:360}
-    @slide.addEvent 'change',( (step) ->
+    @hue: @colorData.hue
+    @saturation: @colorData.saturation
+    @lightness: @colorData.lightness
+    @hue.addEvent 'change',( (step) ->
       if typeof(step) == "object"
         step: 0
-      @bgColor: @bgColor.setHue step
-      colr: new $HSB @bgColor.hsb[0], 100, 100
+      @bgColor.setHue Number(step)
+      colr: new $HSB step, 100, 100  
       @color.setStyle 'background-color', colr
       @setColor()
+    ).bindWithEvent this
+    @saturation.addEvent 'change',( (step) ->
+      @xy.set {x:step
+         y:@xy.get().y
+         }
+    ).bindWithEvent this
+    @lightness.addEvent 'change',( (step) ->
+      @xy.set {x:@xy.get().x
+              y:100-step
+              }
     ).bindWithEvent this
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
     @setValue( if @value then @value else '#fff' )
-  setValue: (hex) -> 
-    @bgColor: new Color hex
-    @slide.set @bgColor.hsb[0]
-    @xy.set {x:@bgColor.hsb[1]
-             y:100-@bgColor.hsb[2]
-             }
-    @saturation: @bgColor.hsb[1]
-    @brightness: (100-@bgColor.hsb[2])
-    @hue: @bgColor.hsb[0]
+  setValue: (hex) ->
+    if hex?
+      @bgColor: new Color hex
+    @hue.setValue @bgColor.hsb[0]
+    @saturation.setValue @bgColor.hsb[1]
+    @lightness.setValue @bgColor.hsb[2]
+    colr: new $HSB @bgColor.hsb[0], 100, 100
+    @color.setStyle 'background-color', colr
     @setColor()
   setColor: ->
-    @finalColor: @bgColor.setSaturation(@saturation).setBrightness (100-@brightness)
-    @colorData.setValue @finalColor
+    @finalColor: @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
+    
     ret: ''
     switch @options.format
       when "hsl"
-        ret: @colorData.hsb.input.get 'value'
+        ret: "hsl("+(@finalColor.hsb[0])+", "+(@finalColor.hsb[1])+"%, "+(@finalColor.hsb[2])+"%)"
       when "rgb"
-        ret: @colorData.rgb.input.get 'value'
+        ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
       else
-        ret: @colorData.hex.input.get 'value'
+        ret: "#"+@finalColor.hex.slice(1,7)
     @fireEvent 'change', [ret]
     @value: @finalColor
   change: (pos) ->
-    @saturation: pos.x
-    @brightness: pos.y
+    @saturation.setValue pos.x
+    @lightness.setValue 100-pos.y
     @setColor()
 }
 Data.Color.SlotControls: new Class {
@@ -1175,20 +1230,15 @@ Data.Color.SlotControls: new Class {
     @parent(options)
     this
   create: ->
-    @base.addClass @options.class
-    @typeslot: new Core.Slot();
-    @typeslot.addItem(new Iterable.ListItem({title:'RGB'}));
-    @typeslot.addItem(new Iterable.ListItem({title:'HSL'}));
-    @typeslot.addItem(new Iterable.ListItem({title:'HEX'}));
-  
-    @red: new Data.Number {range:[0,360],reset: off, steps: [360]}
-    @red.addEvent 'change', ((value) ->
-        @green.slider.base.setStyle 'background-color', new $HSB(value,100,100)
+    @base.addClass @options.class  
+    @hue: new Data.Number {range:[0,360],reset: off, steps: [360]}
+    @hue.addEvent 'change', ((value) ->
+        @saturation.slider.base.setStyle 'background-color', new $HSB(value,100,100)
       ).bindWithEvent this
-    @green: new Data.Number {range:[0,100],reset: off, steps: [100]}
-    @blue: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @saturation: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @lightness: new Data.Number {range:[0,100],reset: off, steps: [100]}
   ready: ->
-    @base.adopt @typeslot,@red, @green, @blue
+    @base.adopt @hue, @saturation, @lightness
 }
 Data.Color.Controls: new Class {
     Extends:Data.Abstract
@@ -1472,23 +1522,28 @@ provides: Iterable.ListItem
 ###
 Iterable.ListItem: new Class {
   Extends:Core.Abstract
+  Implements: Interfaces.Draggable
   options:{
     class:GDotUI.Theme.ListItem.class
     title:''
     subtitle:''
+    draggable: on
+    ghost: on
+    removeClasses: '.icon'
   }
   initialize: (options) ->
     @parent options
     @enabled: on
+    this
   create: ->
     @base.addClass(@options.class).setStyle  'position','relative'
     @remove: new Core.Icon {image:GDotUI.Theme.Icons.remove}
-    @handle: new Core.Icon {image:GDotUI.Theme.Icons.handleVertical}
-    @handle.base.addClass 'list-handle'
-    $$(@remove.base,@handle.base).setStyle 'position','absolute'
+    @handles: new Core.Icon {image:GDotUI.Theme.Icons.handleVertical}
+    @handles.base.addClass 'list-handle'
+    $$(@remove.base,@handles.base).setStyle 'position','absolute'
     @title: new Element('div').addClass(GDotUI.Theme.ListItem.title).set 'text', @options.title
     @subtitle: new Element('div').addClass(GDotUI.Theme.ListItem.subTitle).set 'text', @options.subtitle
-    @base.adopt @title,@subtitle, @remove, @handle
+    @base.adopt @title,@subtitle, @remove, @handles
     #Invoked
     @base.addEvent 'click', ( ->
       if @enabled
@@ -1502,28 +1557,28 @@ Iterable.ListItem: new Class {
   toggleEdit: ->
     if @editing
       @remove.base.setStyle 'right', -@remove.base.getSize().x
-      @handle.base.setStyle 'left', -@handle.base.getSize().x
+      @handles.base.setStyle 'left', -@handles.base.getSize().x
       @base.setStyle 'padding-left', @base.retrieve('padding-left:old')
       @base.setStyle 'padding-right', @base.retrieve('padding-right:old')
       @editing: off
     else
       @remove.base.setStyle 'right',GDotUI.Theme.ListItem.iconOffset
-      @handle.base.setStyle 'left',GDotUI.Theme.ListItem.iconOffset
+      @handles.base.setStyle 'left',GDotUI.Theme.ListItem.iconOffset
       @base.store 'padding-left:old', @base.getStyle('padding-left')
       @base.store 'padding-right:old', @base.getStyle('padding-left')
-      @base.setStyle 'padding-left', Number(@base.getStyle('padding-left').slice(0,-2))+@handle.base.getSize().x
+      @base.setStyle 'padding-left', Number(@base.getStyle('padding-left').slice(0,-2))+@handles.base.getSize().x
       @base.setStyle 'padding-right', Number(@base.getStyle('padding-right').slice(0,-2))+@remove.base.getSize().x
       @editing: on
   ready: ->
     if not @editing
-      handSize: @handle.base.getSize()
+      handSize: @handles.base.getSize()
       remSize: @remove.base.getSize()
       baseSize: @base.getSize()
       @remove.base.setStyles {
         "right":-remSize.x
         "top":(baseSize.y-remSize.y)/2
         }
-      @handle.base.setStyles {
+      @handles.base.setStyles {
         "left":-handSize.x,
         "top":(baseSize.y-handSize.y)/2
         }

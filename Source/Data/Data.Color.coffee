@@ -46,14 +46,14 @@ Data.Color: new Class {
     @wrapper.adopt @color, @white, @black, @xyKnob
     # SB END 
     # Hue Start 
-    @color_linear: new Element('div').addClass @options.hue
-    @colorKnob: new Element 'div', {'id':'knob'}
-    @color_linear.grab @colorKnob
+    # @color_linear: new Element('div').addClass @options.hue
+    # @colorKnob: new Element 'div', {'id':'knob'}
+    # @color_linear.grab @colorKnob
     # Hue End 
     
    
-    @colorData=new Data.Color.Controls()
-    @base.adopt @wrapper, @color_linear, @colorData.base
+    @colorData: new Data.Color.SlotControls()
+    @base.adopt @wrapper, @colorData
   ready: ->
     sbSize: @color.getSize()
     @wrapper.setStyles {
@@ -69,55 +69,56 @@ Data.Color: new Class {
       'width': 'inherit'
       'height': 'inherit'
       }
-    @color_linear.setStyles {
-      height: sbSize.y 
-      width: sbSize.x/11.25 
-      'float': 'left'
-    }
-    @colorKnob.setStyles {
-      height: (sbSize.y/11.25+8)/2.8
-      width: sbSize.x/11.25+8
-    }
-    @colorKnob.setStyle 'left', (@color_linear.getSize().x-@colorKnob.getSize().x)/2
     @xy: new Field @.black, @.xyKnob, {setOnClick:true, x:[0,1,100],y:[0,1,100]}
-    @slide: new Slider @color_linear, @colorKnob, {mode:'vertical',steps:360}
-    @slide.addEvent 'change',( (step) ->
+    @hue: @colorData.hue
+    @saturation: @colorData.saturation
+    @lightness: @colorData.lightness
+    @hue.addEvent 'change',( (step) ->
       if typeof(step) == "object"
         step: 0
-      @bgColor: @bgColor.setHue step
-      colr: new $HSB @bgColor.hsb[0], 100, 100
+      @bgColor.setHue Number(step)
+      colr: new $HSB step, 100, 100  
       @color.setStyle 'background-color', colr
       @setColor()
+    ).bindWithEvent this
+    @saturation.addEvent 'change',( (step) ->
+      @xy.set {x:step
+         y:@xy.get().y
+         }
+    ).bindWithEvent this
+    @lightness.addEvent 'change',( (step) ->
+      @xy.set {x:@xy.get().x
+              y:100-step
+              }
     ).bindWithEvent this
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
     @setValue( if @value then @value else '#fff' )
-  setValue: (hex) -> 
-    @bgColor: new Color hex
-    @slide.set @bgColor.hsb[0]
-    @xy.set {x:@bgColor.hsb[1]
-             y:100-@bgColor.hsb[2]
-             }
-    @saturation: @bgColor.hsb[1]
-    @brightness: (100-@bgColor.hsb[2])
-    @hue: @bgColor.hsb[0]
+  setValue: (hex) ->
+    if hex?
+      @bgColor: new Color hex
+    @hue.setValue @bgColor.hsb[0]
+    @saturation.setValue @bgColor.hsb[1]
+    @lightness.setValue @bgColor.hsb[2]
+    colr: new $HSB @bgColor.hsb[0], 100, 100
+    @color.setStyle 'background-color', colr
     @setColor()
   setColor: ->
-    @finalColor: @bgColor.setSaturation(@saturation).setBrightness (100-@brightness)
-    @colorData.setValue @finalColor
+    @finalColor: @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
+    
     ret: ''
     switch @options.format
       when "hsl"
-        ret: @colorData.hsb.input.get 'value'
+        ret: "hsl("+(@finalColor.hsb[0])+", "+(@finalColor.hsb[1])+"%, "+(@finalColor.hsb[2])+"%)"
       when "rgb"
-        ret: @colorData.rgb.input.get 'value'
+        ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
       else
-        ret: @colorData.hex.input.get 'value'
+        ret: "#"+@finalColor.hex.slice(1,7)
     @fireEvent 'change', [ret]
     @value: @finalColor
   change: (pos) ->
-    @saturation: pos.x
-    @brightness: pos.y
+    @saturation.setValue pos.x
+    @lightness.setValue 100-pos.y
     @setColor()
 }
 Data.Color.SlotControls: new Class {
@@ -129,20 +130,15 @@ Data.Color.SlotControls: new Class {
     @parent(options)
     this
   create: ->
-    @base.addClass @options.class
-    @typeslot: new Core.Slot();
-    @typeslot.addItem(new Iterable.ListItem({title:'RGB'}));
-    @typeslot.addItem(new Iterable.ListItem({title:'HSL'}));
-    @typeslot.addItem(new Iterable.ListItem({title:'HEX'}));
-  
-    @red: new Data.Number {range:[0,360],reset: off, steps: [360]}
-    @red.addEvent 'change', ((value) ->
-        @green.slider.base.setStyle 'background-color', new $HSB(value,100,100)
+    @base.addClass @options.class  
+    @hue: new Data.Number {range:[0,360],reset: off, steps: [360]}
+    @hue.addEvent 'change', ((value) ->
+        @saturation.slider.base.setStyle 'background-color', new $HSB(value,100,100)
       ).bindWithEvent this
-    @green: new Data.Number {range:[0,100],reset: off, steps: [100]}
-    @blue: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @saturation: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @lightness: new Data.Number {range:[0,100],reset: off, steps: [100]}
   ready: ->
-    @base.adopt @typeslot,@red, @green, @blue
+    @base.adopt @hue, @saturation, @lightness
 }
 Data.Color.Controls: new Class {
     Extends:Data.Abstract

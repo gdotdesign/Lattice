@@ -33,6 +33,7 @@ Data.Number: new Class {
                               steps: @options.steps
                               mode:'horizontal'}
   ready: ->
+    @justSet: off
     @slider.knob.grab @text
     @base.adopt @slider
     @slider.knob.addEvent 'click', ( ->
@@ -48,7 +49,10 @@ Data.Number: new Class {
         @text.set 'value', 0
       else
         @text.set 'value', step
-      @fireEvent 'change', step
+      if not @justSet
+        @fireEvent 'change', step
+      else
+        @justSet: off
       ).bindWithEvent this
     @text.addEvent 'change', ( ->
       step: Number @text.get('value')
@@ -63,6 +67,7 @@ Data.Number: new Class {
   getValue: ->
     @slider.slider.step
   setValue: (step) ->
+    @justSet: on
     if @options.reset
       @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
     @slider.set step

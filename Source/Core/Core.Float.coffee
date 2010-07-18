@@ -35,6 +35,8 @@ Core.Float: new Class {
 		closeable: on
 		resizeable: off
 		editable: off
+		draggable: on
+		ghost: off
 	}
 	initialize: (options) ->
 		@parent(options)
