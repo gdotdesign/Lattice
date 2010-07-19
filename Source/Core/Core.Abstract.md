@@ -6,11 +6,31 @@ Core: Abtract
 ### Implements
 Interfaces.Mux
 
-Method: Constructor
+Method: Create
+--------------
+An empty class which soud be overriden. This is used to create the U.I. element.
+The base property can be overriden here:
+
+	create: function(){
+		delete this.base;
+		this.base = new Element('input');
+	}
+
+How to use:
 -------------------
 ### Syntax
   
-	var Cat = new Class
-	var myAbstract = new Core.Abstract(options);
+	Core.Test = new Class({
+		Extends: Core.Abstract(),
+		options: {
+			label: ''
+		}
+		initialize: function(options){
+			this.parent(options);
+		}
+		create: function(){
+		  
+		}
+	})
   
 Initializes the class.
