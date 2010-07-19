@@ -3,12 +3,12 @@ Core: Abtract
 
 "Abstract" class for Core elements to extend upon.
 
-## Implements
+### Implements
 Interfaces.Mux
 
 Method: Constructor
 -------------------
-## Syntax
+### Syntax
   
 	var Cat = new Class
 	var myAbstract = new Core.Abstract(options);
