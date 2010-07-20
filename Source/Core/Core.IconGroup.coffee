@@ -28,8 +28,9 @@ Core.IconGroup: new Class {
   initialize: (options) ->
     @icons: []
     @parent options
-  create: ->
+  create: ( ->
     @base.setStyle 'position', 'relative'
+    ).protect()
   addIcon: (icon) ->
     if @icons.indexOf icon == -1
       @base.grab icon

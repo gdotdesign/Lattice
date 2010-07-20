@@ -321,14 +321,14 @@ Core.Icon = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
-  create: function() {
+  create: (function() {
     var _a;
     this.base.addClass(this.options['class']);
     (typeof (_a = this.options.image) !== "undefined" && _a !== null) ? this.base.setStyle('background-image', 'url(' + this.options.image + ')') : null;
     return this.base.addEvent('click', (function(e) {
       return this.enabled ? this.fireEvent('invoked', [this, e]) : null;
     }).bindWithEvent(this));
-  }
+  }).protect()
 });
 /*
 ---
@@ -362,9 +362,9 @@ Core.IconGroup = new Class({
     this.icons = [];
     return this.parent(options);
   },
-  create: function() {
+  create: (function() {
     return this.base.setStyle('position', 'relative');
-  },
+  }).protect(),
   addIcon: function(icon) {
     if (this.icons.indexOf(icon === -1)) {
       this.base.grab(icon);
@@ -673,12 +673,12 @@ Core.Float = new Class({
     this.showSilder = false;
     return this.parent(options);
   },
-  ready: function() {
+  ready: (function() {
     this.loadPosition();
     this.base.adopt(this.controls);
     return this.parent();
-  },
-  create: function() {
+  }).protect(),
+  create: (function() {
     var _a;
     this.base.addClass(this.options.classes['class']);
     this.base.setStyle('position', 'fixed');
@@ -746,42 +746,39 @@ Core.Float = new Class({
           y: 'height'
         }
       });
-      this.sizeDrag.addEvent('drag', this.resize);
+      this.sizeDrag.addEvent('drag', (function() {
+        if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
+          if (!this.showSlider) {
+            this.showSlider = true;
+            return this.mouseisover ? this.slider.show() : null;
+          }
+        } else {
+          if (this.showSlider) {
+            this.showSlider = false;
+            return this.slider.hide();
+          }
+        }
+      }).bindWithEvent(this));
     }
-    this.base.addEvent('mouseenter', this.mouseEnter);
-    return this.base.addEvent('mouseleave', this.mouseLeave);
-  },
-  mouseEnter: function() {
-    this.base.toggleClass(this.options.classes.active);
-    this.base.toggleClass(this.options.classes.inactive);
-    $clear(this.iconsTimout);
-    $clear(this.sliderTimout);
-    this.showSlider ? this.slider.show() : null;
-    this.icons.show();
-    this.mouseisover = true;
-    return this.mouseisover;
-  },
-  mouseLeave: function() {
-    this.base.toggleClass(this.options.classes.active);
-    this.base.toggleClass(this.options.classes.inactive);
-    !this.scrolling ? this.showSlider ? (this.sliderTimout = this.slider.hide.delay(200, this.slider)) : null : null;
-    this.iconsTimout = this.icons.hide.delay(200, this.icons);
-    this.mouseisover = false;
-    return this.mouseisover;
-  },
-  resize: function() {
-    if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
-      if (!this.showSlider) {
-        this.showSlider = true;
-        return this.mouseisover ? this.slider.show() : null;
-      }
-    } else {
-      if (this.showSlider) {
-        this.showSlider = false;
-        return this.slider.hide();
-      }
-    }
-  },
+    this.base.addEvent('mouseenter', (function() {
+      this.base.toggleClass(this.options.classes.active);
+      this.base.toggleClass(this.options.classes.inactive);
+      $clear(this.iconsTimout);
+      $clear(this.sliderTimout);
+      this.showSlider ? this.slider.show() : null;
+      this.icons.show();
+      this.mouseisover = true;
+      return this.mouseisover;
+    }).bindWithEvent(this));
+    return this.base.addEvent('mouseleave', (function() {
+      this.base.toggleClass(this.options.classes.active);
+      this.base.toggleClass(this.options.classes.inactive);
+      !this.scrolling ? this.showSlider ? (this.sliderTimout = this.slider.hide.delay(200, this.slider)) : null : null;
+      this.iconsTimout = this.icons.hide.delay(200, this.icons);
+      this.mouseisover = false;
+      return this.mouseisover;
+    }).bindWithEvent(this));
+  }).protect(),
   show: function() {
     document.getElement('body').grab(this.base);
     return this.saveState();
@@ -827,7 +824,7 @@ Core.Button = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
-  create: function() {
+  create: (function() {
     delete this.base;
     this.base = new Element('button');
     this.base.addClass(this.options['class']).set('text', this.options.text);
@@ -837,11 +834,11 @@ Core.Button = new Class({
     return this.base.addEvent('click', (function(e) {
       return this.enabled ? this.fireEvent('invoked', [this, e]) : null;
     }).bindWithEvent(this));
-  },
-  ready: function() {
+  }).protect(),
+  ready: (function() {
     this.base.grab(this.icon);
     return this.parent();
-  }
+  }).protect()
 });
 /*
 ---

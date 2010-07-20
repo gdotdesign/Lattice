@@ -6,16 +6,11 @@ Core: Abtract
 ### Implements
 Interfaces.Mux
 
-Method: Create
+Method: create
 --------------
-An empty function which shoud be overriden.   
-This is used to create the U.I. element.   
-The base property can be overriden like this:   
 
-	create: function(){
-		delete this.base;
-		this.base = new Element('input');
-	}
+Method: ready
+--------------
 
 How to use:
 -------------------

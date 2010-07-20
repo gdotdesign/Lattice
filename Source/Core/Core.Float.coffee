@@ -46,11 +46,12 @@ Core.Float: new Class {
 	initialize: (options) ->
 		@showSilder: off
 		@parent options
-	ready: ->
+	ready: ( ->
 		@loadPosition()
 		@base.adopt @controls
 		@parent()
-	create: ->
+		).protect()
+	create: ( ->
 		@base.addClass @options.classes.class
 		@base.setStyle 'position', 'fixed'
 		@base.setPosition {x:0,y:0}
@@ -106,37 +107,35 @@ Core.Float: new Class {
 		if @options.resizeable
 			@base.grab @bottom
 			@sizeDrag: new Drag @scrollBase, {handle:@bottom, modifiers:{x:'',y:'height'}}
-			@sizeDrag.addEvent 'drag', @resize
-		
-		@base.addEvent 'mouseenter', @mouseEnter
-		@base.addEvent 'mouseleave', @mouseLeave
-	mouseEnter: ->
-		@base.toggleClass @options.classes.active
-		@base.toggleClass @options.classes.inactive
-		$clear @iconsTimout
-		$clear @sliderTimout
-		if @showSlider
-			@slider.show()
-		@icons.show()
-		@mouseisover: on
-	mouseLeave: ->
-		@base.toggleClass @options.classes.active
-		@base.toggleClass @options.classes.inactive
-		if not @scrolling
+			@sizeDrag.addEvent 'drag', ( ->
+				if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
+					if not @showSlider
+						@showSlider: on
+						if @mouseisover
+							@slider.show()
+				else
+					if @showSlider
+						@showSlider: off
+						@slider.hide()
+				).bindWithEvent @
+		@base.addEvent 'mouseenter', ( ->
+			@base.toggleClass @options.classes.active
+			@base.toggleClass @options.classes.inactive
+			$clear @iconsTimout
+			$clear @sliderTimout
 			if @showSlider
-				@sliderTimout: @slider.hide.delay 200, @slider
-		@iconsTimout: @icons.hide.delay 200, @icons
-		@mouseisover: off
-	resize: ->
-		if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
-			if not @showSlider
-				@showSlider: on
-				if @mouseisover
-					@slider.show()
-		else
-			if @showSlider
-				@showSlider: off
-				@slider.hide()
+				@slider.show()
+			@icons.show()
+			@mouseisover: on ).bindWithEvent @
+		@base.addEvent 'mouseleave', ( ->
+			@base.toggleClass @options.classes.active
+			@base.toggleClass @options.classes.inactive
+			if not @scrolling
+				if @showSlider
+					@sliderTimout: @slider.hide.delay 200, @slider
+			@iconsTimout: @icons.hide.delay 200, @icons
+			@mouseisover: off ).bindWithEvent @
+		).protect()
 	show: ->
 		document.getElement('body').grab @base
 		@saveState()

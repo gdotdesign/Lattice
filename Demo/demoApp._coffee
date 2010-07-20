@@ -26,6 +26,7 @@ App: new Class {
     ).bindWithEvent this
     $('tabs').grab @tabnav
     @createFloats()
+    @
   createBasic: ->
     @basicContent: new Element 'div'
   createPickers: ->

@@ -34,7 +34,8 @@ App = new Class({
       }
     }).bindWithEvent(this));
     $('tabs').grab(this.tabnav);
-    return this.createFloats();
+    this.createFloats();
+    return this;
   },
   createBasic: function() {
     this.basicContent = new Element('div');

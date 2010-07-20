@@ -21,11 +21,11 @@ Core.Abstract: new Class {
     @setOptions options
     @base: new Element 'div'
     @create()
-    fn: @ready.bindWithEvent this
+    fn: @ready.bindWithEvent @
     @base.store 'fn', fn
     @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
     @mux()
-    this
+    @
   create: ->
   ready: ->
     @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve('fn'), no
