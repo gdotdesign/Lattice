@@ -13,8 +13,10 @@ App: new Class {
       tab: new Core.Tab {label:key}
       tab.panel: $ value
       tab.addEvent 'activated' , (t) ->
+        t.panel.setStyle 'z-index', 10
         t.panel.setStyle 'opacity', 1
       tab.addEvent 'deactivated' , (t) ->
+        t.panel.setStyle 'z-index', 1
         t.panel.setStyle 'opacity', 0
       @tabnav.add tab
     

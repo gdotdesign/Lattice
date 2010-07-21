@@ -22,9 +22,11 @@ App = new Class({
         });
         tab.panel = $(value);
         tab.addEvent('activated', function(t) {
+          t.panel.setStyle('z-index', 10);
           return t.panel.setStyle('opacity', 1);
         });
         tab.addEvent('deactivated', function(t) {
+          t.panel.setStyle('z-index', 1);
           return t.panel.setStyle('opacity', 0);
         });
         return this.tabnav.add(tab);
