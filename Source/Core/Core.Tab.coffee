@@ -39,7 +39,9 @@ Core.Tab: new Class {
     if @options.removeable
       @base.grab @icon
   activate: ->
+    @fireEvent 'activated', this
     @base.addClass @options.active 
   deactivate: ->
+    @fireEvent 'deactivated', this
     @base.removeClass @options.active
 }

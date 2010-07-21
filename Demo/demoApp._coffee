@@ -1,29 +1,25 @@
 # Demo application...
+Tabs: new Hash {
+  'About':'about'
+  'Basic Elements':'basic'
+  'Pickers':'pickers'
+  'Floats':'floats'
+  'Forms':'forms'
+}
 App: new Class {
   initialize: ->
     @tabnav: new Core.Tabs()
-    @aboutTab: new Core.Tab {label:'About'}
-    @basicTab: new Core.Tab {label:'Basic Elements'}
-    @pickerTab: new Core.Tab {label:'Pickers'}
-    @floatTab: new Core.Tab {label:'Floats'}
-    @formsTab: new Core.Tab {label:'Forms'}
+    for key, value of Tabs
+      tab: new Core.Tab {label:key}
+      tab.panel: $ value
+      tab.addEvent 'activated' , (t) ->
+        t.panel.setStyle 'opacity', 1
+      tab.addEvent 'deactivated' , (t) ->
+        t.panel.setStyle 'opacity', 0
+      @tabnav.add tab
     
-    @content: $ 'content'
+    @tabnav.setActive @tabnav.tabs[0]
     
-    @tabnav.add @aboutTab
-    @tabnav.add @basicTab
-    @tabnav.add @pickerTab
-    @tabnav.add @floatTab
-    @tabnav.add @formsTab
-    
-    @tabnav.addEvent 'change',( (tab) ->
-      if tab is @aboutTab
-        $('about').setStyle 'opacity', 1
-        $('asd').setStyle 'opacity', 0
-      if tab is @basicTab
-        $('about').setStyle 'opacity', 0
-        $('asd').setStyle 'opacity', 1
-    ).bindWithEvent this
     $('tabs').grab @tabnav
     @createFloats()
     @

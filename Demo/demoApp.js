@@ -1,38 +1,36 @@
-var App;
+var App, Tabs;
+var __hasProp = Object.prototype.hasOwnProperty;
+Tabs = new Hash({
+  'About': 'about',
+  'Basic Elements': 'basic',
+  'Pickers': 'pickers',
+  'Floats': 'floats',
+  'Forms': 'forms'
+});
 App = new Class({
   initialize: function() {
+    var _a, _b, key;
     this.tabnav = new Core.Tabs();
-    this.aboutTab = new Core.Tab({
-      label: 'About'
-    });
-    this.basicTab = new Core.Tab({
-      label: 'Basic Elements'
-    });
-    this.pickerTab = new Core.Tab({
-      label: 'Pickers'
-    });
-    this.floatTab = new Core.Tab({
-      label: 'Floats'
-    });
-    this.formsTab = new Core.Tab({
-      label: 'Forms'
-    });
-    this.content = $('content');
-    this.tabnav.add(this.aboutTab);
-    this.tabnav.add(this.basicTab);
-    this.tabnav.add(this.pickerTab);
-    this.tabnav.add(this.floatTab);
-    this.tabnav.add(this.formsTab);
-    this.tabnav.addEvent('change', (function(tab) {
-      if (tab === this.aboutTab) {
-        $('about').setStyle('opacity', 1);
-        $('asd').setStyle('opacity', 0);
-      }
-      if (tab === this.basicTab) {
-        $('about').setStyle('opacity', 0);
-        return $('asd').setStyle('opacity', 1);
-      }
-    }).bindWithEvent(this));
+    _b = Tabs;
+    for (_a in _b) { if (__hasProp.call(_b, _a)) {
+      (function() {
+        var tab;
+        var key = _a;
+        var value = _b[_a];
+        tab = new Core.Tab({
+          label: key
+        });
+        tab.panel = $(value);
+        tab.addEvent('activated', function(t) {
+          return t.panel.setStyle('opacity', 1);
+        });
+        tab.addEvent('deactivated', function(t) {
+          return t.panel.setStyle('opacity', 0);
+        });
+        return this.tabnav.add(tab);
+      }).call(this);
+    }}
+    this.tabnav.setActive(this.tabnav.tabs[0]);
     $('tabs').grab(this.tabnav);
     this.createFloats();
     return this;

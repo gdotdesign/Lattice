@@ -2188,9 +2188,11 @@ Core.Tab = new Class({
     return this.options.removeable ? this.base.grab(this.icon) : null;
   },
   activate: function() {
+    this.fireEvent('activated', this);
     return this.base.addClass(this.options.active);
   },
   deactivate: function() {
+    this.fireEvent('deactivated', this);
     return this.base.removeClass(this.options.active);
   }
 });
