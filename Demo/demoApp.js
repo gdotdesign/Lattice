@@ -9,7 +9,7 @@ Tabs = new Hash({
 });
 App = new Class({
   initialize: function() {
-    var _a, _b, key;
+    var _a, _b, a, key;
     this.tabnav = new Core.Tabs();
     _b = Tabs;
     for (_a in _b) { if (__hasProp.call(_b, _a)) {
@@ -21,27 +21,135 @@ App = new Class({
           label: key
         });
         tab.panel = $(value);
-        tab.addEvent('activated', function(t) {
-          t.panel.setStyle('z-index', 10);
-          return t.panel.setStyle('opacity', 1);
-        });
+        tab.lastHeight = tab.panel.getSize().y;
+        tab.panel.setStyle('height', 0);
+        tab.addEvent('activated', (function(t) {
+          t.panel.setStyle('height', t.lastHeight);
+          return window.localStorage.setItem('current-tab', this.tabnav.tabs.indexOf(t));
+        }).bindWithEvent(this));
         tab.addEvent('deactivated', function(t) {
-          t.panel.setStyle('z-index', 1);
-          return t.panel.setStyle('opacity', 0);
+          return t.panel.setStyle('height', 0);
         });
         return this.tabnav.add(tab);
       }).call(this);
     }}
-    this.tabnav.setActive(this.tabnav.tabs[0]);
+    a = window.localStorage.getItem('current-tab');
+    if (a === null) {
+      this.tabnav.setActive(this.tabnav.tabs[0]);
+      window.localStorage.setItem('current-tab', 0);
+    } else {
+      this.tabnav.setActive(this.tabnav.tabs[Number(window.localStorage.getItem('current-tab'))]);
+    }
     $('tabs').grab(this.tabnav);
     this.createFloats();
+    this.createPickers();
+    this.createBasic();
     return this;
   },
   createBasic: function() {
-    this.basicContent = new Element('div');
-    return this.basicContent;
+    var ic, icg, slot, tip;
+    $("exButton").grab(new Core.Button({
+      text: "Hello there!"
+    }));
+    $("exButton1").grab(new Core.Button({
+      text: "Hello there!",
+      image: "images/delete.png",
+      'class': "alertButton"
+    }));
+    $("exIcon").grab(new Core.Icon({
+      image: "images/delete.png"
+    }));
+    icg = new Core.IconGroup();
+    icg.addIcon(new Core.Icon({
+      image: "images/calendar.png"
+    }));
+    icg.addIcon(new Core.Icon({
+      image: "images/database.png"
+    }));
+    icg.addIcon(new Core.Icon({
+      image: "images/camera.png"
+    }));
+    icg.addIcon(new Core.Icon({
+      image: "images/color_wheel.png"
+    }));
+    this.icgc = new Core.IconGroup({
+      mode: 'circular',
+      angle: 360,
+      radius: 30
+    });
+    this.icgc.addIcon(new Core.Icon({
+      image: "images/calendar.png",
+      'class': 'cicon'
+    }));
+    this.icgc.addIcon(new Core.Icon({
+      image: "images/database.png",
+      'class': 'cicon'
+    }));
+    this.icgc.addIcon(new Core.Icon({
+      image: "images/camera.png",
+      'class': 'cicon'
+    }));
+    this.icgc.addIcon(new Core.Icon({
+      image: "images/color_wheel.png",
+      'class': 'cicon'
+    }));
+    $("exIconG").grab(icg);
+    icg.base.addEvent('outerClick', (function() {
+      return this.icgc.base.dispose();
+    }).bindWithEvent(this));
+    icg.base.addEvent('contextmenu', (function(e) {
+      e.stop();
+      document.body.grab(this.icgc);
+      return this.icgc.base.setStyles({
+        'position': 'absolute',
+        'top': e.page.y,
+        'left': e.page.x
+      });
+    }).bindWithEvent(this));
+    $("exSlider").grab(new Core.Slider({
+      mode: "horizontal",
+      range: [0, 100],
+      steps: [100]
+    }));
+    slot = new Core.Slot();
+    slot.addItem(new Iterable.ListItem({
+      title: 'List item 1',
+      subtitle: 'subtitle'
+    }));
+    slot.addItem(new Iterable.ListItem({
+      title: 'List item 2',
+      subtitle: 'subtitle'
+    }));
+    slot.addItem(new Iterable.ListItem({
+      title: 'List item 3',
+      subtitle: 'subtitle'
+    }));
+    slot.addItem(new Iterable.ListItem({
+      title: 'List item 4',
+      subtitle: 'subtitle'
+    }));
+    $("exSlot").grab(slot);
+    ic = new Core.Icon({
+      image: "images/calendar.png"
+    });
+    tip = new Core.Tip({
+      label: 'Calendar',
+      location: {
+        x: "right",
+        y: "bottom"
+      }
+    });
+    tip.attach(ic);
+    return $("exTip").grab(ic);
   },
-  createPickers: function() {  },
+  createPickers: function() {
+    Pickers.Color.attach($('colorSelect'));
+    Pickers.Text.attach($('textSelect'));
+    Pickers.Date.attach($('dateSelect'));
+    Pickers.Number.attach($('numberSelect'));
+    Pickers.Time.attach($('timeSelect'));
+    return Pickers.DateTime.attach($('datetimeSelect'));
+  },
   createFloats: function() {
     var a;
     this.textFloat = new Core.Float({

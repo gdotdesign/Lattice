@@ -824,7 +824,7 @@ Core.Button = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
-  create: (function() {
+  create: function() {
     delete this.base;
     this.base = new Element('button');
     this.base.addClass(this.options['class']).set('text', this.options.text);
@@ -834,11 +834,11 @@ Core.Button = new Class({
     return this.base.addEvent('click', (function(e) {
       return this.enabled ? this.fireEvent('invoked', [this, e]) : null;
     }).bindWithEvent(this));
-  }).protect(),
-  ready: (function() {
+  },
+  ready: function() {
     this.base.grab(this.icon);
     return this.parent();
-  }).protect()
+  }
 });
 /*
 ---
@@ -885,16 +885,17 @@ Core.Picker = new Class({
     return this.base.setStyle('position', 'absolute');
   },
   ready: function() {
-    var asize, offset, position, size, winsize, x, xpos, y, ypos;
+    var asize, offset, position, size, winscroll, winsize, x, xpos, y, ypos;
     !this.base.hasChild(this.contentElement) ? this.base.grab(this.contentElement) : null;
     winsize = window.getSize();
+    winscroll = window.getScroll();
     asize = this.attachedTo.getSize();
     position = this.attachedTo.getPosition();
     size = this.base.getSize();
     offset = this.options.offset;
     x = '';
     y = '';
-    if ((position.x - size.x) < 0) {
+    if ((position.x - size.x - winscroll.x) < 0) {
       x = 'right';
       xpos = position.x + asize.x + offset;
     }
@@ -906,7 +907,7 @@ Core.Picker = new Class({
       x = 'center';
       xpos = (position.x + asize.x / 2) - (size.x / 2);
     }
-    if (position.y > (winsize.x / 2)) {
+    if (position.y + size.y - winscroll.y > winsize.y) {
       y = 'up';
       ypos = position.y - size.y - offset;
     } else {

@@ -27,7 +27,7 @@ Pickers.Base: new Class {
     @picker: new Core.Picker()
     @data: new Data[@options.type]()
     @picker.setContent @data
-    this
+    @
 }
 Pickers.Color: new Pickers.Base {type:'Color'}
 Pickers.Number: new Pickers.Base {type:'Number'}

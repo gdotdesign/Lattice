@@ -42,13 +42,14 @@ Core.Picker: new Class {
     if not @base.hasChild @contentElement
        @base.grab @contentElement
     winsize: window.getSize()
+    winscroll: window.getScroll()
     asize: @attachedTo.getSize()
     position: @attachedTo.getPosition()
     size: @base.getSize()
     offset: @options.offset
     x: ''
     y: ''
-    if (position.x-size.x) < 0
+    if (position.x-size.x-winscroll.x) < 0
       x: 'right'
       xpos: position.x+asize.x+offset
     if (position.x+size.x+asize.x) > winsize.x
@@ -57,7 +58,7 @@ Core.Picker: new Class {
     if not ((position.x+size.x+asize.x)>winsize.x) and not ((position.x-size.x) < 0) 
       x: 'center'
       xpos: (position.x+asize.x/2)-(size.x/2)
-    if position.y > (winsize.x/2)
+    if position.y+size.y-winscroll.y > winsize.y
       y: 'up'
       ypos: position.y-size.y-offset
     else

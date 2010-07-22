@@ -26,7 +26,7 @@ Core.Button: new Class {
   }
   initialize: (options) ->
     @parent options 
-  create: ( ->
+  create: ->
     delete @base
     @base: new Element 'button'
     @base.addClass(@options.class).set 'text', @options.text
@@ -35,9 +35,7 @@ Core.Button: new Class {
       if @enabled
         @fireEvent 'invoked', [this, e]
       ).bindWithEvent this
-    ).protect()
-  ready: ( ->
+  ready: ->
     @base.grab @icon
     @parent()
-    ).protect()
 }

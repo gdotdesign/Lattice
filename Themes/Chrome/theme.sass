@@ -60,8 +60,12 @@
     :width 13px 
     :height 18px 
 .bar.horizontal
-  :width 100px
-  :width height 18px
+  :width 200px
+  :height 15px
+  .knob 
+    :position relative
+    :width 35px 
+    :height 15px 
 .number
   :padding 2px
   input
@@ -74,9 +78,10 @@
     .knob 
       :position relative
       :width 35px 
-      :height 18px 
+      :height 15px 
 
 .picker
+  :z-index 999
   :background-color rgba(255,255,255,0.8)
   +box_shadow(0,0,15px, rgba(0,0,0,0.5))
   +round_full(7px)

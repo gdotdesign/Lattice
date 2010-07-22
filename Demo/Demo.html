@@ -190,90 +190,431 @@
     </div>
     <div id="content" class="container_12">
         <div id="about" class="panel">
+            <div class="wrap">
             <h1>Welcome to the demo page for G.UI!</h1>
             <p>
-                This is a offline web application showcasing the project.
-                <br/>
-                You can navigate through the tabs at the top of the page
+                This is a offline web application, that means if you refresh the
+                page you will be at the same tab as you were. It will also save the
+                positions of the floats (see Floats tab), and your notes which can be
+                toggled with the icon at the top right corner of the page, also you
+                can navigate through the tabs at the top of the page
             </p>
             <h2> Examples </h2>
             <p>
                 Each example will feature an Element of the UI, with code examples like this:
-                <code>                  
-                var slot = new Core.Slot();
-                <br>
-                document.body.grab(slot);
-                </code>
+                <div class="grid_6">
+                 <h3>Name of the element</h3>
+                 <p>
+                    This is where the element will be.
+                 </p>
+                </div>
+                <div class="grid_5">
+                    <code>                  
+                    // code example
+                    </code>
+                </div>
+                <div style="clear: both"></div>
+            </p>
+            <p>
+                <b><i>These were the important stuff.
+                <br/>
+                If you want to read more about G.UI there are plenty below. If you want to see more, use the tabs at the top.</i></b>
             </p>
             <h2> Effects, transitions, shadows </h2>
             <p>
-                Every effect, transition, or shadow you see is done with css. 
+                Every effect, transition, or shadow you see is done with CSS.
             </p>
+            <p>
+                This is because the UI is CSS driven. That means that all the UI elements
+                position, styles are defined in the css and the library only modifies what is
+                needed to achive the functionality of the element.
+                <br/><br/>
+                To make it simple, if you want to make an element dissapear you only have to do:
+                <code>
+                    element.setStyle('opacity',0);
+                </code>
+                and add a css property so it would transition, this way the UI
+                don't constrain the developer, more like empower them to make stunning effects with CSS.
+                <br/>
+                <br/>
+                With that in mind all the
+                elements can have different css classes by theme, so it won't conflict with your
+                webpage / webapp.
+            </p>
+            <h2> Every element can be "grabbed" </h2>
+            <p>
+                This UI is based heavily on Mootools class architetcure. Most elements are extended
+                upon a base class (Core.Abstract, Data.Abstract), and these classes implement the toElement
+                method, so every UI element can be grabbed, adopted, disposed, etc.
+            </p>
+            <h2> Why webkit? </h2>
+            <p>
+                Keep in mind that this project is for <b>offline</b> web applications in the upcoming
+                Google Web Store. Because of this there is no logical reason to make it work
+                with non webkit browsers, also G.UI implements a number of technologies that
+                are not yet available for other browsers: presistent local storage,
+                DOMNodeInsertedIntoDocument event, transitions, css effects just to name a few. These
+                technologies make the project work, without these it is just another UI library.
+            </p>
+            <p>
+                There are plans to make it cross browser. It just needs some clever workarounds.
+                If you are interested to make this happen and have some ideas contact me trought github.
+            </p>
+            <h2> Compact, Extensible, Customizable, Fast, Innovative </h2>
+            <h3> Compact </h3>
+            <p>
+                In its current form weights only xx kbytes.
+            </p>
+            <h3> Extensible </h3>
+            <p>
+                You can extends it by adding your own UI elements, based upon the core classes (Core.Abstract, Data.Abstract)
+            </p>
+            <h3> Customizable </h3>
+            <p>
+                CSS driven theme architetcure. That means you can size, position elements with css.
+            </p>
+            <h3> Fast </h3>
+            <p>
+                The release version will come with support for Mootools 1.3 and Slick
+                (fastest javascript selector engine). Also there are no javascript effects,
+                tweening of any sort, to slow it down.
+            </p>
+            <h3> Innovative </h3>
+            <p>
+                If you bored with the generic elements other UI's use, then this is the UI for ya.
+            </p>
+            </div>
         </div>
         <div id="basic" class="panel">
+            <div class="wrap">
             <h1>Basic Elements</h1>
-            <p>
-               
-            </p>
+            <h2>Button</h2>
+            <div class="grid_5">
+                <p>
+                    Generic button element with icon. 
+                </p>
+                <div id="exButton"></div>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myButton = new Core.Button({text: "Hello there",image:"path/image.png"});
+                <br/>
+                document.body.grab(myButton);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <div class="grid_5">
+                <p>
+                    Different icon, different class.
+                </p>
+                <div id="exButton1"></div>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myButton = new Core.Button({text: "I'm red",
+                image:"path/image.png",
+                class:"alertButton"});
+                <br/>
+                document.body.grab(myButton);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            <h2>Icon</h2>
+            <div class="grid_5">
+                <p>
+                    Generic icon. 
+                </p>
+                <div id="exIcon"></div>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myIcon = new Core.Icon({image:"path/image.png"});
+                <br/>
+                document.body.grab(myIcon);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            <h2>Icon Group</h2>
+            <div class="grid_5">
+                <p>
+                    Icon group with 4 types of layout: horizontal, vertical, grid, circular.
+                    <br/>
+                    Right click the group for an awesome context menu.
+                </p>
+                <div id="exIconG"></div>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myIconGroup = new Core.IconGroup();
+                <br/>
+                myIconGroup.addIcon(new Core.Icon({image:"path/image.png"}))
+                <br/>
+                myIconGroup.addIcon(new Core.Icon({image:"path/image.png"}))
+                <br/>
+                myIconGroup.addIcon(new Core.Icon({image:"path/image.png"}))
+                <br/>
+                myIconGroup.addIcon(new Core.Icon({image:"path/image.png"}))
+                <br/>
+                document.body.grab(myIconGroup);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            <h2>Slider</h2>
+                <div class="grid_5">
+                <p>
+                    Generic Slider. 
+                </p>
+                <div id="exSlider"></div>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var mySlider = new Core.Slider({mode:"horizontal",range:[0,100],steps:[100]});
+                <br/>
+                document.body.grab(mySlider);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            <h2>Slot</h2>
+                <div class="grid_5">
+                <p>
+                    iPhone, iPad like slot list selector.
+                </p>
+                <div id="exSlot"></div>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var mySlot = new Core.Slot();
+                mySlot.add(
+                <br/>
+                new Iterable.ListItem({title:'List item 1',subtitle:'subtitle'}));
+                mySlot.add(
+                <br/>
+                new Iterable.ListItem({title:'List item 2',subtitle:'subtitle'}));
+                mySlot.add(
+                <br/>
+                new Iterable.ListItem({title:'List item 3',subtitle:'subtitle'}));
+                mySlot.add(
+                <br/>
+                new Iterable.ListItem({title:'List item 4',subtitle:'subtitle'}));
+                <br/>
+                document.body.grab(mySlot);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            <h2>Tab & Tabs</h2>
+                 <div class="grid_5">
+                <p>
+                    See the top of the page.
+                </p>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myTabs = new Core.Tabs();
+                <br/>
+                myTabs.add(new Core.Tab({label:'Tab'});
+                <br/>
+                document.body.grab(mySlider);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            <h2>Tip</h2>
+     <div class="grid_5">
+                <p>
+                    Attachable tip to any G.UI element.
+                </p>
+                <div id="exTip"></div>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myTip = new Core.Tip({label:'Your Notes',
+                              location: { x:"left",
+                              y:"bottom" }
+                              });
+                <br/>
+                myTip.attach(myIcon);
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            </div>
         </div>
         <div id="pickers" class="panel">
+             <div class="wrap">
             <h1>Pickers</h1>
             <p>
-                Basic data pickers
+                A picker is a floating box containing data which you can choose from.
+                It usually appears when you click on an input element.
+                <br/>
+                Pickers in G.UI are pretty much the same with a few differences:
+                <ul>
+                    <li>It will appear on the side of the element where is more space. (it will never go out of the window)</li>
+                    <li>You can create custom data pickers.</li>
+                    <li>You can attach it to any html element.</li>
+                    <li>Automatically highlight the element which initiated the "pick" by adding a class to it specified by the theme.</li>
+                    <li>You can change the trigger event (click, double click, etc.).</li>
+                </ul>
             </p>
             <h2> Usage </h2>
             <p>
+                Basic usage of the built in pickers:
                 <code>                  
                 Pickers.Number.attach($('numberSelect'));
                 </code>
+                If you have a custom data type (Data.MyDatatype) then:
+                <code>                  
+                Pickers.MyDatatype = new Picker({type:"MyDatatype"});
+                <br/>
+                Pickers.MyDatatype.attach($('inputbox'));
+                </code>
+                When the data of the picker changes (when you pick a color, change text, change date, etc.)
+                the attached element will fire the 'change' event with the value of the picked data as the argument, also if it is an input element it will change it's value.
+                <code>                  
+                Pickers.Number.attach($('numberSelect'));
+                <br/>
+                $('numberSelect').addEvent('change',function(value){
+                <br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;console.log('The current value of the picker is: '+value);
+                <br/>
+                })
+                </code>
             </p>
             <h2> Examples </h2>
-            <p>
-                Color
-                <input type="text"/>
+            <div class="grid_6">
+                 <h3>Color</h3>
+                 <p>
+                    Normal color picker, with HSL sliders.
+                    <br/>
+                    The return color can be Hex, RGB, or HSL specified by the theme.
+                    <br/>
+                    <input type="text" id="colorSelect"/>
+                 </p>
+            </div>
+            <div class="grid_5">
                 <code>                  
                 Pickers.Color.attach($('colorSelect'));
                 </code>
-                <br />
-                Text
-                <input type="text"/>
+            </div>
+            <div style="clear: both"></div>
+             <hr/>
+             <div class="grid_6">
+                 <h3>Text</h3>
+                 <p>
+                    Basic textarea input.
+                    <br/>
+                <input type="text" id="textSelect"/>
+                </p>
+            </div>
+            <div class="grid_5">
                 <code>                  
-                Pickers.Text.attach($('textSelect'));
+                Pickers.Color.attach($('colorSelect'));
                 </code>
-                <br />
-                Number
-                <input type="text"/><code>                  
-                Pickers.Number.attach($('numberSlect'));
+            </div>
+            <div style="clear: both"></div>
+             <hr/>
+             <div class="grid_6">
+                 <h3>Number</h3>
+                 <p>
+                    Use the slider to adjust the number, or type in the "knob".
+                    <input type="text" id="numberSelect"/>
+                 </p>
+            </div>
+            <div class="grid_5">
+                <code>                  
+                Pickers.Number.attach($('numberSelect'));
                 </code>
-                <br />
-                Date
-                <input type="text"/><code>                  
+            </div>
+            <div style="clear: both"></div>
+             <hr/>
+             <div class="grid_6">
+                 <h3>Date</h3>
+                 <p>
+                    You can use the mouse wheel or drag the individual "slots" to change.
+                    <br/>
+                    The return value can be formatted like any javascript Date object.
+                    Specified by the theme, or it's options.
+                    <br/>
+                    <input type="text" id="dateSelect"/>
+                 </p>
+            </div>
+            <div class="grid_5">
+                <code>                  
                 Pickers.Date.attach($('dateSelect'));
                 </code>
-                <br />
-                Time
-                <input type="text"/><code>                  
+            </div>
+            <div style="clear: both"></div>
+             <hr/>
+             <div class="grid_6">
+                 <h3>Time</h3>
+                 <p>
+                    Same as above.
+                    <br/>
+                    <input type="text" id="timeSelect"/>
+                 </p>
+            </div>
+            <div class="grid_5">
+                <code>                  
                 Pickers.Time.attach($('timeSelect'));
                 </code>
-                <br />
-                Date & Time
-                <input type="text"/><code>                  
+            </div>
+            <div style="clear: both"></div>
+             <hr/>
+             <div class="grid_6">
+                 <h3>Date & Time</h3>
+                 <p>
+                    Same as above.
+                    <br/>
+                    <input type="text" id="datetimeSelect"/>
+                 </p>
+            </div>
+            <div class="grid_5">
+                <code>                  
                 Pickers.DateTime.attach($('datetimeSelect'));
                 </code>
-                <br />
-            </p>
+            </div>
+            <div style="clear: both"></div>
+            <h2> Theme properties </h2>
+            <ul>
+                <li>class - css class of the base element.</li>
+                <li>event - trigger event</li>
+                <li>picking - css class of the highlight</li>
+                <li>offset - offset from the trigger element</li>
+            </ul>
+            <code>
+                GDotUI.Theme.Picker:{
+                    <br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;'class':'picker',
+                    <br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;event: 'click',
+                    <br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;picking: 'picking',
+                    <br/>
+                    &nbsp;&nbsp;&nbsp;&nbsp;offset: 10
+                    <br/>
+                }
+            </code>
+             </div>
         </div>
         <div id="floats" class="panel">
+             <div class="wrap">
             <h1>Floats</h1>
             <p>
                
             </p>
+             </div>
         </div>
         <div id="forms" class="panel">
+             <div class="wrap">
             <h1>Forms</h1>
             <p>
                
             </p>
+             </div>
         </div>
     </div>
 </body>
