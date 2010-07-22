@@ -619,6 +619,7 @@ Core.Float: new Class {
 	ready: ->
 		@loadPosition()
 		@base.adopt @controls
+		@content.grab @contentElement
 		@parent()
 	create: ->
 		@base.addClass @options.classes.class
@@ -717,7 +718,6 @@ Core.Float: new Class {
 			@show el
 	setContent: (element) -> 
 		@contentElement: element
-		@content.grab element
 	center: ->
 		@base.position()
 }

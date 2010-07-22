@@ -676,6 +676,7 @@ Core.Float = new Class({
   ready: function() {
     this.loadPosition();
     this.base.adopt(this.controls);
+    this.content.grab(this.contentElement);
     return this.parent();
   },
   create: function() {
@@ -792,7 +793,7 @@ Core.Float = new Class({
   },
   setContent: function(element) {
     this.contentElement = element;
-    return this.content.grab(element);
+    return this.contentElement;
   },
   center: function() {
     return this.base.position();
