@@ -24,7 +24,7 @@ App = new Class({
         tab.lastHeight = tab.panel.getSize().y;
         tab.panel.setStyle('height', 0);
         tab.addEvent('activated', (function(t) {
-          t.panel.setStyle('height', t.lastHeight);
+          t.panel.setStyle.delay(600, t.panel, ['height', t.lastHeight]);
           return window.localStorage.setItem('current-tab', this.tabnav.tabs.indexOf(t));
         }).bindWithEvent(this));
         tab.addEvent('deactivated', function(t) {
@@ -52,7 +52,7 @@ App = new Class({
       text: "Hello there!"
     }));
     $("exButton1").grab(new Core.Button({
-      text: "Hello there!",
+      text: "I'm red!",
       image: "images/delete.png",
       'class': "alertButton"
     }));
@@ -151,7 +151,55 @@ App = new Class({
     return Pickers.DateTime.attach($('datetimeSelect'));
   },
   createFloats: function() {
-    var a;
+    var a, date, dateFloat, dateFloatButton, g, i, item, list, listFloat, listFloatButton;
+    listFloat = new Core.Float({
+      useCookie: false,
+      cookieID: 'lfloat',
+      editable: true,
+      resizeable: true
+    });
+    list = new Iterable.List();
+    i = 0;
+    while (i < 5) {
+      item = new Iterable.ListItem({
+        title: 'List item ' + i,
+        draggable: false
+      });
+      list.addItem(item);
+      i++;
+    }
+    listFloat.setContent(list);
+    listFloatButton = new Core.Button({
+      text: 'Toggle',
+      image: 'images/layout.png'
+    });
+    $("exFloat1").grab(listFloatButton);
+    g = window.localStorage.getItem('lfloat.y');
+    g === null ? listFloat.base.setStyle('opacity', 0) : null;
+    listFloat.show();
+    listFloatButton.addEvent('invoked', (function() {
+      return listFloat.base.getStyle('opacity') !== 0 ? listFloat.toggle() : listFloat.base.setStyle('opacity', 1);
+    }).bindWithEvent(this));
+    dateFloat = new Core.Float({
+      useCookie: false,
+      cookieID: 'dfloat',
+      editable: false,
+      resizeable: false,
+      closeable: false
+    });
+    date = new Data.DateTime();
+    dateFloat.setContent(date);
+    dateFloatButton = new Core.Button({
+      text: 'Toggle',
+      image: 'images/layout.png'
+    });
+    $("exFloat2").grab(dateFloatButton);
+    g = window.localStorage.getItem('dfloat.y');
+    g === null ? dateFloat.base.setStyle('opacity', 0) : null;
+    dateFloat.show();
+    dateFloatButton.addEvent('invoked', (function() {
+      return dateFloat.base.getStyle('opacity') !== 0 ? dateFloat.toggle() : dateFloat.base.setStyle('opacity', 1);
+    }).bindWithEvent(this));
     this.textFloat = new Core.Float({
       editable: false,
       draggable: true,
@@ -199,13 +247,17 @@ App = new Class({
     if (a === null) {
       window.localStorage.setItem('float-text-note', 'Set notes here that will remain in your local storage...');
       this.textFel.setValue('Set notes here that will remain in your local storage...');
+      this.textFloat.base.setStyles({
+        'left': 50,
+        'top': 100
+      });
+      window.localStorage.setItem('text.state', 'hidden');
     } else {
-      this.textFloat.show();
       this.textFel.setValue(a);
+      this.textFloat.show();
     }
     return this.textFel.addEvent('change', (function(value) {
       return window.localStorage.setItem('float-text-note', value);
     }).bindWithEvent(this));
-  },
-  tabChange: function() {  }
+  }
 });

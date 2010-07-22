@@ -107,78 +107,6 @@
         }
         window.addEvent('domready',function(){
             this.a=new App();
-            /*var b=new Core.Button();
-            document.body.grab(b);
-            var t=new Core.Tabs();
-            for(var i=0;i<7;i++){
-                t.add(new Core.Tab({label:'tab'+i}));
-            }
-            document.body.grab(t);*/
-            /*var a=new Forms.Form(Forms.Settings);
-            this.float=new Core.Float({editable:true,
-                                      draggable:true,
-                                      resizeable:true,
-                                      cookieID:'list',
-                                      useCookie:false});
-            this.nfloat=new Core.Float({editable:false,
-                                      draggable:true,
-                                      resizeable:false,
-                                      cookieID:'text',
-                                      useCookie:false});
-             this.tfloat=new Core.Float({editable:false,
-                                      draggable:true,
-                                      resizeable:false,
-                                      cookieID:'number',
-                                      useCookie:false});
-            this.lfloat=new Core.Float({editable:true,
-                                      draggable:true,
-                                      resizeable:true,
-                                      cookieID:'test',
-                                      useCookie:false});
-            this.overlay=new Core.Overlay();
-            
-            this.list=new Iterable.List();
-            for(var i=0;i<7;i++){
-                this.list.addItem(new Iterable.ListItem({title:'List-item'+i}));
-            }
-            //console.log(Data);
-           
-            this.color1=new Data.DateTime();
-            this.number=new Data.Number();
-            this.number1=new Data.Number();
-            this.nfloat.setContent(this.number);
-            this.nfloat.show();
-            this.text=new Data.Text();
-            this.tfloat.setContent(this.text);
-            this.tfloat.show();
-             this.color=new Data.Date();
-            this.float.setContent(this.list);
-            this.float.show();
-            /*this.lfloat.setContent(this.list);
-            this.lfloat.show();
-            //this.btn=new Core.Button({image:'../Themes/Blank/images/delete.png',text:'deleteME'});
-            //this.list.base.inject(document.body);
-            //this.text.deploy(document.body);
-            //this.pick=new Core.Picker();
-            //this.pick.setContent(this.list);
-            //this.colorInput=new Element('input').inject(document.body);
-            Pickers.Color.attach($('color'));
-            //new Element('br').inject(document.body);
-            //this.pick1=new Core.Picker();
-            this.numberInput=new Element('input').inject(document.body);
-            //this.pick.attach(this.numberInput);
-            //this.pick1.setContent(this.number1);
-            
-            Pickers.Date.attach(this.numberInput);
-            this.numberInput.setStyle('border','1px solid #000');
-            
-            this.numberInput.addEvent('change',function(value){
-              this.setStyle('border',value+'px solid #000');
-            });
-            //document.body.grab(this.number.base);
-           // GDotUI.init();
-            */
-  
         })
     </script>
 </head>
@@ -189,6 +117,7 @@
         </div>
     </div>
     <div id="content" class="container_12">
+        <div id="wrapperr">
         <div id="about" class="panel">
             <div class="wrap">
             <h1>Welcome to the demo page for G.UI!</h1>
@@ -388,17 +317,17 @@
             <div class="grid_6">
                 <code>                  
                 var mySlot = new Core.Slot();
-                mySlot.add(
                 <br/>
+                mySlot.add(
                 new Iterable.ListItem({title:'List item 1',subtitle:'subtitle'}));
-                mySlot.add(
                 <br/>
+                mySlot.add(
                 new Iterable.ListItem({title:'List item 2',subtitle:'subtitle'}));
-                mySlot.add(
                 <br/>
+                mySlot.add(
                 new Iterable.ListItem({title:'List item 3',subtitle:'subtitle'}));
-                mySlot.add(
                 <br/>
+                mySlot.add(
                 new Iterable.ListItem({title:'List item 4',subtitle:'subtitle'}));
                 <br/>
                 document.body.grab(mySlot);
@@ -418,7 +347,7 @@
                 <br/>
                 myTabs.add(new Core.Tab({label:'Tab'});
                 <br/>
-                document.body.grab(mySlider);
+                document.body.grab(myTabs);
                 </code>
             </div>
             <div style="clear: both"></div>
@@ -432,8 +361,8 @@
             </div>
             <div class="grid_6">
                 <code>                  
-                var myTip = new Core.Tip({label:'Your Notes',
-                              location: { x:"left",
+                var myTip = new Core.Tip({label:'Calendar',
+                              location: { x:"right",
                               y:"bottom" }
                               });
                 <br/>
@@ -441,7 +370,6 @@
                 </code>
             </div>
             <div style="clear: both"></div>
-            <hr/>
             </div>
         </div>
         <div id="pickers" class="panel">
@@ -604,8 +532,104 @@
              <div class="wrap">
             <h1>Floats</h1>
             <p>
-               
+               Think of floats as panels or windows that "float" around the screen.
+               You can resize,close and drag them around.
             </p>
+            <p>
+               Behavior of the floats:
+            </p>
+               <ul>
+                <li> The edit, and close icons are only shown when you hover the float.</li>
+                <li> The scrollbar which in this case is a Core.Slider is only shown when you can
+                actually scroll the contents.</li>
+                <li> The floats are inherit the width of the content most of the time so there is no need
+               for a horizontal scrollbar. </li>
+                <li> The floats have an ability to save it's current position, and state (visible / hidden)
+                into the Local Storage or into cookies, and load them when the page reloads. </li>
+                <li> Any G.UI element or a mix of them can be the content.</li>
+                <li> You can drag them by the top handle, resize them by the bottom handle.</li>
+               </ul>
+            <h2>Options</h2>
+            <p>There are number of options available besides the css classes:</p>
+            <ul>
+                <li>
+                    closeable - if enabled the float can be closed
+                </li>
+                <li>
+                    resizeable - enables or disables the resize of the float, if false
+                    the float inherits the contents height.
+                </li>
+                <li>
+                    editable - if enabled clicking the edit icon will trigger the edit mode of the content
+                    if it has it.
+                </li>
+                <li>
+                    draggable - makes the float draggable
+                </li>
+                <li>
+                    restoreable - true if it's restoreable false if not
+                </li>
+                <li>
+                    useCookie - true to use cookies false to use Local Storage
+                </li>
+                <li>
+                    cookieID - if the float is restoreable this is the id that it wil use
+                </li>
+            </ul>
+            <h2>Examples</h2>
+            <div class="grid_5">
+                <p>
+                    A float that can be resized, edited, closed.
+                    <br/>
+                    It has a list as content.
+                    <div id="exFloat1"></div>
+                </p>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myFloat = new Core.Float({useCookie: off, cookieID:'lfloat', editable:true, resizeable:true});
+                <br/>
+                var list = new Iterable.List();
+                <br/>
+                var i = 0;
+                <br/>
+                while(i < 5){
+                <br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;var item = new Iterable.ListItem({title:'List item '+i,draggable:false})
+                  <br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;myFloat.addItem(item)
+                  <br/>
+                  &nbsp;&nbsp;&nbsp;&nbsp;i++
+                  <br/>
+                }
+                <br/>
+                myFloat.setContent(list);
+                <br/>
+                myFloat.show();
+                </code>
+            </div>
+            <div style="clear: both"></div>
+            <hr/>
+            <div class="grid_5">
+                <p>
+                    A float that can't be resized, edited, closed.
+                    <br/>
+                    It has a Date and Time picker as content.
+                    <div id="exFloat2"></div>
+                </p>
+            </div>
+            <div class="grid_6">
+                <code>                  
+                var myFloat = new Core.Float({useCookie: off, cookieID:'lfloat', editable:false, resizeable:false, closeable:false);
+                <br/>
+                var date = new Data.DateTime();
+                <br/>
+                myFloat.setContent(date);
+                <br/>
+                myFloat.show();
+                </code>
+            </div>
+            <div style="clear: both"></div>
              </div>
         </div>
         <div id="forms" class="panel">
@@ -615,6 +639,7 @@
                
             </p>
              </div>
+        </div>
         </div>
     </div>
 </body>

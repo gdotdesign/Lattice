@@ -673,12 +673,12 @@ Core.Float = new Class({
     this.showSilder = false;
     return this.parent(options);
   },
-  ready: (function() {
+  ready: function() {
     this.loadPosition();
     this.base.adopt(this.controls);
     return this.parent();
-  }).protect(),
-  create: (function() {
+  },
+  create: function() {
     var _a;
     this.base.addClass(this.options.classes['class']);
     this.base.setStyle('position', 'fixed');
@@ -778,7 +778,7 @@ Core.Float = new Class({
       this.mouseisover = false;
       return this.mouseisover;
     }).bindWithEvent(this));
-  }).protect(),
+  },
   show: function() {
     document.getElement('body').grab(this.base);
     return this.saveState();

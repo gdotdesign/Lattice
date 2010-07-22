@@ -15,7 +15,7 @@ App: new Class {
       tab.lastHeight: tab.panel.getSize().y
       tab.panel.setStyle 'height', 0
       tab.addEvent 'activated' , ( (t) ->
-        t.panel.setStyle 'height', t.lastHeight
+        t.panel.setStyle.delay(600,t.panel,['height', t.lastHeight])
         window.localStorage.setItem 'current-tab', @tabnav.tabs.indexOf(t)
       ).bindWithEvent @
       tab.addEvent 'deactivated' , (t) ->
@@ -36,7 +36,7 @@ App: new Class {
     @
   createBasic: ->
     $("exButton").grab new Core.Button({text:"Hello there!"})
-    $("exButton1").grab new Core.Button({text:"Hello there!",image:"images/delete.png",class:"alertButton"})
+    $("exButton1").grab new Core.Button({text:"I'm red!",image:"images/delete.png",class:"alertButton"})
     $("exIcon").grab new Core.Icon({image:"images/delete.png"})
     icg: new Core.IconGroup();
     icg.addIcon new Core.Icon({image:"images/calendar.png"})
@@ -86,6 +86,43 @@ App: new Class {
     Pickers.Time.attach($('timeSelect'))
     Pickers.DateTime.attach($('datetimeSelect'))
   createFloats: ->
+    listFloat: new Core.Float({useCookie: off, cookieID:'lfloat',editable:true,resizeable:true})
+    list: new Iterable.List()
+    i: 0
+    while i < 5
+      item: new Iterable.ListItem {title:'List item '+i,draggable:off}
+      list.addItem item
+      i++
+    listFloat.setContent(list);
+    listFloatButton: new Core.Button({text:'Toggle',image:'images/layout.png'})
+    $("exFloat1").grab listFloatButton
+    g: window.localStorage.getItem 'lfloat.y'
+    if g is null
+      listFloat.base.setStyle 'opacity', 0
+    listFloat.show()
+    listFloatButton.addEvent 'invoked', ( ->
+      if listFloat.base.getStyle('opacity') isnt 0
+        listFloat.toggle()
+      else
+        listFloat.base.setStyle 'opacity', 1
+      ).bindWithEvent @
+    
+    
+    dateFloat: new Core.Float({useCookie: off, cookieID:'dfloat',editable:off,resizeable:off, closeable:off})
+    date: new Data.DateTime();
+    dateFloat.setContent(date);
+    dateFloatButton: new Core.Button({text:'Toggle',image:'images/layout.png'})
+    $("exFloat2").grab dateFloatButton
+    g: window.localStorage.getItem 'dfloat.y'
+    if g is null
+      dateFloat.base.setStyle 'opacity', 0
+    dateFloat.show()
+    dateFloatButton.addEvent 'invoked', ( ->
+      if dateFloat.base.getStyle('opacity') isnt 0
+        dateFloat.toggle()
+      else
+        dateFloat.base.setStyle 'opacity', 1
+      ).bindWithEvent @
     @textFloat: new Core.Float {editable:off
                           draggable: on
                           resizeable: off
@@ -121,12 +158,12 @@ App: new Class {
     if a == null
       window.localStorage.setItem 'float-text-note', 'Set notes here that will remain in your local storage...'
       @textFel.setValue 'Set notes here that will remain in your local storage...'
+      @textFloat.base.setStyles {'left':50, 'top':100}
+      window.localStorage.setItem 'text.state', 'hidden'
     else
-      @textFloat.show()
       @textFel.setValue a
+      @textFloat.show()
     @textFel.addEvent 'change', ( (value) ->
       window.localStorage.setItem 'float-text-note',value
     ).bindWithEvent this
-  tabChange: ->
-    
 }

@@ -46,12 +46,11 @@ Core.Float: new Class {
 	initialize: (options) ->
 		@showSilder: off
 		@parent options
-	ready: ( ->
+	ready: ->
 		@loadPosition()
 		@base.adopt @controls
 		@parent()
-		).protect()
-	create: ( ->
+	create: ->
 		@base.addClass @options.classes.class
 		@base.setStyle 'position', 'fixed'
 		@base.setPosition {x:0,y:0}
@@ -135,7 +134,6 @@ Core.Float: new Class {
 					@sliderTimout: @slider.hide.delay 200, @slider
 			@iconsTimout: @icons.hide.delay 200, @icons
 			@mouseisover: off ).bindWithEvent @
-		).protect()
 	show: ->
 		document.getElement('body').grab @base
 		@saveState()
