@@ -1,5 +1,5 @@
 #!/bin/bash
-/home/gdotdesign/kamicane-packager-fc36b28/packager build G.UI/* > builds/gdotui-$(date +%Y-%m-%d).coffee
+/home/gdotdesign/Applications/Packager/packager build G.UI/* > builds/gdotui-$(date +%Y-%m-%d).coffee
 coffee --print --no-wrap builds/gdotui-$(date +%Y-%m-%d).coffee > builds/gdotui-latest.js
 #cp builds/gdotui-$(date +%Y-%m-%d).js builds/gdotui-latest.js
 #java -jar /home/gdotdesign/kamicane-packager-fc36b28/compiler.jar --js builds/gdotui-latest.js --js_output_file builds/gdotui-compressed-latest.js --compilation_level SIMPLE_OPTIMIZATIONS

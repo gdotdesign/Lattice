@@ -111,7 +111,7 @@ GDotUI.Theme={
        white:'white',
        wrapper:'wrapper',
       'class':'color',
-       format: 'hsl', 
+       format: 'hex', 
        controls:{
           'class':'slotcontrol'
        }
