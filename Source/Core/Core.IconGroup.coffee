@@ -37,17 +37,19 @@ Core.IconGroup: new Class {
   delegate: ->
     @fireEvent 'invoked', arguments
   addIcon: (icon) ->
-    if @icons.indexOf icon == -1
+    if @icons.indexOf icon is -1
       icon.addEvent 'invoked', @delegate
       @base.grab icon
       @icons.push icon
       yes
     else no
   removeIcon: (icon) ->
-    if @icons.indexOf icon != -1
+    index: @icons.indexOf icon
+    if index isnt -1
       icon.removeEvent 'invoked', @delegate
       icon.base.dispose()
-      @icons.erase icon
+      @icons.splice index,1
+      console.log @icons
       yes
     else no
   ready: ->

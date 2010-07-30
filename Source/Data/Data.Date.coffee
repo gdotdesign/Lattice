@@ -39,7 +39,6 @@ Data.Date: new Class {
       @date.setDate item.value
       @setValue()
     ).bindWithEvent this
-  ready: ->
     i: 0
     while i < 30
       item: new Iterable.ListItem {title:i+1}
@@ -59,15 +58,16 @@ Data.Date: new Class {
       @years.addItem item
       i++
     @base.adopt @years, @month, @days
-    @setValue new Date()
-    @parent()
+  ready: ->
+    if not @date?
+      @setValue new Date()
   getValue: ->
     @date.format(@options.format)
   setValue: (date) ->
     if date?
       @date: date
     @update()
-    @fireEvent 'change', @date.format(@options.format)
+    @fireEvent 'change', @date
   update: ->
     cdays: @date.get 'lastdayofmonth'
     listlength: @days.list.items.length

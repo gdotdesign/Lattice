@@ -55,8 +55,8 @@ Iterable.ListItem: new Class {
       if @enabled and not @options.draggable
         @fireEvent 'invoked', @
      ).bindWithEvent @
-    @addEvent 'dropped', ( ->
-        @fireEvent 'invoked', @
+    @addEvent 'dropped', ( (el,drop,e) ->
+      @fireEvent 'invoked', [@ ,e ]
     ).bindWithEvent @
     @base.addEvent 'dblclick', ( ->
       if @enabled

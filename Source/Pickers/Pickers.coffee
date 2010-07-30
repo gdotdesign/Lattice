@@ -17,7 +17,8 @@ Pickers.Base: new Class {
   Implements:Options
   Delegates:{
     picker:['attach'
-            'detach']
+            'detach'
+            'attachAndShow']
     data: ['setValue'
           'getValue']
   }

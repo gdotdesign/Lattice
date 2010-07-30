@@ -27,7 +27,7 @@ Drag.Ghost: new Class {
 						 pos: false
 						 remove: ''}
 	start: (event) ->
-		if  not event.rightClick
+		if not event.rightClick
 			@droppables = $$(@options.droppables)
 			@ghost()
 			@parent(event)
@@ -80,6 +80,6 @@ Interfaces.Draggable: new Class {
 			else
 				@drag: new Drag.Float @base, {target:@handle, handle:@handle}
 			@drag.addEvent 'drop', (->
-				@fireEvent 'dropped', @
+				@fireEvent 'dropped', arguments
 			).bindWithEvent @
 }

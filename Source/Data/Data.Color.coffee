@@ -85,13 +85,14 @@ Data.Color: new Class {
     ).bindWithEvent this
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
-    @setValue( if @value then @value else '#fff' )
+    @setValue( if @value? then @value else '#fff' )
   setValue: (hex) ->
     if hex?
       @bgColor: new Color hex
     @hue.setValue @bgColor.hsb[0]
     @saturation.setValue @bgColor.hsb[1]
     @lightness.setValue @bgColor.hsb[2]
+    @xy.set {x:@bgColor.hsb[1], y:100-@bgColor.hsb[2]}
     colr: new $HSB @bgColor.hsb[0], 100, 100
     @color.setStyle 'background-color', colr
     @setColor()
@@ -106,7 +107,7 @@ Data.Color: new Class {
         ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
       else
         ret: "#"+@finalColor.hex.slice(1,7)
-    @fireEvent 'change', [ret]
+    @fireEvent 'change', [[@finalColor]]
     @value: @finalColor
   getValue: ->
     ret: ''

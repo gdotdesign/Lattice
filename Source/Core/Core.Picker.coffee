@@ -14,7 +14,7 @@ provides: [Core.Picker, outerClick]
 ...
 ###
 Element.Events.outerClick: {
-    base: 'click'
+    base: 'mousedown'
     condition: (event) ->
       event.stopPropagation();
       off
@@ -76,7 +76,8 @@ Core.Picker: new Class {
     @attachedTo.removeEvent @options.event, @show
     @attachedTo: null
   attach: (input) ->
-    if @attachedTo isnt null
+    console.log input
+    if @attachedTo?
       @detach()
     input.addEvent @options.event, @show #bind???
     @contentElement.addEvent 'change', ((value) ->
@@ -84,16 +85,16 @@ Core.Picker: new Class {
       @attachedTo.fireEvent 'change', value
     ).bindWithEvent @
     @attachedTo: input
-  attachAndShow: (el) ->
+  attachAndShow: (el, e) ->
     @attach el
     @show e
   show: (e) ->
     document.getElement('body').grab @base
     @attachedTo.addClass @options.picking
     e.stop()
-    @base.addEvent 'outerClick', @hide #bind here too???
-  hide: ->
-    if @base.isVisible()
+    @base.addEvent 'outerClick', @hide.bindWithEvent @ #bind here too???
+  hide: (e) ->
+    if @base.isVisible() and not  @base.hasChild(e.target)
       @attachedTo.removeClass @options.picking
       @base.dispose()
   setContent: (element) ->
