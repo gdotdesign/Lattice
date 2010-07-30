@@ -47,9 +47,17 @@ Core.Float: new Class {
 		@showSilder: off
 		@parent options
 	ready: ->
-		@loadPosition()
 		@base.adopt @controls
 		@content.grab @contentElement
+		if @options.restoreable
+			@loadPosition()
+		else
+			@base.position()
+		if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
+					if not @showSlider
+						@showSlider: on
+						if @mouseisover
+							@slider.show()
 		@parent()
 	create: ->
 		@base.addClass @options.classes.class

@@ -4,6 +4,8 @@ GDotUI.Theme={
         active: 'active',
         inactive: 'inactive'
     },
+    IconGroup: {
+    },
     Icons:{
       add:'../Themes/Chrome/images/add.png',  
       remove:'../Themes/Chrome/images/delete.png',

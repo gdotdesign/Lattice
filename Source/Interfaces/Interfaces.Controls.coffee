@@ -18,4 +18,9 @@ Interfaces.Controls: new Class {
     @base.setStyle 'opacity', 0
   show: -> 
     @base.setStyle 'opacity', 1
+  toggle: ->
+    if @base.getStyle('opacity') is 0
+      @show()
+    else
+      @hide()
 }

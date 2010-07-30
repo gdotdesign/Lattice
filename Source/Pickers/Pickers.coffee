@@ -18,6 +18,8 @@ Pickers.Base: new Class {
   Delegates:{
     picker:['attach'
             'detach']
+    data: ['setValue'
+          'getValue']
   }
   options:{
     type:''

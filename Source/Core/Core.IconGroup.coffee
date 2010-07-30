@@ -16,6 +16,7 @@ provides: Core.IconGroup
 Core.IconGroup: new Class {
   Extends: Core.Abstract
   Implements: Interfaces.Controls
+  Binds: ['delegate']
   options:{
     mode:"horizontal" #horizontal / vertical / circular / grid
     spacing: {x:0
@@ -24,26 +25,34 @@ Core.IconGroup: new Class {
     startAngle:0 #degree
     radius:0 #degree
     degree:360 #degree
+    class: GDotUI.Theme.IconGroup.class
   }
   initialize: (options) ->
     @icons: []
     @parent options
   create: ( ->
     @base.setStyle 'position', 'relative'
+    @base.addClass @options.class
     ).protect()
+  delegate: ->
+    @fireEvent 'invoked', arguments
   addIcon: (icon) ->
     if @icons.indexOf icon == -1
+      icon.addEvent 'invoked', @delegate
       @base.grab icon
       @icons.push icon
       yes
     else no
   removeIcon: (icon) ->
     if @icons.indexOf icon != -1
+      icon.removeEvent 'invoked', @delegate
       icon.base.dispose()
-      @icons.push icon
+      @icons.erase icon
       yes
     else no
   ready: ->
+    @positionIcons()
+  positionIcons: ->
     x: 0
     y: 0
     @size: {x:0, y:0}
@@ -65,6 +74,14 @@ Core.IconGroup: new Class {
           @size.x: x+item.base.getSize().x
           @size.y: y+item.base.getSize().y
           {x:x, y:y}
+      when 'linear'
+        icpos: @icons.map ((item,i) ->
+          x: if i==0 then x+x else x+spacing.x
+          y: if i==0 then y+y else y+spacing.y
+          @size.x: x+item.base.getSize().x
+          @size.y: y+item.base.getSize().y
+          {x:x, y:y}
+          ).bind this
       when 'horizontal'
         icpos: @icons.map ((item,i) ->
           x: if i==0 then x+x else x+item.base.getSize().x+spacing.x
@@ -83,6 +100,7 @@ Core.IconGroup: new Class {
           ).bind this
       when 'circular'
         n: @icons.length
+        console.log @icons
         radius: @options.radius
         startAngle: @options.startAngle
         ker: 2*@radius*Math.PI
@@ -90,11 +108,11 @@ Core.IconGroup: new Class {
         icpos: @icons.map (item,i) ->
           if i==0
             foks: startAngle*(Math.PI/180)
-            x: -Math.round radius*Math.cos(foks)
-            y: Math.round radius*Math.sin(foks)
+            x: Math.round radius*Math.sin(foks)
+            y: -Math.round radius*Math.cos(foks)
           else
-            x: -Math.round radius*Math.cos(((fok*i)+startAngle)*(Math.PI/180))
-            y: Math.round radius*Math.sin(((fok*i)+startAngle)*(Math.PI/180))
+            x: Math.round radius*Math.sin(((fok*i)+startAngle)*(Math.PI/180))
+            y: -Math.round radius*Math.cos(((fok*i)+startAngle)*(Math.PI/180))
           # TODO Size calculation
           {x:x, y:y}
     @icons.each (item,i) ->

@@ -80,6 +80,6 @@ Interfaces.Draggable: new Class {
 			else
 				@drag: new Drag.Float @base, {target:@handle, handle:@handle}
 			@drag.addEvent 'drop', (->
-				@fireEvent 'dropped', this
-			).bindWithEvent this
+				@fireEvent 'dropped', @
+			).bindWithEvent @
 }

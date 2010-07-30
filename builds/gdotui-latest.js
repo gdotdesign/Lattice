@@ -257,6 +257,9 @@ Interfaces.Controls = new Class({
   },
   show: function() {
     return this.base.setStyle('opacity', 1);
+  },
+  toggle: function() {
+    return this.base.getStyle('opacity') === 0 ? this.show() : this.hide();
   }
 });
 /*
@@ -348,6 +351,7 @@ provides: Core.IconGroup
 Core.IconGroup = new Class({
   Extends: Core.Abstract,
   Implements: Interfaces.Controls,
+  Binds: ['delegate'],
   options: {
     mode: "horizontal",
     spacing: {
@@ -356,17 +360,23 @@ Core.IconGroup = new Class({
     },
     startAngle: 0,
     radius: 0,
-    degree: 360
+    degree: 360,
+    'class': GDotUI.Theme.IconGroup['class']
   },
   initialize: function(options) {
     this.icons = [];
     return this.parent(options);
   },
   create: (function() {
-    return this.base.setStyle('position', 'relative');
+    this.base.setStyle('position', 'relative');
+    return this.base.addClass(this.options['class']);
   }).protect(),
+  delegate: function() {
+    return this.fireEvent('invoked', arguments);
+  },
   addIcon: function(icon) {
     if (this.icons.indexOf(icon === -1)) {
+      icon.addEvent('invoked', this.delegate);
       this.base.grab(icon);
       this.icons.push(icon);
       return true;
@@ -376,14 +386,18 @@ Core.IconGroup = new Class({
   },
   removeIcon: function(icon) {
     if (this.icons.indexOf(icon !== -1)) {
+      icon.removeEvent('invoked', this.delegate);
       icon.base.dispose();
-      this.icons.push(icon);
+      this.icons.erase(icon);
       return true;
     } else {
       return false;
     }
   },
   ready: function() {
+    return this.positionIcons();
+  },
+  positionIcons: function() {
     var _a, _b, _c, columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
     x = 0;
     y = 0;
@@ -415,6 +429,17 @@ Core.IconGroup = new Class({
           y: y
         };
       });
+    } else if (_a === 'linear') {
+      icpos = this.icons.map((function(item, i) {
+        x = i === 0 ? x + x : x + spacing.x;
+        y = i === 0 ? y + y : y + spacing.y;
+        this.size.x = x + item.base.getSize().x;
+        this.size.y = y + item.base.getSize().y;
+        return {
+          x: x,
+          y: y
+        };
+      }).bind(this));
     } else if (_a === 'horizontal') {
       icpos = this.icons.map((function(item, i) {
         x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
@@ -439,6 +464,7 @@ Core.IconGroup = new Class({
       }).bind(this));
     } else if (_a === 'circular') {
       n = this.icons.length;
+      console.log(this.icons);
       radius = this.options.radius;
       startAngle = this.options.startAngle;
       ker = 2 * this.radius * Math.PI;
@@ -447,11 +473,11 @@ Core.IconGroup = new Class({
         var foks;
         if (i === 0) {
           foks = startAngle * (Math.PI / 180);
-          x = -Math.round(radius * Math.cos(foks));
-          y = Math.round(radius * Math.sin(foks));
+          x = Math.round(radius * Math.sin(foks));
+          y = -Math.round(radius * Math.cos(foks));
         } else {
-          x = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180)));
-          y = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180)));
+          x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180)));
+          y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180)));
         }
         return {
           x: x,
@@ -674,9 +700,15 @@ Core.Float = new Class({
     return this.parent(options);
   },
   ready: function() {
-    this.loadPosition();
     this.base.adopt(this.controls);
     this.content.grab(this.contentElement);
+    this.options.restoreable ? this.loadPosition() : this.base.position();
+    if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
+      if (!this.showSlider) {
+        this.showSlider = true;
+        this.mouseisover ? this.slider.show() : null;
+      }
+    }
     return this.parent();
   },
   create: function() {
@@ -920,7 +952,14 @@ Core.Picker = new Class({
       'top': ypos
     });
   },
+  detach: function() {
+    this.contentElement.removeEvents('change');
+    this.attachedTo.removeEvent(this.options.event, this.show);
+    this.attachedTo = null;
+    return this.attachedTo;
+  },
   attach: function(input) {
+    this.attachedTo !== null ? this.detach() : null;
     input.addEvent(this.options.event, this.show);
     this.contentElement.addEvent('change', (function(value) {
       this.attachedTo.set('value', value);
@@ -928,6 +967,10 @@ Core.Picker = new Class({
     }).bindWithEvent(this));
     this.attachedTo = input;
     return this.attachedTo;
+  },
+  attachAndShow: function(el) {
+    this.attach(el);
+    return this.show(e);
   },
   show: function(e) {
     document.getElement('body').grab(this.base);
@@ -979,13 +1022,12 @@ Iterable.List = new Class({
   },
   removeItem: function(li) {
     li.removeEvents('invoked', 'edit', 'delete');
-    li.base.destroy();
-    this.items.erase(li);
-    return delete li;
+    return li.base.destroy();
   },
   removeAll: function() {
     this.selected = null;
-    this.items.each((function() {
+    this.items.each((function(item) {
+      console.log(item);
       return this.removeItem(item);
     }).bind(this));
     delete this.items;
@@ -1032,8 +1074,10 @@ Iterable.List = new Class({
   addItem: function(li) {
     this.items.push(li);
     this.base.grab(li);
+    li.addEvent('select', (function(item) {
+      return this.select(item);
+    }).bindWithEvent(this));
     li.addEvent('invoked', (function(item) {
-      this.select(item);
       return this.fireEvent('invoked', arguments);
     }).bindWithEvent(this));
     li.addEvent('edit', (function() {
@@ -1727,7 +1771,9 @@ Iterable.ListItem = new Class({
     subtitle: '',
     draggable: true,
     ghost: true,
-    removeClasses: '.' + GDotUI.Theme.Icon['class']
+    removeClasses: '.' + GDotUI.Theme.Icon['class'],
+    invokeEvent: 'click',
+    selectEvent: 'click'
   },
   initialize: function(options) {
     return this.parent(options);
@@ -1745,8 +1791,14 @@ Iterable.ListItem = new Class({
     this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
     this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
     this.base.adopt(this.title, this.subtitle, this.remove, this.handles);
-    this.base.addEvent('click', (function() {
-      return this.enabled ? this.fireEvent('invoked', this) : null;
+    this.base.addEvent(this.options.selectEvent, (function() {
+      return this.fireEvent('select', this);
+    }).bindWithEvent(this));
+    this.base.addEvent(this.options.invokeEvent, (function() {
+      return this.enabled && !this.options.draggable ? this.fireEvent('invoked', this) : null;
+    }).bindWithEvent(this));
+    this.addEvent('dropped', (function() {
+      return this.fireEvent('invoked', this);
     }).bindWithEvent(this));
     return this.base.addEvent('dblclick', (function() {
       return this.enabled ? this.editing ? this.fireEvent('edit', this) : null : null;
@@ -1787,7 +1839,10 @@ Iterable.ListItem = new Class({
         "left": -handSize.x,
         "top": (baseSize.y - handSize.y) / 2
       });
-      return this.parent();
+      this.parent();
+      return this.options.draggable ? this.drag.addEvent('beforeStart', (function() {
+        return this.fireEvent('select', this);
+      }).bindWithEvent(this)) : null;
     }
   }
 });
@@ -1809,7 +1864,8 @@ provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Ti
 Pickers.Base = new Class({
   Implements: Options,
   Delegates: {
-    picker: ['attach', 'detach']
+    picker: ['attach', 'detach'],
+    data: ['setValue', 'getValue']
   },
   options: {
     type: ''
@@ -1934,22 +1990,22 @@ Forms.Input = new Class({
       }).bind(this));
     }
     if (this.options.type === "radio") {
-      this.base = document.createDocumentFragment();
-      this.options.texts.each((function(it, i) {
+      this.base = new Element('div');
+      this.options.options.each((function(item, i) {
         var input, label;
         label = new Element('label', {
-          'text': it
+          'text': item.label
         });
         input = new Element('input', {
           type: 'radio',
-          name: item.name,
-          'value': item.values[i]
+          name: this.options.name,
+          value: item.value
         });
-        return this.base.appendChild(input, label);
+        return this.base.adopt(label, input);
       }).bind(this));
     }
     (typeof (_a = this.options.validate) !== "undefined" && _a !== null) ? $splat(this.options.validate).each((function(val) {
-      return this.base.addClass(val);
+      return this.options.type !== "radio" ? this.base.addClass(val) : null;
     }).bind(this)) : null;
     return this.base;
   }
@@ -2255,5 +2311,10 @@ Core.Tabs = new Class({
     tab.activate();
     this.active = tab;
     return this.active;
+  },
+  getByLabel: function(label) {
+    return (this.tabs.filter(function(item, i) {
+      return item.options.label === label ? true : false;
+    }))[0];
   }
 });

@@ -71,18 +71,27 @@ Core.Picker: new Class {
       'left':xpos
       'top':ypos
     }
+  detach: ->
+    @contentElement.removeEvents 'change'
+    @attachedTo.removeEvent @options.event, @show
+    @attachedTo: null
   attach: (input) ->
-    input.addEvent @options.event, this.show #bind???
+    if @attachedTo isnt null
+      @detach()
+    input.addEvent @options.event, @show #bind???
     @contentElement.addEvent 'change', ((value) ->
       @attachedTo.set 'value', value
       @attachedTo.fireEvent 'change', value
-    ).bindWithEvent this
+    ).bindWithEvent @
     @attachedTo: input
+  attachAndShow: (el) ->
+    @attach el
+    @show e
   show: (e) ->
     document.getElement('body').grab @base
     @attachedTo.addClass @options.picking
     e.stop()
-    @base.addEvent 'outerClick', this.hide #bind here too???
+    @base.addEvent 'outerClick', @hide #bind here too???
   hide: ->
     if @base.isVisible()
       @attachedTo.removeClass @options.picking

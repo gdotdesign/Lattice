@@ -30,13 +30,12 @@ Iterable.List: new Class {
   removeItem: (li) ->
     li.removeEvents 'invoked', 'edit', 'delete'
     li.base.destroy()
-    @items.erase li
-    delete li
   removeAll: ->
     @selected: null
-    @items.each( ( ->
+    @items.each ( (item) ->
+      console.log item
       @removeItem item
-      ).bind this)
+      ).bind @
     delete @items
     @items: []
   toggleEdit: ->
@@ -68,14 +67,16 @@ Iterable.List: new Class {
   addItem: (li) -> 
     @items.push li
     @base.grab li
-    li.addEvent 'invoked', ( (item) ->
+    li.addEvent 'select', ( (item)->
       @select item
+      ).bindWithEvent @
+    li.addEvent 'invoked', ( (item) ->
       @fireEvent 'invoked', arguments
-      ).bindWithEvent this
+      ).bindWithEvent @
     li.addEvent 'edit', ( -> 
       @fireEvent 'edit', arguments
-      ).bindWithEvent this
+      ).bindWithEvent @
     li.addEvent 'delete', ( ->
       @fireEvent 'delete', arguments
-      ).bindWithEvent this
+      ).bindWithEvent @
 }

@@ -48,4 +48,10 @@ Core.Tabs: new Class {
       @active.deactivate()
     tab.activate()
     @active: tab
+  getByLabel: (label) ->
+    (@tabs.filter (item, i) ->
+      if item.options.label is label
+        true
+      else
+        false)[0]
 }

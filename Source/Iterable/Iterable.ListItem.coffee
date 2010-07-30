@@ -34,6 +34,8 @@ Iterable.ListItem: new Class {
     draggable: on
     ghost: on
     removeClasses: '.'+GDotUI.Theme.Icon.class
+    invokeEvent: 'click'
+    selectEvent: 'click'
   }
   initialize: (options) ->
     @parent options
@@ -46,23 +48,29 @@ Iterable.ListItem: new Class {
     @title: new Element('div').addClass(@options.classes.title).set 'text', @options.title
     @subtitle: new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
     @base.adopt @title,@subtitle, @remove, @handles
-    @base.addEvent 'click', ( ->
+    @base.addEvent @options.selectEvent, ( ->
+      @fireEvent 'select', @
+      ).bindWithEvent @
+    @base.addEvent @options.invokeEvent, ( ->
+      if @enabled and not @options.draggable
+        @fireEvent 'invoked', @
+     ).bindWithEvent @
+    @addEvent 'dropped', ( ->
+        @fireEvent 'invoked', @
+    ).bindWithEvent @
+    @base.addEvent 'dblclick', ( ->
       if @enabled
-        @fireEvent 'invoked', this
-     ).bindWithEvent this
-     @base.addEvent 'dblclick', ( ->
-       if @enabled
-         if @editing
-           @fireEvent 'edit', this
-     ).bindWithEvent this
+        if @editing
+          @fireEvent 'edit', @
+    ).bindWithEvent this
   toggleEdit: ->
     if @editing
       if @options.draggable
         @drag.attach()
       @remove.base.setStyle 'right', -@remove.base.getSize().x
       @handles.base.setStyle 'left', -@handles.base.getSize().x
-      @base.setStyle 'padding-left', @base.retrieve('padding-left:old')
-      @base.setStyle 'padding-right', @base.retrieve('padding-right:old')
+      @base.setStyle 'padding-left' , @base.retrieve( 'padding-left:old')
+      @base.setStyle 'padding-right', @base.retrieve( 'padding-right:old')
       @editing: off
     else
       if @options.draggable
@@ -88,4 +96,8 @@ Iterable.ListItem: new Class {
         "top":(baseSize.y-handSize.y)/2
         }
       @parent()
+      if @options.draggable
+        @drag.addEvent 'beforeStart',( ->
+          @fireEvent 'select', @
+          ).bindWithEvent @
 }
