@@ -13,6 +13,12 @@ provides: [Core.Picker, outerClick]
 
 ...
 ###
+( ->
+  oldPrototypeStart: Drag.prototype.start
+  Drag.prototype.start: ->
+    window.fireEvent 'outer'
+    oldPrototypeStart.run arguments, this
+)()
 Element.Events.outerClick: {
     base: 'mousedown'
     condition: (event) ->
@@ -20,8 +26,10 @@ Element.Events.outerClick: {
       off
     onAdd: (fn) ->
       window.addEvent 'click', fn
+      window.addEvent 'outer', fn
     onRemove: (fn) ->
       window.removeEvent 'click', fn
+      window.removeEvent 'outer', fn
 };
 Core.Picker: new Class {
   Extends: Core.Abstract
@@ -76,7 +84,6 @@ Core.Picker: new Class {
     @attachedTo.removeEvent @options.event, @show
     @attachedTo: null
   attach: (input) ->
-    console.log input
     if @attachedTo?
       @detach()
     input.addEvent @options.event, @show #bind???
@@ -92,6 +99,8 @@ Core.Picker: new Class {
     document.getElement('body').grab @base
     @attachedTo.addClass @options.picking
     e.stop()
+    if @contentElement?
+      @contentElement.fireEvent 'show'
     @base.addEvent 'outerClick', @hide.bindWithEvent @ #bind here too???
   hide: (e) ->
     if @base.isVisible() and not  @base.hasChild(e.target)

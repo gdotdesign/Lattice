@@ -15,9 +15,13 @@ provides: Data.Text
 ###
 Data.Text: new Class {
   Extends: Data.Abstract
+  options: {
+    class: GDotUI.Theme.Text.class
+  }
   initialize: (options) ->
     @parent options
   create: ->
+    @base.addClass @options.class
     @text: new Element 'textarea'
     @base.grab @text
     @addEvent 'show', ( ->

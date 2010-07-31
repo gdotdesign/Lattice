@@ -49,7 +49,6 @@ Core.IconGroup: new Class {
       icon.removeEvent 'invoked', @delegate
       icon.base.dispose()
       @icons.splice index,1
-      console.log @icons
       yes
     else no
   ready: ->
@@ -102,7 +101,6 @@ Core.IconGroup: new Class {
           ).bind this
       when 'circular'
         n: @icons.length
-        console.log @icons
         radius: @options.radius
         startAngle: @options.startAngle
         ker: 2*@radius*Math.PI
