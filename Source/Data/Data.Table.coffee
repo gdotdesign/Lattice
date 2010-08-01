@@ -38,10 +38,11 @@ Data.Table: new Class {
     @columns: @options.columns
     @header: new Data.TableRow {columns:@columns}
     @header.addEvent 'next', ( ->
-      @addCloumn()
+      @addCloumn ''
       @header.cells.getLast().editStart()
     ).bindWithEvent @
     @header.addEvent 'editEnd', ( ->
+      @fireEvent 'change', @getData()
       if not @header.cells.getLast().editing
         if @header.cells.getLast().getValue() is ''
           @removeLast()
@@ -50,9 +51,9 @@ Data.Table: new Class {
     @addRow(@columns)
     @
   ready: ->
-  addCloumn: ->
+  addCloumn: (name) ->
     @columns++
-    @header.add ''
+    @header.add name
     @rows.each (item) ->
       item.add ''
   removeLast: () ->
@@ -78,14 +79,17 @@ Data.Table: new Class {
     @rows.erase row
     row.base.destroy()
     delete row
-  removeAll: ->
+  removeAll: (addColumn) ->
+    if not addColumn?
+      addColumn: yes
     @header.removeAll()
     (@rows.filter -> true).each ( (row) ->
       @removeRow row
     ).bind @
     @columns: 0
-    @addCloumn()
-    @addRow @columns
+    if addColumn
+      @addCloumn()
+      @addRow @columns
   update: ->
     length: @rows.length-1
     longest: 0
@@ -100,6 +104,7 @@ Data.Table: new Class {
     rowsToRemove.each ( (item) ->
       @removeRow item
     ).bind @
+    @fireEvent 'change', @getData()
   getData: ->
     ret: {}
     headers: []
@@ -115,7 +120,24 @@ Data.Table: new Class {
     ret
   getValue: ->
     @getData()
-  setValue: () ->
+  setValue: (obj) ->
+    @removeAll( no )
+    console.log @
+    rowa: []
+    j: 0
+    self: @
+    new Hash(obj).each (value,key) ->
+      self.addCloumn key
+      value.each (item,i) ->
+        if not rowa[i]?
+          rowa[i]: []
+        rowa[i][j]: item
+        i++
+      j++
+    rowa.each (item,i) ->
+      self.addRow self.columns
+      self.rows[i].setValue item
+    @
 }
 Data.TableRow: new Class {
   Extends: Data.Abstract
@@ -168,6 +190,9 @@ Data.TableRow: new Class {
   getValue: ->
     @cells.map (cell) ->
       cell.getValue()
+  setValue: (value) ->
+    @cells.each (item,i) ->
+      item.setValue value[i]
 }
 Data.TableCell: new Class {
   Extends: Data.Abstract
