@@ -32,6 +32,12 @@ GDotUI.Theme={
             }
         }
     },
+    Table:{
+        'class':'table'
+    },
+    Text:{
+        'class':'text'
+    },
     Icon:{
         'class':'icon'
     },

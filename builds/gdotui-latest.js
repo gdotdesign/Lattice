@@ -163,7 +163,7 @@ Interfaces.Draggable = new Class({
         handle: this.handle
       }));
       return this.drag.addEvent('drop', (function() {
-        return this.fireEvent('dropped', this);
+        return this.fireEvent('dropped', arguments);
       }).bindWithEvent(this));
     }
   }
@@ -385,10 +385,12 @@ Core.IconGroup = new Class({
     }
   },
   removeIcon: function(icon) {
-    if (this.icons.indexOf(icon !== -1)) {
+    var index;
+    index = this.icons.indexOf(icon);
+    if (index !== -1) {
       icon.removeEvent('invoked', this.delegate);
       icon.base.dispose();
-      this.icons.erase(icon);
+      this.icons.splice(index, 1);
       return true;
     } else {
       return false;
@@ -464,7 +466,6 @@ Core.IconGroup = new Class({
       }).bind(this));
     } else if (_a === 'circular') {
       n = this.icons.length;
-      console.log(this.icons);
       radius = this.options.radius;
       startAngle = this.options.startAngle;
       ker = 2 * this.radius * Math.PI;
@@ -888,17 +889,28 @@ provides: [Core.Picker, outerClick]
 
 ...
 */
+(function() {
+  var oldPrototypeStart;
+  oldPrototypeStart = Drag.prototype.start;
+  Drag.prototype.start = function() {
+    window.fireEvent('outer');
+    return oldPrototypeStart.run(arguments, this);
+  };
+  return Drag.prototype.start;
+})();
 Element.Events.outerClick = {
-  base: 'click',
+  base: 'mousedown',
   condition: function(event) {
     event.stopPropagation();
     return false;
   },
   onAdd: function(fn) {
-    return window.addEvent('click', fn);
+    window.addEvent('click', fn);
+    return window.addEvent('outer', fn);
   },
   onRemove: function(fn) {
-    return window.removeEvent('click', fn);
+    window.removeEvent('click', fn);
+    return window.removeEvent('outer', fn);
   }
 };
 Core.Picker = new Class({
@@ -959,7 +971,8 @@ Core.Picker = new Class({
     return this.attachedTo;
   },
   attach: function(input) {
-    this.attachedTo !== null ? this.detach() : null;
+    var _a;
+    (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.detach() : null;
     input.addEvent(this.options.event, this.show);
     this.contentElement.addEvent('change', (function(value) {
       this.attachedTo.set('value', value);
@@ -968,18 +981,20 @@ Core.Picker = new Class({
     this.attachedTo = input;
     return this.attachedTo;
   },
-  attachAndShow: function(el) {
+  attachAndShow: function(el, e) {
     this.attach(el);
     return this.show(e);
   },
   show: function(e) {
+    var _a;
     document.getElement('body').grab(this.base);
     this.attachedTo.addClass(this.options.picking);
     e.stop();
-    return this.base.addEvent('outerClick', this.hide);
+    (typeof (_a = this.contentElement) !== "undefined" && _a !== null) ? this.contentElement.fireEvent('show') : null;
+    return this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
   },
-  hide: function() {
-    if (this.base.isVisible()) {
+  hide: function(e) {
+    if (this.base.isVisible() && !this.base.hasChild(e.target)) {
       this.attachedTo.removeClass(this.options.picking);
       return this.base.dispose();
     }
@@ -1235,10 +1250,14 @@ provides: Data.Text
 */
 Data.Text = new Class({
   Extends: Data.Abstract,
+  options: {
+    'class': GDotUI.Theme.Text['class']
+  },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
+    this.base.addClass(this.options['class']);
     this.text = new Element('textarea');
     this.base.grab(this.text);
     this.addEvent('show', (function() {
@@ -1376,7 +1395,7 @@ Data.Color = new Class({
     return this.base.adopt(this.wrapper, this.colorData);
   },
   ready: function() {
-    var sbSize;
+    var _a, sbSize;
     sbSize = this.color.getSize();
     this.wrapper.setStyles({
       width: sbSize.x,
@@ -1421,7 +1440,7 @@ Data.Color = new Class({
     }).bindWithEvent(this));
     this.xy.addEvent('tick', this.change);
     this.xy.addEvent('change', this.change);
-    return this.setValue(this.value ? this.value : '#fff');
+    return this.setValue((typeof (_a = this.value) !== "undefined" && _a !== null) ? this.value : '#fff');
   },
   setValue: function(hex) {
     var colr;
@@ -1429,6 +1448,10 @@ Data.Color = new Class({
     this.hue.setValue(this.bgColor.hsb[0]);
     this.saturation.setValue(this.bgColor.hsb[1]);
     this.lightness.setValue(this.bgColor.hsb[2]);
+    this.xy.set({
+      x: this.bgColor.hsb[1],
+      y: 100 - this.bgColor.hsb[2]
+    });
     colr = new $HSB(this.bgColor.hsb[0], 100, 100);
     this.color.setStyle('background-color', colr);
     return this.setColor();
@@ -1444,7 +1467,7 @@ Data.Color = new Class({
     } else {
       ret = "#" + this.finalColor.hex.slice(1, 7);
     }
-    this.fireEvent('change', [ret]);
+    this.fireEvent('change', [[this.finalColor]]);
     this.value = this.finalColor;
     return this.value;
   },
@@ -1526,6 +1549,7 @@ Data.Date = new Class({
     return this.parent(options);
   },
   create: function() {
+    var i, item;
     this.base.addClass(this.options['class']);
     this.days = new Core.Slot();
     this.month = new Core.Slot();
@@ -1538,13 +1562,10 @@ Data.Date = new Class({
       this.date.setMonth(item.value);
       return this.setValue();
     }).bindWithEvent(this));
-    return this.days.addEvent('change', (function(item) {
+    this.days.addEvent('change', (function(item) {
       this.date.setDate(item.value);
       return this.setValue();
     }).bindWithEvent(this));
-  },
-  ready: function() {
-    var i, item;
     i = 0;
     while (i < 30) {
       item = new Iterable.ListItem({
@@ -1572,9 +1593,11 @@ Data.Date = new Class({
       this.years.addItem(item);
       i++;
     }
-    this.base.adopt(this.years, this.month, this.days);
-    this.setValue(new Date());
-    return this.parent();
+    return this.base.adopt(this.years, this.month, this.days);
+  },
+  ready: function() {
+    var _a;
+    return !(typeof (_a = this.date) !== "undefined" && _a !== null) ? this.setValue(new Date()) : null;
   },
   getValue: function() {
     return this.date.format(this.options.format);
@@ -1582,7 +1605,7 @@ Data.Date = new Class({
   setValue: function(date) {
     (typeof date !== "undefined" && date !== null) ? (this.date = date) : null;
     this.update();
-    return this.fireEvent('change', this.date.format(this.options.format));
+    return this.fireEvent('change', this.date);
   },
   update: function() {
     var cdays, i, item, listlength;
@@ -1740,6 +1763,230 @@ Data.DateTime = new Class({
 /*
 ---
 
+name: Data.Table
+
+description: Text data element.
+
+requires: Data.Abstract
+
+provides: Data.Table
+
+...
+*/
+Data.Table = new Class({
+  Extends: Data.Abstract,
+  Binds: ['update'],
+  options: {
+    columns: 1,
+    'class': GDotUI.Theme.Table['class']
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options['class']);
+    this.table = new Element('table', {
+      cellspacing: 0,
+      cellpadding: 0
+    });
+    this.base.grab(this.table);
+    this.rows = [];
+    this.columns = this.options.columns;
+    this.header = new Data.TableRow({
+      columns: this.columns
+    });
+    this.header.addEvent('next', (function() {
+      this.addCloumn();
+      return this.header.cells.getLast().editStart();
+    }).bindWithEvent(this));
+    this.header.addEvent('editEnd', (function() {
+      return !this.header.cells.getLast().editing ? this.header.cells.getLast().getValue() === '' ? this.removeLast() : null : null;
+    }).bindWithEvent(this));
+    this.table.grab(this.header);
+    this.addRow(this.columns);
+    return document.body.grab(this);
+  },
+  ready: function() {  },
+  addCloumn: function() {
+    this.columns++;
+    this.header.add(new Data.TableCell());
+    return this.rows.each(function(item) {
+      return item.add('');
+    });
+  },
+  removeLast: function() {
+    this.header.removeLast();
+    this.columns--;
+    return this.rows.each(function(item) {
+      return item.removeLast();
+    });
+  },
+  addRow: function(columns) {
+    var row;
+    row = new Data.TableRow({
+      columns: columns
+    });
+    row.addEvent('editEnd', this.update);
+    row.addEvent('next', (function(row) {
+      var index;
+      index = this.rows.indexOf(row);
+      return index !== this.rows.length - 1 ? this.rows[index + 1].cells[0].editStart() : null;
+    }).bindWithEvent(this));
+    this.rows.push(row);
+    return this.table.grab(row);
+  },
+  removeRow: function(row) {
+    row.removeEvents('editEnd');
+    row.removeEvents('next');
+    this.rows.erase(row);
+    row.base.destroy();
+    return delete row;
+  },
+  update: function() {
+    var length, longest, rowsToRemove;
+    length = this.rows.length - 1;
+    longest = 0;
+    rowsToRemove = [];
+    this.rows.each((function(row, i) {
+      var empty;
+      empty = row.empty();
+      empty && i !== 0 && i !== length ? rowsToRemove.push(row) : null;
+      return i === length && !empty ? this.addRow(this.columns) : null;
+    }).bind(this));
+    return rowsToRemove.each((function(item) {
+      return this.removeRow(item);
+    }).bind(this));
+  },
+  getValue: function() {  },
+  setValue: function() {  }
+});
+Data.TableRow = new Class({
+  Extends: Data.Abstract,
+  Delegates: {
+    base: ['getChildren']
+  },
+  options: {
+    columns: 1,
+    'class': ''
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    var _a, i;
+    delete this.base;
+    this.base = new Element('tr');
+    this.base.addClass(this.options['class']);
+    this.cells = [];
+    i = 0;
+    _a = [];
+    while (i < this.options.columns) {
+      _a.push((function() {
+        this.add('');
+        return i++;
+      }).call(this));
+    }
+    return _a;
+  },
+  add: function(value) {
+    var cell;
+    cell = new Data.TableCell({
+      value: value
+    });
+    cell.addEvent('editEnd', (function() {
+      return this.fireEvent('editEnd');
+    }).bindWithEvent(this));
+    cell.addEvent('next', (function(cell) {
+      var index;
+      index = this.cells.indexOf(cell);
+      return index === this.cells.length - 1 ? this.fireEvent('next', this) : this.cells[index + 1].editStart();
+    }).bindWithEvent(this));
+    this.cells.push(cell);
+    return this.base.grab(cell);
+  },
+  empty: function() {
+    var filtered;
+    filtered = this.cells.filter(function(item) {
+      return item.getValue() !== '' ? true : false;
+    });
+    return filtered.length > 0 ? false : true;
+  },
+  removeLast: function() {
+    return this.remove(this.cells.getLast());
+  },
+  remove: function(cell) {
+    cell.removeEvents('editEnd');
+    cell.removeEvents('next');
+    this.cells.erase(cell);
+    cell.base.destroy();
+    return delete cell;
+  }
+});
+Data.TableCell = new Class({
+  Extends: Data.Abstract,
+  Binds: ['editStart', 'editEnd'],
+  options: {
+    editable: true,
+    value: ''
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    delete this.base;
+    this.base = new Element('td', {
+      text: this.options.value
+    });
+    return this.options.editable ? this.base.addEvent('click', this.editStart) : null;
+  },
+  editStart: function() {
+    var size;
+    if (!this.editing) {
+      this.editing = true;
+      this.input = new Element('input', {
+        type: 'text',
+        value: this.value
+      });
+      this.base.set('html', '');
+      this.base.grab(this.input);
+      this.input.addEvent('change', (function() {
+        return this.setValue(this.input.get('value'));
+      }).bindWithEvent(this));
+      this.input.addEvent('keydown', (function(e) {
+        e.key === 'enter' ? this.input.blur() : null;
+        if (e.key === 'tab') {
+          e.stop();
+          return this.fireEvent('next', this);
+        }
+      }).bindWithEvent(this));
+      size = this.base.getSize();
+      this.input.setStyles({
+        width: size.x + "px !important",
+        height: size.y + "px !important"
+      });
+      this.input.focus();
+      return this.input.addEvent('blur', this.editEnd);
+    }
+  },
+  editEnd: function(e) {
+    this.editing ? (this.editing = false) : null;
+    this.setValue(this.input.get('value'));
+    this.input.removeEvents(['change', 'keydown']);
+    this.input.destroy();
+    delete this.input;
+    return this.fireEvent('editEnd');
+  },
+  setValue: function(value) {
+    this.value = value;
+    return !this.editing ? this.base.set('text', this.value) : null;
+  },
+  getValue: function() {
+    return this.base.get('text');
+  }
+});
+/*
+---
+
 name: Iterable.ListItem
 
 description: List items for Iterable.List.
@@ -1797,8 +2044,8 @@ Iterable.ListItem = new Class({
     this.base.addEvent(this.options.invokeEvent, (function() {
       return this.enabled && !this.options.draggable ? this.fireEvent('invoked', this) : null;
     }).bindWithEvent(this));
-    this.addEvent('dropped', (function() {
-      return this.fireEvent('invoked', this);
+    this.addEvent('dropped', (function(el, drop, e) {
+      return this.fireEvent('invoked', [this, e]);
     }).bindWithEvent(this));
     return this.base.addEvent('dblclick', (function() {
       return this.enabled ? this.editing ? this.fireEvent('edit', this) : null : null;
@@ -1864,7 +2111,7 @@ provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Ti
 Pickers.Base = new Class({
   Implements: Options,
   Delegates: {
-    picker: ['attach', 'detach'],
+    picker: ['attach', 'detach', 'attachAndShow'],
     data: ['setValue', 'getValue']
   },
   options: {

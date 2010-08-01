@@ -35,6 +35,7 @@ sources:
   - "Source/Data/Data.Date.coffee"
   - "Source/Data/Data.Time.coffee"
   - "Source/Data/Data.DateTime.coffee"
+  - "Source/Data/Data.Table.coffee"
   - "Source/Iterable/Iterable.ListItem.coffee"
   - "Source/Iterable/Iterable.List.coffee"
   - "Source/Pickers/Pickers.coffee"
