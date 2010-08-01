@@ -11,6 +11,16 @@ provides: Data.Table
 
 ...
 ###
+checkForKey: (key,hash,i) ->
+  if not i?
+    i: 0
+  if not hash[key]?
+    key
+  else
+    if not hash[key+i]?
+      key+i
+    else
+      checkForKey key,hash,i+1
 Data.Table: new Class {
   Extends: Data.Abstract
   Binds: ['update']
@@ -38,11 +48,11 @@ Data.Table: new Class {
     ).bindWithEvent @
     @table.grab @header
     @addRow(@columns)
-    document.body.grab @
+    @
   ready: ->
-  addCloumn: () ->
+  addCloumn: ->
     @columns++
-    @header.add new Data.TableCell()
+    @header.add ''
     @rows.each (item) ->
       item.add ''
   removeLast: () ->
@@ -64,9 +74,18 @@ Data.Table: new Class {
   removeRow: (row) ->
     row.removeEvents 'editEnd'
     row.removeEvents 'next'
+    row.removeAll()
     @rows.erase row
     row.base.destroy()
     delete row
+  removeAll: ->
+    @header.removeAll()
+    (@rows.filter -> true).each ( (row) ->
+      @removeRow row
+    ).bind @
+    @columns: 0
+    @addCloumn()
+    @addRow @columns
   update: ->
     length: @rows.length-1
     longest: 0
@@ -81,7 +100,21 @@ Data.Table: new Class {
     rowsToRemove.each ( (item) ->
       @removeRow item
     ).bind @
+  getData: ->
+    ret: {}
+    headers: []
+    @header.cells.each (item) ->
+      value: item.getValue()        
+      ret[checkForKey(value,ret)]:[]
+      headers.push ret[value]
+    @rows.each ( (row) ->
+      if not row.empty()
+        row.getValue().each (item,i) ->
+          headers[i].push item
+    ).bind @
+    ret
   getValue: ->
+    @getData()
   setValue: () ->
 }
 Data.TableRow: new Class {
@@ -122,12 +155,19 @@ Data.TableRow: new Class {
     if filtered.length > 0 then no else yes
   removeLast: ->
     @remove @cells.getLast()
-  remove: (cell)->
+  remove: (cell,remove)->
     cell.removeEvents 'editEnd'
     cell.removeEvents 'next'
     @cells.erase cell
     cell.base.destroy()
     delete cell
+  removeAll: ->
+    (@cells.filter -> true).each ( (cell) ->
+      @remove cell
+    ).bind @
+  getValue: ->
+    @cells.map (cell) ->
+      cell.getValue()
 }
 Data.TableCell: new Class {
   Extends: Data.Abstract
