@@ -33,4 +33,5 @@ Data.Abstract: new Class {
     @base
   setValue: ->
   getValue: ->
+    @value
 }

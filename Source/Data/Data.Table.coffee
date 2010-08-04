@@ -206,6 +206,7 @@ Data.TableCell: new Class {
   create: ->
     delete @base
     @base: new Element 'td', {text: @options.value}
+    @value: @options.value
     if @options.editable
       @base.addEvent 'click', @editStart
   editStart: ->

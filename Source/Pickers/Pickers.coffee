@@ -39,3 +39,6 @@ Pickers.Text: new Pickers.Base {type:'Text'}
 Pickers.Date: new Pickers.Base {type:'Date'}
 Pickers.DateTime: new Pickers.Base {type:'DateTime'}
 Pickers.Table: new Pickers.Base {type:'Table'}
+Pickers.Unit: new Pickers.Base {type:'Unit'}
+Pickers.Select: new Pickers.Base {type:'Select'}
+Pickers.List: new Pickers.Base {type:'List'}

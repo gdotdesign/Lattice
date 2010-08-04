@@ -105,6 +105,7 @@ Core.Picker: new Class {
   hide: (e) ->
     if @base.isVisible() and not  @base.hasChild(e.target)
       @attachedTo.removeClass @options.picking
+      @detach()
       @base.dispose()
   setContent: (element) ->
     @contentElement: element
