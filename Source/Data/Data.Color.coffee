@@ -107,7 +107,7 @@ Data.Color: new Class {
         ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
       else
         ret: "#"+@finalColor.hex.slice(1,7)
-    @fireEvent 'change', [[@finalColor]]
+    @fireEvent 'change', {color:@finalColor}
     @value: @finalColor
   getValue: ->
     ret: ''

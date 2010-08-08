@@ -34,7 +34,7 @@ Data.Unit: new Class {
     @base.adopt @number, @sel
   setValue: (value) ->
     if typeof value is 'string'
-      match = value.match(/(\d*)(.*)/)
+      match = value.match(/(-?\d*)(.*)/)
       value = match[1]
       unit = match[2]
       @sel.setValue unit

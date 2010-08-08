@@ -43,6 +43,7 @@ Core.Picker: new Class {
   }
   initialize: (options) ->
     @parent options
+    @
   create: ->
     @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
@@ -80,32 +81,39 @@ Core.Picker: new Class {
       'top':ypos
     }
   detach: ->
-    @contentElement.removeEvents 'change'
-    @attachedTo.removeEvent @options.event, @show
-    @attachedTo: null
+    if @contentElement?
+      @contentElement.removeEvents 'change'
+    if @attachedTo?
+      @attachedTo.removeEvent @options.event, @show
+      @attachedTo: null
+      @fireEvent 'detached'
   attach: (input) ->
     if @attachedTo?
       @detach()
     input.addEvent @options.event, @show #bind???
-    @contentElement.addEvent 'change', ((value) ->
-      @attachedTo.set 'value', value
-      @attachedTo.fireEvent 'change', value
-    ).bindWithEvent @
+    if @contentElement?
+      @contentElement.addEvent 'change', ((value) ->
+        @attachedTo.set 'value', value
+        @attachedTo.fireEvent 'change', value
+      ).bindWithEvent @
     @attachedTo: input
   attachAndShow: (el, e) ->
     @attach el
     @show e
   show: (e) ->
     document.getElement('body').grab @base
-    @attachedTo.addClass @options.picking
-    e.stop()
+    if @attachedTo?
+      @attachedTo.addClass @options.picking
+    if e.stop?
+      e.stop()
     if @contentElement?
       @contentElement.fireEvent 'show'
     @base.addEvent 'outerClick', @hide.bindWithEvent @ #bind here too???
   hide: (e) ->
     if @base.isVisible() and not  @base.hasChild(e.target)
-      @attachedTo.removeClass @options.picking
-      @detach()
+      if @attachedTo?
+        @attachedTo.removeClass @options.picking
+        @detach()
       @base.dispose()
   setContent: (element) ->
     @contentElement: element

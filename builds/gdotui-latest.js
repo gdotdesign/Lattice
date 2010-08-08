@@ -1,4 +1,4 @@
-var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider;
+var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider, checkForKey;
 var __hasProp = Object.prototype.hasOwnProperty;
 /*
 ---
@@ -923,7 +923,8 @@ Core.Picker = new Class({
     picking: GDotUI.Theme.Picker.picking
   },
   initialize: function(options) {
-    return this.parent(options);
+    this.parent(options);
+    return this;
   },
   create: function() {
     this.base.addClass(this.options['class']);
@@ -965,19 +966,22 @@ Core.Picker = new Class({
     });
   },
   detach: function() {
-    this.contentElement.removeEvents('change');
-    this.attachedTo.removeEvent(this.options.event, this.show);
-    this.attachedTo = null;
-    return this.attachedTo;
+    var _a, _b;
+    (typeof (_a = this.contentElement) !== "undefined" && _a !== null) ? this.contentElement.removeEvents('change') : null;
+    if ((typeof (_b = this.attachedTo) !== "undefined" && _b !== null)) {
+      this.attachedTo.removeEvent(this.options.event, this.show);
+      this.attachedTo = null;
+      return this.fireEvent('detached');
+    }
   },
   attach: function(input) {
-    var _a;
+    var _a, _b;
     (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.detach() : null;
     input.addEvent(this.options.event, this.show);
-    this.contentElement.addEvent('change', (function(value) {
+    (typeof (_b = this.contentElement) !== "undefined" && _b !== null) ? this.contentElement.addEvent('change', (function(value) {
       this.attachedTo.set('value', value);
       return this.attachedTo.fireEvent('change', value);
-    }).bindWithEvent(this));
+    }).bindWithEvent(this)) : null;
     this.attachedTo = input;
     return this.attachedTo;
   },
@@ -986,16 +990,20 @@ Core.Picker = new Class({
     return this.show(e);
   },
   show: function(e) {
-    var _a;
+    var _a, _b;
     document.getElement('body').grab(this.base);
-    this.attachedTo.addClass(this.options.picking);
+    (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.attachedTo.addClass(this.options.picking) : null;
     e.stop();
-    (typeof (_a = this.contentElement) !== "undefined" && _a !== null) ? this.contentElement.fireEvent('show') : null;
+    (typeof (_b = this.contentElement) !== "undefined" && _b !== null) ? this.contentElement.fireEvent('show') : null;
     return this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
   },
   hide: function(e) {
+    var _a;
     if (this.base.isVisible() && !this.base.hasChild(e.target)) {
-      this.attachedTo.removeClass(this.options.picking);
+      if ((typeof (_a = this.attachedTo) !== "undefined" && _a !== null)) {
+        this.attachedTo.removeClass(this.options.picking);
+        this.detach();
+      }
       return this.base.dispose();
     }
   },
@@ -1231,7 +1239,9 @@ Data.Abstract = new Class({
     return this.base;
   },
   setValue: function() {  },
-  getValue: function() {  }
+  getValue: function() {
+    return this.value;
+  }
 });
 /*
 ---
@@ -1467,7 +1477,9 @@ Data.Color = new Class({
     } else {
       ret = "#" + this.finalColor.hex.slice(1, 7);
     }
-    this.fireEvent('change', [[this.finalColor]]);
+    this.fireEvent('change', {
+      color: this.finalColor
+    });
     this.value = this.finalColor;
     return this.value;
   },
@@ -1773,6 +1785,11 @@ provides: Data.Table
 
 ...
 */
+checkForKey = function(key, hash, i) {
+  var _a, _b;
+  !(typeof i !== "undefined" && i !== null) ? (i = 0) : null;
+  return !(typeof (_a = hash[key]) !== "undefined" && _a !== null) ? key : !(typeof (_b = hash[key + i]) !== "undefined" && _b !== null) ? key + i : checkForKey(key, hash, i + 1);
+};
 Data.Table = new Class({
   Extends: Data.Abstract,
   Binds: ['update'],
@@ -1796,20 +1813,21 @@ Data.Table = new Class({
       columns: this.columns
     });
     this.header.addEvent('next', (function() {
-      this.addCloumn();
+      this.addCloumn('');
       return this.header.cells.getLast().editStart();
     }).bindWithEvent(this));
     this.header.addEvent('editEnd', (function() {
+      this.fireEvent('change', this.getData());
       return !this.header.cells.getLast().editing ? this.header.cells.getLast().getValue() === '' ? this.removeLast() : null : null;
     }).bindWithEvent(this));
     this.table.grab(this.header);
     this.addRow(this.columns);
-    return document.body.grab(this);
+    return this;
   },
   ready: function() {  },
-  addCloumn: function() {
+  addCloumn: function(name) {
     this.columns++;
-    this.header.add(new Data.TableCell());
+    this.header.add(name);
     return this.rows.each(function(item) {
       return item.add('');
     });
@@ -1838,9 +1856,24 @@ Data.Table = new Class({
   removeRow: function(row) {
     row.removeEvents('editEnd');
     row.removeEvents('next');
+    row.removeAll();
     this.rows.erase(row);
     row.base.destroy();
     return delete row;
+  },
+  removeAll: function(addColumn) {
+    !(typeof addColumn !== "undefined" && addColumn !== null) ? (addColumn = true) : null;
+    this.header.removeAll();
+    (this.rows.filter(function() {
+      return true;
+    })).each((function(row) {
+      return this.removeRow(row);
+    }).bind(this));
+    this.columns = 0;
+    if (addColumn) {
+      this.addCloumn();
+      return this.addRow(this.columns);
+    }
   },
   update: function() {
     var length, longest, rowsToRemove;
@@ -1853,12 +1886,54 @@ Data.Table = new Class({
       empty && i !== 0 && i !== length ? rowsToRemove.push(row) : null;
       return i === length && !empty ? this.addRow(this.columns) : null;
     }).bind(this));
-    return rowsToRemove.each((function(item) {
+    rowsToRemove.each((function(item) {
       return this.removeRow(item);
     }).bind(this));
+    return this.fireEvent('change', this.getData());
   },
-  getValue: function() {  },
-  setValue: function() {  }
+  getData: function() {
+    var headers, ret;
+    ret = {};
+    headers = [];
+    this.header.cells.each(function(item) {
+      var value;
+      value = item.getValue();
+      ret[checkForKey(value, ret)] = [];
+      return headers.push(ret[value]);
+    });
+    this.rows.each((function(row) {
+      return !row.empty() ? row.getValue().each(function(item, i) {
+        return headers[i].push(item);
+      }) : null;
+    }).bind(this));
+    return ret;
+  },
+  getValue: function() {
+    return this.getData();
+  },
+  setValue: function(obj) {
+    var j, rowa, self;
+    this.removeAll(false);
+    console.log(this);
+    rowa = [];
+    j = 0;
+    self = this;
+    new Hash(obj).each(function(value, key) {
+      self.addCloumn(key);
+      value.each(function(item, i) {
+        var _a;
+        !(typeof (_a = rowa[i]) !== "undefined" && _a !== null) ? (rowa[i] = []) : null;
+        rowa[i][j] = item;
+        return i++;
+      });
+      return j++;
+    });
+    rowa.each(function(item, i) {
+      self.addRow(self.columns);
+      return self.rows[i].setValue(item);
+    });
+    return this;
+  }
 });
 Data.TableRow = new Class({
   Extends: Data.Abstract,
@@ -1914,12 +1989,29 @@ Data.TableRow = new Class({
   removeLast: function() {
     return this.remove(this.cells.getLast());
   },
-  remove: function(cell) {
+  remove: function(cell, remove) {
     cell.removeEvents('editEnd');
     cell.removeEvents('next');
     this.cells.erase(cell);
     cell.base.destroy();
     return delete cell;
+  },
+  removeAll: function() {
+    return (this.cells.filter(function() {
+      return true;
+    })).each((function(cell) {
+      return this.remove(cell);
+    }).bind(this));
+  },
+  getValue: function() {
+    return this.cells.map(function(cell) {
+      return cell.getValue();
+    });
+  },
+  setValue: function(value) {
+    return this.cells.each(function(item, i) {
+      return item.setValue(value[i]);
+    });
   }
 });
 Data.TableCell = new Class({
@@ -1937,6 +2029,7 @@ Data.TableCell = new Class({
     this.base = new Element('td', {
       text: this.options.value
     });
+    this.value = this.options.value;
     return this.options.editable ? this.base.addEvent('click', this.editStart) : null;
   },
   editStart: function() {
@@ -1987,6 +2080,217 @@ Data.TableCell = new Class({
 /*
 ---
 
+name: Data.Select
+
+description: Color data element. ( color picker )
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Select
+
+...
+*/
+Data.Select = new Class({
+  Extends: Data.Abstract,
+  options: {
+    'class': GDotUI.Theme.Select['class'],
+    list: {}
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options['class']);
+    this.select = new Element('select');
+    this.base.grab(this.select);
+    new Hash(this.options.list).each((function(value, key) {
+      var option;
+      option = new Element('option');
+      option.set('value', value);
+      option.set('text', key);
+      return this.select.grab(option);
+    }).bind(this));
+    return this.select.addEvent('change', (function() {
+      this.value = this.select.get('value');
+      return this.fireEvent('change', this.value);
+    }).bindWithEvent(this));
+  },
+  setList: function(list) {
+    this.select.getElements("option").destroy();
+    console.log(list);
+    return new Hash(list).each((function(value, key) {
+      var option;
+      option = new Element('option');
+      option.set('value', value);
+      option.set('text', key);
+      return this.select.grab(option);
+    }).bind(this));
+  },
+  setValue: function(value) {
+    var _a, selected;
+    selected = this.select.getElements("option[value=" + value + "]");
+    if ((typeof (_a = selected[0]) !== "undefined" && _a !== null)) {
+      this.select.getElements("option").set('selected', null);
+      selected.set('selected', true);
+      this.value = value;
+      return this.value;
+    }
+  },
+  getValue: function() {
+    var _a;
+    !(typeof (_a = this.value) !== "undefined" && _a !== null) ? (this.value = this.select.get('value')) : null;
+    return this.value;
+  }
+});
+/*
+---
+
+name: Data.Unit
+
+description: Color data element. ( color picker )
+
+license: MIT-style license.
+
+requires: Data.Abstract
+
+provides: Data.Unit
+
+...
+*/
+Data.Unit = new Class({
+  Extends: Data.Abstract,
+  options: {
+    'class': GDotUI.Theme.Unit['class']
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options['class']);
+    this.number = new Data.Number({
+      range: [-100, 100],
+      reset: true,
+      steps: [200]
+    });
+    this.sel = new Data.Select({
+      list: {
+        px: "px",
+        '%': "%",
+        em: "em"
+      }
+    });
+    this.number.addEvent('change', (function(value) {
+      this.value = value;
+      return this.fireEvent('change', String(this.value) + this.sel.value);
+    }).bindWithEvent(this));
+    this.sel.addEvent('change', (function() {
+      return this.fireEvent('change', String(this.value) + this.sel.value);
+    }).bindWithEvent(this));
+    return this.base.adopt(this.number, this.sel);
+  },
+  setValue: function(value) {
+    var match, unit;
+    if (typeof value === 'string') {
+      match = value.match(/(-?\d*)(.*)/);
+      value = match[1];
+      unit = match[2];
+      this.sel.setValue(unit);
+    }
+    return this.number.setValue(value);
+  },
+  getValue: function() {
+    return String(this.value) + this.sel.value;
+  }
+});
+/*
+---
+
+name: Data.List
+
+description: Text data element.
+
+requires: Data.Abstract
+
+provides: Data.List
+
+...
+*/
+Data.List = new Class({
+  Extends: Data.Abstract,
+  Binds: ['update'],
+  options: {
+    'class': GDotUI.Theme.DataList['class']
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options['class']);
+    this.table = new Element('table', {
+      cellspacing: 0,
+      cellpadding: 0
+    });
+    this.base.grab(this.table);
+    this.cells = [];
+    return this.add('');
+  },
+  update: function() {
+    this.cells.each((function(item) {
+      return item.getValue() === '' ? this.remove(item) : null;
+    }).bind(this));
+    this.cells.length === 0 ? this.add('') : null;
+    this.cells.getLast().getValue() !== '' ? this.add('') : null;
+    return this.fireEvent('change', {
+      value: this.getValue()
+    });
+  },
+  add: function(value) {
+    var cell, tr;
+    cell = new Data.TableCell({
+      value: value
+    });
+    cell.addEvent('editEnd', this.update);
+    this.cells.push(cell);
+    tr = new Element('tr');
+    this.table.grab(tr);
+    return tr.grab(cell);
+  },
+  remove: function(cell, remove) {
+    cell.removeEvents('editEnd');
+    this.cells.erase(cell);
+    cell.base.getParent('tr').destroy();
+    cell.base.destroy();
+    return delete cell;
+  },
+  removeAll: function() {
+    return (this.cells.filter(function() {
+      return true;
+    })).each((function(cell) {
+      return this.remove(cell);
+    }).bind(this));
+  },
+  getValue: function() {
+    var map;
+    map = this.cells.map(function(cell) {
+      return cell.getValue();
+    });
+    map.splice(this.cells.length - 1, 1);
+    return map;
+  },
+  setValue: function(value) {
+    var self;
+    this.removeAll();
+    self = this;
+    return value.each(function(item) {
+      return self.add(item);
+    });
+  }
+});
+/*
+---
+
 name: Iterable.ListItem
 
 description: List items for Iterable.List.
@@ -1999,6 +2303,11 @@ provides: Iterable.ListItem
 
 ...
 */
+Element.implement({
+  toggleTransition: function() {
+    return this.handles.base.setStyle('-webkit-transition-duration', this.handles.base.retrieve('transition-dur'));
+  }
+});
 Iterable.ListItem = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Draggable, Interfaces.Enabled],
@@ -2142,6 +2451,18 @@ Pickers.Date = new Pickers.Base({
 });
 Pickers.DateTime = new Pickers.Base({
   type: 'DateTime'
+});
+Pickers.Table = new Pickers.Base({
+  type: 'Table'
+});
+Pickers.Unit = new Pickers.Base({
+  type: 'Unit'
+});
+Pickers.Select = new Pickers.Base({
+  type: 'Select'
+});
+Pickers.List = new Pickers.Base({
+  type: 'List'
 });
 /*
 ---

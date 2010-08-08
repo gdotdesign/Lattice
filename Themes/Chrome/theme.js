@@ -32,6 +32,12 @@ GDotUI.Theme={
             }
         }
     },
+    Unit:{
+        'class':'unit-pick'
+    },
+    Select: {
+        'class':'select-pick'
+    },
     Table:{
         'class':'table'
     },
@@ -49,6 +55,9 @@ GDotUI.Theme={
         event: 'click',
         picking: 'picking',
         offset: 10
+    },
+    DataList:{
+        'class':'data-list'
     },
     Slider:{
         barClass:'bar',

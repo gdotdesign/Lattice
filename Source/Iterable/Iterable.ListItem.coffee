@@ -13,6 +13,16 @@ provides: Iterable.ListItem
 
 ...
 ###
+Element.implement {
+  toggleTransition: ->
+    old = @retrieve 'transition-dur'
+    if old?
+      @setStyle '-webkit-transition-duration', old
+      @eliminate 'transition-dur'
+    else
+      @setStyle '-webkit-transition-duration', 0
+      @store 'transition-dur', @getStyle '-webkit-transition-duration'
+}
 Iterable.ListItem: new Class {
   Extends:Core.Abstract
   Implements: [ Interfaces.Draggable
@@ -36,6 +46,8 @@ Iterable.ListItem: new Class {
     removeClasses: '.'+GDotUI.Theme.Icon.class
     invokeEvent: 'click'
     selectEvent: 'click'
+    removeable: on
+    sortable: off
   }
   initialize: (options) ->
     @parent options
@@ -47,12 +59,18 @@ Iterable.ListItem: new Class {
     $$(@remove.base,@handles.base).setStyle 'position','absolute'
     @title: new Element('div').addClass(@options.classes.title).set 'text', @options.title
     @subtitle: new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
-    @base.adopt @title,@subtitle, @remove, @handles
+    @remove.base.toggleTransition()
+    @handles.base.toggleTransition()
+    @base.adopt @title,@subtitle
+    if @options.removeable
+      @base.grab @remove
+    if @options.sortable
+      @base.grab @handle
     @base.addEvent @options.selectEvent, ( ->
       @fireEvent 'select', @
       ).bindWithEvent @
     @base.addEvent @options.invokeEvent, ( ->
-      if @enabled and not @options.draggable
+      if @enabled and not @options.draggable and not @editing
         @fireEvent 'invoked', @
      ).bindWithEvent @
     @addEvent 'dropped', ( (el,drop,e) ->
@@ -62,7 +80,10 @@ Iterable.ListItem: new Class {
       if @enabled
         if @editing
           @fireEvent 'edit', @
-    ).bindWithEvent this
+    ).bindWithEvent @
+    @remove.addEvent 'invoked', ( ->
+      @fireEvent 'delete', @
+    ).bindWithEvent @
   toggleEdit: ->
     if @editing
       if @options.draggable
@@ -95,6 +116,8 @@ Iterable.ListItem: new Class {
         "left":-handSize.x,
         "top":(baseSize.y-handSize.y)/2
         }
+      @remove.base.toggleTransition()
+      @handles.base.toggleTransition()
       @parent()
       if @options.draggable
         @drag.addEvent 'beforeStart',( ->
