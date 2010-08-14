@@ -45,10 +45,12 @@ Core.Float: new Class {
 	}
 	initialize: (options) ->
 		@showSilder: off
+		@readyr = no
 		@parent options
 	ready: ->
 		@base.adopt @controls
-		@content.grab @contentElement
+		if @contentElement?
+			@content.grab @contentElement
 		if @options.restoreable
 			@loadPosition()
 		else
@@ -59,6 +61,7 @@ Core.Float: new Class {
 						if @mouseisover
 							@slider.show()
 		@parent()
+		@readyr = yes
 	create: ->
 		@base.addClass @options.classes.class
 		@base.setStyle 'position', 'fixed'
@@ -156,6 +159,16 @@ Core.Float: new Class {
 			@show el
 	setContent: (element) -> 
 		@contentElement: element
+		if @readyr
+			@content.getChildren().dispose()
+			@content.grab @contentElement
+			if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
+				@showSlider: on
+				if @mouseisover
+					@slider.show()
+			else
+				@showSlider: off
+				@slider.hide()
 	center: ->
 		@base.position()
 }

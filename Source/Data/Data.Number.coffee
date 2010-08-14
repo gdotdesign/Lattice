@@ -67,6 +67,12 @@ Data.Number: new Class {
   setValue: (step) ->
     @justSet: on
     if @options.reset
+      #range = [Number(step)+@options.range[0],Number(step)+@options.range[1]]
+      #@slider.options.steps = @options.steps
+      #@slider.options.range = range
+      #@slider.slider.options.steps = @options.steps
+      #@slider.slider.options.range = range
+      #@slider.setRange range
       @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
     @slider.set step
 }

@@ -18,6 +18,7 @@ Iterable.List: new Class {
   options:{
     class: GDotUI.Theme.List.class
     selected: GDotUI.Theme.List.selected
+    search: off
   }
   initialize: (options) ->
     @parent options
@@ -26,11 +27,25 @@ Iterable.List: new Class {
     @sortable: new Sortables null
     #TODO Sortable Events
     @editing: off
+    if @options.search
+      @sinput = new Element 'input', {class:'search'}
+      @base.grab @sinput
+      @sinput.addEvent 'keyup', ( ->
+          svalue = @sinput.get 'value'
+          @items.each ( (item) ->
+            if item.title.get('text').test(/$svalue/ig) or item.subtitle.get('text').test(/$svalue/ig)
+              item.base.setStyle 'display', 'block'
+            else
+              item.base.setStyle 'display', 'none'
+          ).bind @
+      ).bindWithEvent @
     @items: []
   removeItem: (li) ->
     li.removeEvents 'invoked', 'edit', 'delete'
     li.base.destroy()
   removeAll: ->
+    if @options.search
+      @sinput.set 'value', ''
     @selected: null
     @items.each ( (item) ->
       console.log item

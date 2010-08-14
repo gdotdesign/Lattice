@@ -28,6 +28,7 @@ sources:
   - "Source/Core/Core.Button.coffee"
   - "Source/Core/Core.Picker.coffee"
   - "Source/Core/Core.Slot.coffee"
+  - "Source/Core/Core.TabFloat.coffee"
   - "Source/Data/Data.Abstract.coffee"
   - "Source/Data/Data.Text.coffee"
   - "Source/Data/Data.Number.coffee"

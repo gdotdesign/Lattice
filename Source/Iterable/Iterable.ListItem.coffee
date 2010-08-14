@@ -42,12 +42,14 @@ Iterable.ListItem: new Class {
     title:''
     subtitle:''
     draggable: on
+    dragreset: on
     ghost: on
     removeClasses: '.'+GDotUI.Theme.Icon.class
     invokeEvent: 'click'
     selectEvent: 'click'
     removeable: on
     sortable: off
+    dropppables: ''
   }
   initialize: (options) ->
     @parent options
@@ -74,7 +76,7 @@ Iterable.ListItem: new Class {
         @fireEvent 'invoked', @
      ).bindWithEvent @
     @addEvent 'dropped', ( (el,drop,e) ->
-      @fireEvent 'invoked', [@ ,e ]
+      @fireEvent 'invoked', [@ ,e, drop]
     ).bindWithEvent @
     @base.addEvent 'dblclick', ( ->
       if @enabled
@@ -121,6 +123,7 @@ Iterable.ListItem: new Class {
       @parent()
       if @options.draggable
         @drag.addEvent 'beforeStart',( ->
+          #recalculate drops
           @fireEvent 'select', @
           ).bindWithEvent @
 }
