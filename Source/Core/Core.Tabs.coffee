@@ -18,6 +18,7 @@ Core.Tabs: new Class {
   Binds:['remove','change']
   options:{
     class: GDotUI.Theme.Tabs.class
+    autoRemove: on
   }
   initialize: (options) ->
     @tabs: []
@@ -33,12 +34,16 @@ Core.Tabs: new Class {
       tab.addEvent 'activate', @change
   remove: (tab) ->
     if @tabs.indexOf(tab) != -1
-      @tabs.erase tab
-      document.id(tab).dispose()
-      if tab is @active
-        if @tabs.length > 0
-          @change @tabs[0]
-      @fireEvent 'tabRemoved', tab
+      if @options.autoRemove
+        @removeTab(tab)
+      @fireEvent 'removed',tab
+  removeTab: (tab) ->
+    @tabs.erase tab
+    document.id(tab).dispose()
+    if tab is @active
+      if @tabs.length > 0
+        @change @tabs[0]
+    @fireEvent 'tabRemoved', tab
   change: (tab) ->
     if tab isnt @active
       @setActive tab

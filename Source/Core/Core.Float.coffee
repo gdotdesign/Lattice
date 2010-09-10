@@ -42,6 +42,7 @@ Core.Float: new Class {
 		editable: off
 		draggable: on
 		ghost: off
+		overlay: off
 	}
 	initialize: (options) ->
 		@showSilder: off
@@ -129,6 +130,10 @@ Core.Float: new Class {
 						@showSlider: off
 						@slider.hide()
 				).bindWithEvent @
+				@scrollBase.addEvent 'mousewheel',( (e) ->
+					@scrollBase.scrollTop = @scrollBase.scrollTop+e.wheel*12
+					@slider.knob.setStyle 'top', (@scrollBase.scrollTop/@scrollBase.getScrollSize().y)*@slider.base.getSize().y
+				).bindWithEvent @
 		@base.addEvent 'mouseenter', ( ->
 			@base.toggleClass @options.classes.active
 			@base.toggleClass @options.classes.inactive
@@ -146,10 +151,17 @@ Core.Float: new Class {
 					@sliderTimout: @slider.hide.delay 200, @slider
 			@iconsTimout: @icons.hide.delay 200, @icons
 			@mouseisover: off ).bindWithEvent @
+	  if @options.overlay
+	  	@overlay = new Core.Overlay()
 	show: ->
+		if @options.overlay
+			document.getElement('body').grab @overlay
+			@overlay.show()
 		document.getElement('body').grab @base
 		@saveState()
 	hide: ->
+		if @options.overlay
+			@overlay.base.dispose()
 		@base.dispose()
 		@saveState()
 	toggle: (el) ->

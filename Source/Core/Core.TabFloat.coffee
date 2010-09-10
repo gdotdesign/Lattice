@@ -31,5 +31,12 @@ Core.TabFloat = new Class {
   addTab: (label,content) ->
     @tabs.add new Core.Tab({class:'floatTab',label:label})
     @tabContents.push content
-  
+  setContent: (element) ->
+    index = null
+    @tabContents.each (item,i) ->
+      if item is element
+        index = i
+    if index?
+      @tabs.setActive @tabs.tabs[index]
+    @parent element
 }

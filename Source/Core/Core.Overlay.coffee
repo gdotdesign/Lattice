@@ -30,7 +30,7 @@ Core.Overlay: new Class {
       "opacity":0
       }
     @base.addClass @options.class
-    document.getElement('body').grab @.base
+    #document.getElement('body').grab @.base
     @base.addEventListener 'webkitTransitionEnd', ((e) ->
       if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
         @base.setStyle 'visiblity', 'hidden'

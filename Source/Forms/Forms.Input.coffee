@@ -23,7 +23,7 @@ Forms.Input: new Class {
     @parent options
   create: () ->
     delete @base  
-    if (@options.type is 'text' or @options.type is 'password' or @options.type is 'checkbox' or @options.type is'button')
+    if (@options.type is 'text' or @options.type is 'password' or @options.type is 'checkbox' or @options.type is 'button')
       @base: new Element 'input', { type: @options.type, name: @options.name}
     if @options.type is "textarea"
       @base: new Element 'textarea', {name: @options.name}
