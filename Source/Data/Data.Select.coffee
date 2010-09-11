@@ -37,7 +37,6 @@ Data.Select: new Class {
     ).bindWithEvent @
   setList: (list) ->
     @select.getElements("option").destroy()
-    console.log list
     new Hash(list).each ( (value,key) ->
       option = new Element 'option'
       option.set 'value', value

@@ -43,6 +43,15 @@ Core.IconGroup: new Class {
       @icons.push icon
       yes
     else no
+  show: ->
+    @base.setStyle 'display', 'block'
+  hide: ->
+    @base.setStyle 'display', 'none'
+  toggle: ->
+    if @base.getStyle('display') is 'none'
+      @show()
+    else
+      @hide()
   removeIcon: (icon) ->
     index: @icons.indexOf icon
     if index isnt -1

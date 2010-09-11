@@ -35,6 +35,30 @@ UnitTable = {
     steps:[100]
   }
 }
+UnitList = {px: "px"
+            '%': "%"
+            em: "em"
+            ex:"ex"
+            gd:"gd"
+            rem:"rem"
+            vw:"vw"
+            vh:"vh"
+            vm:"vm"
+            ch:"ch"
+            "in":"in"
+            mm:"mm"
+            pt:"pt"
+            pc:"pc"
+            cm:"cm"
+            deg:"deg"
+            grad:"grad"
+            rad:"rad"
+            turn:"turn"
+            s:"s"
+            ms:"ms"
+            Hz:"Hz"
+            kHz:"kHz"
+            }
 Data.Unit: new Class {
   Extends:Data.Abstract
   options:{
@@ -46,30 +70,7 @@ Data.Unit: new Class {
     @value = 0
     @base.addClass @options.class
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
-    @sel = new Data.Select {list:{px: "px"
-                                  '%': "%"
-                                  em: "em"
-                                  ex:"ex"
-                                  gd:"gd"
-                                  rem:"rem"
-                                  vw:"vw"
-                                  vh:"vh"
-                                  vm:"vm"
-                                  ch:"ch"
-                                  "in":"in"
-                                  mm:"mm"
-                                  pt:"pt"
-                                  pc:"pc"
-                                  cm:"cm"
-                                  deg:"deg"
-                                  grad:"grad"
-                                  rad:"rad"
-                                  turn:"turn"
-                                  s:"s"
-                                  ms:"ms"
-                                  Hz:"Hz"
-                                  kHz:"kHz"
-                                  }}
+    @sel = new Data.Select {list:UnitList}
     @number.addEvent 'change', ((value) ->
       @value = value
       @fireEvent 'change', String(@value)+@sel.value
