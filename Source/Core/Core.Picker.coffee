@@ -97,7 +97,8 @@ Core.Picker: new Class {
         @attachedTo.fireEvent 'change', value
       ).bindWithEvent @
     @attachedTo: input
-  attachAndShow: (el, e) ->
+  attachAndShow: (el, e, callback) ->
+    @contentElement.readyCallback = callback
     @attach el
     @show e
   show: (e) ->

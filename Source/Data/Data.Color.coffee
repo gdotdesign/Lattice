@@ -7,7 +7,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: Data.Abstract
+requires: [Data.Abstract, Forms.Input]
 
 provides: Data.Color
 
@@ -45,8 +45,8 @@ Data.Color: new Class {
     @wrapper.adopt @color, @white, @black, @xyKnob
    
     @colorData: new Data.Color.SlotControls()
-    @base.adopt @wrapper, @colorData
   ready: ->
+    @base.adopt @wrapper
     sbSize: @color.getSize()
     @wrapper.setStyles {
       width: sbSize.x
@@ -65,6 +65,17 @@ Data.Color: new Class {
     @hue: @colorData.hue
     @saturation: @colorData.saturation
     @lightness: @colorData.lightness
+    @alpha = @colorData.alpha
+    @colorData.readyCallback = @readyCallback
+    @base.adopt @colorData
+    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
+      item.addEvent 'click',( ->
+        @setColor()
+      ).bindWithEvent @
+    ).bind @
+    @alpha.addEvent 'change',( (step) ->
+      @setColor()
+    ).bindWithEvent this
     @hue.addEvent 'change',( (step) ->
       if typeof(step) == "object"
         step: 0
@@ -74,55 +85,79 @@ Data.Color: new Class {
       @setColor()
     ).bindWithEvent this
     @saturation.addEvent 'change',( (step) ->
+      @xy.detach()
       @xy.set {x:step
          y:@xy.get().y
          }
+      @xy.attach()
     ).bindWithEvent this
     @lightness.addEvent 'change',( (step) ->
+      @xy.detach()
       @xy.set {x:@xy.get().x
               y:100-step
               }
+      @xy.attach()
     ).bindWithEvent this
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
-    @setValue( if @value? then @value else '#fff' )
-  setValue: (hex) ->
-    if hex?
-      @bgColor: new Color hex
-    @hue.setValue @bgColor.hsb[0]
-    @saturation.setValue @bgColor.hsb[1]
-    @lightness.setValue @bgColor.hsb[2]
-    @xy.set {x:@bgColor.hsb[1], y:100-@bgColor.hsb[2]}
-    colr: new $HSB @bgColor.hsb[0], 100, 100
+    #@setValue( '#fff', 100, 'hex')
+  setValue: (color, alpha, type) ->
+    color = new Color(color)
+    @hue.setValue color.hsb[0]
+    @saturation.setValue color.hsb[1]
+    @lightness.setValue color.hsb[2]
+    @alpha.setValue alpha
+    @colorData.base.getElements( 'input[type=radio]').each (item) ->
+      if item.get('value') is type
+        item.set 'checked', true
+    @xy.set {x: color.hsb[1], y:100-color.hsb[2]}
+    colr: new $HSB color.hsb[0], 100, 100
+    @bgColor = color
+    @finalColor = color
+    console.log @
     @color.setStyle 'background-color', colr
     @setColor()
   setColor: ->
     @finalColor: @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
-    
-    ret: ''
-    switch @options.format
-      when "hsl"
-        ret: "hsl("+(@finalColor.hsb[0])+", "+(@finalColor.hsb[1])+"%, "+(@finalColor.hsb[2])+"%)"
-      when "rgb"
-        ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
-      else
-        ret: "#"+@finalColor.hex.slice(1,7)
-    @fireEvent 'change', {color:@finalColor}
+    type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
+    @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
     @value: @finalColor
   getValue: ->
-    ret: ''
-    switch @options.format
-      when "hsl"
-        ret: "hsl("+(@finalColor.hsb[0])+", "+(@finalColor.hsb[1])+"%, "+(@finalColor.hsb[2])+"%)"
-      when "rgb"
-        ret: "rgb("+(@finalColor.rgb[0])+", "+(@finalColor.rgb[1])+", "+(@finalColor.rgb[2])+")"
-      else
-        ret: "#"+@finalColor.hex.slice(1,7)
-    ret
+    @finalColor
   change: (pos) ->
+    @saturation.slider.slider.detach()
     @saturation.setValue pos.x
+    @saturation.slider.slider.attach()
+    @lightness.slider.slider.detach()
     @lightness.setValue 100-pos.y
+    @lightness.slider.slider.attach()
     @setColor()
+}
+Data.Color.ReturnValues = {
+  type: 'radio'
+  name: 'col'
+  options: [
+    {
+      label: 'rgb'
+      value: 'rgb'
+    }
+    {
+      label: 'rgba'
+      value: 'rgba'
+    }
+    {
+      label: 'hsl'
+      value: 'hsl'
+    }
+    {
+      label: 'hsla'
+      value: 'hsla'
+    }
+    {
+      label: 'hex'
+      value: 'hex'
+    }
+  ]
 }
 Data.Color.SlotControls: new Class {
   Extends:Data.Abstract
@@ -139,6 +174,10 @@ Data.Color.SlotControls: new Class {
       ).bindWithEvent this
     @saturation: new Data.Number {range:[0,100],reset: off, steps: [100]}
     @lightness: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @alpha: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @col = new Forms.Input Data.Color.ReturnValues
   ready: ->
-    @base.adopt @hue, @saturation, @lightness
+    @base.adopt @hue, @saturation, @lightness, @alpha, @col
+    @base.getElements('input[type=radio]')[0].set('checked',true)
+    @readyCallback()
 }
