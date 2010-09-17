@@ -21,6 +21,7 @@ Forms.Field: new Class {
   }
   initialize: (options) ->
     @parent options
+    @
   create: ->
     h: new Hash @options.structure
     for key of h

@@ -31,15 +31,17 @@ Iterable.List: new Class {
       @sinput = new Element 'input', {class:'search'}
       @base.grab @sinput
       @sinput.addEvent 'keyup', ( ->
-          svalue = @sinput.get 'value'
-          @items.each ( (item) ->
-            if item.title.get('text').test(/$svalue/ig) or item.subtitle.get('text').test(/$svalue/ig)
-              item.base.setStyle 'display', 'block'
-            else
-              item.base.setStyle 'display', 'none'
-          ).bind @
+          @search()
       ).bindWithEvent @
     @items: []
+  search: ->
+    svalue = @sinput.get 'value'
+    @items.each ( (item) ->
+      if item.title.get('text').test(/$svalue/ig) or item.subtitle.get('text').test(/$svalue/ig)
+        item.base.setStyle 'display', 'block'
+      else
+        item.base.setStyle 'display', 'none'
+    ).bind @
   removeItem: (li) ->
     li.removeEvents 'invoked', 'edit', 'delete'
     li.base.destroy()

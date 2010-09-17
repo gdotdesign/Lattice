@@ -23,8 +23,11 @@ Core.TabFloat = new Class {
     @parent()
     @tabs = new Core.Tabs({class:'floatTabs'})
     @tabs.addEvent 'change', ( (tab) ->
+      @lastTab = @tabs.active
       index = @tabs.tabs.indexOf tab
+      @activeContent = @tabContents[index]
       @setContent @tabContents[index]
+      @fireEvent 'tabChange'
       ).bindWithEvent @
     @tabContents = []
     @base.grab @tabs, 'top'

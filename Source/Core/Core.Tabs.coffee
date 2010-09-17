@@ -46,8 +46,8 @@ Core.Tabs: new Class {
     @fireEvent 'tabRemoved', tab
   change: (tab) ->
     if tab isnt @active
-      @setActive tab
       @fireEvent 'change', tab
+      @setActive tab
   setActive: (tab) ->
     if @active?
       @active.deactivate()

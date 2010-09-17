@@ -179,5 +179,6 @@ Data.Color.SlotControls: new Class {
   ready: ->
     @base.adopt @hue, @saturation, @lightness, @alpha, @col
     @base.getElements('input[type=radio]')[0].set('checked',true)
-    @readyCallback()
+    if @readyCallback?
+      @readyCallback()
 }
