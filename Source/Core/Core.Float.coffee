@@ -13,7 +13,7 @@ provides: Core.Float
 
 ...
 ###
-Core.Float: new Class {
+Core.Float = new Class {
 	Extends:Core.Abstract
 	Implements:[Interfaces.Draggable
 							Interfaces.Restoreable]
@@ -45,7 +45,7 @@ Core.Float: new Class {
 		overlay: off
 	}
 	initialize: (options) ->
-		@showSilder: off
+		@showSilder = off
 		@readyr = no
 		@parent options
 	ready: ->
@@ -58,7 +58,7 @@ Core.Float: new Class {
 			@base.position()
 		if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
 					if not @showSlider
-						@showSlider: on
+						@showSlider = on
 						if @mouseisover
 							@slider.show()
 		@parent()
@@ -69,32 +69,32 @@ Core.Float: new Class {
 		@base.setPosition {x:0,y:0}
 		@base.toggleClass @options.classes.inactive
 		
-		@controls:  new Element 'div', {class: @options.classes.controls}
-		@content: new Element 'div', {'class': @options.classes.content}
-		@handle: new Element 'div', {'class': @options.classes.handle}
-		@bottom: new Element 'div', {'class': @options.classes.bottom}
+		@controls =  new Element 'div', {class: @options.classes.controls}
+		@content = new Element 'div', {'class': @options.classes.content}
+		@handle = new Element 'div', {'class': @options.classes.handle}
+		@bottom = new Element 'div', {'class': @options.classes.bottom}
 
 		@base.adopt @handle, @content
 
-		@slider: new Core.Slider {scrollBase:@content, range:[0,100], steps: 100}
+		@slider = new Core.Slider {scrollBase:@content, range:[0,100], steps: 100}
 		@slider.addEvent 'complete', ( ->
-			@scrolling: off
+			@scrolling = off
 		).bindWithEvent this
 		@slider.addEvent 'change', ( ->
-			@scrolling: on
+			@scrolling = on
 		).bindWithEvent this
 		
 		@slider.hide()
 		
-		@icons: new Core.IconGroup @options.iconOptions
+		@icons = new Core.IconGroup @options.iconOptions
 		@controls.adopt @icons, @slider
 		
-		@close: new Core.Icon {image: @options.icons.remove}
+		@close = new Core.Icon {image: @options.icons.remove}
 		@close.addEvent 'invoked', ( ->
 			@hide()
 		).bindWithEvent this
 
-		@edit: new Core.Icon {image:@options.icons.edit}
+		@edit = new Core.Icon {image:@options.icons.edit}
 		@edit.addEvent 'invoked', ( ->
 			if @contentElement?
 				if @contentElement.toggleEdit?
@@ -110,24 +110,24 @@ Core.Float: new Class {
 		@icons.hide()
 		
 		if @options.scrollBase? 
-			@scrollBase: @options.scrollBase
+			@scrollBase = @options.scrollBase
 		else
-			@scrollBase: @content
+			@scrollBase = @content
 		
 		@scrollBase.setStyle 'overflow', 'hidden'
 		
 		if @options.resizeable
 			@base.grab @bottom
-			@sizeDrag: new Drag @scrollBase, {handle:@bottom, modifiers:{x:'',y:'height'}}
+			@sizeDrag = new Drag @scrollBase, {handle:@bottom, modifiers:{x:'',y:'height'}}
 			@sizeDrag.addEvent 'drag', ( ->
 				if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
 					if not @showSlider
-						@showSlider: on
+						@showSlider = on
 						if @mouseisover
 							@slider.show()
 				else
 					if @showSlider
-						@showSlider: off
+						@showSlider = off
 						@slider.hide()
 				).bindWithEvent @
 				@scrollBase.addEvent 'mousewheel',( (e) ->
@@ -142,15 +142,15 @@ Core.Float: new Class {
 			if @showSlider
 				@slider.show()
 			@icons.show()
-			@mouseisover: on ).bindWithEvent @
+			@mouseisover = on ).bindWithEvent @
 		@base.addEvent 'mouseleave', ( ->
 			@base.toggleClass @options.classes.active
 			@base.toggleClass @options.classes.inactive
 			if not @scrolling
 				if @showSlider
-					@sliderTimout: @slider.hide.delay 200, @slider
-			@iconsTimout: @icons.hide.delay 200, @icons
-			@mouseisover: off ).bindWithEvent @
+					@sliderTimout = @slider.hide.delay 200, @slider
+			@iconsTimout = @icons.hide.delay 200, @icons
+			@mouseisover = off ).bindWithEvent @
 	  if @options.overlay
 	  	@overlay = new Core.Overlay()
 	show: ->
@@ -170,16 +170,16 @@ Core.Float: new Class {
 		else
 			@show el
 	setContent: (element) -> 
-		@contentElement: element
+		@contentElement = element
 		if @readyr
 			@content.getChildren().dispose()
 			@content.grab @contentElement
 			if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
-				@showSlider: on
+				@showSlider = on
 				if @mouseisover
 					@slider.show()
 			else
-				@showSlider: off
+				@showSlider = off
 				@slider.hide()
 	center: ->
 		@base.position()

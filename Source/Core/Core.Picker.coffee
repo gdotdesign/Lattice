@@ -14,15 +14,15 @@ provides: [Core.Picker, outerClick]
 ...
 ###
 ( ->
-  oldPrototypeStart: Drag.prototype.start
-  Drag.prototype.start: ->
+  oldPrototypeStart = Drag.prototype.start
+  Drag.prototype.start = ->
     window.fireEvent 'outer'
     oldPrototypeStart.run arguments, this
 )()
-Element.Events.outerClick: {
+Element.Events.outerClick = {
     base: 'mousedown'
     condition: (event) ->
-      event.stopPropagation();
+      event.stopPropagation()
       off
     onAdd: (fn) ->
       window.addEvent 'click', fn
@@ -30,8 +30,8 @@ Element.Events.outerClick: {
     onRemove: (fn) ->
       window.removeEvent 'click', fn
       window.removeEvent 'outer', fn
-};
-Core.Picker: new Class {
+}
+Core.Picker = new Class {
   Extends: Core.Abstract
   Binds: ['show'
           'hide']
@@ -50,42 +50,42 @@ Core.Picker: new Class {
   ready: ->
     if not @base.hasChild @contentElement
        @base.grab @contentElement
-    winsize: window.getSize()
-    winscroll: window.getScroll()
-    asize: @attachedTo.getSize()
-    position: @attachedTo.getPosition()
-    size: @base.getSize()
-    offset: @options.offset
-    x: ''
-    y: ''
+    winsize = window.getSize()
+    winscroll = window.getScroll()
+    asize = @attachedTo.getSize()
+    position = @attachedTo.getPosition()
+    size = @base.getSize()
+    offset = @options.offset
+    x = ''
+    y = ''
     if (position.x-size.x-winscroll.x) < 0
-      x: 'right'
-      xpos: position.x+asize.x+offset
+      x = 'right'
+      xpos = position.x+asize.x+offset
     if (position.x+size.x+asize.x) > winsize.x
-      x: 'left'
-      xpos: position.x-size.x-offset
+      x = 'left'
+      xpos = position.x-size.x-offset
     if not ((position.x+size.x+asize.x)>winsize.x) and not ((position.x-size.x) < 0) 
-      x: 'center'
-      xpos: (position.x+asize.x/2)-(size.x/2)
+      x = 'center'
+      xpos = (position.x+asize.x/2)-(size.x/2)
     if position.y+size.y-winscroll.y > winsize.y
-      y: 'up'
-      ypos: position.y-size.y-offset
+      y = 'up'
+      ypos = position.y-size.y-offset
     else
-      y: 'down'
+      y = 'down'
       if x=='center'
-        ypos: position.y+asize.y+offset
+        ypos = position.y+asize.y+offset
       else
-        ypos: position.y
+        ypos = position.y
     @base.setStyles {
-      'left':xpos
-      'top':ypos
+      left : xpos
+      top : ypos
     }
   detach: ->
     if @contentElement?
       @contentElement.removeEvents 'change'
     if @attachedTo?
       @attachedTo.removeEvent @options.event, @show
-      @attachedTo: null
+      @attachedTo = null
       @fireEvent 'detached'
   attach: (input) ->
     if @attachedTo?
@@ -96,7 +96,7 @@ Core.Picker: new Class {
         @attachedTo.set 'value', value
         @attachedTo.fireEvent 'change', value
       ).bindWithEvent @
-    @attachedTo: input
+    @attachedTo = input
   attachAndShow: (el, e, callback) ->
     @contentElement.readyCallback = callback
     @attach el
@@ -117,5 +117,5 @@ Core.Picker: new Class {
         @detach()
       @base.dispose()
   setContent: (element) ->
-    @contentElement: element
+    @contentElement = element
 }

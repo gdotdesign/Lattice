@@ -13,15 +13,15 @@ provides: Core.Abstract
 
 ...
 ###
-Core.Abstract: new Class {
+Core.Abstract = new Class {
   Implements:[Events
               Options
               Interfaces.Mux]
   initialize: (options) ->
     @setOptions options
-    @base: new Element 'div'
+    @base = new Element 'div'
     @create()
-    fn: @ready.bindWithEvent @
+    fn = @ready.bindWithEvent @
     @base.store 'fn', fn
     @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
     @mux()

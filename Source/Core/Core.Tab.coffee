@@ -13,7 +13,7 @@ provides: Core.Tab
 
 ...
 ###
-Core.Tab: new Class {
+Core.Tab = new Class {
   Extends: Core.Abstract
   options:{
     class: GDotUI.Theme.Tab.class
@@ -29,8 +29,8 @@ Core.Tab: new Class {
     @base.addEvent 'click', ( ->
       @fireEvent 'activate', this
     ).bindWithEvent this
-    @label: new Element 'div', {text: @options.label}
-    @icon: new Core.Icon {image: @options.image}
+    @label = new Element 'div', {text: @options.label}
+    @icon = new Core.Icon {image: @options.image}
     @icon.addEvent 'invoked', ( (ic,e) ->
       e.stop()
       @fireEvent 'remove', this

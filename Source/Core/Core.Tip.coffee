@@ -13,7 +13,7 @@ provides: Core.Tip
 
 ...
 ###
-Core.Tip: new Class {
+Core.Tip = new Class {
   Extends:Core.Abstract
   Binds:['enter'
          'leave']
@@ -36,11 +36,11 @@ Core.Tip: new Class {
       @detach()
     item.base.addEvent 'mouseenter', @enter
     item.base.addEvent 'mouseleave', @leave
-    @attachedTo: item
+    @attachedTo = item
   detach: (item) ->
     item.base.removeEvent 'mouseenter', @enter
     item.base.removeEvent 'mouseleave', @leave
-    @attachedTo: null
+    @attachedTo = null
   enter: ->
     if @attachedTo.enabled
       @show()
@@ -48,9 +48,9 @@ Core.Tip: new Class {
     if @attachedTo.enabled
       @hide()
   ready: ->
-    p: @attachedTo.base.getPosition()
-    s: @attachedTo.base.getSize()
-    s1: @base.getSize()
+    p = @attachedTo.base.getPosition()
+    s = @attachedTo.base.getSize()
+    s1 = @base.getSize()
     switch @options.location.x
       when "left"
         @base.setStyle 'left', p.x-(s1.x+@options.offset)

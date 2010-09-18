@@ -13,7 +13,7 @@ provides: Core.Overlay
 
 ...
 ###
-Core.Overlay: new Class {
+Core.Overlay = new Class {
   Extends:Core.Abstract
   options:{
     class: GDotUI.Theme.Overlay.class
@@ -22,15 +22,14 @@ Core.Overlay: new Class {
     @parent options 
   create: ->
     @base.setStyles {
-      "position":"fixed"
-      "top":0
-      "left":0
-      "right":0
-      "bottom":0
-      "opacity":0
+      position:"fixed"
+      top:0
+      left:0
+      right:0
+      bottom:0
+      opacity:0
       }
     @base.addClass @options.class
-    #document.getElement('body').grab @.base
     @base.addEventListener 'webkitTransitionEnd', ((e) ->
       if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
         @base.setStyle 'visiblity', 'hidden'
@@ -39,7 +38,7 @@ Core.Overlay: new Class {
     @base.setStyle 'opacity', 0
   show: ->
     @base.setStyles {
-      'visiblity': 'visible'
-      'opacity': 1
+      visiblity: 'visible'
+      opacity: 1
     }
 }

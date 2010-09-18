@@ -13,7 +13,7 @@ provides: Core.Tabs
 
 ...
 ###
-Core.Tabs: new Class {
+Core.Tabs = new Class {
   Extends: Core.Abstract
   Binds:['remove','change']
   options:{
@@ -21,8 +21,8 @@ Core.Tabs: new Class {
     autoRemove: on
   }
   initialize: (options) ->
-    @tabs: []
-    @active: null
+    @tabs = []
+    @active = null
     @parent options
   create: ->
     @base.addClass @options.class
@@ -52,7 +52,7 @@ Core.Tabs: new Class {
     if @active?
       @active.deactivate()
     tab.activate()
-    @active: tab
+    @active = tab
   getByLabel: (label) ->
     (@tabs.filter (item, i) ->
       if item.options.label is label

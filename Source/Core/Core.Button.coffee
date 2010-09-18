@@ -13,7 +13,7 @@ provides: Core.Button
 
 ...
 ###
-Core.Button: new Class {
+Core.Button = new Class {
   Extends:Core.Abstract
   Implements:[
     Interfaces.Enabled
@@ -28,9 +28,9 @@ Core.Button: new Class {
     @parent options 
   create: ->
     delete @base
-    @base: new Element 'button'
+    @base = new Element 'button'
     @base.addClass(@options.class).set 'text', @options.text
-    @icon: new Core.Icon {image: @options.image}
+    @icon = new Core.Icon {image: @options.image}
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [this, e]

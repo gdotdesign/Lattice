@@ -13,7 +13,7 @@ provides: Core.Icon
 
 ...
 ###
-Core.Icon: new Class {
+Core.Icon = new Class {
   Extends:Core.Abstract
   Implements:[
     Interfaces.Enabled
