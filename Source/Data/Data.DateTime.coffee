@@ -13,7 +13,7 @@ provides: Data.DateTime
 
 ...
 ###
-Data.DateTime: new Class {
+Data.DateTime = new Class {
   Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Date.DateTime.class
@@ -23,8 +23,8 @@ Data.DateTime: new Class {
     @parent options
   create: ->
     @base.addClass @options.class
-    @datea: new Data.Date()
-    @time: new Data.Time()
+    @datea = new Data.Date()
+    @time = new Data.Time()
   ready: ->
     @base.adopt @datea, @time
     @setValue new Date()
@@ -44,7 +44,7 @@ Data.DateTime: new Class {
     @date.format(@options.format)
   setValue: (date) ->
     if date?
-      @date: date
+      @date = date
     @datea.setValue @date
     @time.setValue @date
     @fireEvent 'change', @date.format(@options.format)

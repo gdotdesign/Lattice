@@ -13,7 +13,7 @@ provides: Data.Text
 
 ...
 ###
-Data.Text: new Class {
+Data.Text = new Class {
   Extends: Data.Abstract
   options: {
     class: GDotUI.Theme.Text.class
@@ -22,7 +22,7 @@ Data.Text: new Class {
     @parent options
   create: ->
     @base.addClass @options.class
-    @text: new Element 'textarea'
+    @text = new Element 'textarea'
     @base.grab @text
     @addEvent 'show', ( ->
       @text.focus()

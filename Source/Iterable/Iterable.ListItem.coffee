@@ -23,7 +23,7 @@ Element.implement {
       @setStyle '-webkit-transition-duration', 0
       @store 'transition-dur', @getStyle '-webkit-transition-duration'
 }
-Iterable.ListItem: new Class {
+Iterable.ListItem = new Class {
   Extends:Core.Abstract
   Implements: [ Interfaces.Draggable
                Interfaces.Enabled ]
@@ -55,12 +55,12 @@ Iterable.ListItem: new Class {
     @parent options
   create: ->
     @base.addClass(@options.classes.class).setStyle  'position','relative'
-    @remove: new Core.Icon {image: @options.icons.remove}
-    @handles: new Core.Icon {image: @options.icons.handle}
+    @remove = new Core.Icon {image: @options.icons.remove}
+    @handles = new Core.Icon {image: @options.icons.handle}
     @handles.base.addClass  @options.classes.handle
     $$(@remove.base,@handles.base).setStyle 'position','absolute'
-    @title: new Element('div').addClass(@options.classes.title).set 'text', @options.title
-    @subtitle: new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
+    @title = new Element('div').addClass(@options.classes.title).set 'text', @options.title
+    @subtitle = new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
     @remove.base.toggleTransition()
     @handles.base.toggleTransition()
     @base.adopt @title,@subtitle
@@ -74,7 +74,7 @@ Iterable.ListItem: new Class {
     @base.addEvent @options.invokeEvent, ( ->
       if @enabled and not @options.draggable and not @editing
         @fireEvent 'invoked', @
-     ).bindWithEvent @
+    ).bindWithEvent @
     @addEvent 'dropped', ( (el,drop,e) ->
       @fireEvent 'invoked', [@ ,e, drop]
     ).bindWithEvent @
@@ -94,7 +94,7 @@ Iterable.ListItem: new Class {
       @handles.base.setStyle 'left', -@handles.base.getSize().x
       @base.setStyle 'padding-left' , @base.retrieve( 'padding-left:old')
       @base.setStyle 'padding-right', @base.retrieve( 'padding-right:old')
-      @editing: off
+      @editing = off
     else
       if @options.draggable
         @drag.detach()
@@ -104,12 +104,12 @@ Iterable.ListItem: new Class {
       @base.store 'padding-right:old', @base.getStyle('padding-left')
       @base.setStyle 'padding-left', Number(@base.getStyle('padding-left').slice(0,-2))+@handles.base.getSize().x
       @base.setStyle 'padding-right', Number(@base.getStyle('padding-right').slice(0,-2))+@remove.base.getSize().x
-      @editing: on
+      @editing = on
   ready: ->
     if not @editing
-      handSize: @handles.base.getSize()
-      remSize: @remove.base.getSize()
-      baseSize: @base.getSize()
+      handSize = @handles.base.getSize()
+      remSize = @remove.base.getSize()
+      baseSize = @base.getSize()
       @remove.base.setStyles {
         "right":-remSize.x
         "top":(baseSize.y-remSize.y)/2

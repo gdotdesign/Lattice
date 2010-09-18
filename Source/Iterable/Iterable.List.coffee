@@ -13,7 +13,7 @@ provides: Iterable.List
 
 ...
 ###
-Iterable.List: new Class {
+Iterable.List = new Class {
   Extends:Core.Abstract
   options:{
     class: GDotUI.Theme.List.class
@@ -24,16 +24,16 @@ Iterable.List: new Class {
     @parent options
   create: ->
     @base.addClass @options.class
-    @sortable: new Sortables null
+    @sortable = new Sortables null
     #TODO Sortable Events
-    @editing: off
+    @editing = off
     if @options.search
       @sinput = new Element 'input', {class:'search'}
       @base.grab @sinput
       @sinput.addEvent 'keyup', ( ->
           @search()
       ).bindWithEvent @
-    @items: []
+    @items = []
   search: ->
     svalue = @sinput.get 'value'
     @items.each ( (item) ->
@@ -48,28 +48,28 @@ Iterable.List: new Class {
   removeAll: ->
     if @options.search
       @sinput.set 'value', ''
-    @selected: null
+    @selected = null
     @items.each ( (item) ->
       console.log item
       @removeItem item
       ).bind @
     delete @items
-    @items: []
+    @items = []
   toggleEdit: ->
-    bases: @items.map (item) ->
+    bases = @items.map (item) ->
       return item.base
     if @editing
       @sortable.removeItems bases
       @items.each (item) ->
         item.toggleEdit()
-      @editing: off
+      @editing = off
     else
       @sortable.addItems bases
       @items.each (item) ->
         item.toggleEdit()
-      @editing: on
+      @editing = on
   getItemFromTitle: (title) ->
-    filtered: @items.filter (item) ->
+    filtered = @items.filter (item) ->
       if item.title.get('text') == String(title)
         yes
       else no
@@ -78,7 +78,7 @@ Iterable.List: new Class {
     if @selected != item
       if @selected?
         @selected.base.removeClass @options.selected
-      @selected: item
+      @selected = item
       @selected.base.addClass @options.selected
       @fireEvent 'select', item
   addItem: (li) -> 

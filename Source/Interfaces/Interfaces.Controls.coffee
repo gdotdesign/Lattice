@@ -13,7 +13,7 @@ provides: Interfaces.Controls
 
 ...
 ###
-Interfaces.Controls: new Class {
+Interfaces.Controls = new Class {
   hide: ->
     @base.setStyle 'opacity', 0
   show: -> 

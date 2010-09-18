@@ -13,7 +13,7 @@ provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
 ...
 ###
-Drag.Float: new Class {
+Drag.Float = new Class {
 	Extends: Drag.Move
 	initialize: (el,options) ->
 		@parent el, options
@@ -21,11 +21,12 @@ Drag.Float: new Class {
 		if @options.target == event.target
 			@parent event
 }
-Drag.Ghost: new Class {
+Drag.Ghost = new Class {
 	Extends: Drag.Move
-	options: { opacity: 0.65
-						 pos: false
-						 remove: ''}
+	options: {
+	  opacity: 0.65
+		pos: false
+		remove: ''}
 	start: (event) ->
 		if not event.rightClick
 			@droppables = $$(@options.droppables)
@@ -42,7 +43,7 @@ Drag.Ghost: new Class {
 		@parent(event)
 
 	ghost: ->
-		@element: (@element.clone()
+		@element = (@element.clone()
 		).setStyles({
 			'opacity': @options.opacity,
 			'position': 'absolute',
@@ -54,8 +55,8 @@ Drag.Ghost: new Class {
 		@element.getElements(@options.remove).dispose()
 		
 	deghost: ->
-		e: @element.retrieve 'parent'
-		newpos: @element.getPosition e.getParent()
+		e = @element.retrieve 'parent'
+		newpos = @element.getPosition e.getParent()
 		if @options.pos && @overed==null
 			e.setStyles({
 			'top': newpos.y,
@@ -64,7 +65,7 @@ Drag.Ghost: new Class {
 		@element.destroy();
 		@element = e;
 }
-Interfaces.Draggable: new Class {
+Interfaces.Draggable = new Class {
 	Implements: Options
 	options:{
 		draggable: off
@@ -74,11 +75,11 @@ Interfaces.Draggable: new Class {
 	_$Draggable: ->
 		if @options.draggable
 			if @handle == null
-				@handle: @base
+				@handle = @base
 			if @options.ghost
-				@drag: new Drag.Ghost @base, {target:@handle, handle:@handle, remove:@options.removeClasses, droppables: @options.droppables, precalculate: on}
+				@drag = new Drag.Ghost @base, {target:@handle, handle:@handle, remove:@options.removeClasses, droppables: @options.droppables, precalculate: on}
 			else
-				@drag: new Drag.Float @base, {target:@handle, handle:@handle}
+				@drag = new Drag.Float @base, {target:@handle, handle:@handle}
 			@drag.addEvent 'drop', (->
 				@fireEvent 'dropped', arguments
 			).bindWithEvent @

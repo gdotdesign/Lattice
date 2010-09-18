@@ -11,7 +11,7 @@ provides: Interfaces.Mux
 
 ...
 ###
-Interfaces.Mux: new Class {
+Interfaces.Mux = new Class {
   mux: ->
     (new Hash this).each( ( (value,key) ->
       if (key.test(/^_\$/) && $type(value)=="function")

@@ -13,7 +13,7 @@ provides: Data.Number
 
 ...
 ###
-Data.Number: new Class {
+Data.Number = new Class {
   Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Number.class
@@ -25,13 +25,13 @@ Data.Number: new Class {
     @parent options
   create: ->
     @base.addClass @options.class
-    @text: new Element 'input', {'type':'text'}
-    @slider: new Core.Slider {reset: @options.reset
+    @text = new Element 'input', {'type':'text'}
+    @slider = new Core.Slider {reset: @options.reset
                               range: @options.range
                               steps: @options.steps
                               mode:'horizontal'}
   ready: ->
-    @justSet: off
+    @justSet = off
     @slider.knob.grab @text
     @base.adopt @slider
     @slider.knob.addEvent 'click', ( ->
@@ -50,10 +50,10 @@ Data.Number: new Class {
       if not @justSet
         @fireEvent 'change', step
       else
-        @justSet: off
+        @justSet = off
       ).bindWithEvent this
     @text.addEvent 'change', ( ->
-      step: Number @text.get('value')
+      step = Number @text.get('value')
       if @options.reset
         @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
       @slider.set step
@@ -65,7 +65,7 @@ Data.Number: new Class {
   getValue: ->
     @slider.slider.step
   setValue: (step) ->
-    @justSet: on
+    @justSet = on
     if @options.reset
       #range = [Number(step)+@options.range[0],Number(step)+@options.range[1]]
       #@slider.options.steps = @options.steps

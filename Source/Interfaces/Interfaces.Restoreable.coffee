@@ -13,7 +13,7 @@ provides: Interfaces.Restoreable
 
 ...
 ###
-Interfaces.Restoreable: new Class {
+Interfaces.Restoreable = new Class {
   Impelments:[Options]
   Binds: ['savePosition']
   options:{
@@ -27,7 +27,7 @@ Interfaces.Restoreable: new Class {
         window.localStorage.setItem @options.cookieID+'.height', @scrollBase.getSize().y
       ).bindWithEvent @
   saveState: ->
-    state: if @base.isVisible() then 'visible' else 'hidden'
+    state = if @base.isVisible() then 'visible' else 'hidden'
     if $chk @options.cookieID
       if @options.useCookie
         Cookie.write @options.cookieID+'.state', state, {duration:GDotUI.Config.cookieDuration}
@@ -35,8 +35,8 @@ Interfaces.Restoreable: new Class {
         window.localStorage.setItem @options.cookieID+'.state', state
   savePosition: ->
     if $chk @options.cookieID
-      position: @base.getPosition();
-      state: if @base.isVisible() then 'visible' else 'hidden'
+      position = @base.getPosition();
+      state = if @base.isVisible() then 'visible' else 'hidden'
       if @options.useCookie
         Cookie.write @options.cookieID+'.x', position.x, {duration:GDotUI.Config.cookieDuration}
         Cookie.write @options.cookieID+'.y', position.y, {duration:GDotUI.Config.cookieDuration}

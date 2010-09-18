@@ -13,7 +13,7 @@ provides: Data.Date
 
 ...
 ###
-Data.Date: new Class {
+Data.Date = new Class {
   Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Date.class
@@ -24,9 +24,9 @@ Data.Date: new Class {
     @parent options
   create: ->
     @base.addClass @options.class
-    @days: new Core.Slot()
-    @month: new Core.Slot()
-    @years: new Core.Slot()
+    @days = new Core.Slot()
+    @month = new Core.Slot()
+    @years = new Core.Slot()
     @years.addEvent 'change', ( (item) ->
       @date.setYear item.value
       @setValue()
@@ -39,22 +39,22 @@ Data.Date: new Class {
       @date.setDate item.value
       @setValue()
     ).bindWithEvent this
-    i: 0
+    i = 0
     while i < 30
-      item: new Iterable.ListItem {title:i+1}
-      item.value: i+1;
+      item = new Iterable.ListItem {title:i+1}
+      item.value = i+1;
       @days.addItem item
       i++
-    i: 0
+    i = 0
     while i < 12
-      item: new Iterable.ListItem {title:i+1}
-      item.value: i
+      item = new Iterable.ListItem {title:i+1}
+      item.value = i
       @month.addItem item
       i++
-    i: @options.yearFrom
+    i = @options.yearFrom
     while i <= new Date().getFullYear()
-      item: new Iterable.ListItem {title:i}
-      item.value: i;
+      item = new Iterable.ListItem {title:i}
+      item.value = i;
       @years.addItem item
       i++
     @base.adopt @years, @month, @days
@@ -65,21 +65,21 @@ Data.Date: new Class {
     @date.format(@options.format)
   setValue: (date) ->
     if date?
-      @date: date
+      @date = date
     @update()
     @fireEvent 'change', @date
   update: ->
-    cdays: @date.get 'lastdayofmonth'
-    listlength: @days.list.items.length
+    cdays = @date.get 'lastdayofmonth'
+    listlength = @days.list.items.length
     if cdays > listlength
-      i: listlength+1
+      i = listlength+1
       while i <= cdays
         item=new Iterable.ListItem {title:i}
-        item.value: i
+        item.value = i
         @days.addItem item
         i++
     else if cdays < listlength
-      i: listlength
+      i = listlength
       while i > cdays
         @days.list.removeItem @days.list.items[i-1]
         i--

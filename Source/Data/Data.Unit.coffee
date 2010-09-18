@@ -35,31 +35,32 @@ UnitTable = {
     steps:[100]
   }
 }
-UnitList = {px: "px"
-            '%': "%"
-            em: "em"
-            ex:"ex"
-            gd:"gd"
-            rem:"rem"
-            vw:"vw"
-            vh:"vh"
-            vm:"vm"
-            ch:"ch"
-            "in":"in"
-            mm:"mm"
-            pt:"pt"
-            pc:"pc"
-            cm:"cm"
-            deg:"deg"
-            grad:"grad"
-            rad:"rad"
-            turn:"turn"
-            s:"s"
-            ms:"ms"
-            Hz:"Hz"
-            kHz:"kHz"
-            }
-Data.Unit: new Class {
+UnitList = {
+  px: "px"
+  '%': "%"
+  em: "em"
+  ex:"ex"
+  gd:"gd"
+  rem:"rem"
+  vw:"vw"
+  vh:"vh"
+  vm:"vm"
+  ch:"ch"
+  "in":"in"
+  mm:"mm"
+  pt:"pt"
+  pc:"pc"
+  cm:"cm"
+  deg:"deg"
+  grad:"grad"
+  rad:"rad"
+  turn:"turn"
+  s:"s"
+  ms:"ms"
+  Hz:"Hz"
+  kHz:"kHz"
+  }
+Data.Unit = new Class {
   Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Unit.class

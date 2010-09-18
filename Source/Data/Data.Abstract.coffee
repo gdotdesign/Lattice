@@ -13,14 +13,14 @@ provides: Data.Abstract
 
 ...
 ###
-Data.Abstract: new Class {
+Data.Abstract = new Class {
   Implements:[Events
               Options]
   options:{}
   initialize: (options) ->
     @setOptions options
-    @base: new Element 'div'
-    fn: @ready.bindWithEvent this
+    @base = new Element 'div'
+    fn = @ready.bindWithEvent this
     @base.store 'fn', fn
     @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
     @create()

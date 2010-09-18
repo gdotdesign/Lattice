@@ -13,7 +13,7 @@ provides: Forms.Field
 
 ...
 ###
-Forms.Field: new Class {
+Forms.Field = new Class {
   Extends:Core.Abstract
   options:{
     structure: GDotUI.Theme.Forms.Field.struct
@@ -23,9 +23,9 @@ Forms.Field: new Class {
     @parent options
     @
   create: ->
-    h: new Hash @options.structure
+    h = new Hash @options.structure
     for key of h
-      @base: new Element key
+      @base = new Element key
       @createS h.get( key ), @base
       break
     if @options.hidden
@@ -36,15 +36,15 @@ Forms.Field: new Class {
     switch $type(item)
       when "object"
         for key of item
-          data: new Hash(item).get key
+          data = new Hash(item).get key
           if key == 'input'
-            @input: new Forms.Input @options  
-            el: @input
+            @input = new Forms.Input @options  
+            el = @input
           else if key == 'label'
-            @label: new Element 'label', {'text':@options.label}
-            el: @label
+            @label = new Element 'label', {'text':@options.label}
+            el = @label
           else
-            el: new Element key 
+            el = new Element key 
           parent.grab el
           @createS data , el
           

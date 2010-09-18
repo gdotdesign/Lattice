@@ -11,7 +11,7 @@ provides: Data.List
 
 ...
 ###
-Data.List: new Class {
+Data.List = new Class {
   Extends: Data.Abstract
   Binds: ['update']
   options: {
@@ -36,7 +36,7 @@ Data.List: new Class {
       @add ''
     @fireEvent 'change', {value:@getValue()}
   add: (value) ->
-    cell: new Data.TableCell({value:value})
+    cell = new Data.TableCell({value:value})
     cell.addEvent 'editEnd', @update
     @cells.push cell
     tr = new Element 'tr'
@@ -53,13 +53,13 @@ Data.List: new Class {
       @remove cell
     ).bind @
   getValue: ->
-    map: @cells.map (cell) ->
+    map = @cells.map (cell) ->
       cell.getValue()
     map.splice(@cells.length-1,1)
     map
   setValue: (value) ->
     @removeAll()
-    self: @
+    self = @
     value.each (item) ->
       self.add item
 }

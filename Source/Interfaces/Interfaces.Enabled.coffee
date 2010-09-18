@@ -11,11 +11,11 @@ provides: Interfaces.Enabled
 
 ...
 ###
-Interfaces.Enabled: new Class {
+Interfaces.Enabled = new Class {
   _$Enabled: ->
-    @enabled: on
+    @enabled = on
   enable: ->
-    @enabled: on
+    @enabled = on
     @base.removeClass 'disabled'
     @fireEvent 'enabled'
   disable: ->

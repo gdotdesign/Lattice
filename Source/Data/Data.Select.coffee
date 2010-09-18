@@ -13,7 +13,7 @@ provides: Data.Select
 
 ...
 ###
-Data.Select: new Class {
+Data.Select = new Class {
   Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Select.class

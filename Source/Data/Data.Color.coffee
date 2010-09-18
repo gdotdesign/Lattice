@@ -13,7 +13,7 @@ provides: Data.Color
 
 ...
 ###
-Data.Color: new Class {
+Data.Color = new Class {
   Extends:Data.Abstract
   Binds: ['change']
   options:{
@@ -30,10 +30,10 @@ Data.Color: new Class {
   create: ->
     @base.addClass @options.class
     
-    @wrapper: new Element('div').addClass @options.wrapper
-    @white: new Element('div').addClass @options.white
-    @black: new Element('div').addClass @options.black
-    @color: new Element('div').addClass @options.sb
+    @wrapper = new Element('div').addClass @options.wrapper
+    @white = new Element('div').addClass @options.white
+    @black = new Element('div').addClass @options.black
+    @color = new Element('div').addClass @options.sb
    
     @xyKnob=new Element('div').set 'id', 'xyknob'
     @xyKnob.setStyles {
@@ -44,10 +44,10 @@ Data.Color: new Class {
     
     @wrapper.adopt @color, @white, @black, @xyKnob
    
-    @colorData: new Data.Color.SlotControls()
+    @colorData = new Data.Color.SlotControls()
   ready: ->
     @base.adopt @wrapper
-    sbSize: @color.getSize()
+    sbSize = @color.getSize()
     @wrapper.setStyles {
       width: sbSize.x
       height: sbSize.y
@@ -61,10 +61,10 @@ Data.Color: new Class {
       'width': 'inherit'
       'height': 'inherit'
       }
-    @xy: new Field @.black, @.xyKnob, {setOnClick:true, x:[0,1,100],y:[0,1,100]}
-    @hue: @colorData.hue
-    @saturation: @colorData.saturation
-    @lightness: @colorData.lightness
+    @xy = new Field @.black, @.xyKnob, {setOnClick:true, x:[0,1,100],y:[0,1,100]}
+    @hue = @colorData.hue
+    @saturation = @colorData.saturation
+    @lightness = @colorData.lightness
     @alpha = @colorData.alpha
     @colorData.readyCallback = @readyCallback
     @base.adopt @colorData
@@ -78,9 +78,9 @@ Data.Color: new Class {
     ).bindWithEvent this
     @hue.addEvent 'change',( (step) ->
       if typeof(step) == "object"
-        step: 0
+        step = 0
       @bgColor.setHue Number(step)
-      colr: new $HSB step, 100, 100  
+      colr = new $HSB step, 100, 100  
       @color.setStyle 'background-color', colr
       @setColor()
     ).bindWithEvent this
@@ -111,17 +111,17 @@ Data.Color: new Class {
       if item.get('value') is type
         item.set 'checked', true
     @xy.set {x: color.hsb[1], y:100-color.hsb[2]}
-    colr: new $HSB color.hsb[0], 100, 100
+    colr = new $HSB color.hsb[0], 100, 100
     @bgColor = color
     @finalColor = color
     console.log @
     @color.setStyle 'background-color', colr
     @setColor()
   setColor: ->
-    @finalColor: @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
+    @finalColor = @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
     type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
     @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
-    @value: @finalColor
+    @value = @finalColor
   getValue: ->
     @finalColor
   change: (pos) ->
@@ -159,7 +159,7 @@ Data.Color.ReturnValues = {
     }
   ]
 }
-Data.Color.SlotControls: new Class {
+Data.Color.SlotControls = new Class {
   Extends:Data.Abstract
   options:{
     class:GDotUI.Theme.Color.controls.class
@@ -168,13 +168,13 @@ Data.Color.SlotControls: new Class {
     @parent(options)
   create: ->
     @base.addClass @options.class  
-    @hue: new Data.Number {range:[0,360],reset: off, steps: [360]}
+    @hue = new Data.Number {range:[0,360],reset: off, steps: [360]}
     @hue.addEvent 'change', ((value) ->
         @saturation.slider.base.setStyle 'background-color', new $HSB(value,100,100)
       ).bindWithEvent this
-    @saturation: new Data.Number {range:[0,100],reset: off, steps: [100]}
-    @lightness: new Data.Number {range:[0,100],reset: off, steps: [100]}
-    @alpha: new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @saturation = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @col = new Forms.Input Data.Color.ReturnValues
   ready: ->
     @base.adopt @hue, @saturation, @lightness, @alpha, @col
