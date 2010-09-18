@@ -45,6 +45,7 @@ Data.Color = new Class {
     @wrapper.adopt @color, @white, @black, @xyKnob
    
     @colorData = new Data.Color.SlotControls()
+    @bgColor = new Color('#fff')
   ready: ->
     @base.adopt @wrapper
     sbSize = @color.getSize()
@@ -86,9 +87,10 @@ Data.Color = new Class {
     ).bindWithEvent this
     @saturation.addEvent 'change',( (step) ->
       @xy.detach()
-      @xy.set {x:step
-         y:@xy.get().y
-         }
+      @xy.set {
+        x:step
+        y:@xy.get().y
+        }
       @xy.attach()
     ).bindWithEvent this
     @lightness.addEvent 'change',( (step) ->
@@ -100,7 +102,6 @@ Data.Color = new Class {
     ).bindWithEvent this
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
-    #@setValue( '#fff', 100, 'hex')
   setValue: (color, alpha, type) ->
     color = new Color(color)
     @hue.setValue color.hsb[0]

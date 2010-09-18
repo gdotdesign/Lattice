@@ -79,6 +79,7 @@ App: new Class {
     tip.attach ic
     $("exTip").grab ic
   createPickers: ->
+    Pickers.Color.setValue( '#fff', 100, 'hex')
     Pickers.Color.attach($('colorSelect'))
     Pickers.Text.attach($('textSelect'))
     Pickers.Date.attach($('dateSelect'))

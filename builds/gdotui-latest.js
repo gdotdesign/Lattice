@@ -1789,7 +1789,8 @@ Data.Color = new Class({
       'left': 0
     });
     this.wrapper.adopt(this.color, this.white, this.black, this.xyKnob);
-    return (this.colorData = new Data.Color.SlotControls());
+    this.colorData = new Data.Color.SlotControls();
+    return (this.bgColor = new Color('#fff'));
   },
   ready: function() {
     var sbSize;
@@ -1840,9 +1841,8 @@ Data.Color = new Class({
     this.saturation.addEvent('change', (function(step) {
       this.xy.detach();
       this.xy.set({
-        x: step({
-          y: this.xy.get().y
-        })
+        x: step,
+        y: this.xy.get().y
       });
       return this.xy.attach();
     }).bindWithEvent(this));
