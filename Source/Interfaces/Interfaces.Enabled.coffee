@@ -19,7 +19,7 @@ Interfaces.Enabled = new Class {
     @base.removeClass 'disabled'
     @fireEvent 'enabled'
   disable: ->
-    @enabled off
+    @enabled = off
     @base.addClass 'disabled'
     @fireEvent 'disabled'
 }
