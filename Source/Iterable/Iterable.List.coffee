@@ -37,7 +37,7 @@ Iterable.List = new Class {
   search: ->
     svalue = @sinput.get 'value'
     @items.each ( (item) ->
-      if item.title.get('text').test(/$svalue/ig) or item.subtitle.get('text').test(/$svalue/ig)
+      if item.title.get('text').test(/#{svalue}/ig) or item.subtitle.get('text').test(/#{svalue}/ig)
         item.base.setStyle 'display', 'block'
       else
         item.base.setStyle 'display', 'none'
