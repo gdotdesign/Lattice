@@ -26,10 +26,12 @@ Data.Number = new Class {
   create: ->
     @base.addClass @options.class
     @text = new Element 'input', {'type':'text'}
-    @slider = new Core.Slider {reset: @options.reset
-                              range: @options.range
-                              steps: @options.steps
-                              mode:'horizontal'}
+    @slider = new Core.Slider {
+      reset: @options.reset
+      range: @options.range
+      steps: @options.steps
+      mode:'horizontal'
+    }
   ready: ->
     @justSet = off
     @slider.knob.grab @text

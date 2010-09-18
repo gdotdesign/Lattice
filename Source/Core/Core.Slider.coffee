@@ -63,14 +63,18 @@ Core.Slider = new Class {
 		@base.grab @knob
 	ready: ->
 		if @options.reset 
-			@slider = new ResetSlider @base, @knob, {mode: @options.mode
-																							steps: @options.steps
-																							range: @options.range}
+			@slider = new ResetSlider @base, @knob, {
+			  mode: @options.mode
+				steps: @options.steps
+				range: @options.range
+			}
 			@slider.set 0
 		else
-			@slider = new Slider @base, @knob, {mode: @options.mode
-																				range: @options.range
-																				steps: @options.steps}
+			@slider = new Slider @base, @knob, {
+			  mode: @options.mode
+			  range: @options.range
+			  steps: @options.steps
+			}
 		@slider.addEvent 'complete', ((step) ->
 			@fireEvent 'complete', step+''
 		).bindWithEvent this
