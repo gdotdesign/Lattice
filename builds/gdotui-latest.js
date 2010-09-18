@@ -1,7 +1,6 @@
-var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider, checkForKey;
+var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider, UnitList, UnitTable, checkForKey;
 var __hasProp = Object.prototype.hasOwnProperty;
-/*
----
+/*---
 
 name: GDotUI
 
@@ -19,14 +18,15 @@ Data = {};
 Iterable = {};
 Pickers = {};
 Forms = {};
-!(typeof GDotUI !== "undefined" && GDotUI !== null) ? (GDotUI = {}) : null;
+if (!(typeof GDotUI !== "undefined" && GDotUI !== null)) {
+  GDotUI = {};
+}
 GDotUI.Config = {
   tipZindex: 100,
   floatZindex: 0,
   cookieDuration: 7 * 1000
 };
-/*
----
+/*---
 
 name: Interfaces.Mux
 
@@ -45,8 +45,7 @@ Interfaces.Mux = new Class({
     }).bind(this));
   }
 });
-/*
----
+/*---
 
 name: Interfaces.Enabled
 
@@ -60,8 +59,7 @@ provides: Interfaces.Enabled
 */
 Interfaces.Enabled = new Class({
   _$Enabled: function() {
-    this.enabled = true;
-    return this.enabled;
+    return (this.enabled = true);
   },
   enable: function() {
     this.enabled = true;
@@ -74,8 +72,7 @@ Interfaces.Enabled = new Class({
     return this.fireEvent('disabled');
   }
 });
-/*
----
+/*---
 
 name: Interfaces.Draggable
 
@@ -113,7 +110,9 @@ Drag.Ghost = new Class({
     }
   },
   cancel: function(event) {
-    event ? this.deghost() : null;
+    if (event) {
+      this.deghost();
+    }
     return this.parent(event);
   },
   stop: function(event) {
@@ -135,13 +134,14 @@ Drag.Ghost = new Class({
     var e, newpos;
     e = this.element.retrieve('parent');
     newpos = this.element.getPosition(e.getParent());
-    this.options.pos && this.overed === null ? e.setStyles({
-      'top': newpos.y,
-      'left': newpos.x
-    }) : null;
+    if (this.options.pos && this.overed === null) {
+      e.setStyles({
+        'top': newpos.y,
+        'left': newpos.x
+      });
+    }
     this.element.destroy();
-    this.element = e;
-    return this.element;
+    return (this.element = e);
   }
 });
 Interfaces.Draggable = new Class({
@@ -153,23 +153,30 @@ Interfaces.Draggable = new Class({
   },
   _$Draggable: function() {
     if (this.options.draggable) {
-      this.handle === null ? (this.handle = this.base) : null;
-      this.options.ghost ? (this.drag = new Drag.Ghost(this.base, {
-        target: this.handle,
-        handle: this.handle,
-        remove: this.options.removeClasses
-      })) : (this.drag = new Drag.Float(this.base, {
-        target: this.handle,
-        handle: this.handle
-      }));
+      if (this.handle === null) {
+        this.handle = this.base;
+      }
+      if (this.options.ghost) {
+        this.drag = new Drag.Ghost(this.base, {
+          target: this.handle,
+          handle: this.handle,
+          remove: this.options.removeClasses,
+          droppables: this.options.droppables,
+          precalculate: true
+        });
+      } else {
+        this.drag = new Drag.Float(this.base, {
+          target: this.handle,
+          handle: this.handle
+        });
+      }
       return this.drag.addEvent('drop', (function() {
         return this.fireEvent('dropped', arguments);
       }).bindWithEvent(this));
     }
   }
 });
-/*
----
+/*---
 
 name: Interfaces.Restoreable
 
@@ -191,14 +198,17 @@ Interfaces.Restoreable = new Class({
     cookieID: null
   },
   _$Restoreable: function() {
-    return this.addEvent('dropped', this.savePosition);
+    this.addEvent('dropped', this.savePosition);
+    return this.options.resizeable ? this.sizeDrag.addEvent('complete', (function() {
+      return window.localStorage.setItem(this.options.cookieID + '.height', this.scrollBase.getSize().y);
+    }).bindWithEvent(this)) : null;
   },
   saveState: function() {
     var state;
     state = this.base.isVisible() ? 'visible' : 'hidden';
-    return $chk(this.options.cookieID) ? this.options.useCookie ? Cookie.write(this.options.cookieID + '.state', state, {
+    return $chk(this.options.cookieID) ? (this.options.useCookie ? Cookie.write(this.options.cookieID + '.state', state, {
       duration: GDotUI.Config.cookieDuration
-    }) : window.localStorage.setItem(this.options.cookieID + '.state', state) : null;
+    }) : window.localStorage.setItem(this.options.cookieID + '.state', state)) : null;
   },
   savePosition: function() {
     var position, state;
@@ -231,13 +241,16 @@ Interfaces.Restoreable = new Class({
       } else {
         this.base.setStyle('top', window.localStorage.getItem(this.options.cookieID + '.y') + "px");
         this.base.setStyle('left', window.localStorage.getItem(this.options.cookieID + '.x') + "px");
+        this.scrollBase.setStyle('height', window.localStorage.getItem(this.options.cookieID + '.height') + "px");
+        if (window.localStorage.getItem(this.options.cookieID + '.x') === null) {
+          this.center();
+        }
         return window.localStorage.getItem(this.options.cookieID + '.state') === "hidden" ? this.hide() : null;
       }
     }
   }
 });
-/*
----
+/*---
 
 name: Interfaces.Controls
 
@@ -262,8 +275,7 @@ Interfaces.Controls = new Class({
     return this.base.getStyle('opacity') === 0 ? this.show() : this.hide();
   }
 });
-/*
----
+/*---
 
 name: Core.Abstract
 
@@ -290,7 +302,7 @@ Core.Abstract = new Class({
     this.mux();
     return this;
   },
-  create: function() {  },
+  create: function() {},
   ready: function() {
     this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn'), false);
     return this.base.eliminate('fn');
@@ -299,8 +311,7 @@ Core.Abstract = new Class({
     return this.base;
   }
 });
-/*
----
+/*---
 
 name: Core.Icon
 
@@ -319,22 +330,23 @@ Core.Icon = new Class({
   Implements: [Interfaces.Enabled, Interfaces.Controls],
   options: {
     image: null,
-    'class': GDotUI.Theme.Icon['class']
+    "class": GDotUI.Theme.Icon["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: (function() {
     var _a;
-    this.base.addClass(this.options['class']);
-    (typeof (_a = this.options.image) !== "undefined" && _a !== null) ? this.base.setStyle('background-image', 'url(' + this.options.image + ')') : null;
+    this.base.addClass(this.options["class"]);
+    if (typeof (_a = this.options.image) !== "undefined" && _a !== null) {
+      this.base.setStyle('background-image', 'url(' + this.options.image + ')');
+    }
     return this.base.addEvent('click', (function(e) {
       return this.enabled ? this.fireEvent('invoked', [this, e]) : null;
     }).bindWithEvent(this));
   }).protect()
 });
-/*
----
+/*---
 
 name: Core.IconGroup
 
@@ -361,7 +373,7 @@ Core.IconGroup = new Class({
     startAngle: 0,
     radius: 0,
     degree: 360,
-    'class': GDotUI.Theme.IconGroup['class']
+    "class": GDotUI.Theme.IconGroup["class"]
   },
   initialize: function(options) {
     this.icons = [];
@@ -369,7 +381,7 @@ Core.IconGroup = new Class({
   },
   create: (function() {
     this.base.setStyle('position', 'relative');
-    return this.base.addClass(this.options['class']);
+    return this.base.addClass(this.options["class"]);
   }).protect(),
   delegate: function() {
     return this.fireEvent('invoked', arguments);
@@ -383,6 +395,15 @@ Core.IconGroup = new Class({
     } else {
       return false;
     }
+  },
+  show: function() {
+    return this.base.setStyle('display', 'block');
+  },
+  hide: function() {
+    return this.base.setStyle('display', 'none');
+  },
+  toggle: function() {
+    return this.base.getStyle('display') === 'none' ? this.show() : this.hide();
   },
   removeIcon: function(icon) {
     var index;
@@ -400,7 +421,7 @@ Core.IconGroup = new Class({
     return this.positionIcons();
   },
   positionIcons: function() {
-    var _a, _b, _c, columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
+    var _a, _b, columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
     x = 0;
     y = 0;
     this.size = {
@@ -408,12 +429,13 @@ Core.IconGroup = new Class({
       y: 0
     };
     spacing = this.options.spacing;
-    if ((_a = this.options.mode) === 'grid') {
-      if ((typeof (_b = this.options.columns) !== "undefined" && _b !== null)) {
+    switch (this.options.mode) {
+    case 'grid':
+      if (typeof (_a = this.options.columns) !== "undefined" && _a !== null) {
         columns = this.options.columns;
         rows = this.icons.length / columns;
       }
-      if ((typeof (_c = this.options.rows) !== "undefined" && _c !== null)) {
+      if (typeof (_b = this.options.rows) !== "undefined" && _b !== null) {
         rows = this.options.rows;
         columns = Math.round(this.icons.length / rows);
       }
@@ -431,7 +453,8 @@ Core.IconGroup = new Class({
           y: y
         };
       });
-    } else if (_a === 'linear') {
+      break;
+    case 'linear':
       icpos = this.icons.map((function(item, i) {
         x = i === 0 ? x + x : x + spacing.x;
         y = i === 0 ? y + y : y + spacing.y;
@@ -442,7 +465,8 @@ Core.IconGroup = new Class({
           y: y
         };
       }).bind(this));
-    } else if (_a === 'horizontal') {
+      break;
+    case 'horizontal':
       icpos = this.icons.map((function(item, i) {
         x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
         y = i === 0 ? y : y + spacing.y;
@@ -453,7 +477,8 @@ Core.IconGroup = new Class({
           y: y
         };
       }).bind(this));
-    } else if (_a === 'vertical') {
+      break;
+    case 'vertical':
       icpos = this.icons.map((function(item, i) {
         x = i === 0 ? x : x + spacing.x;
         y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
@@ -464,7 +489,8 @@ Core.IconGroup = new Class({
           y: y
         };
       }).bind(this));
-    } else if (_a === 'circular') {
+      break;
+    case 'circular':
       n = this.icons.length;
       radius = this.options.radius;
       startAngle = this.options.startAngle;
@@ -485,6 +511,7 @@ Core.IconGroup = new Class({
           y: y
         };
       });
+      break;
     }
     return this.icons.each(function(item, i) {
       item.base.setStyle('top', icpos[i].y);
@@ -493,8 +520,7 @@ Core.IconGroup = new Class({
     });
   }
 });
-/*
----
+/*---
 
 name: Core.Tip
 
@@ -512,7 +538,7 @@ Core.Tip = new Class({
   Extends: Core.Abstract,
   Binds: ['enter', 'leave'],
   options: {
-    'class': GDotUI.Theme.Tip['class'],
+    "class": GDotUI.Theme.Tip["class"],
     label: "",
     location: GDotUI.Theme.Tip.location,
     offset: GDotUI.Theme.Tip.offset,
@@ -522,24 +548,24 @@ Core.Tip = new Class({
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'absolute');
     this.base.setStyle('z-index', this.options.tipZindex);
     return this.base.set('html', this.options.label);
   },
   attach: function(item) {
     var _a;
-    (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.detach() : null;
+    if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
+      this.detach();
+    }
     item.base.addEvent('mouseenter', this.enter);
     item.base.addEvent('mouseleave', this.leave);
-    this.attachedTo = item;
-    return this.attachedTo;
+    return (this.attachedTo = item);
   },
   detach: function(item) {
     item.base.removeEvent('mouseenter', this.enter);
     item.base.removeEvent('mouseleave', this.leave);
-    this.attachedTo = null;
-    return this.attachedTo;
+    return (this.attachedTo = null);
   },
   enter: function() {
     return this.attachedTo.enabled ? this.show() : null;
@@ -548,22 +574,27 @@ Core.Tip = new Class({
     return this.attachedTo.enabled ? this.hide() : null;
   },
   ready: function() {
-    var _a, _b, p, s, s1;
+    var p, s, s1;
     p = this.attachedTo.base.getPosition();
     s = this.attachedTo.base.getSize();
     s1 = this.base.getSize();
-    if ((_a = this.options.location.x) === "left") {
+    switch (this.options.location.x) {
+    case "left":
       this.base.setStyle('left', p.x - (s1.x + this.options.offset));
-    } else if (_a === "right") {
+      break;
+    case "right":
       this.base.setStyle('left', p.x + (s.x + this.options.offset));
-    } else if (_a === "center") {
+      break;
+    case "center":
       this.base.setStyle('left', p.x - s1.x / 2 + s.x / 2);
+      break;
     }
-    if ((_b = this.options.location.y) === "top") {
+    switch (this.options.location.y) {
+    case "top":
       return this.base.setStyle('top', p.y - (s.y + this.options.offset));
-    } else if (_b === "bottom") {
+    case "bottom":
       return this.base.setStyle('top', p.y + (s.y + this.options.offset));
-    } else if (_b === "center") {
+    case "center":
       return this.base.setStyle('top', p.y - s1.y / 2 + s.y / 2);
     }
   },
@@ -574,8 +605,7 @@ Core.Tip = new Class({
     return document.getElement('body').grab(this.base);
   }
 });
-/*
----
+/*---
 
 name: Core.Slider
 
@@ -600,8 +630,20 @@ ResetSlider = new Class({
     this.range = this.max - this.min;
     this.steps = this.options.steps || this.full;
     this.stepSize = Math.abs(this.range) / this.steps;
-    this.stepWidth = this.stepSize * this.full / Math.abs(this.range);
-    return this.stepWidth;
+    return (this.stepWidth = this.stepSize * this.full / Math.abs(this.range));
+  },
+  draggedKnob: function() {
+    var dir, position, step;
+    dir = this.range < 0 ? -1 : 1;
+    position = this.drag.value.now[this.axis];
+    position = position.limit(-this.options.offset, this.full - this.options.offset);
+    this.step = this.min + dir * this.toStep(position);
+    this.checkStep();
+    ({
+      toStep: function(position) {}
+    });
+    step = (position + this.options.offset) * this.stepSize / this.full * this.steps;
+    return this.options.steps ? step -= step % this.stepSize : step;
   }
 });
 Core.Slider = new Class({
@@ -616,14 +658,14 @@ Core.Slider = new Class({
     steps: 0,
     range: [0, 0],
     mode: 'vertical',
-    'class': GDotUI.Theme.Slider.barClass,
+    "class": GDotUI.Theme.Slider.barClass,
     knob: GDotUI.Theme.Slider.knobClass
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.base.addClass(this.options.mode);
     this.knob = (new Element('div')).addClass(this.options.knob);
     this.scrollBase = this.options.scrollBase;
@@ -649,15 +691,16 @@ Core.Slider = new Class({
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function(step) {
       var _a;
-      typeof (step) === 'object' ? (step = 0) : null;
+      if (typeof (step) === 'object') {
+        step = 0;
+      }
       this.fireEvent('change', step + '');
       return (typeof (_a = this.scrollBase) !== "undefined" && _a !== null) ? (this.scrollBase.scrollTop = (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100 * step) : null;
     }).bindWithEvent(this));
     return this.parent();
   }
 });
-/*
----
+/*---
 
 name: Core.Float
 
@@ -677,7 +720,7 @@ Core.Float = new Class({
   Binds: ['resize', 'mouseEnter', 'mouseLeave', 'hide'],
   options: {
     classes: {
-      'class': GDotUI.Theme.Float['class'],
+      "class": GDotUI.Theme.Float["class"],
       controls: GDotUI.Theme.Float.controls,
       content: GDotUI.Theme.Float.content,
       handle: GDotUI.Theme.Float.topHandle,
@@ -694,27 +737,39 @@ Core.Float = new Class({
     resizeable: false,
     editable: false,
     draggable: true,
-    ghost: false
+    ghost: false,
+    overlay: false
   },
   initialize: function(options) {
     this.showSilder = false;
+    this.readyr = false;
     return this.parent(options);
   },
   ready: function() {
+    var _a;
     this.base.adopt(this.controls);
-    this.content.grab(this.contentElement);
-    this.options.restoreable ? this.loadPosition() : this.base.position();
+    if (typeof (_a = this.contentElement) !== "undefined" && _a !== null) {
+      this.content.grab(this.contentElement);
+    }
+    if (this.options.restoreable) {
+      this.loadPosition();
+    } else {
+      this.base.position();
+    }
     if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
       if (!this.showSlider) {
         this.showSlider = true;
-        this.mouseisover ? this.slider.show() : null;
+        if (this.mouseisover) {
+          this.slider.show();
+        }
       }
     }
-    return this.parent();
+    this.parent();
+    return (this.readyr = true);
   },
   create: function() {
     var _a;
-    this.base.addClass(this.options.classes['class']);
+    this.base.addClass(this.options.classes["class"]);
     this.base.setStyle('position', 'fixed');
     this.base.setPosition({
       x: 0,
@@ -722,7 +777,7 @@ Core.Float = new Class({
     });
     this.base.toggleClass(this.options.classes.inactive);
     this.controls = new Element('div', {
-      'class': this.options.classes.controls
+      "class": this.options.classes.controls
     });
     this.content = new Element('div', {
       'class': this.options.classes.content
@@ -740,12 +795,10 @@ Core.Float = new Class({
       steps: 100
     });
     this.slider.addEvent('complete', (function() {
-      this.scrolling = false;
-      return this.scrolling;
+      return (this.scrolling = false);
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function() {
-      this.scrolling = true;
-      return this.scrolling;
+      return (this.scrolling = true);
     }).bindWithEvent(this));
     this.slider.hide();
     this.icons = new Core.IconGroup(this.options.iconOptions);
@@ -761,15 +814,25 @@ Core.Float = new Class({
     });
     this.edit.addEvent('invoked', (function() {
       var _a, _b;
-      if ((typeof (_b = this.contentElement) !== "undefined" && _b !== null)) {
-        (typeof (_a = this.contentElement.toggleEdit) !== "undefined" && _a !== null) ? this.contentElement.toggleEdit() : null;
+      if (typeof (_b = this.contentElement) !== "undefined" && _b !== null) {
+        if (typeof (_a = this.contentElement.toggleEdit) !== "undefined" && _a !== null) {
+          this.contentElement.toggleEdit();
+        }
         return this.fireEvent('edit');
       }
     }).bindWithEvent(this));
-    this.options.closeable ? this.icons.addIcon(this.close) : null;
-    this.options.editable ? this.icons.addIcon(this.edit) : null;
+    if (this.options.closeable) {
+      this.icons.addIcon(this.close);
+    }
+    if (this.options.editable) {
+      this.icons.addIcon(this.edit);
+    }
     this.icons.hide();
-    (typeof (_a = this.options.scrollBase) !== "undefined" && _a !== null) ? (this.scrollBase = this.options.scrollBase) : (this.scrollBase = this.content);
+    if (typeof (_a = this.options.scrollBase) !== "undefined" && _a !== null) {
+      this.scrollBase = this.options.scrollBase;
+    } else {
+      this.scrollBase = this.content;
+    }
     this.scrollBase.setStyle('overflow', 'hidden');
     if (this.options.resizeable) {
       this.base.grab(this.bottom);
@@ -792,32 +855,46 @@ Core.Float = new Class({
             return this.slider.hide();
           }
         }
-      }).bindWithEvent(this));
+      }).bindWithEvent(this), this.scrollBase.addEvent('mousewheel', (function(e) {
+        this.scrollBase.scrollTop = this.scrollBase.scrollTop + e.wheel * 12;
+        return this.slider.knob.setStyle('top', (this.scrollBase.scrollTop / this.scrollBase.getScrollSize().y) * this.slider.base.getSize().y);
+      }).bindWithEvent(this)));
     }
     this.base.addEvent('mouseenter', (function() {
       this.base.toggleClass(this.options.classes.active);
       this.base.toggleClass(this.options.classes.inactive);
       $clear(this.iconsTimout);
       $clear(this.sliderTimout);
-      this.showSlider ? this.slider.show() : null;
+      if (this.showSlider) {
+        this.slider.show();
+      }
       this.icons.show();
-      this.mouseisover = true;
-      return this.mouseisover;
+      return (this.mouseisover = true);
     }).bindWithEvent(this));
     return this.base.addEvent('mouseleave', (function() {
       this.base.toggleClass(this.options.classes.active);
       this.base.toggleClass(this.options.classes.inactive);
-      !this.scrolling ? this.showSlider ? (this.sliderTimout = this.slider.hide.delay(200, this.slider)) : null : null;
+      if (!this.scrolling) {
+        if (this.showSlider) {
+          this.sliderTimout = this.slider.hide.delay(200, this.slider);
+        }
+      }
       this.iconsTimout = this.icons.hide.delay(200, this.icons);
-      this.mouseisover = false;
-      return this.mouseisover;
-    }).bindWithEvent(this));
+      return (this.mouseisover = false);
+    }).bindWithEvent(this), this.options.overlay ? (this.overlay = new Core.Overlay()) : null);
   },
   show: function() {
+    if (this.options.overlay) {
+      document.getElement('body').grab(this.overlay);
+      this.overlay.show();
+    }
     document.getElement('body').grab(this.base);
     return this.saveState();
   },
   hide: function() {
+    if (this.options.overlay) {
+      this.overlay.base.dispose();
+    }
     this.base.dispose();
     return this.saveState();
   },
@@ -826,14 +903,23 @@ Core.Float = new Class({
   },
   setContent: function(element) {
     this.contentElement = element;
-    return this.contentElement;
+    if (this.readyr) {
+      this.content.getChildren().dispose();
+      this.content.grab(this.contentElement);
+      if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
+        this.showSlider = true;
+        return this.mouseisover ? this.slider.show() : null;
+      } else {
+        this.showSlider = false;
+        return this.slider.hide();
+      }
+    }
   },
   center: function() {
     return this.base.position();
   }
 });
-/*
----
+/*---
 
 name: Core.Button
 
@@ -853,7 +939,7 @@ Core.Button = new Class({
   options: {
     image: GDotUI.Theme.Button.defaultIcon,
     text: GDotUI.Theme.Button.defaultText,
-    'class': GDotUI.Theme.Button['class']
+    "class": GDotUI.Theme.Button["class"]
   },
   initialize: function(options) {
     return this.parent(options);
@@ -861,7 +947,7 @@ Core.Button = new Class({
   create: function() {
     delete this.base;
     this.base = new Element('button');
-    this.base.addClass(this.options['class']).set('text', this.options.text);
+    this.base.addClass(this.options["class"]).set('text', this.options.text);
     this.icon = new Core.Icon({
       image: this.options.image
     });
@@ -874,8 +960,7 @@ Core.Button = new Class({
     return this.parent();
   }
 });
-/*
----
+/*---
 
 name: Core.Picker
 
@@ -892,11 +977,10 @@ provides: [Core.Picker, outerClick]
 (function() {
   var oldPrototypeStart;
   oldPrototypeStart = Drag.prototype.start;
-  Drag.prototype.start = function() {
+  return (Drag.prototype.start = function() {
     window.fireEvent('outer');
     return oldPrototypeStart.run(arguments, this);
-  };
-  return Drag.prototype.start;
+  });
 })();
 Element.Events.outerClick = {
   base: 'mousedown',
@@ -917,7 +1001,7 @@ Core.Picker = new Class({
   Extends: Core.Abstract,
   Binds: ['show', 'hide'],
   options: {
-    'class': GDotUI.Theme.Picker['class'],
+    "class": GDotUI.Theme.Picker["class"],
     offset: GDotUI.Theme.Picker.offset,
     event: GDotUI.Theme.Picker.event,
     picking: GDotUI.Theme.Picker.picking
@@ -927,12 +1011,14 @@ Core.Picker = new Class({
     return this;
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     return this.base.setStyle('position', 'absolute');
   },
   ready: function() {
     var asize, offset, position, size, winscroll, winsize, x, xpos, y, ypos;
-    !this.base.hasChild(this.contentElement) ? this.base.grab(this.contentElement) : null;
+    if (!this.base.hasChild(this.contentElement)) {
+      this.base.grab(this.contentElement);
+    }
     winsize = window.getSize();
     winscroll = window.getScroll();
     asize = this.attachedTo.getSize();
@@ -958,17 +1044,23 @@ Core.Picker = new Class({
       ypos = position.y - size.y - offset;
     } else {
       y = 'down';
-      x === 'center' ? (ypos = position.y + asize.y + offset) : (ypos = position.y);
+      if (x === 'center') {
+        ypos = position.y + asize.y + offset;
+      } else {
+        ypos = position.y;
+      }
     }
     return this.base.setStyles({
-      'left': xpos,
-      'top': ypos
+      left: xpos,
+      top: ypos
     });
   },
   detach: function() {
     var _a, _b;
-    (typeof (_a = this.contentElement) !== "undefined" && _a !== null) ? this.contentElement.removeEvents('change') : null;
-    if ((typeof (_b = this.attachedTo) !== "undefined" && _b !== null)) {
+    if (typeof (_a = this.contentElement) !== "undefined" && _a !== null) {
+      this.contentElement.removeEvents('change');
+    }
+    if (typeof (_b = this.attachedTo) !== "undefined" && _b !== null) {
       this.attachedTo.removeEvent(this.options.event, this.show);
       this.attachedTo = null;
       return this.fireEvent('detached');
@@ -976,31 +1068,41 @@ Core.Picker = new Class({
   },
   attach: function(input) {
     var _a, _b;
-    (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.detach() : null;
+    if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
+      this.detach();
+    }
     input.addEvent(this.options.event, this.show);
-    (typeof (_b = this.contentElement) !== "undefined" && _b !== null) ? this.contentElement.addEvent('change', (function(value) {
-      this.attachedTo.set('value', value);
-      return this.attachedTo.fireEvent('change', value);
-    }).bindWithEvent(this)) : null;
-    this.attachedTo = input;
-    return this.attachedTo;
+    if (typeof (_b = this.contentElement) !== "undefined" && _b !== null) {
+      this.contentElement.addEvent('change', (function(value) {
+        this.attachedTo.set('value', value);
+        return this.attachedTo.fireEvent('change', value);
+      }).bindWithEvent(this));
+    }
+    return (this.attachedTo = input);
   },
-  attachAndShow: function(el, e) {
+  attachAndShow: function(el, e, callback) {
+    this.contentElement.readyCallback = callback;
     this.attach(el);
     return this.show(e);
   },
   show: function(e) {
-    var _a, _b;
+    var _a, _b, _c;
     document.getElement('body').grab(this.base);
-    (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) ? this.attachedTo.addClass(this.options.picking) : null;
-    e.stop();
-    (typeof (_b = this.contentElement) !== "undefined" && _b !== null) ? this.contentElement.fireEvent('show') : null;
+    if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
+      this.attachedTo.addClass(this.options.picking);
+    }
+    if (typeof (_b = e.stop) !== "undefined" && _b !== null) {
+      e.stop();
+    }
+    if (typeof (_c = this.contentElement) !== "undefined" && _c !== null) {
+      this.contentElement.fireEvent('show');
+    }
     return this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
   },
   hide: function(e) {
     var _a;
     if (this.base.isVisible() && !this.base.hasChild(e.target)) {
-      if ((typeof (_a = this.attachedTo) !== "undefined" && _a !== null)) {
+      if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
         this.attachedTo.removeClass(this.options.picking);
         this.detach();
       }
@@ -1008,12 +1110,10 @@ Core.Picker = new Class({
     }
   },
   setContent: function(element) {
-    this.contentElement = element;
-    return this.contentElement;
+    return (this.contentElement = element);
   }
 });
-/*
----
+/*---
 
 name: Iterable.List
 
@@ -1030,32 +1130,50 @@ provides: Iterable.List
 Iterable.List = new Class({
   Extends: Core.Abstract,
   options: {
-    'class': GDotUI.Theme.List['class'],
-    selected: GDotUI.Theme.List.selected
+    "class": GDotUI.Theme.List["class"],
+    selected: GDotUI.Theme.List.selected,
+    search: false
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.sortable = new Sortables(null);
     this.editing = false;
-    this.items = [];
-    return this.items;
+    if (this.options.search) {
+      this.sinput = new Element('input', {
+        "class": 'search'
+      });
+      this.base.grab(this.sinput);
+      this.sinput.addEvent('keyup', (function() {
+        return this.search();
+      }).bindWithEvent(this));
+    }
+    return (this.items = []);
+  },
+  search: function() {
+    var svalue;
+    svalue = this.sinput.get('value');
+    return this.items.each((function(item) {
+      return item.title.get('text').test(/$svalue/ig) || item.subtitle.get('text').test(/$svalue/ig) ? item.base.setStyle('display', 'block') : item.base.setStyle('display', 'none');
+    }).bind(this));
   },
   removeItem: function(li) {
     li.removeEvents('invoked', 'edit', 'delete');
     return li.base.destroy();
   },
   removeAll: function() {
+    if (this.options.search) {
+      this.sinput.set('value', '');
+    }
     this.selected = null;
     this.items.each((function(item) {
       console.log(item);
       return this.removeItem(item);
     }).bind(this));
     delete this.items;
-    this.items = [];
-    return this.items;
+    return (this.items = []);
   },
   toggleEdit: function() {
     var bases;
@@ -1067,15 +1185,13 @@ Iterable.List = new Class({
       this.items.each(function(item) {
         return item.toggleEdit();
       });
-      this.editing = false;
-      return this.editing;
+      return (this.editing = false);
     } else {
       this.sortable.addItems(bases);
       this.items.each(function(item) {
         return item.toggleEdit();
       });
-      this.editing = true;
-      return this.editing;
+      return (this.editing = true);
     }
   },
   getItemFromTitle: function(title) {
@@ -1088,7 +1204,9 @@ Iterable.List = new Class({
   select: function(item) {
     var _a;
     if (this.selected !== item) {
-      (typeof (_a = this.selected) !== "undefined" && _a !== null) ? this.selected.base.removeClass(this.options.selected) : null;
+      if (typeof (_a = this.selected) !== "undefined" && _a !== null) {
+        this.selected.base.removeClass(this.options.selected);
+      }
       this.selected = item;
       this.selected.base.addClass(this.options.selected);
       return this.fireEvent('select', item);
@@ -1111,8 +1229,7 @@ Iterable.List = new Class({
     }).bindWithEvent(this));
   }
 });
-/*
----
+/*---
 
 name: Core.Slot
 
@@ -1133,13 +1250,13 @@ Core.Slot = new Class({
     'list': ['addItem', 'removeAll', 'select']
   },
   options: {
-    'class': GDotUI.Theme.Slot['class']
+    "class": GDotUI.Theme.Slot["class"]
   },
   initilaize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.overlay = new Element('div', {
       'text': ' '
     });
@@ -1173,9 +1290,21 @@ Core.Slot = new Class({
     this.overlay.addEvent('mousewheel', (function(e) {
       var _a, index;
       e.stop();
-      (typeof (_a = this.list.selected) !== "undefined" && _a !== null) ? (index = this.list.items.indexOf(this.list.selected)) : e.wheel === 1 ? (index = 0) : (index = 1);
-      index + e.wheel >= 0 && index + e.wheel < this.list.items.length ? this.list.select(this.list.items[index + e.wheel]) : null;
-      index + e.wheel < 0 ? this.list.select(this.list.items[this.list.items.length - 1]) : null;
+      if (typeof (_a = this.list.selected) !== "undefined" && _a !== null) {
+        index = this.list.items.indexOf(this.list.selected);
+      } else {
+        if (e.wheel === 1) {
+          index = 0;
+        } else {
+          index = 1;
+        }
+      }
+      if ((index + e.wheel >= 0) && index + e.wheel < this.list.items.length) {
+        this.list.select(this.list.items[index + e.wheel]);
+      }
+      if (index + e.wheel < 0) {
+        this.list.select(this.list.items[this.list.items.length - 1]);
+      }
       return index + e.wheel > this.list.items.length - 1 ? this.list.select(this.list.items[0]) : null;
     }).bindWithEvent(this));
     this.drag = new Drag(this.list.base, {
@@ -1202,8 +1331,190 @@ Core.Slot = new Class({
     }
   }
 });
-/*
----
+/*---
+
+name: Core.Tab
+
+description: Tab element for Core.Tabs.
+
+license: MIT-style license.
+
+requires: [Core.Abstract]
+
+provides: Core.Tab
+
+...
+*/
+Core.Tab = new Class({
+  Extends: Core.Abstract,
+  options: {
+    "class": GDotUI.Theme.Tab["class"],
+    label: '',
+    image: GDotUI.Theme.Icons.remove,
+    active: GDotUI.Theme.Global.active,
+    removeable: false
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options["class"]);
+    this.base.addEvent('click', (function() {
+      return this.fireEvent('activate', this);
+    }).bindWithEvent(this));
+    this.label = new Element('div', {
+      text: this.options.label
+    });
+    this.icon = new Core.Icon({
+      image: this.options.image
+    });
+    this.icon.addEvent('invoked', (function(ic, e) {
+      e.stop();
+      return this.fireEvent('remove', this);
+    }).bindWithEvent(this));
+    this.base.adopt(this.label);
+    return this.options.removeable ? this.base.grab(this.icon) : null;
+  },
+  activate: function() {
+    this.fireEvent('activated', this);
+    return this.base.addClass(this.options.active);
+  },
+  deactivate: function() {
+    this.fireEvent('deactivated', this);
+    return this.base.removeClass(this.options.active);
+  }
+});
+/*---
+
+name: Core.Tabs
+
+description: Tab navigation element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Core.Tab]
+
+provides: Core.Tabs
+
+...
+*/
+Core.Tabs = new Class({
+  Extends: Core.Abstract,
+  Binds: ['remove', 'change'],
+  options: {
+    "class": GDotUI.Theme.Tabs["class"],
+    autoRemove: true
+  },
+  initialize: function(options) {
+    this.tabs = [];
+    this.active = null;
+    return this.parent(options);
+  },
+  create: function() {
+    return this.base.addClass(this.options["class"]);
+  },
+  add: function(tab) {
+    if (this.tabs.indexOf(tab) === -1) {
+      this.tabs.push(tab);
+      this.base.grab(tab);
+      tab.addEvent('remove', this.remove);
+      return tab.addEvent('activate', this.change);
+    }
+  },
+  remove: function(tab) {
+    if (this.tabs.indexOf(tab) !== -1) {
+      if (this.options.autoRemove) {
+        this.removeTab(tab);
+      }
+      return this.fireEvent('removed', tab);
+    }
+  },
+  removeTab: function(tab) {
+    this.tabs.erase(tab);
+    document.id(tab).dispose();
+    if (tab === this.active) {
+      if (this.tabs.length > 0) {
+        this.change(this.tabs[0]);
+      }
+    }
+    return this.fireEvent('tabRemoved', tab);
+  },
+  change: function(tab) {
+    if (tab !== this.active) {
+      this.fireEvent('change', tab);
+      return this.setActive(tab);
+    }
+  },
+  setActive: function(tab) {
+    var _a;
+    if (typeof (_a = this.active) !== "undefined" && _a !== null) {
+      this.active.deactivate();
+    }
+    tab.activate();
+    return (this.active = tab);
+  },
+  getByLabel: function(label) {
+    return (this.tabs.filter(function(item, i) {
+      return item.options.label === label ? true : false;
+    }))[0];
+  }
+});
+/*---
+
+name: Core.TabFloat
+
+description:
+
+license: MIT-style license.
+
+requires: [Core.Float, Core.Tabs]
+
+provides: Core.TabFloat
+
+...
+*/
+Core.TabFloat = new Class({
+  Extends: Core.Float,
+  options: {},
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.parent();
+    this.tabs = new Core.Tabs({
+      "class": 'floatTabs'
+    });
+    this.tabs.addEvent('change', (function(tab) {
+      var index;
+      this.lastTab = this.tabs.active;
+      index = this.tabs.tabs.indexOf(tab);
+      this.activeContent = this.tabContents[index];
+      this.setContent(this.tabContents[index]);
+      return this.fireEvent('tabChange');
+    }).bindWithEvent(this));
+    this.tabContents = [];
+    return this.base.grab(this.tabs, 'top');
+  },
+  addTab: function(label, content) {
+    this.tabs.add(new Core.Tab({
+      "class": 'floatTab',
+      label: label
+    }));
+    return this.tabContents.push(content);
+  },
+  setContent: function(element) {
+    var index;
+    index = null;
+    this.tabContents.each(function(item, i) {
+      return item === element ? (index = i) : null;
+    });
+    if (typeof index !== "undefined" && index !== null) {
+      this.tabs.setActive(this.tabs.tabs[index]);
+    }
+    return this.parent(element);
+  }
+});
+/*---
 
 name: Data.Abstract
 
@@ -1230,7 +1541,7 @@ Data.Abstract = new Class({
     this.create();
     return this;
   },
-  create: function() {  },
+  create: function() {},
   ready: function() {
     this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn'), false);
     return this.base.eliminate('fn');
@@ -1238,13 +1549,12 @@ Data.Abstract = new Class({
   toElement: function() {
     return this.base;
   },
-  setValue: function() {  },
+  setValue: function() {},
   getValue: function() {
     return this.value;
   }
 });
-/*
----
+/*---
 
 name: Data.Text
 
@@ -1261,13 +1571,13 @@ provides: Data.Text
 Data.Text = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Text['class']
+    "class": GDotUI.Theme.Text["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.text = new Element('textarea');
     this.base.grab(this.text);
     this.addEvent('show', (function() {
@@ -1284,8 +1594,7 @@ Data.Text = new Class({
     return this.text.set('value', text);
   }
 });
-/*
----
+/*---
 
 name: Data.Number
 
@@ -1302,7 +1611,7 @@ provides: Data.Number
 Data.Number = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Number['class'],
+    "class": GDotUI.Theme.Number["class"],
     range: GDotUI.Theme.Number.range,
     reset: GDotUI.Theme.Number.reset,
     steps: GDotUI.Theme.Number.steps
@@ -1311,17 +1620,16 @@ Data.Number = new Class({
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.text = new Element('input', {
       'type': 'text'
     });
-    this.slider = new Core.Slider({
+    return (this.slider = new Core.Slider({
       reset: this.options.reset,
       range: this.options.range,
       steps: this.options.steps,
       mode: 'horizontal'
-    });
-    return this.slider;
+    }));
   },
   ready: function() {
     this.justSet = false;
@@ -1331,17 +1639,25 @@ Data.Number = new Class({
       return this.text.focus();
     }).bindWithEvent(this));
     this.slider.addEvent('complete', (function(step) {
-      this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
+      if (this.options.reset) {
+        this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]);
+      }
       return this.slider.set(step);
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function(step) {
-      typeof (step) === 'object' ? this.text.set('value', 0) : this.text.set('value', step);
+      if (typeof (step) === 'object') {
+        this.text.set('value', 0);
+      } else {
+        this.text.set('value', step);
+      }
       return !this.justSet ? this.fireEvent('change', step) : (this.justSet = false);
     }).bindWithEvent(this));
     this.text.addEvent('change', (function() {
       var step;
       step = Number(this.text.get('value'));
-      this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
+      if (this.options.reset) {
+        this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]);
+      }
       return this.slider.set(step);
     }).bindWithEvent(this));
     this.text.addEvent('mousewheel', (function(e) {
@@ -1354,12 +1670,84 @@ Data.Number = new Class({
   },
   setValue: function(step) {
     this.justSet = true;
-    this.options.reset ? this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]) : null;
+    if (this.options.reset) {
+      this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]);
+    }
     return this.slider.set(step);
   }
 });
-/*
----
+/*---
+
+name: Forms.Input
+
+description: Input elements for Forms.
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Forms.Input
+
+...
+*/
+Forms.Input = new Class({
+  Extends: Core.Abstract,
+  options: {
+    type: '',
+    name: ''
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    var _a;
+    delete this.base;
+    if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'checkbox' || this.options.type === 'button') {
+      this.base = new Element('input', {
+        type: this.options.type,
+        name: this.options.name
+      });
+    }
+    if (this.options.type === "textarea") {
+      this.base = new Element('textarea', {
+        name: this.options.name
+      });
+    }
+    if (this.options.type === "select") {
+      this.base = new Element('select', {
+        name: this.options.name
+      });
+      this.options.options.each((function(item) {
+        return this.base.grab(new Element('option', {
+          value: item.value,
+          text: item.label
+        }));
+      }).bind(this));
+    }
+    if (this.options.type === "radio") {
+      this.base = new Element('div');
+      this.options.options.each((function(item, i) {
+        var input, label;
+        label = new Element('label', {
+          'text': item.label
+        });
+        input = new Element('input', {
+          type: 'radio',
+          name: this.options.name,
+          value: item.value
+        });
+        return this.base.adopt(label, input);
+      }).bind(this));
+    }
+    if (typeof (_a = this.options.validate) !== "undefined" && _a !== null) {
+      $splat(this.options.validate).each((function(val) {
+        return this.options.type !== "radio" ? this.base.addClass(val) : null;
+      }).bind(this));
+    }
+    return this.base;
+  }
+});
+/*---
 
 name: Data.Color
 
@@ -1367,7 +1755,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: Data.Abstract
+requires: [Data.Abstract, Forms.Input]
 
 provides: Data.Color
 
@@ -1377,7 +1765,7 @@ Data.Color = new Class({
   Extends: Data.Abstract,
   Binds: ['change'],
   options: {
-    'class': GDotUI.Theme.Color['class'],
+    "class": GDotUI.Theme.Color["class"],
     sb: GDotUI.Theme.Color.sb,
     hue: GDotUI.Theme.Color.hue,
     wrapper: GDotUI.Theme.Color.wrapper,
@@ -1389,7 +1777,7 @@ Data.Color = new Class({
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.wrapper = new Element('div').addClass(this.options.wrapper);
     this.white = new Element('div').addClass(this.options.white);
     this.black = new Element('div').addClass(this.options.black);
@@ -1401,11 +1789,11 @@ Data.Color = new Class({
       'left': 0
     });
     this.wrapper.adopt(this.color, this.white, this.black, this.xyKnob);
-    this.colorData = new Data.Color.SlotControls();
-    return this.base.adopt(this.wrapper, this.colorData);
+    return (this.colorData = new Data.Color.SlotControls());
   },
   ready: function() {
-    var _a, sbSize;
+    var sbSize;
+    this.base.adopt(this.wrapper);
     sbSize = this.color.getSize();
     this.wrapper.setStyles({
       width: sbSize.x,
@@ -1428,89 +1816,125 @@ Data.Color = new Class({
     this.hue = this.colorData.hue;
     this.saturation = this.colorData.saturation;
     this.lightness = this.colorData.lightness;
+    this.alpha = this.colorData.alpha;
+    this.colorData.readyCallback = this.readyCallback;
+    this.base.adopt(this.colorData);
+    this.colorData.base.getElements('input[type=radio]').each((function(item) {
+      return item.addEvent('click', (function() {
+        return this.setColor();
+      }).bindWithEvent(this));
+    }).bind(this));
+    this.alpha.addEvent('change', (function(step) {
+      return this.setColor();
+    }).bindWithEvent(this));
     this.hue.addEvent('change', (function(step) {
       var colr;
-      typeof (step) === "object" ? (step = 0) : null;
+      if (typeof (step) === "object") {
+        step = 0;
+      }
       this.bgColor.setHue(Number(step));
       colr = new $HSB(step, 100, 100);
       this.color.setStyle('background-color', colr);
       return this.setColor();
     }).bindWithEvent(this));
     this.saturation.addEvent('change', (function(step) {
-      return this.xy.set({
-        x: step,
-        y: this.xy.get().y
+      this.xy.detach();
+      this.xy.set({
+        x: step({
+          y: this.xy.get().y
+        })
       });
+      return this.xy.attach();
     }).bindWithEvent(this));
     this.lightness.addEvent('change', (function(step) {
-      return this.xy.set({
-        x: this.xy.get().x,
-        y: 100 - step
+      this.xy.detach();
+      this.xy.set({
+        x: this.xy.get().x({
+          y: 100 - step
+        })
       });
+      return this.xy.attach();
     }).bindWithEvent(this));
     this.xy.addEvent('tick', this.change);
-    this.xy.addEvent('change', this.change);
-    return this.setValue((typeof (_a = this.value) !== "undefined" && _a !== null) ? this.value : '#fff');
+    return this.xy.addEvent('change', this.change);
   },
-  setValue: function(hex) {
+  setValue: function(color, alpha, type) {
     var colr;
-    (typeof hex !== "undefined" && hex !== null) ? (this.bgColor = new Color(hex)) : null;
-    this.hue.setValue(this.bgColor.hsb[0]);
-    this.saturation.setValue(this.bgColor.hsb[1]);
-    this.lightness.setValue(this.bgColor.hsb[2]);
-    this.xy.set({
-      x: this.bgColor.hsb[1],
-      y: 100 - this.bgColor.hsb[2]
+    color = new Color(color);
+    this.hue.setValue(color.hsb[0]);
+    this.saturation.setValue(color.hsb[1]);
+    this.lightness.setValue(color.hsb[2]);
+    this.alpha.setValue(alpha);
+    this.colorData.base.getElements('input[type=radio]').each(function(item) {
+      return item.get('value') === type ? item.set('checked', true) : null;
     });
-    colr = new $HSB(this.bgColor.hsb[0], 100, 100);
+    this.xy.set({
+      x: color.hsb[1],
+      y: 100 - color.hsb[2]
+    });
+    colr = new $HSB(color.hsb[0], 100, 100);
+    this.bgColor = color;
+    this.finalColor = color;
+    console.log(this);
     this.color.setStyle('background-color', colr);
     return this.setColor();
   },
   setColor: function() {
-    var _a, ret;
+    var type;
     this.finalColor = this.bgColor.setSaturation(this.saturation.getValue()).setBrightness(this.lightness.getValue()).setHue(this.hue.getValue());
-    ret = '';
-    if ((_a = this.options.format) === "hsl") {
-      ret = "hsl(" + (this.finalColor.hsb[0]) + ", " + (this.finalColor.hsb[1]) + "%, " + (this.finalColor.hsb[2]) + "%)";
-    } else if (_a === "rgb") {
-      ret = "rgb(" + (this.finalColor.rgb[0]) + ", " + (this.finalColor.rgb[1]) + ", " + (this.finalColor.rgb[2]) + ")";
-    } else {
-      ret = "#" + this.finalColor.hex.slice(1, 7);
-    }
+    type = this.colorData.base.getElements('input[type=radio]:checked')[0].get('value');
     this.fireEvent('change', {
-      color: this.finalColor
+      color: this.finalColor,
+      type: type,
+      alpha: this.alpha.getValue()
     });
-    this.value = this.finalColor;
-    return this.value;
+    return (this.value = this.finalColor);
   },
   getValue: function() {
-    var _a, ret;
-    ret = '';
-    if ((_a = this.options.format) === "hsl") {
-      ret = "hsl(" + (this.finalColor.hsb[0]) + ", " + (this.finalColor.hsb[1]) + "%, " + (this.finalColor.hsb[2]) + "%)";
-    } else if (_a === "rgb") {
-      ret = "rgb(" + (this.finalColor.rgb[0]) + ", " + (this.finalColor.rgb[1]) + ", " + (this.finalColor.rgb[2]) + ")";
-    } else {
-      ret = "#" + this.finalColor.hex.slice(1, 7);
-    }
-    return ret;
+    return this.finalColor;
   },
   change: function(pos) {
+    this.saturation.slider.slider.detach();
     this.saturation.setValue(pos.x);
+    this.saturation.slider.slider.attach();
+    this.lightness.slider.slider.detach();
     this.lightness.setValue(100 - pos.y);
+    this.lightness.slider.slider.attach();
     return this.setColor();
   }
 });
+Data.Color.ReturnValues = {
+  type: 'radio',
+  name: 'col',
+  options: [
+    {
+      label: 'rgb',
+      value: 'rgb'
+    }, {
+      label: 'rgba',
+      value: 'rgba'
+    }, {
+      label: 'hsl',
+      value: 'hsl'
+    }, {
+      label: 'hsla',
+      value: 'hsla'
+    }, {
+      label: 'hex',
+      value: 'hex'
+    }
+  ]
+};
 Data.Color.SlotControls = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Color.controls['class']
+    "class": GDotUI.Theme.Color.controls["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.hue = new Data.Number({
       range: [0, 360],
       reset: false,
@@ -1529,14 +1953,21 @@ Data.Color.SlotControls = new Class({
       reset: false,
       steps: [100]
     });
-    return this.lightness;
+    this.alpha = new Data.Number({
+      range: [0, 100],
+      reset: false,
+      steps: [100]
+    });
+    return (this.col = new Forms.Input(Data.Color.ReturnValues));
   },
   ready: function() {
-    return this.base.adopt(this.hue, this.saturation, this.lightness);
+    var _a;
+    this.base.adopt(this.hue, this.saturation, this.lightness, this.alpha, this.col);
+    this.base.getElements('input[type=radio]')[0].set('checked', true);
+    return (typeof (_a = this.readyCallback) !== "undefined" && _a !== null) ? this.readyCallback() : null;
   }
 });
-/*
----
+/*---
 
 name: Data.Date
 
@@ -1553,7 +1984,7 @@ provides: Data.Date
 Data.Date = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Date['class'],
+    "class": GDotUI.Theme.Date["class"],
     format: GDotUI.Theme.Date.format,
     yearFrom: GDotUI.Theme.Date.yearFrom
   },
@@ -1562,7 +1993,7 @@ Data.Date = new Class({
   },
   create: function() {
     var i, item;
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.days = new Core.Slot();
     this.month = new Core.Slot();
     this.years = new Core.Slot();
@@ -1615,7 +2046,9 @@ Data.Date = new Class({
     return this.date.format(this.options.format);
   },
   setValue: function(date) {
-    (typeof date !== "undefined" && date !== null) ? (this.date = date) : null;
+    if (typeof date !== "undefined" && date !== null) {
+      this.date = date;
+    }
     this.update();
     return this.fireEvent('change', this.date);
   },
@@ -1645,8 +2078,7 @@ Data.Date = new Class({
     return this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
   }
 });
-/*
----
+/*---
 
 name: Data.Time
 
@@ -1663,14 +2095,14 @@ provides: Data.Time
 Data.Time = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Date.Time['class'],
+    "class": GDotUI.Theme.Date.Time["class"],
     format: GDotUI.Theme.Date.Time.format
   },
   initilaize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.hourList = new Core.Slot();
     this.minuteList = new Core.Slot();
     this.hourList.addEvent('change', (function(item) {
@@ -1686,7 +2118,9 @@ Data.Time = new Class({
     return this.time.format(this.options.format);
   },
   setValue: function(date) {
-    (typeof date !== "undefined" && date !== null) ? (this.time = date) : null;
+    if (typeof date !== "undefined" && date !== null) {
+      this.time = date;
+    }
     this.hourList.select(this.hourList.list.items[this.time.getHours()]);
     this.minuteList.select(this.minuteList.list.items[this.time.getMinutes()]);
     return this.fireEvent('change', this.time.format(this.options.format));
@@ -1716,8 +2150,7 @@ Data.Time = new Class({
     return this.parent();
   }
 });
-/*
----
+/*---
 
 name: Data.DateTime
 
@@ -1734,17 +2167,16 @@ provides: Data.DateTime
 Data.DateTime = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Date.DateTime['class'],
+    "class": GDotUI.Theme.Date.DateTime["class"],
     format: GDotUI.Theme.Date.DateTime.format
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.datea = new Data.Date();
-    this.time = new Data.Time();
-    return this.time;
+    return (this.time = new Data.Time());
   },
   ready: function() {
     this.base.adopt(this.datea, this.time);
@@ -1766,14 +2198,15 @@ Data.DateTime = new Class({
     return this.date.format(this.options.format);
   },
   setValue: function(date) {
-    (typeof date !== "undefined" && date !== null) ? (this.date = date) : null;
+    if (typeof date !== "undefined" && date !== null) {
+      this.date = date;
+    }
     this.datea.setValue(this.date);
     this.time.setValue(this.date);
     return this.fireEvent('change', this.date.format(this.options.format));
   }
 });
-/*
----
+/*---
 
 name: Data.Table
 
@@ -1787,21 +2220,23 @@ provides: Data.Table
 */
 checkForKey = function(key, hash, i) {
   var _a, _b;
-  !(typeof i !== "undefined" && i !== null) ? (i = 0) : null;
-  return !(typeof (_a = hash[key]) !== "undefined" && _a !== null) ? key : !(typeof (_b = hash[key + i]) !== "undefined" && _b !== null) ? key + i : checkForKey(key, hash, i + 1);
+  if (!(typeof i !== "undefined" && i !== null)) {
+    i = 0;
+  }
+  return !(typeof (_a = hash[key]) !== "undefined" && _a !== null) ? key : (!(typeof (_b = hash[key + i]) !== "undefined" && _b !== null) ? key + i : checkForKey(key, hash, i + 1));
 };
 Data.Table = new Class({
   Extends: Data.Abstract,
   Binds: ['update'],
   options: {
     columns: 1,
-    'class': GDotUI.Theme.Table['class']
+    "class": GDotUI.Theme.Table["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.table = new Element('table', {
       cellspacing: 0,
       cellpadding: 0
@@ -1818,13 +2253,13 @@ Data.Table = new Class({
     }).bindWithEvent(this));
     this.header.addEvent('editEnd', (function() {
       this.fireEvent('change', this.getData());
-      return !this.header.cells.getLast().editing ? this.header.cells.getLast().getValue() === '' ? this.removeLast() : null : null;
+      return !this.header.cells.getLast().editing ? (this.header.cells.getLast().getValue() === '' ? this.removeLast() : null) : null;
     }).bindWithEvent(this));
     this.table.grab(this.header);
     this.addRow(this.columns);
     return this;
   },
-  ready: function() {  },
+  ready: function() {},
   addCloumn: function(name) {
     this.columns++;
     this.header.add(name);
@@ -1862,7 +2297,9 @@ Data.Table = new Class({
     return delete row;
   },
   removeAll: function(addColumn) {
-    !(typeof addColumn !== "undefined" && addColumn !== null) ? (addColumn = true) : null;
+    if (!(typeof addColumn !== "undefined" && addColumn !== null)) {
+      addColumn = true;
+    }
     this.header.removeAll();
     (this.rows.filter(function() {
       return true;
@@ -1883,7 +2320,9 @@ Data.Table = new Class({
     this.rows.each((function(row, i) {
       var empty;
       empty = row.empty();
-      empty && i !== 0 && i !== length ? rowsToRemove.push(row) : null;
+      if (empty && i !== 0 && i !== length) {
+        rowsToRemove.push(row);
+      }
       return i === length && !empty ? this.addRow(this.columns) : null;
     }).bind(this));
     rowsToRemove.each((function(item) {
@@ -1922,7 +2361,9 @@ Data.Table = new Class({
       self.addCloumn(key);
       value.each(function(item, i) {
         var _a;
-        !(typeof (_a = rowa[i]) !== "undefined" && _a !== null) ? (rowa[i] = []) : null;
+        if (!(typeof (_a = rowa[i]) !== "undefined" && _a !== null)) {
+          rowa[i] = [];
+        }
         rowa[i][j] = item;
         return i++;
       });
@@ -1942,7 +2383,7 @@ Data.TableRow = new Class({
   },
   options: {
     columns: 1,
-    'class': ''
+    "class": ''
   },
   initialize: function(options) {
     return this.parent(options);
@@ -1951,7 +2392,7 @@ Data.TableRow = new Class({
     var _a, i;
     delete this.base;
     this.base = new Element('tr');
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.cells = [];
     i = 0;
     _a = [];
@@ -2046,7 +2487,9 @@ Data.TableCell = new Class({
         return this.setValue(this.input.get('value'));
       }).bindWithEvent(this));
       this.input.addEvent('keydown', (function(e) {
-        e.key === 'enter' ? this.input.blur() : null;
+        if (e.key === 'enter') {
+          this.input.blur();
+        }
         if (e.key === 'tab') {
           e.stop();
           return this.fireEvent('next', this);
@@ -2062,7 +2505,9 @@ Data.TableCell = new Class({
     }
   },
   editEnd: function(e) {
-    this.editing ? (this.editing = false) : null;
+    if (this.editing) {
+      this.editing = false;
+    }
     this.setValue(this.input.get('value'));
     this.input.removeEvents(['change', 'keydown']);
     this.input.destroy();
@@ -2077,8 +2522,7 @@ Data.TableCell = new Class({
     return this.base.get('text');
   }
 });
-/*
----
+/*---
 
 name: Data.Select
 
@@ -2095,14 +2539,14 @@ provides: Data.Select
 Data.Select = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Select['class'],
+    "class": GDotUI.Theme.Select["class"],
     list: {}
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.select = new Element('select');
     this.base.grab(this.select);
     new Hash(this.options.list).each((function(value, key) {
@@ -2119,7 +2563,6 @@ Data.Select = new Class({
   },
   setList: function(list) {
     this.select.getElements("option").destroy();
-    console.log(list);
     return new Hash(list).each((function(value, key) {
       var option;
       option = new Element('option');
@@ -2130,22 +2573,22 @@ Data.Select = new Class({
   },
   setValue: function(value) {
     var _a, selected;
-    selected = this.select.getElements("option[value=" + value + "]");
-    if ((typeof (_a = selected[0]) !== "undefined" && _a !== null)) {
+    selected = this.select.getElements("option[value=$value]");
+    if (typeof (_a = selected[0]) !== "undefined" && _a !== null) {
       this.select.getElements("option").set('selected', null);
       selected.set('selected', true);
-      this.value = value;
-      return this.value;
+      return (this.value = value);
     }
   },
   getValue: function() {
     var _a;
-    !(typeof (_a = this.value) !== "undefined" && _a !== null) ? (this.value = this.select.get('value')) : null;
+    if (!(typeof (_a = this.value) !== "undefined" && _a !== null)) {
+      this.value = this.select.get('value');
+    }
     return this.value;
   }
 });
-/*
----
+/*---
 
 name: Data.Unit
 
@@ -2159,32 +2602,77 @@ provides: Data.Unit
 
 ...
 */
+UnitTable = {
+  "px": {
+    range: [-50, 50],
+    steps: [100]
+  },
+  "%": {
+    range: [-50, 50],
+    steps: [100]
+  },
+  "em": {
+    range: [-5, 5],
+    steps: [100]
+  },
+  "s": {
+    range: [-10, 10],
+    steps: [100]
+  },
+  "default": {
+    range: [-50, 50],
+    steps: [100]
+  }
+};
+UnitList = {
+  px: "px",
+  '%': "%",
+  em: "em",
+  ex: "ex",
+  gd: "gd",
+  rem: "rem",
+  vw: "vw",
+  vh: "vh",
+  vm: "vm",
+  ch: "ch",
+  "in": "in",
+  mm: "mm",
+  pt: "pt",
+  pc: "pc",
+  cm: "cm",
+  deg: "deg",
+  grad: "grad",
+  rad: "rad",
+  turn: "turn",
+  s: "s",
+  ms: "ms",
+  Hz: "Hz",
+  kHz: "kHz"
+};
 Data.Unit = new Class({
   Extends: Data.Abstract,
   options: {
-    'class': GDotUI.Theme.Unit['class']
+    "class": GDotUI.Theme.Unit["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.value = 0;
+    this.base.addClass(this.options["class"]);
     this.number = new Data.Number({
-      range: [-100, 100],
+      range: [-50, 50],
       reset: true,
-      steps: [200]
+      steps: [100]
     });
     this.sel = new Data.Select({
-      list: {
-        px: "px",
-        '%': "%",
-        em: "em"
-      }
+      list: UnitList
     });
     this.number.addEvent('change', (function(value) {
       this.value = value;
       return this.fireEvent('change', String(this.value) + this.sel.value);
     }).bindWithEvent(this));
+    this.sel.setValue('px');
     this.sel.addEvent('change', (function() {
       return this.fireEvent('change', String(this.value) + this.sel.value);
     }).bindWithEvent(this));
@@ -2204,8 +2692,7 @@ Data.Unit = new Class({
     return String(this.value) + this.sel.value;
   }
 });
-/*
----
+/*---
 
 name: Data.List
 
@@ -2221,13 +2708,13 @@ Data.List = new Class({
   Extends: Data.Abstract,
   Binds: ['update'],
   options: {
-    'class': GDotUI.Theme.DataList['class']
+    "class": GDotUI.Theme.DataList["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options['class']);
+    this.base.addClass(this.options["class"]);
     this.table = new Element('table', {
       cellspacing: 0,
       cellpadding: 0
@@ -2240,8 +2727,12 @@ Data.List = new Class({
     this.cells.each((function(item) {
       return item.getValue() === '' ? this.remove(item) : null;
     }).bind(this));
-    this.cells.length === 0 ? this.add('') : null;
-    this.cells.getLast().getValue() !== '' ? this.add('') : null;
+    if (this.cells.length === 0) {
+      this.add('');
+    }
+    if (this.cells.getLast().getValue() !== '') {
+      this.add('');
+    }
     return this.fireEvent('change', {
       value: this.getValue()
     });
@@ -2288,8 +2779,7 @@ Data.List = new Class({
     });
   }
 });
-/*
----
+/*---
 
 name: Iterable.ListItem
 
@@ -2305,7 +2795,15 @@ provides: Iterable.ListItem
 */
 Element.implement({
   toggleTransition: function() {
-    return this.handles.base.setStyle('-webkit-transition-duration', this.handles.base.retrieve('transition-dur'));
+    var old;
+    old = this.retrieve('transition-dur');
+    if (typeof old !== "undefined" && old !== null) {
+      this.setStyle('-webkit-transition-duration', old);
+      return this.eliminate('transition-dur');
+    } else {
+      this.setStyle('-webkit-transition-duration', 0);
+      return this.store('transition-dur', this.getStyle('-webkit-transition-duration'));
+    }
   }
 });
 Iterable.ListItem = new Class({
@@ -2313,7 +2811,7 @@ Iterable.ListItem = new Class({
   Implements: [Interfaces.Draggable, Interfaces.Enabled],
   options: {
     classes: {
-      'class': GDotUI.Theme.ListItem['class'],
+      "class": GDotUI.Theme.ListItem["class"],
       title: GDotUI.Theme.ListItem.title,
       subtitle: GDotUI.Theme.ListItem.subTitle,
       handle: GDotUI.Theme.ListItem.handle
@@ -2326,16 +2824,20 @@ Iterable.ListItem = new Class({
     title: '',
     subtitle: '',
     draggable: true,
+    dragreset: true,
     ghost: true,
-    removeClasses: '.' + GDotUI.Theme.Icon['class'],
+    removeClasses: '.' + GDotUI.Theme.Icon["class"],
     invokeEvent: 'click',
-    selectEvent: 'click'
+    selectEvent: 'click',
+    removeable: true,
+    sortable: false,
+    dropppables: ''
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options.classes['class']).setStyle('position', 'relative');
+    this.base.addClass(this.options.classes["class"]).setStyle('position', 'relative');
     this.remove = new Core.Icon({
       image: this.options.icons.remove
     });
@@ -2346,39 +2848,52 @@ Iterable.ListItem = new Class({
     $$(this.remove.base, this.handles.base).setStyle('position', 'absolute');
     this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
     this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
-    this.base.adopt(this.title, this.subtitle, this.remove, this.handles);
+    this.remove.base.toggleTransition();
+    this.handles.base.toggleTransition();
+    this.base.adopt(this.title, this.subtitle);
+    if (this.options.removeable) {
+      this.base.grab(this.remove);
+    }
+    if (this.options.sortable) {
+      this.base.grab(this.handle);
+    }
     this.base.addEvent(this.options.selectEvent, (function() {
       return this.fireEvent('select', this);
     }).bindWithEvent(this));
     this.base.addEvent(this.options.invokeEvent, (function() {
-      return this.enabled && !this.options.draggable ? this.fireEvent('invoked', this) : null;
+      return this.enabled && !this.options.draggable && !this.editing ? this.fireEvent('invoked', this) : null;
     }).bindWithEvent(this));
     this.addEvent('dropped', (function(el, drop, e) {
-      return this.fireEvent('invoked', [this, e]);
+      return this.fireEvent('invoked', [this, e, drop]);
     }).bindWithEvent(this));
-    return this.base.addEvent('dblclick', (function() {
-      return this.enabled ? this.editing ? this.fireEvent('edit', this) : null : null;
+    this.base.addEvent('dblclick', (function() {
+      return this.enabled ? (this.editing ? this.fireEvent('edit', this) : null) : null;
+    }).bindWithEvent(this));
+    return this.remove.addEvent('invoked', (function() {
+      return this.fireEvent('delete', this);
     }).bindWithEvent(this));
   },
   toggleEdit: function() {
     if (this.editing) {
-      this.options.draggable ? this.drag.attach() : null;
+      if (this.options.draggable) {
+        this.drag.attach();
+      }
       this.remove.base.setStyle('right', -this.remove.base.getSize().x);
       this.handles.base.setStyle('left', -this.handles.base.getSize().x);
       this.base.setStyle('padding-left', this.base.retrieve('padding-left:old'));
       this.base.setStyle('padding-right', this.base.retrieve('padding-right:old'));
-      this.editing = false;
-      return this.editing;
+      return (this.editing = false);
     } else {
-      this.options.draggable ? this.drag.detach() : null;
+      if (this.options.draggable) {
+        this.drag.detach();
+      }
       this.remove.base.setStyle('right', this.options.offset);
       this.handles.base.setStyle('left', this.options.offset);
       this.base.store('padding-left:old', this.base.getStyle('padding-left'));
       this.base.store('padding-right:old', this.base.getStyle('padding-left'));
       this.base.setStyle('padding-left', Number(this.base.getStyle('padding-left').slice(0, -2)) + this.handles.base.getSize().x);
       this.base.setStyle('padding-right', Number(this.base.getStyle('padding-right').slice(0, -2)) + this.remove.base.getSize().x);
-      this.editing = true;
-      return this.editing;
+      return (this.editing = true);
     }
   },
   ready: function() {
@@ -2395,6 +2910,8 @@ Iterable.ListItem = new Class({
         "left": -handSize.x,
         "top": (baseSize.y - handSize.y) / 2
       });
+      this.remove.base.toggleTransition();
+      this.handles.base.toggleTransition();
       this.parent();
       return this.options.draggable ? this.drag.addEvent('beforeStart', (function() {
         return this.fireEvent('select', this);
@@ -2402,8 +2919,7 @@ Iterable.ListItem = new Class({
     }
   }
 });
-/*
----
+/*---
 
 name: Pickers
 
@@ -2464,8 +2980,7 @@ Pickers.Select = new Pickers.Base({
 Pickers.List = new Pickers.Base({
   type: 'List'
 });
-/*
----
+/*---
 
 name: Core.Overlay
 
@@ -2482,22 +2997,21 @@ provides: Core.Overlay
 Core.Overlay = new Class({
   Extends: Core.Abstract,
   options: {
-    'class': GDotUI.Theme.Overlay['class']
+    "class": GDotUI.Theme.Overlay["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
     this.base.setStyles({
-      "position": "fixed",
-      "top": 0,
-      "left": 0,
-      "right": 0,
-      "bottom": 0,
-      "opacity": 0
+      position: "fixed",
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      opacity: 0
     });
-    this.base.addClass(this.options['class']);
-    document.getElement('body').grab(this.base);
+    this.base.addClass(this.options["class"]);
     return this.base.addEventListener('webkitTransitionEnd', (function(e) {
       return e.propertyName === "opacity" && this.base.getStyle('opacity') === 0 ? this.base.setStyle('visiblity', 'hidden') : null;
     }).bindWithEvent(this));
@@ -2507,79 +3021,12 @@ Core.Overlay = new Class({
   },
   show: function() {
     return this.base.setStyles({
-      'visiblity': 'visible',
-      'opacity': 1
+      visiblity: 'visible',
+      opacity: 1
     });
   }
 });
-/*
----
-
-name: Forms.Input
-
-description: Input elements for Forms.
-
-license: MIT-style license.
-
-requires: Core.Abstract
-
-provides: Forms.Input
-
-...
-*/
-Forms.Input = new Class({
-  Extends: Core.Abstract,
-  options: {
-    type: '',
-    name: ''
-  },
-  initialize: function(options) {
-    return this.parent(options);
-  },
-  create: function() {
-    var _a;
-    delete this.base;
-    (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'checkbox' || this.options.type === 'button') ? (this.base = new Element('input', {
-      type: this.options.type,
-      name: this.options.name
-    })) : null;
-    this.options.type === "textarea" ? (this.base = new Element('textarea', {
-      name: this.options.name
-    })) : null;
-    if (this.options.type === "select") {
-      this.base = new Element('select', {
-        name: this.options.name
-      });
-      this.options.options.each((function(item) {
-        return this.base.grab(new Element('option', {
-          value: item.value,
-          text: item.label
-        }));
-      }).bind(this));
-    }
-    if (this.options.type === "radio") {
-      this.base = new Element('div');
-      this.options.options.each((function(item, i) {
-        var input, label;
-        label = new Element('label', {
-          'text': item.label
-        });
-        input = new Element('input', {
-          type: 'radio',
-          name: this.options.name,
-          value: item.value
-        });
-        return this.base.adopt(label, input);
-      }).bind(this));
-    }
-    (typeof (_a = this.options.validate) !== "undefined" && _a !== null) ? $splat(this.options.validate).each((function(val) {
-      return this.options.type !== "radio" ? this.base.addClass(val) : null;
-    }).bind(this)) : null;
-    return this.base;
-  }
-});
-/*
----
+/*---
 
 name: Forms.Field
 
@@ -2600,17 +3047,20 @@ Forms.Field = new Class({
     label: ''
   },
   initialize: function(options) {
-    return this.parent(options);
+    this.parent(options);
+    return this;
   },
   create: function() {
-    var _a, h, key;
+    var _a, _b, h, key;
     h = new Hash(this.options.structure);
-    _a = h;
-    for (key in _a) { if (__hasProp.call(_a, key)) {
+    _b = h;
+    for (key in _b) {
+      if (!__hasProp.call(_b, key)) continue;
+      _a = _b[key];
       this.base = new Element(key);
       this.createS(h.get(key), this.base);
       break;
-    }}
+    }
     return this.options.hidden ? this.base.setStyle('display', 'none') : null;
   },
   createS: function(item, parent) {
@@ -2618,9 +3068,12 @@ Forms.Field = new Class({
     if (!(typeof parent !== "undefined" && parent !== null)) {
       return null;
     }
-    if ((_a = $type(item)) === "object") {
+    switch ($type(item)) {
+    case "object":
       _b = []; _c = item;
-      for (key in _c) { if (__hasProp.call(_c, key)) {
+      for (key in _c) {
+        if (!__hasProp.call(_c, key)) continue;
+        _a = _c[key];
         _b.push((function() {
           data = new Hash(item).get(key);
           if (key === 'input') {
@@ -2637,13 +3090,13 @@ Forms.Field = new Class({
           parent.grab(el);
           return this.createS(data, el);
         }).call(this));
-      }}
+      }
       return _b;
+      break;
     }
   }
 });
-/*
----
+/*---
 
 name: Forms.Fieldset
 
@@ -2673,13 +3126,12 @@ Forms.Fieldset = new Class({
       text: this.options.name
     });
     this.base.grab(this.legend);
-    return this.options.inputs.each(((function(item) {
+    return this.options.inputs.each((function(item) {
       return this.base.grab(new Forms.Field(item));
-    }).bindWithEvent(this)));
+    }).bindWithEvent(this));
   }
 });
-/*
----
+/*---
 
 name: Forms.Form
 
@@ -2707,9 +3159,11 @@ Forms.Form = new Class({
     var _a;
     delete this.base;
     this.base = new Element('form');
-    (typeof (_a = this.options.data) !== "undefined" && _a !== null) ? this.options.data.each((function(fs) {
-      return this.addFieldset(new Forms.Fieldset(fs));
-    }).bind(this)) : null;
+    if (typeof (_a = this.options.data) !== "undefined" && _a !== null) {
+      this.options.data.each((function(fs) {
+        return this.addFieldset(new Forms.Fieldset(fs));
+      }).bind(this));
+    }
     this.extra = this.options.extra;
     this.useRequest = this.options.useRequest;
     if (this.useRequest) {
@@ -2734,7 +3188,7 @@ Forms.Form = new Class({
     });
     this.validator.start();
     return this.submit.addEvent('click', (function() {
-      return this.validator.validate() ? this.useRequest ? this.send() : this.fireEvent('passed', this.geatherdata()) : this.fireEvent('failed', {
+      return this.validator.validate() ? (this.useRequest ? this.send() : this.fireEvent('passed', this.geatherdata())) : this.fireEvent('failed', {
         message: 'Validation failed'
       });
     }).bindWithEvent(this));
@@ -2749,8 +3203,7 @@ Forms.Form = new Class({
     var data;
     data = {};
     this.base.getElements('select, input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each(function(item) {
-      data[item.get('name')] = item.get('type') === "checkbox" ? true : item.get('value');
-      return data[item.get('name')];
+      return (data[item.get('name')] = item.get('type') === "checkbox" ? true : item.get('value'));
     });
     return data;
   },
@@ -2766,123 +3219,5 @@ Forms.Form = new Class({
     return this.fireEvent('failed', {
       message: 'Request error!'
     });
-  }
-});
-/*
----
-
-name: Core.Tab
-
-description: Tab element for Core.Tabs.
-
-license: MIT-style license.
-
-requires: [Core.Abstract]
-
-provides: Core.Tab
-
-...
-*/
-Core.Tab = new Class({
-  Extends: Core.Abstract,
-  options: {
-    'class': GDotUI.Theme.Tab['class'],
-    label: '',
-    image: GDotUI.Theme.Icons.remove,
-    active: GDotUI.Theme.Global.active,
-    removeable: false
-  },
-  initialize: function(options) {
-    return this.parent(options);
-  },
-  create: function() {
-    this.base.addClass(this.options['class']);
-    this.base.addEvent('click', (function() {
-      return this.fireEvent('activate', this);
-    }).bindWithEvent(this));
-    this.label = new Element('div', {
-      text: this.options.label
-    });
-    this.icon = new Core.Icon({
-      image: this.options.image
-    });
-    this.icon.addEvent('invoked', (function(ic, e) {
-      e.stop();
-      return this.fireEvent('remove', this);
-    }).bindWithEvent(this));
-    this.base.adopt(this.label);
-    return this.options.removeable ? this.base.grab(this.icon) : null;
-  },
-  activate: function() {
-    this.fireEvent('activated', this);
-    return this.base.addClass(this.options.active);
-  },
-  deactivate: function() {
-    this.fireEvent('deactivated', this);
-    return this.base.removeClass(this.options.active);
-  }
-});
-/*
----
-
-name: Core.Tabs
-
-description: Tab navigation element.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, Core.Tab]
-
-provides: Core.Tabs
-
-...
-*/
-Core.Tabs = new Class({
-  Extends: Core.Abstract,
-  Binds: ['remove', 'change'],
-  options: {
-    'class': GDotUI.Theme.Tabs['class']
-  },
-  initialize: function(options) {
-    this.tabs = [];
-    this.active = null;
-    return this.parent(options);
-  },
-  create: function() {
-    return this.base.addClass(this.options['class']);
-  },
-  add: function(tab) {
-    if (this.tabs.indexOf(tab) === -1) {
-      this.tabs.push(tab);
-      this.base.grab(tab);
-      tab.addEvent('remove', this.remove);
-      return tab.addEvent('activate', this.change);
-    }
-  },
-  remove: function(tab) {
-    if (this.tabs.indexOf(tab) !== -1) {
-      this.tabs.erase(tab);
-      document.id(tab).dispose();
-      tab === this.active ? this.tabs.length > 0 ? this.change(this.tabs[0]) : null : null;
-      return this.fireEvent('tabRemoved', tab);
-    }
-  },
-  change: function(tab) {
-    if (tab !== this.active) {
-      this.setActive(tab);
-      return this.fireEvent('change', tab);
-    }
-  },
-  setActive: function(tab) {
-    var _a;
-    (typeof (_a = this.active) !== "undefined" && _a !== null) ? this.active.deactivate() : null;
-    tab.activate();
-    this.active = tab;
-    return this.active;
-  },
-  getByLabel: function(label) {
-    return (this.tabs.filter(function(item, i) {
-      return item.options.label === label ? true : false;
-    }))[0];
   }
 });
