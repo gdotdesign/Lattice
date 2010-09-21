@@ -74,7 +74,7 @@ Data.Unit = new Class {
     @sel = new Data.Select {list:UnitList}
     @number.addEvent 'change', ((value) ->
       @value = value
-      @fireEvent 'change', String(@value)+@sel.value
+      @fireEvent 'change', String(@value)+@sel.getValue()
     ).bindWithEvent @
     @sel.setValue 'px'
     @sel.addEvent 'change', ( ->
@@ -83,7 +83,7 @@ Data.Unit = new Class {
       #@number.options.steps = data.steps
       #@number.options.range = data.range
       #@number.setValue @value
-      @fireEvent 'change', String(@value)+@sel.value
+      @fireEvent 'change', String(@value)+@sel.getValue()
     ).bindWithEvent @
     @base.adopt @number, @sel
   setValue: (value) ->
@@ -92,7 +92,7 @@ Data.Unit = new Class {
       value = match[1]
       unit = match[2]
       @sel.setValue unit
-    @number.setValue value
+      @number.setValue value
   getValue: ->
     String(@value)+@sel.value
 }

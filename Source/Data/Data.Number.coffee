@@ -59,10 +59,11 @@ Data.Number = new Class {
       if @options.reset
         @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
       @slider.set step
-    ).bindWithEvent this
+      @fireEvent 'change', step
+    ).bindWithEvent @
     @text.addEvent 'mousewheel', ( (e) ->
       @slider.set Number(@text.get('value'))+e.wheel
-    ).bindWithEvent this
+    ).bindWithEvent @
     @parent()
   getValue: ->
     @slider.slider.step
