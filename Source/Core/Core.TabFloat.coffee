@@ -3,7 +3,7 @@
 
 name: Core.TabFloat
 
-description:
+description: Tabbed float.
 
 license: MIT-style license.
 

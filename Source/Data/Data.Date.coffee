@@ -14,7 +14,7 @@ provides: Data.Date
 ...
 ###
 Data.Date = new Class {
-  Extends:Data.Abstract
+  Extends: Data.Abstract
   options:{
     class: GDotUI.Theme.Date.class
     format: GDotUI.Theme.Date.format
@@ -30,19 +30,19 @@ Data.Date = new Class {
     @years.addEvent 'change', ( (item) ->
       @date.setYear item.value
       @setValue()
-    ).bindWithEvent this
+    ).bindWithEvent @
     @month.addEvent 'change', ( (item) ->
       @date.setMonth item.value
-      @setValue();
-    ).bindWithEvent this
+      @setValue()
+    ).bindWithEvent @
     @days.addEvent 'change', ( (item) ->
       @date.setDate item.value
       @setValue()
-    ).bindWithEvent this
+    ).bindWithEvent @
     i = 0
     while i < 30
       item = new Iterable.ListItem {title:i+1}
-      item.value = i+1;
+      item.value = i+1
       @days.addItem item
       i++
     i = 0
@@ -54,7 +54,7 @@ Data.Date = new Class {
     i = @options.yearFrom
     while i <= new Date().getFullYear()
       item = new Iterable.ListItem {title:i}
-      item.value = i;
+      item.value = i
       @years.addItem item
       i++
     @base.adopt @years, @month, @days

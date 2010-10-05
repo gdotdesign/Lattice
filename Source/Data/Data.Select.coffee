@@ -44,7 +44,7 @@ Data.Select = new Class {
       @select.grab option
     ).bind @
   setValue: (value) ->
-    selected = @select.getElements "option[value=$value]"
+    selected = @select.getElements "option[value=#{value}]"
     if selected[0]?
       @select.getElements("option").set 'selected', null
       selected.set 'selected', true

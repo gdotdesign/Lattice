@@ -19,14 +19,14 @@ Core.Tip = new Class {
          'leave']
   options:{
     class: GDotUI.Theme.Tip.class
-    label:""
+    label: ""
     location: GDotUI.Theme.Tip.location
     offset: GDotUI.Theme.Tip.offset
     zindex: GDotUI.Theme.Tip.zindex
   }
   initialize: (options) ->
     @parent options
-  create:  ->
+  create: ->
     @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
     @base.setStyle 'z-index', @options.tipZindex

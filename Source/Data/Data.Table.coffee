@@ -48,7 +48,7 @@ Data.Table = new Class {
           @removeLast()
     ).bindWithEvent @
     @table.grab @header
-    @addRow(@columns)
+    @addRow @columns
     @
   ready: ->
   addCloumn: (name) ->
@@ -70,7 +70,6 @@ Data.Table = new Class {
         @rows[index+1].cells[0].editStart()
     ).bindWithEvent @
     @rows.push row
-    #sortable here 
     @table.grab row
   removeRow: (row) ->
     row.removeEvents 'editEnd'
@@ -83,7 +82,7 @@ Data.Table = new Class {
     if not addColumn?
       addColumn = yes
     @header.removeAll()
-    (@rows.filter -> true).each ( (row) ->
+    @rows.each ( (row) ->
       @removeRow row
     ).bind @
     @columns = 0
@@ -91,19 +90,19 @@ Data.Table = new Class {
       @addCloumn()
       @addRow @columns
   update: ->
-    length = @rows.length-1
+    length = @rows.length
     longest = 0
     rowsToRemove = []
     @rows.each ( (row, i) ->
       empty = row.empty() # check is the row is empty
-      if empty and i isnt 0 and i isnt length
+      if empty
         rowsToRemove.push row
-      if i is length and not empty
-        @addRow @columns
     ).bind @
     rowsToRemove.each ( (item) ->
       @removeRow item
     ).bind @
+    if @rows.length is 0 or not @rows.getLast().empty()
+      @addRow @columns
     @fireEvent 'change', @getData()
   getData: ->
     ret = {}
@@ -122,7 +121,6 @@ Data.Table = new Class {
     @getData()
   setValue: (obj) ->
     @removeAll( no )
-    console.log @
     rowa = []
     j = 0
     self = @
@@ -137,6 +135,7 @@ Data.Table = new Class {
     rowa.each (item,i) ->
       self.addRow self.columns
       self.rows[i].setValue item
+    @update()
     @
 }
 Data.TableRow = new Class {
@@ -233,14 +232,17 @@ Data.TableCell = new Class {
     if @editing
       @editing = off
     @setValue @input.get 'value'
-    @input.removeEvents ['change','keydown']
-    @input.destroy()
-    delete @input
+    if @input?
+      @input.removeEvents ['change','keydown']
+      @input.destroy()
+      delete @input
     @fireEvent 'editEnd'
   setValue: (value) ->
     @value = value
     if not @editing
       @base.set 'text', @value
   getValue: ->
-    @base.get 'text'
+    if not @editing
+      @base.get 'text'
+    else @input.get 'value'
 }

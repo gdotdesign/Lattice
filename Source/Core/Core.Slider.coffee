@@ -24,17 +24,14 @@ ResetSlider = new Class {
 		@steps = @options.steps || @full
 		@stepSize = Math.abs(@range) / @steps
 		@stepWidth = @stepSize * @full / Math.abs(@range) 
-		#console.log @stepWidth,@stepSize
 	draggedKnob: ->
 		dir = if @range < 0 then -1 else 1
 		position = @drag.value.now[this.axis]
 		position = position.limit(-@options.offset, @full -@options.offset)
 		@step = @min + dir * @toStep(position)
-		#console.log @step, @toStep(position)
 		@checkStep()
   toStep: (position) ->
-		step = (position + @options.offset) * @stepSize / @full * @steps;
-		#console.log @options.steps, step -= step % @stepSize, step
+		step = (position + @options.offset) * @stepSize / @full * @steps
 		if @options.steps then step -= step % @stepSize else step
 }
 Core.Slider = new Class {
@@ -77,14 +74,13 @@ Core.Slider = new Class {
 			}
 		@slider.addEvent 'complete', ((step) ->
 			@fireEvent 'complete', step+''
-		).bindWithEvent this
+		).bindWithEvent @
 		@slider.addEvent 'change', ((step)->
-			#console.log step
 			if typeof(step) == 'object'
 				step = 0
 			@fireEvent 'change', step+''
 			if @scrollBase?
 				@scrollBase.scrollTop = (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
-		).bindWithEvent this
+		).bindWithEvent @
 		@parent()
 }

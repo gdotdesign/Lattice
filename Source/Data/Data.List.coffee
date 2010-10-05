@@ -38,12 +38,15 @@ Data.List = new Class {
   add: (value) ->
     cell = new Data.TableCell({value:value})
     cell.addEvent 'editEnd', @update
+    cell.addEvent 'next', ->
+      cell.input.blur()
     @cells.push cell
     tr = new Element 'tr'
     @table.grab tr
     tr.grab cell
   remove: (cell,remove)->
     cell.removeEvents 'editEnd'
+    cell.removeEvents 'next'
     @cells.erase cell
     cell.base.getParent('tr').destroy()
     cell.base.destroy()

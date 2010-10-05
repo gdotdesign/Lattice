@@ -32,7 +32,7 @@ Forms.Field = new Class {
       @base.setStyle 'display', 'none'
   createS: (item,parent) ->
     if not parent?
-      return null
+      null
     switch $type(item)
       when "object"
         for key of item

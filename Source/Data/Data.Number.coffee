@@ -38,12 +38,12 @@ Data.Number = new Class {
     @base.adopt @slider
     @slider.knob.addEvent 'click', ( ->
       @text.focus()
-    ).bindWithEvent this
+    ).bindWithEvent @
     @slider.addEvent 'complete', ( (step) ->
       if @options.reset
         @slider.setRange [step-@options.steps/2, Number(step)+@options.steps/2]
       @slider.set step
-      ).bindWithEvent this
+      ).bindWithEvent @
     @slider.addEvent 'change', ( (step) ->
       if typeof(step) == 'object'
         @text.set 'value', 0
@@ -53,7 +53,7 @@ Data.Number = new Class {
         @fireEvent 'change', step
       else
         @justSet = off
-      ).bindWithEvent this
+      ).bindWithEvent @
     @text.addEvent 'change', ( ->
       step = Number @text.get('value')
       if @options.reset
@@ -70,12 +70,6 @@ Data.Number = new Class {
   setValue: (step) ->
     @justSet = on
     if @options.reset
-      #range = [Number(step)+@options.range[0],Number(step)+@options.range[1]]
-      #@slider.options.steps = @options.steps
-      #@slider.options.range = range
-      #@slider.slider.options.steps = @options.steps
-      #@slider.slider.options.range = range
-      #@slider.setRange range
       @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
     @slider.set step
 }

@@ -28,13 +28,13 @@ Data.Time = new Class {
     @hourList.addEvent 'change', ( (item) ->
       @time.setHours item.value
       @setValue()
-    ).bindWithEvent this
+    ).bindWithEvent @
     @minuteList.addEvent 'change', ( (item) ->
       @time.setMinutes item.value
       @setValue()
-    ).bindWithEvent this
+    ).bindWithEvent @
   getValue: ->
-    @time.format(@options.format)
+    @time.format @options.format
   setValue: (date) ->
     if date?
       @time = date
@@ -47,7 +47,7 @@ Data.Time = new Class {
       item = new Iterable.ListItem {title:i}
       item.value = i
       @hourList.addItem item
-      i++;
+      i++
     i = 0
     while i < 60
       item = new Iterable.ListItem {title: if i<10 then '0'+i else i}

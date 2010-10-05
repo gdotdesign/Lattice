@@ -31,18 +31,18 @@ Forms.Input = new Class {
       @base = new Element 'select', {name: @options.name}
       @options.options.each ( (item) ->
         @base.grab new Element('option', {value:item.value,text:item.label})
-      ).bind this
+      ).bind @
     if @options.type is "radio"
       @base = new Element 'div'
       @options.options.each ( (item,i) ->
         label = new Element 'label', {'text':item.label}
         input = new Element 'input', {type:'radio',name:@options.name, value:item.value}
         @base.adopt label, input
-        ).bind this
+        ).bind @
     if @options.validate?
       $splat(@options.validate).each ( (val) ->
         if @options.type isnt "radio"
           @base.addClass val
-      ).bind this
+      ).bind @
     @base
 }

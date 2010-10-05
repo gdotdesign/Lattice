@@ -27,15 +27,15 @@ Core.Tabs = new Class {
   create: ->
     @base.addClass @options.class
   add: (tab) ->
-    if @tabs.indexOf(tab) == -1
+    if @tabs.indexOf tab == -1
       @tabs.push tab
       @base.grab tab
       tab.addEvent 'remove', @remove
       tab.addEvent 'activate', @change
   remove: (tab) ->
-    if @tabs.indexOf(tab) != -1
+    if @tabs.indexOf tab != -1
       if @options.autoRemove
-        @removeTab(tab)
+        @removeTab tab
       @fireEvent 'removed',tab
   removeTab: (tab) ->
     @tabs.erase tab

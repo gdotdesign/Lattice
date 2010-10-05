@@ -76,7 +76,7 @@ Data.Color = new Class {
     ).bind @
     @alpha.addEvent 'change',( (step) ->
       @setColor()
-    ).bindWithEvent this
+    ).bindWithEvent @
     @hue.addEvent 'change',( (step) ->
       if typeof(step) == "object"
         step = 0
@@ -84,7 +84,7 @@ Data.Color = new Class {
       colr = new $HSB step, 100, 100  
       @color.setStyle 'background-color', colr
       @setColor()
-    ).bindWithEvent this
+    ).bindWithEvent @
     @saturation.addEvent 'change',( (step) ->
       @xy.detach()
       @xy.set {
@@ -92,14 +92,15 @@ Data.Color = new Class {
         y:@xy.get().y
         }
       @xy.attach()
-    ).bindWithEvent this
+    ).bindWithEvent @
     @lightness.addEvent 'change',( (step) ->
       @xy.detach()
-      @xy.set {x:@xy.get().x
-              y:100-step
-              }
+      @xy.set {
+        x:@xy.get().x
+        y:100-step
+        }
       @xy.attach()
-    ).bindWithEvent this
+    ).bindWithEvent @
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
   setValue: (color, alpha, type) ->
@@ -172,7 +173,7 @@ Data.Color.SlotControls = new Class {
     @hue = new Data.Number {range:[0,360],reset: off, steps: [360]}
     @hue.addEvent 'change', ((value) ->
         @saturation.slider.base.setStyle 'background-color', new $HSB(value,100,100)
-      ).bindWithEvent this
+      ).bindWithEvent @
     @saturation = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}

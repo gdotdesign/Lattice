@@ -7,7 +7,7 @@ description: Icon group with 4 types of layout.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls]
+requires: Core.Abstract
 
 provides: Core.IconGroup
 
@@ -15,26 +15,24 @@ provides: Core.IconGroup
 ###
 Core.IconGroup = new Class {
   Extends: Core.Abstract
-  Implements: Interfaces.Controls
   Binds: ['delegate']
-  options:{
-    mode:"horizontal" #horizontal / vertical / circular / grid
+  options: {
+    mode: "horizontal" #horizontal / vertical / circular / grid
     spacing: {
-      x:0
-      y:0
+      x: 0
+      y: 0
     }
-    startAngle:0 #degree
-    radius:0 #degree
-    degree:360 #degree
+    startAngle: 0 #degree
+    radius: 0 #degree
+    degree: 360 #degree
     class: GDotUI.Theme.IconGroup.class
   }
   initialize: (options) ->
     @icons = []
     @parent options
-  create: ( ->
+  create: ->
     @base.setStyle 'position', 'relative'
     @base.addClass @options.class
-    ).protect()
   delegate: ->
     @fireEvent 'invoked', arguments
   addIcon: (icon) ->
@@ -58,7 +56,7 @@ Core.IconGroup = new Class {
     if index isnt -1
       icon.removeEvent 'invoked', @delegate
       icon.base.dispose()
-      @icons.splice index,1
+      @icons.splice index, 1
       yes
     else no
   ready: ->
@@ -72,12 +70,12 @@ Core.IconGroup = new Class {
       when 'grid'
         if @options.columns?
           columns = @options.columns
-          rows = @icons.length/columns
+          rows = @icons.length / columns
         if @options.rows?
-          rows = @options.rows;
+          rows = @options.rows
           columns = Math.round @icons.length/rows
         icpos = @icons.map (item,i) ->
-          if i%columns == 0
+          if i % columns == 0
             x = 0
             y = if i==0 then y else y+item.base.getSize().y+spacing.y
           else
@@ -92,7 +90,7 @@ Core.IconGroup = new Class {
           @size.x = x+item.base.getSize().x
           @size.y = y+item.base.getSize().y
           {x:x, y:y}
-          ).bind this
+          ).bind @
       when 'horizontal'
         icpos = @icons.map ((item,i) ->
           x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
@@ -100,7 +98,7 @@ Core.IconGroup = new Class {
           @size.x = x+item.base.getSize().x
           @size.y = item.base.getSize().y
           {x:x, y:y}
-          ).bind this
+          ).bind @
       when 'vertical'
         icpos = @icons.map ((item,i) ->
           x = if i==0 then x else x+spacing.x
@@ -108,7 +106,7 @@ Core.IconGroup = new Class {
           @size.x = item.base.getSize().x
           @size.y = y+item.base.getSize().y
           {x:x,y:y}
-          ).bind this
+          ).bind @
       when 'circular'
         n = @icons.length
         radius = @options.radius
@@ -117,12 +115,12 @@ Core.IconGroup = new Class {
         fok = @options.degree/n
         icpos = @icons.map (item,i) ->
           if i==0
-            foks = startAngle*(Math.PI/180)
-            x = Math.round radius*Math.sin(foks)
-            y = -Math.round radius*Math.cos(foks)
+            foks = startAngle * (Math.PI/180)
+            x = Math.round radius * Math.sin(foks)
+            y = -Math.round radius * Math.cos(foks)
           else
-            x = Math.round radius*Math.sin(((fok*i)+startAngle)*(Math.PI/180))
-            y = -Math.round radius*Math.cos(((fok*i)+startAngle)*(Math.PI/180))
+            x = Math.round radius * Math.sin(((fok * i) + startAngle) * (Math.PI/180))
+            y = -Math.round radius * Math.cos(((fok * i) + startAngle) * (Math.PI/180))
           {x:x, y:y}
     @icons.each (item,i) ->
       item.base.setStyle 'top', icpos[i].y

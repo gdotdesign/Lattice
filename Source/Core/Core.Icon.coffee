@@ -14,7 +14,7 @@ provides: Core.Icon
 ...
 ###
 Core.Icon = new Class {
-  Extends:Core.Abstract
+  Extends: Core.Abstract
   Implements:[
     Interfaces.Enabled
     Interfaces.Controls
@@ -25,13 +25,12 @@ Core.Icon = new Class {
   }
   initialize: (options) ->
     @parent options
-  create: ( ->
+  create: ->
     @base.addClass @options.class
     if @options.image?
-      @base.setStyle 'background-image', 'url('+@options.image+')'
+      @base.setStyle 'background-image', 'url(' + @options.image + ')'
     @base.addEvent 'click', ((e) ->
       if @enabled
-        @fireEvent 'invoked', [this, e]
-      ).bindWithEvent this
-    ).protect()
+        @fireEvent 'invoked', [@, e]
+    ).bindWithEvent @
 }

@@ -28,7 +28,7 @@ Forms.Form = new Class {
     if @options.data?
       @options.data.each( ( (fs) ->
         @addFieldset(new Forms.Fieldset(fs))
-      ).bind this )
+      ).bind @ )
     @extra=@options.extra;
     @useRequest=@options.useRequest;
     if @useRequest
@@ -53,7 +53,7 @@ Forms.Form = new Class {
           @fireEvent 'passed', @geatherdata()
       else
         @fireEvent 'failed', {message:'Validation failed'}
-    ).bindWithEvent this
+    ).bindWithEvent @
   addFieldset: (fieldset)->
     if @fieldsets.indexOf(fieldset) == -1
       @fieldsets.push fieldset
@@ -64,7 +64,7 @@ Forms.Form = new Class {
       data[item.get('name')] = if item.get('type')=="checkbox" then true else item.get('value')
     data
   send: ->
-    @request.send {data: $extend(@geatherdata(), this.extra)}
+    @request.send {data: $extend(@geatherdata(), @extra)}
   success: (data) ->
     @fireEvent 'success', data
   faliure: ->

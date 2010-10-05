@@ -3,7 +3,7 @@
 
 name: Core.Slot
 
-description: Generic icon element.
+description: iOs style slot control.
 
 license: MIT-style license.
 
@@ -14,7 +14,7 @@ provides: Core.Slot
 ...
 ###
 Core.Slot = new Class {
-  Extends:Core.Abstract
+  Extends: Core.Abstract
   Binds:['check'
          'complete']
   Delegates:{
@@ -23,7 +23,7 @@ Core.Slot = new Class {
             'select']
   }
   options:{
-    class:GDotUI.Theme.Slot.class
+    class: GDotUI.Theme.Slot.class
   }
   initilaize: (options) ->
     @parent options
@@ -35,17 +35,17 @@ Core.Slot = new Class {
     @list.addEvent 'select', ((item) ->
       @update()
       @fireEvent 'change', item
-    ).bindWithEvent this
+    ).bindWithEvent @
     @base.adopt @list.base, @overlay
   check: (el,e) ->
     @dragging = on
     lastDistance = 1000
     lastOne = null
     @list.items.each( ( (item,i) ->
-      distance = -item.base.getPosition(@base).y+@base.getSize().y/2
+      distance = -item.base.getPosition(@base).y + @base.getSize().y/2
       if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
         @list.select item
-    ).bind this )
+    ).bind @ )
   ready: -> 
     @parent()
     @base.setStyle 'overflow', 'hidden'
@@ -55,7 +55,7 @@ Core.Slot = new Class {
     @base.setStyle 'width', @list.base.getSize().x
     @overlay.setStyle 'width', @base.getSize().x
     @overlay.addEvent 'mousewheel',( (e) ->
-      e.stop();
+      e.stop()
       if @list.selected?
         index = @list.items.indexOf @list.selected
       else
@@ -69,16 +69,16 @@ Core.Slot = new Class {
         @list.select @list.items[@list.items.length-1]
       if index+e.wheel > @list.items.length-1
         @list.select @list.items[0]
-    ).bindWithEvent this
+    ).bindWithEvent @
     @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
     @drag.addEvent 'drag', @check
     @drag.addEvent 'beforeStart',( ->
       @list.base.setStyle '-webkit-transition-duration', '0s'
-    ).bindWithEvent this
+    ).bindWithEvent @
     @drag.addEvent 'complete', ( ->
       @dragging = off
       @update()
-    ).bindWithEvent this
+    ).bindWithEvent @
   update: ->
     if not @dragging
       @list.base.setStyle '-webkit-transition-duration', '0.3s' # get the property and store and retrieve it

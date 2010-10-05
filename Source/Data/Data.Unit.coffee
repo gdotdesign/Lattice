@@ -78,11 +78,6 @@ Data.Unit = new Class {
     ).bindWithEvent @
     @sel.setValue 'px'
     @sel.addEvent 'change', ( ->
-      #data = UnitTable[@sel.value] || UnitTable['default']
-      #console.log data
-      #@number.options.steps = data.steps
-      #@number.options.range = data.range
-      #@number.setValue @value
       @fireEvent 'change', String(@value)+@sel.getValue()
     ).bindWithEvent @
     @base.adopt @number, @sel

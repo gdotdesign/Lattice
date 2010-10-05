@@ -27,21 +27,21 @@ Core.Tab = new Class {
   create: ->
     @base.addClass @options.class
     @base.addEvent 'click', ( ->
-      @fireEvent 'activate', this
-    ).bindWithEvent this
+      @fireEvent 'activate', @
+    ).bindWithEvent @
     @label = new Element 'div', {text: @options.label}
     @icon = new Core.Icon {image: @options.image}
     @icon.addEvent 'invoked', ( (ic,e) ->
       e.stop()
-      @fireEvent 'remove', this
-    ).bindWithEvent this
+      @fireEvent 'remove', @
+    ).bindWithEvent @
     @base.adopt @label
     if @options.removeable
       @base.grab @icon
   activate: ->
-    @fireEvent 'activated', this
+    @fireEvent 'activated', @
     @base.addClass @options.active 
   deactivate: ->
-    @fireEvent 'deactivated', this
+    @fireEvent 'deactivated', @
     @base.removeClass @options.active
 }

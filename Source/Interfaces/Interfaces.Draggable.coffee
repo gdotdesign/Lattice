@@ -7,8 +7,6 @@ description: Porived dragging for elements that implements it.
 
 license: MIT-style license.
 
-requires: 
-
 provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
 ...
@@ -32,28 +30,24 @@ Drag.Ghost = new Class {
 			@droppables = $$(@options.droppables)
 			@ghost()
 			@parent(event)
-
 	cancel: (event) ->
 		if event
 			@deghost()
 		@parent(event)
-	
 	stop: (event) ->
 		@deghost()
 		@parent(event)
-
 	ghost: ->
 		@element = (@element.clone()
 		).setStyles({
 			'opacity': @options.opacity,
 			'position': 'absolute',
-			'z-index': 5003, # todo zindexing
+			'z-index': 5003,
 			'top': @element.getCoordinates()['top'],
 			'left': @element.getCoordinates()['left']
 			'-webkit-transition-duration': '0s'
 		}).inject(document.body).store('parent', @element)
-		@element.getElements(@options.remove).dispose()
-		
+		@element.getElements(@options.remove).dispose()	
 	deghost: ->
 		e = @element.retrieve 'parent'
 		newpos = @element.getPosition e.getParent()

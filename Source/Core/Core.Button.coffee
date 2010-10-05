@@ -14,7 +14,7 @@ provides: Core.Button
 ...
 ###
 Core.Button = new Class {
-  Extends:Core.Abstract
+  Extends: Core.Abstract
   Implements:[
     Interfaces.Enabled
     Interfaces.Controls
@@ -33,8 +33,8 @@ Core.Button = new Class {
     @icon = new Core.Icon {image: @options.image}
     @base.addEvent 'click', ((e) ->
       if @enabled
-        @fireEvent 'invoked', [this, e]
-      ).bindWithEvent this
+        @fireEvent 'invoked', [@, e]
+      ).bindWithEvent @
   ready: ->
     @base.grab @icon
     @parent()

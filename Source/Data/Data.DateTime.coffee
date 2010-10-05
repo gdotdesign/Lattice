@@ -33,12 +33,12 @@ Data.DateTime = new Class {
       @date.setMonth @datea.date.getMonth()
       @date.setDate @datea.date.getDate()
       @fireEvent 'change', @date.format(@options.format)
-    ).bindWithEvent this
+    ).bindWithEvent @
     @time.addEvent 'change',( ->
       @date.setHours @time.time.getHours()
       @date.setMinutes @time.time.getMinutes()
       @fireEvent 'change', @date.format(@options.format)
-    ).bindWithEvent this
+    ).bindWithEvent @
     @parent()
   getValue: ->
     @date.format(@options.format)

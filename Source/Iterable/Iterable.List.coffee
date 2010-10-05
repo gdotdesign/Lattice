@@ -25,7 +25,6 @@ Iterable.List = new Class {
   create: ->
     @base.addClass @options.class
     @sortable = new Sortables null
-    #TODO Sortable Events
     @editing = off
     if @options.search
       @sinput = new Element 'input', {class:'search'}
@@ -44,13 +43,13 @@ Iterable.List = new Class {
     ).bind @
   removeItem: (li) ->
     li.removeEvents 'invoked', 'edit', 'delete'
+    @items.erase li
     li.base.destroy()
   removeAll: ->
     if @options.search
       @sinput.set 'value', ''
     @selected = null
     @items.each ( (item) ->
-      console.log item
       @removeItem item
       ).bind @
     delete @items

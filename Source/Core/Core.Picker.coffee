@@ -17,7 +17,7 @@ provides: [Core.Picker, outerClick]
   oldPrototypeStart = Drag.prototype.start
   Drag.prototype.start = ->
     window.fireEvent 'outer'
-    oldPrototypeStart.run arguments, this
+    oldPrototypeStart.run arguments, @
 )()
 Element.Events.outerClick = {
     base: 'mousedown'
@@ -90,7 +90,7 @@ Core.Picker = new Class {
   attach: (input) ->
     if @attachedTo?
       @detach()
-    input.addEvent @options.event, @show #bind???
+    input.addEvent @options.event, @show
     if @contentElement?
       @contentElement.addEvent 'change', ((value) ->
         @attachedTo.set 'value', value
@@ -109,7 +109,7 @@ Core.Picker = new Class {
       e.stop()
     if @contentElement?
       @contentElement.fireEvent 'show'
-    @base.addEvent 'outerClick', @hide.bindWithEvent @ #bind here too???
+    @base.addEvent 'outerClick', @hide.bindWithEvent @
   hide: (e) ->
     if @base.isVisible() and not  @base.hasChild(e.target)
       if @attachedTo?

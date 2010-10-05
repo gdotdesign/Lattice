@@ -7,8 +7,6 @@ description: Some control functions.
 
 license: MIT-style license.
 
-requires: 
-
 provides: Interfaces.Controls
 
 ...
@@ -19,7 +17,7 @@ Interfaces.Controls = new Class {
   show: -> 
     @base.setStyle 'opacity', 1
   toggle: ->
-    if @base.getStyle('opacity') is 0
+    if @base.getStyle ('opacity') is 0
       @show()
     else
       @hide()

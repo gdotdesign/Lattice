@@ -79,10 +79,10 @@ Core.Float = new Class {
 		@slider = new Core.Slider {scrollBase:@content, range:[0,100], steps: 100}
 		@slider.addEvent 'complete', ( ->
 			@scrolling = off
-		).bindWithEvent this
+		).bindWithEvent @
 		@slider.addEvent 'change', ( ->
 			@scrolling = on
-		).bindWithEvent this
+		).bindWithEvent @
 		
 		@slider.hide()
 		
@@ -92,7 +92,7 @@ Core.Float = new Class {
 		@close = new Core.Icon {image: @options.icons.remove}
 		@close.addEvent 'invoked', ( ->
 			@hide()
-		).bindWithEvent this
+		).bindWithEvent @
 
 		@edit = new Core.Icon {image:@options.icons.edit}
 		@edit.addEvent 'invoked', ( ->
@@ -100,7 +100,7 @@ Core.Float = new Class {
 				if @contentElement.toggleEdit?
 					@contentElement.toggleEdit()
 				@fireEvent('edit')
-		).bindWithEvent this
+		).bindWithEvent @
 		
 		if @options.closeable
 			@icons.addIcon @close

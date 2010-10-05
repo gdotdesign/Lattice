@@ -7,8 +7,6 @@ description: "Abstract" base class for data elements.
 
 license: MIT-style license.
 
-requires: 
-
 provides: Data.Abstract
 
 ...
@@ -24,10 +22,10 @@ Data.Abstract = new Class {
     @base.store 'fn', fn
     @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
     @create()
-    this
+    @
   create: ->
   ready: ->
-    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve('fn'), no
+    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve ('fn'), no
     @base.eliminate 'fn'
   toElement: ->
     @base
