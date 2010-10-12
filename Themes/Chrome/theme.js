@@ -18,6 +18,14 @@ GDotUI.Theme={
         defaultText: 'Button',
         defaultIcon: '../Themes/Chrome/images/pencil.png'
     },
+    Toggler:{
+      'class': 'toggler',
+      onClass: 'on',
+      offClass: 'off',
+      separatorClass: 'sep',
+      onText: 'ON',
+      offText: 'OFF'
+    },
     Float:{
         'class':'float',
         bottomHandle:'bottom',

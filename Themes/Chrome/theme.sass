@@ -5,6 +5,36 @@
 @import tabs.css
 @import float.css
 
+
+.toggler
+  :width 120px
+  :overflow hidden
+  :height 16px
+  :border 1px solid #C6C6C6
+  :cursor pointer
+  +round_full(5px)
+  +linear_gradient(#85A7EA,#6F95DB)
+  .on, .off, .sep
+    :font-size 10px
+    :font-weight bold
+    :padding 5px
+    :padding-top 4px
+    :height 16px
+    :text-align center
+    :-webkit-transition-duration 0.3s
+    +round_full(3px)
+  .sep
+    :width 50px
+    :padding-top 0
+    :padding-bottom 0
+    +linear_gradient(#E0E0E0,#D9D9D9)
+    +box_shadow(0,0,10px, rgba(0,0,0,0.2))
+    :z-index 1
+    :background-color #ddd
+  .on, .off
+    :width 50px
+    :z-index 0
+    :color #fff  
 .table
   tr:nth-child(odd) 
     :background-color #D3DCED

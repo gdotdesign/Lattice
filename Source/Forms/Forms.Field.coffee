@@ -33,19 +33,20 @@ Forms.Field = new Class {
   createS: (item,parent) ->
     if not parent?
       null
-    switch $type(item)
-      when "object"
-        for key of item
-          data = new Hash(item).get key
-          if key == 'input'
-            @input = new Forms.Input @options  
-            el = @input
-          else if key == 'label'
-            @label = new Element 'label', {'text':@options.label}
-            el = @label
-          else
-            el = new Element key 
-          parent.grab el
-          @createS data , el
+    else
+      switch $type(item)
+        when "object"
+          for key of item
+            data = new Hash(item).get key
+            if key == 'input'
+              @input = new Forms.Input @options  
+              el = @input
+            else if key == 'label'
+              @label = new Element 'label', {'text':@options.label}
+              el = @label
+            else
+              el = new Element key 
+            parent.grab el
+            @createS data , el
           
 }

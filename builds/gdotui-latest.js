@@ -12,6 +12,36 @@ provides: GDotUI
 
 ...
 */
+/*---
+description: Class Mutator. Exposes methods as its own by delegating specified method calls directly to specified elements within the Class.
+
+license: MIT-style
+
+authors:
+- Kevin Valdek
+- Perrin Westrich
+
+requires:
+  core/1.2.4:   '*'
+
+provides:
+  - Class.Delegates
+
+...
+*/
+Class.Mutators.Delegates = function(delegations) {
+  var self;
+  self = this;
+  return new Hash(delegations).each(function(delegates, target) {
+    return $splat(delegates).each(function(delegate) {
+      return (self.prototype[delegate] = function() {
+        var ret;
+        ret = this[target][delegate].apply(this[target], arguments);
+        return ret === this[target] ? this : ret;
+      });
+    });
+  });
+};
 Interfaces = {};
 Core = {};
 Data = {};
@@ -67,7 +97,7 @@ Interfaces.Enabled = new Class({
     return this.fireEvent('enabled');
   },
   disable: function() {
-    this.enabled(false);
+    this.enabled = false;
     this.base.addClass('disabled');
     return this.fireEvent('disabled');
   }
@@ -79,8 +109,6 @@ name: Interfaces.Draggable
 description: Porived dragging for elements that implements it.
 
 license: MIT-style license.
-
-requires:
 
 provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
@@ -184,8 +212,6 @@ description: Interface to store and restore elements status and position after r
 
 license: MIT-style license.
 
-requires:
-
 provides: Interfaces.Restoreable
 
 ...
@@ -194,7 +220,6 @@ Interfaces.Restoreable = new Class({
   Impelments: [Options],
   Binds: ['savePosition'],
   options: {
-    useCookie: true,
     cookieID: null
   },
   _$Restoreable: function() {
@@ -206,47 +231,27 @@ Interfaces.Restoreable = new Class({
   saveState: function() {
     var state;
     state = this.base.isVisible() ? 'visible' : 'hidden';
-    return $chk(this.options.cookieID) ? (this.options.useCookie ? Cookie.write(this.options.cookieID + '.state', state, {
-      duration: GDotUI.Config.cookieDuration
-    }) : window.localStorage.setItem(this.options.cookieID + '.state', state)) : null;
+    return this.options.cookieID !== null ? window.localStorage.setItem(this.options.cookieID + '.state', state) : null;
   },
   savePosition: function() {
     var position, state;
-    if ($chk(this.options.cookieID)) {
+    if (this.options.cookieID !== null) {
       position = this.base.getPosition();
       state = this.base.isVisible() ? 'visible' : 'hidden';
-      if (this.options.useCookie) {
-        Cookie.write(this.options.cookieID + '.x', position.x, {
-          duration: GDotUI.Config.cookieDuration
-        });
-        Cookie.write(this.options.cookieID + '.y', position.y, {
-          duration: GDotUI.Config.cookieDuration
-        });
-        return Cookie.write(this.options.cookieID + '.state', state, {
-          duration: GDotUI.Config.cookieDuration
-        });
-      } else {
-        window.localStorage.setItem(this.options.cookieID + '.x', position.x);
-        window.localStorage.setItem(this.options.cookieID + '.y', position.y);
-        return window.localStorage.setItem(this.options.cookieID + '.state', state);
-      }
+      window.localStorage.setItem(this.options.cookieID + '.x', position.x);
+      window.localStorage.setItem(this.options.cookieID + '.y', position.y);
+      return window.localStorage.setItem(this.options.cookieID + '.state', state);
     }
   },
   loadPosition: function(loadstate) {
-    if ($chk(this.options.cookieID)) {
-      if (this.options.useCookie) {
-        this.base.setStyle('top', Cookie.read(this.options.cookieID + '.y') + "px");
-        this.base.setStyle('left', Cookie.read(this.options.cookieID + '.x') + "px");
-        return Cookie.read(this.options.cookieID + '.state') === "hidden" ? this.hide() : null;
-      } else {
-        this.base.setStyle('top', window.localStorage.getItem(this.options.cookieID + '.y') + "px");
-        this.base.setStyle('left', window.localStorage.getItem(this.options.cookieID + '.x') + "px");
-        this.scrollBase.setStyle('height', window.localStorage.getItem(this.options.cookieID + '.height') + "px");
-        if (window.localStorage.getItem(this.options.cookieID + '.x') === null) {
-          this.center();
-        }
-        return window.localStorage.getItem(this.options.cookieID + '.state') === "hidden" ? this.hide() : null;
+    if (this.options.cookieID !== null) {
+      this.base.setStyle('top', window.localStorage.getItem(this.options.cookieID + '.y') + "px");
+      this.base.setStyle('left', window.localStorage.getItem(this.options.cookieID + '.x') + "px");
+      this.scrollBase.setStyle('height', window.localStorage.getItem(this.options.cookieID + '.height') + "px");
+      if (window.localStorage.getItem(this.options.cookieID + '.x') === null) {
+        this.center();
       }
+      return window.localStorage.getItem(this.options.cookieID + '.state') === "hidden" ? this.hide() : null;
     }
   }
 });
@@ -257,8 +262,6 @@ name: Interfaces.Controls
 description: Some control functions.
 
 license: MIT-style license.
-
-requires:
 
 provides: Interfaces.Controls
 
@@ -272,7 +275,7 @@ Interfaces.Controls = new Class({
     return this.base.setStyle('opacity', 1);
   },
   toggle: function() {
-    return this.base.getStyle('opacity') === 0 ? this.show() : this.hide();
+    return this.base.getStyle(('opacity') === 0) ? this.show() : this.hide();
   }
 });
 /*---
@@ -304,7 +307,7 @@ Core.Abstract = new Class({
   },
   create: function() {},
   ready: function() {
-    this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn'), false);
+    this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn', false));
     return this.base.eliminate('fn');
   },
   toElement: function() {
@@ -335,7 +338,7 @@ Core.Icon = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
-  create: (function() {
+  create: function() {
     var _a;
     this.base.addClass(this.options["class"]);
     if (typeof (_a = this.options.image) !== "undefined" && _a !== null) {
@@ -344,7 +347,7 @@ Core.Icon = new Class({
     return this.base.addEvent('click', (function(e) {
       return this.enabled ? this.fireEvent('invoked', [this, e]) : null;
     }).bindWithEvent(this));
-  }).protect()
+  }
 });
 /*---
 
@@ -354,7 +357,7 @@ description: Icon group with 4 types of layout.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls]
+requires: Core.Abstract
 
 provides: Core.IconGroup
 
@@ -362,7 +365,6 @@ provides: Core.IconGroup
 */
 Core.IconGroup = new Class({
   Extends: Core.Abstract,
-  Implements: Interfaces.Controls,
   Binds: ['delegate'],
   options: {
     mode: "horizontal",
@@ -379,10 +381,10 @@ Core.IconGroup = new Class({
     this.icons = [];
     return this.parent(options);
   },
-  create: (function() {
+  create: function() {
     this.base.setStyle('position', 'relative');
     return this.base.addClass(this.options["class"]);
-  }).protect(),
+  },
   delegate: function() {
     return this.fireEvent('invoked', arguments);
   },
@@ -633,15 +635,15 @@ ResetSlider = new Class({
     return (this.stepWidth = this.stepSize * this.full / Math.abs(this.range));
   },
   draggedKnob: function() {
-    var dir, position, step;
+    var dir, position;
     dir = this.range < 0 ? -1 : 1;
     position = this.drag.value.now[this.axis];
     position = position.limit(-this.options.offset, this.full - this.options.offset);
     this.step = this.min + dir * this.toStep(position);
-    this.checkStep();
-    ({
-      toStep: function(position) {}
-    });
+    return this.checkStep();
+  },
+  toStep: function(position) {
+    var step;
     step = (position + this.options.offset) * this.stepSize / this.full * this.steps;
     return this.options.steps ? step -= step % this.stepSize : step;
   }
@@ -1156,11 +1158,12 @@ Iterable.List = new Class({
     var svalue;
     svalue = this.sinput.get('value');
     return this.items.each((function(item) {
-      return item.title.get('text').test(/$svalue/ig) || item.subtitle.get('text').test(/$svalue/ig) ? item.base.setStyle('display', 'block') : item.base.setStyle('display', 'none');
+      return item.title.get('text').test(new RegExp("" + (svalue), "ig")) || item.subtitle.get('text').test(new RegExp("" + (svalue), "ig")) ? item.base.setStyle('display', 'block') : item.base.setStyle('display', 'none');
     }).bind(this));
   },
   removeItem: function(li) {
     li.removeEvents('invoked', 'edit', 'delete');
+    this.items.erase(li);
     return li.base.destroy();
   },
   removeAll: function() {
@@ -1169,7 +1172,6 @@ Iterable.List = new Class({
     }
     this.selected = null;
     this.items.each((function(item) {
-      console.log(item);
       return this.removeItem(item);
     }).bind(this));
     delete this.items;
@@ -1233,7 +1235,7 @@ Iterable.List = new Class({
 
 name: Core.Slot
 
-description: Generic icon element.
+description: iOs style slot control.
 
 license: MIT-style license.
 
@@ -1414,7 +1416,7 @@ Core.Tabs = new Class({
     return this.base.addClass(this.options["class"]);
   },
   add: function(tab) {
-    if (this.tabs.indexOf(tab) === -1) {
+    if (this.tabs.indexOf(tab === -1)) {
       this.tabs.push(tab);
       this.base.grab(tab);
       tab.addEvent('remove', this.remove);
@@ -1422,7 +1424,7 @@ Core.Tabs = new Class({
     }
   },
   remove: function(tab) {
-    if (this.tabs.indexOf(tab) !== -1) {
+    if (this.tabs.indexOf(tab !== -1)) {
       if (this.options.autoRemove) {
         this.removeTab(tab);
       }
@@ -1463,7 +1465,7 @@ Core.Tabs = new Class({
 
 name: Core.TabFloat
 
-description:
+description: Tabbed float.
 
 license: MIT-style license.
 
@@ -1516,13 +1518,100 @@ Core.TabFloat = new Class({
 });
 /*---
 
+name: Core.Toggler
+
+description: iOs style checkboxes
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled]
+
+provides: Core.Toggler
+
+...
+*/
+Element.Properties.checked = {
+  get: function() {
+    var _a;
+    return (typeof (_a = this.getChecked) !== "undefined" && _a !== null) ? this.getChecked() : null;
+  },
+  set: function(value) {
+    var _a, _b;
+    return (typeof (_a = this.on) !== "undefined" && _a !== null) && (typeof (_b = this.off) !== "undefined" && _b !== null) ? (value ? this.on() : this.off()) : null;
+  }
+};
+Core.Toggler = new Class({
+  Extends: Core.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Controls],
+  options: {
+    "class": GDotUI.Theme.Toggler["class"],
+    onClass: GDotUI.Theme.Toggler.onClass,
+    offClass: GDotUI.Theme.Toggler.offClass,
+    sepClass: GDotUI.Theme.Toggler.separatorClass,
+    onText: GDotUI.Theme.Toggler.onText,
+    offText: GDotUI.Theme.Toggler.offText
+  },
+  initialize: function(options) {
+    this.checked = true;
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options["class"]);
+    this.base.setStyle('position', 'relative');
+    this.onLabel = new Element('div', {
+      text: this.options.onText,
+      "class": this.options.onClass
+    });
+    this.offLabel = new Element('div', {
+      text: this.options.offText,
+      "class": this.options.offClass
+    });
+    this.separator = new Element('div', {
+      html: '&nbsp;',
+      "class": this.options.sepClass
+    });
+    return this.base.adopt(this.onLabel, this.separator, this.offLabel);
+  },
+  ready: function() {
+    $$(this.onLabel, this.offLabel, this.separator).setStyles({
+      'position': 'absolute',
+      'top': 0,
+      'left': 0
+    });
+    this.follow();
+    this.base.addEvent('click', (function() {
+      return this.checked ? this.off() : this.on();
+    }).bind(this));
+    this.base.getChecked = (function() {
+      return this.checked;
+    }).bind(this);
+    this.base.on = this.on.bind(this);
+    return (this.base.off = this.off.bind(this));
+  },
+  on: function() {
+    this.checked = true;
+    this.onLabel.setStyle('left', 0);
+    return this.follow();
+  },
+  off: function() {
+    this.checked = false;
+    this.onLabel.setStyle('left', -this.onLabel.getSize().x);
+    return this.follow();
+  },
+  follow: function() {
+    var left;
+    left = this.onLabel.getStyle('left');
+    this.separator.setStyle('left', Number(left.slice(0, left.length - 3 + 1)) + this.onLabel.getSize().x);
+    return this.offLabel.setStyle('left', Number(left.slice(0, left.length - 3 + 1)) + this.onLabel.getSize().x + this.separator.getSize().x);
+  }
+});
+/*---
+
 name: Data.Abstract
 
 description: "Abstract" base class for data elements.
 
 license: MIT-style license.
-
-requires:
 
 provides: Data.Abstract
 
@@ -1543,7 +1632,7 @@ Data.Abstract = new Class({
   },
   create: function() {},
   ready: function() {
-    this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn'), false);
+    this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn', false));
     return this.base.eliminate('fn');
   },
   toElement: function() {
@@ -1658,7 +1747,8 @@ Data.Number = new Class({
       if (this.options.reset) {
         this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]);
       }
-      return this.slider.set(step);
+      this.slider.set(step);
+      return this.fireEvent('change', step);
     }).bindWithEvent(this));
     this.text.addEvent('mousewheel', (function(e) {
       return this.slider.set(Number(this.text.get('value')) + e.wheel);
@@ -1849,9 +1939,8 @@ Data.Color = new Class({
     this.lightness.addEvent('change', (function(step) {
       this.xy.detach();
       this.xy.set({
-        x: this.xy.get().x({
-          y: 100 - step
-        })
+        x: this.xy.get().x,
+        y: 100 - step
       });
       return this.xy.attach();
     }).bindWithEvent(this));
@@ -2301,9 +2390,7 @@ Data.Table = new Class({
       addColumn = true;
     }
     this.header.removeAll();
-    (this.rows.filter(function() {
-      return true;
-    })).each((function(row) {
+    this.rows.each((function(row) {
       return this.removeRow(row);
     }).bind(this));
     this.columns = 0;
@@ -2314,20 +2401,20 @@ Data.Table = new Class({
   },
   update: function() {
     var length, longest, rowsToRemove;
-    length = this.rows.length - 1;
+    length = this.rows.length;
     longest = 0;
     rowsToRemove = [];
     this.rows.each((function(row, i) {
       var empty;
       empty = row.empty();
-      if (empty && i !== 0 && i !== length) {
-        rowsToRemove.push(row);
-      }
-      return i === length && !empty ? this.addRow(this.columns) : null;
+      return empty ? rowsToRemove.push(row) : null;
     }).bind(this));
     rowsToRemove.each((function(item) {
       return this.removeRow(item);
     }).bind(this));
+    if (this.rows.length === 0 || !this.rows.getLast().empty()) {
+      this.addRow(this.columns);
+    }
     return this.fireEvent('change', this.getData());
   },
   getData: function() {
@@ -2353,7 +2440,6 @@ Data.Table = new Class({
   setValue: function(obj) {
     var j, rowa, self;
     this.removeAll(false);
-    console.log(this);
     rowa = [];
     j = 0;
     self = this;
@@ -2373,6 +2459,7 @@ Data.Table = new Class({
       self.addRow(self.columns);
       return self.rows[i].setValue(item);
     });
+    this.update();
     return this;
   }
 });
@@ -2505,13 +2592,16 @@ Data.TableCell = new Class({
     }
   },
   editEnd: function(e) {
+    var _a;
     if (this.editing) {
       this.editing = false;
     }
     this.setValue(this.input.get('value'));
-    this.input.removeEvents(['change', 'keydown']);
-    this.input.destroy();
-    delete this.input;
+    if (typeof (_a = this.input) !== "undefined" && _a !== null) {
+      this.input.removeEvents(['change', 'keydown']);
+      this.input.destroy();
+      delete this.input;
+    }
     return this.fireEvent('editEnd');
   },
   setValue: function(value) {
@@ -2519,7 +2609,7 @@ Data.TableCell = new Class({
     return !this.editing ? this.base.set('text', this.value) : null;
   },
   getValue: function() {
-    return this.base.get('text');
+    return !this.editing ? this.base.get('text') : this.input.get('value');
   }
 });
 /*---
@@ -2573,7 +2663,7 @@ Data.Select = new Class({
   },
   setValue: function(value) {
     var _a, selected;
-    selected = this.select.getElements("option[value=$value]");
+    selected = this.select.getElements("option[value=" + (value) + "]");
     if (typeof (_a = selected[0]) !== "undefined" && _a !== null) {
       this.select.getElements("option").set('selected', null);
       selected.set('selected', true);
@@ -2670,11 +2760,11 @@ Data.Unit = new Class({
     });
     this.number.addEvent('change', (function(value) {
       this.value = value;
-      return this.fireEvent('change', String(this.value) + this.sel.value);
+      return this.fireEvent('change', String(this.value) + this.sel.getValue());
     }).bindWithEvent(this));
     this.sel.setValue('px');
     this.sel.addEvent('change', (function() {
-      return this.fireEvent('change', String(this.value) + this.sel.value);
+      return this.fireEvent('change', String(this.value) + this.sel.getValue());
     }).bindWithEvent(this));
     return this.base.adopt(this.number, this.sel);
   },
@@ -2685,8 +2775,8 @@ Data.Unit = new Class({
       value = match[1];
       unit = match[2];
       this.sel.setValue(unit);
+      return this.number.setValue(value);
     }
-    return this.number.setValue(value);
   },
   getValue: function() {
     return String(this.value) + this.sel.value;
@@ -2743,6 +2833,9 @@ Data.List = new Class({
       value: value
     });
     cell.addEvent('editEnd', this.update);
+    cell.addEvent('next', function() {
+      return cell.input.blur();
+    });
     this.cells.push(cell);
     tr = new Element('tr');
     this.table.grab(tr);
@@ -2750,6 +2843,7 @@ Data.List = new Class({
   },
   remove: function(cell, remove) {
     cell.removeEvents('editEnd');
+    cell.removeEvents('next');
     this.cells.erase(cell);
     cell.base.getParent('tr').destroy();
     cell.base.destroy();
@@ -3067,32 +3161,33 @@ Forms.Field = new Class({
     var _a, _b, _c, data, el, key;
     if (!(typeof parent !== "undefined" && parent !== null)) {
       return null;
-    }
-    switch ($type(item)) {
-    case "object":
-      _b = []; _c = item;
-      for (key in _c) {
-        if (!__hasProp.call(_c, key)) continue;
-        _a = _c[key];
-        _b.push((function() {
-          data = new Hash(item).get(key);
-          if (key === 'input') {
-            this.input = new Forms.Input(this.options);
-            el = this.input;
-          } else if (key === 'label') {
-            this.label = new Element('label', {
-              'text': this.options.label
-            });
-            el = this.label;
-          } else {
-            el = new Element(key);
-          }
-          parent.grab(el);
-          return this.createS(data, el);
-        }).call(this));
+    } else {
+      switch ($type(item)) {
+      case "object":
+        _b = []; _c = item;
+        for (key in _c) {
+          if (!__hasProp.call(_c, key)) continue;
+          _a = _c[key];
+          _b.push((function() {
+            data = new Hash(item).get(key);
+            if (key === 'input') {
+              this.input = new Forms.Input(this.options);
+              el = this.input;
+            } else if (key === 'label') {
+              this.label = new Element('label', {
+                'text': this.options.label
+              });
+              el = this.label;
+            } else {
+              el = new Element(key);
+            }
+            parent.grab(el);
+            return this.createS(data, el);
+          }).call(this));
+        }
+        return _b;
+        break;
       }
-      return _b;
-      break;
     }
   }
 });

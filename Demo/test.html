@@ -3,54 +3,20 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
 <head>
     <title>GDotUI.Demo</title>
-    <link type="text/css" rel="stylesheet" href="prettify/prettify.css"/>
-    <script type="text/javascript" src="prettify/prettify.js"></script>
+    <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
+    <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
+    <script type="text/javascript" src="../mootools/Field.js"></script>
+    <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
+    <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
+    <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
+    <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
+    <script type="text/javascript"> 
+    $(window).addEvent('domready', function(){
+      document.body.grab(new Core.Toggler())
+    })
+    </script>
 </head>
 <body>
-                  <pre class="prettyprint" id="javascript"> 
-/**
- * nth element in the fibonacci series.
- * @param n >= 0
- * @return the nth element, >= 0.
- */
-function fib(n) {
-  var a = 1, b = 1;
-  var tmp;
-  while (--n >= 0) {
-    tmp = a;
-    a += b;
-    b = tmp;
-  }
-  return a;
-}
- 
-document.write(fib(10));
-</pre> 
-    <div id="tabs"></div>
-    <div id="content">
-        <div id="about">
-            <h1>Welcome to the demo page for G.UI!</h1>
-            <p>
-                You can navigate through the tabs at the top of the page
-            </p>
-            <p>
-                This is a offline web application showcasing the project.
-            </p>
-            <h2> Examples </h2>
-            <p>
-                Each example will feature an Element of the UI, with code examples like this:
-                <pre class="prettyprint lang-js">                
-var slot = new Core.Slot();
-document.body.grab(slot);
-                </pre> 
 
-            </p>
-            <h2> Effects, transitions, shadows </h2>
-            <p>
-                Every effect, transition, or shadow you see is done with css. No javascript tweening no extra code to create shadows nothing.
-                This application uses the default theme of the project.
-            </p>
-        </div>
-    </div>
 </body>
 </html>
