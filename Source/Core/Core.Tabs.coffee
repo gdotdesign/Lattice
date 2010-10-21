@@ -46,13 +46,14 @@ Core.Tabs = new Class {
     @fireEvent 'tabRemoved', tab
   change: (tab) ->
     if tab isnt @active
-      @fireEvent 'change', tab
       @setActive tab
+      @fireEvent 'change', tab
   setActive: (tab) ->
-    if @active?
-      @active.deactivate()
-    tab.activate()
-    @active = tab
+    if @active isnt tab
+      if @active?
+        @active.deactivate()
+      tab.activate()
+      @active = tab
   getByLabel: (label) ->
     (@tabs.filter (item, i) ->
       if item.options.label is label
