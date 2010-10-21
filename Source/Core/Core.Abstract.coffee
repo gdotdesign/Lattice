@@ -13,6 +13,18 @@ provides: Core.Abstract
 
 ...
 ###
+Element.NativeEvents['DOMNodeInsertedIntoDocument'] = 2
+Element.Events['addedToDom'] = {
+  base: 'DOMNodeInsertedIntoDocument'
+}
+Element.implement {
+  removeTransition: ->
+    @store 'transition', @getStyle( '-webkit-transition-duration' )
+    @setStyle '-webkit-transition-duration', '0'
+  addTransition: ->
+    @setStyle '-webkit-transition-duration', @retrieve( 'transition' )
+    @eliminate 'transition'
+}
 Core.Abstract = new Class {
   Implements:[Events
               Options
@@ -21,15 +33,16 @@ Core.Abstract = new Class {
     @setOptions options
     @base = new Element 'div'
     @create()
-    fn = @ready.bindWithEvent @
-    @base.store 'fn', fn
-    @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
+    @base.addEvent 'addedToDom', @ready.bindWithEvent @
+    @base.store 'transition', @base.getStyle( '-webkit-transition-duration' )
+    @base.setStyle '-webkit-transition-duration', '0'
     @mux()
     @
   create: ->
   ready: ->
-    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve ('fn'), no
-    @base.eliminate 'fn'
+    @base.removeEvents 'addedToDom'
+    @base.setStyle '-webkit-transition-duration', @base.retrieve( 'transition' )
+    @base.eliminate 'transition'
   toElement: ->
     @base
 }

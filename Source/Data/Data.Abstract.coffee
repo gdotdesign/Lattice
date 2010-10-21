@@ -18,15 +18,12 @@ Data.Abstract = new Class {
   initialize: (options) ->
     @setOptions options
     @base = new Element 'div'
-    fn = @ready.bindWithEvent this
-    @base.store 'fn', fn
-    @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
+    @base.addEvent 'addedToDom', @ready.bindWithEvent @
     @create()
     @
   create: ->
   ready: ->
-    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve ('fn'), no
-    @base.eliminate 'fn'
+    @base.removeEvents 'addedToDom'
   toElement: ->
     @base
   setValue: ->

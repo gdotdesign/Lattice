@@ -13,16 +13,6 @@ provides: Iterable.ListItem
 
 ...
 ###
-Element.implement {
-  toggleTransition: ->
-    old = @retrieve 'transition-dur'
-    if old?
-      @setStyle '-webkit-transition-duration', old
-      @eliminate 'transition-dur'
-    else
-      @setStyle '-webkit-transition-duration', 0
-      @store 'transition-dur', @getStyle '-webkit-transition-duration'
-}
 Iterable.ListItem = new Class {
   Extends:Core.Abstract
   Implements: [ Interfaces.Draggable
@@ -61,8 +51,6 @@ Iterable.ListItem = new Class {
     $$(@remove.base,@handles.base).setStyle 'position','absolute'
     @title = new Element('div').addClass(@options.classes.title).set 'text', @options.title
     @subtitle = new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
-    @remove.base.toggleTransition()
-    @handles.base.toggleTransition()
     @base.adopt @title,@subtitle
     if @options.removeable
       @base.grab @remove
@@ -118,8 +106,6 @@ Iterable.ListItem = new Class {
         "left":-handSize.x,
         "top":(baseSize.y-handSize.y)/2
         }
-      @remove.base.toggleTransition()
-      @handles.base.toggleTransition()
       @parent()
       if @options.draggable
         @drag.addEvent 'beforeStart',( ->

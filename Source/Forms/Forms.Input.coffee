@@ -33,6 +33,7 @@ Forms.Input = new Class {
       tg = new Core.Toggler()
       tg.base.setAttribute 'name', @options.name
       tg.base.setAttribute 'type', 'checkbox'
+      tg.checked = @options.checked || false
       @base = tg.base
     if @options.type is "textarea"
       @base = new Element 'textarea', {name: @options.name}

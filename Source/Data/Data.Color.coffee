@@ -116,7 +116,6 @@ Data.Color = new Class {
     colr = new $HSB color.hsb[0], 100, 100
     @bgColor = color
     @finalColor = color
-    console.log @
     @color.setStyle 'background-color', colr
     @setColor()
   setColor: ->

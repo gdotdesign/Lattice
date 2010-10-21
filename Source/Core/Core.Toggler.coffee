@@ -18,12 +18,14 @@ Element.Properties.checked = {
     if @getChecked?
       @getChecked()
   set: (value) ->
+    @setAttribute 'checked', value
     if @on? and @off?
       if value
         @on()
       else
         @off()
 }
+
 Core.Toggler = new Class {
   Extends: Core.Abstract
   Implements:[
@@ -45,8 +47,11 @@ Core.Toggler = new Class {
     @base.addClass @options.class
     @base.setStyle 'position','relative'
     @onLabel = new Element 'div', {text:@options.onText, class:@options.onClass}
+    @onLabel.removeTransition()
     @offLabel = new Element 'div', {text:@options.offText, class:@options.offClass}
+    @offLabel.removeTransition()
     @separator = new Element 'div', {html: '&nbsp;', class:@options.sepClass}
+    @separator.removeTransition()
     @base.adopt @onLabel, @separator, @offLabel
     @base.getChecked = ( ->
       @checked
@@ -59,13 +64,11 @@ Core.Toggler = new Class {
       'top': 0
       'left': 0
     }
-    @follow()
     if @checked
       @on()
     else
       @off()
     @base.addEvent 'click', ( ->
-       console.log 'clicked'
        if @checked
         @off()
         @base.fireEvent 'change'
@@ -73,6 +76,10 @@ Core.Toggler = new Class {
         @on()
         @base.fireEvent 'change'
     ).bind @
+    @onLabel.addTransition()
+    @offLabel.getPosition()
+    @offLabel.addTransition()
+    @separator.addTransition()
     @parent()
   on: ->
     @checked = yes
