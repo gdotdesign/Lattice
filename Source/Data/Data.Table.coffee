@@ -71,11 +71,14 @@ Data.Table = new Class {
     ).bindWithEvent @
     @rows.push row
     @table.grab row
-  removeRow: (row) ->
+  removeRow: (row,erase) ->
+    if not erase?
+      erase = yes
     row.removeEvents 'editEnd'
     row.removeEvents 'next'
     row.removeAll()
-    @rows.erase row
+    if erase
+      @rows.erase row
     row.base.destroy()
     delete row
   removeAll: (addColumn) ->
@@ -83,8 +86,9 @@ Data.Table = new Class {
       addColumn = yes
     @header.removeAll()
     @rows.each ( (row) ->
-      @removeRow row
+      @removeRow row, no
     ).bind @
+    @rows.empty()
     @columns = 0
     if addColumn
       @addCloumn()
@@ -130,7 +134,6 @@ Data.Table = new Class {
         if not rowa[i]?
           rowa[i] = []
         rowa[i][j] = item
-        i++
       j++
     rowa.each (item,i) ->
       self.addRow self.columns

@@ -27,17 +27,17 @@ Data.DateTime = new Class {
     @time = new Data.Time()
   ready: ->
     @base.adopt @datea, @time
-    @setValue new Date()
+    @setValue( @date or new Date())
     @datea.addEvent 'change',( ->
       @date.setYear @datea.date.getFullYear()
       @date.setMonth @datea.date.getMonth()
       @date.setDate @datea.date.getDate()
-      @fireEvent 'change', @date.format(@options.format)
+      @fireEvent 'change', @date
     ).bindWithEvent @
     @time.addEvent 'change',( ->
       @date.setHours @time.time.getHours()
       @date.setMinutes @time.time.getMinutes()
-      @fireEvent 'change', @date.format(@options.format)
+      @fireEvent 'change', @date
     ).bindWithEvent @
     @parent()
   getValue: ->
@@ -47,5 +47,5 @@ Data.DateTime = new Class {
       @date = date
     @datea.setValue @date
     @time.setValue @date
-    @fireEvent 'change', @date.format(@options.format)
+    @fireEvent 'change', @date
 }

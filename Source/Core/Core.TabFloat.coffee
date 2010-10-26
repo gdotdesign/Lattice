@@ -23,7 +23,7 @@ Core.TabFloat = new Class {
     @parent()
     @tabs = new Core.Tabs({class:'floatTabs'})
     @tabs.addEvent 'change', ( (tab) ->
-      @lastTab = @tabs.active
+      @lastTab = @tabs.tabs[@tabContents.indexOf(@activeContent)] 
       index = @tabs.tabs.indexOf tab
       @activeContent = @tabContents[index]
       @setContent @tabContents[index]
@@ -41,5 +41,6 @@ Core.TabFloat = new Class {
         index = i
     if index?
       @tabs.setActive @tabs.tabs[index]
-    @parent element
+    @activeContent = @tabContents[index]
+    @parent @tabContents[index]
 }

@@ -55,6 +55,6 @@ Data.Time = new Class {
       @minuteList.addItem item
       i++
     @base.adopt @hourList, @minuteList
-    @setValue new Date()
+    @setValue(@time or new Date())
     @parent()
 }

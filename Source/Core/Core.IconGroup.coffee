@@ -15,6 +15,7 @@ provides: Core.IconGroup
 ###
 Core.IconGroup = new Class {
   Extends: Core.Abstract
+  Implements: Interfaces.Controls
   Binds: ['delegate']
   options: {
     mode: "horizontal" #horizontal / vertical / circular / grid
@@ -42,15 +43,15 @@ Core.IconGroup = new Class {
       @icons.push icon
       yes
     else no
-  show: ->
-    @base.setStyle 'display', 'block'
-  hide: ->
-    @base.setStyle 'display', 'none'
-  toggle: ->
-    if @base.getStyle('display') is 'none'
-      @show()
-    else
-      @hide()
+  #show: ->
+  #  @base.setStyle 'display', 'block'
+  #hide: ->
+  #  @base.setStyle 'display', 'none'
+  #toggle: ->
+  #  if @base.getStyle('display') is 'none'
+  #    @show()
+  #  else
+  #    @hide()
   removeIcon: (icon) ->
     index = @icons.indexOf icon
     if index isnt -1
