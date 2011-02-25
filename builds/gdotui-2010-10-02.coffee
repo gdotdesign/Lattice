@@ -68,10 +68,10 @@ provides: Interfaces.Mux
 ###
 Interfaces.Mux = new Class {
   mux: ->
-    (new Hash @ ).each( ( (value,key) ->
+    (new Hash this).each( ( (value,key) ->
       if (key.test(/^_\$/) && $type(value)=="function")
-        value.run null, @
-    ).bind @ )
+        value.run null, this
+    ).bind this )
 }
 
 
@@ -111,6 +111,8 @@ description: Porived dragging for elements that implements it.
 
 license: MIT-style license.
 
+requires: 
+
 provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
 ...
@@ -134,24 +136,28 @@ Drag.Ghost = new Class {
 			@droppables = $$(@options.droppables)
 			@ghost()
 			@parent(event)
+
 	cancel: (event) ->
 		if event
 			@deghost()
 		@parent(event)
+	
 	stop: (event) ->
 		@deghost()
 		@parent(event)
+
 	ghost: ->
 		@element = (@element.clone()
 		).setStyles({
 			'opacity': @options.opacity,
 			'position': 'absolute',
-			'z-index': 5003,
+			'z-index': 5003, # todo zindexing
 			'top': @element.getCoordinates()['top'],
 			'left': @element.getCoordinates()['left']
 			'-webkit-transition-duration': '0s'
 		}).inject(document.body).store('parent', @element)
-		@element.getElements(@options.remove).dispose()	
+		@element.getElements(@options.remove).dispose()
+		
 	deghost: ->
 		e = @element.retrieve 'parent'
 		newpos = @element.getPosition e.getParent()
@@ -193,6 +199,8 @@ description: Interface to store and restore elements status and position after r
 
 license: MIT-style license.
 
+requires: 
+
 provides: Interfaces.Restoreable
 
 ...
@@ -201,6 +209,7 @@ Interfaces.Restoreable = new Class {
   Impelments:[Options]
   Binds: ['savePosition']
   options:{
+    useCookie:true
     cookieID:null
   }
   _$Restoreable: ->
@@ -211,24 +220,38 @@ Interfaces.Restoreable = new Class {
       ).bindWithEvent @
   saveState: ->
     state = if @base.isVisible() then 'visible' else 'hidden'
-    if @options.cookieID isnt null
-      window.localStorage.setItem @options.cookieID + '.state', state
+    if $chk @options.cookieID
+      if @options.useCookie
+        Cookie.write @options.cookieID+'.state', state, {duration:GDotUI.Config.cookieDuration}
+      else
+        window.localStorage.setItem @options.cookieID+'.state', state
   savePosition: ->
-    if @options.cookieID isnt null
-      position = @base.getPosition()
+    if $chk @options.cookieID
+      position = @base.getPosition();
       state = if @base.isVisible() then 'visible' else 'hidden'
-      window.localStorage.setItem @options.cookieID + '.x', position.x
-      window.localStorage.setItem @options.cookieID + '.y', position.y
-      window.localStorage.setItem @options.cookieID + '.state', state
+      if @options.useCookie
+        Cookie.write @options.cookieID+'.x', position.x, {duration:GDotUI.Config.cookieDuration}
+        Cookie.write @options.cookieID+'.y', position.y, {duration:GDotUI.Config.cookieDuration}
+        Cookie.write @options.cookieID+'.state', state, {duration:GDotUI.Config.cookieDuration}
+      else
+        window.localStorage.setItem @options.cookieID+'.x', position.x
+        window.localStorage.setItem @options.cookieID+'.y', position.y
+        window.localStorage.setItem @options.cookieID+'.state', state
   loadPosition: (loadstate)->
-    if @options.cookieID isnt null
-      @base.setStyle 'top', window.localStorage.getItem(@.options.cookieID + '.y') + "px"
-      @base.setStyle 'left', window.localStorage.getItem(@.options.cookieID + '.x') + "px"
-      @scrollBase.setStyle 'height', window.localStorage.getItem(@.options.cookieID +'.height') + "px"
-      if window.localStorage.getItem(@options.cookieID+'.x') is null
-        @center()
-      if window.localStorage.getItem(@.options.cookieID+'.state') == "hidden" 
-        @hide()
+    if $chk @options.cookieID
+      if @options.useCookie
+        @base.setStyle 'top', Cookie.read(this.options.cookieID+'.y')+"px"
+        @base.setStyle 'left', Cookie.read(this.options.cookieID+'.x')+"px"
+        if Cookie.read(@options.cookieID+'.state') == "hidden"
+          @hide();
+      else
+        @base.setStyle 'top', window.localStorage.getItem(this.options.cookieID+'.y')+"px"
+        @base.setStyle 'left', window.localStorage.getItem(this.options.cookieID+'.x')+"px"
+        @scrollBase.setStyle 'height', window.localStorage.getItem(this.options.cookieID+'.height')+"px"
+        if window.localStorage.getItem(@options.cookieID+'.x') is null
+          @center()
+        if window.localStorage.getItem(this.options.cookieID+'.state') == "hidden" 
+          @hide();
 }
 
 
@@ -241,6 +264,8 @@ description: Some control functions.
 
 license: MIT-style license.
 
+requires: 
+
 provides: Interfaces.Controls
 
 ...
@@ -251,7 +276,7 @@ Interfaces.Controls = new Class {
   show: -> 
     @base.setStyle 'opacity', 1
   toggle: ->
-    if @base.getStyle ('opacity') is 0
+    if @base.getStyle('opacity') is 0
       @show()
     else
       @hide()
@@ -273,23 +298,46 @@ provides: Core.Abstract
 
 ...
 ###
+# Abstract class to be extended on.
+# 
+# Implements:
+# 
+# * Events
+# * Options
+# * Interfaces.Mux
 Core.Abstract = new Class {
   Implements:[Events
               Options
               Interfaces.Mux]
+  # ### Constructor
+  # After setting the options, create the base object
+  # which is a Html element, in this case a div.
   initialize: (options) ->
     @setOptions options
     @base = new Element 'div'
+    # Call the create function which can be overriden.
     @create()
+    # Bind the ready event because the MooTools 1.2 doesn't support addEvent for 'DOMNodeInsertedIntoDocument',
+    # then store it so it can be removed later on, then add the event listener.
     fn = @ready.bindWithEvent @
     @base.store 'fn', fn
     @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
+    # This initializes the other interfaces.
     @mux()
+    # Return itself.
     @
+  # #### create()
+  # This is an empty function, it has to be delacred so if any child class doesn't override it
+  # it should still work.
   create: ->
+  # #### ready()
+  # This function runs when the event 'DOMNodeInsertedIntoDocument' fires. So when it runs the base element is fully
+  # rendered and can be measured via Mootools getSize().
   ready: ->
-    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve ('fn'), no
+    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve('fn'), no
     @base.eliminate 'fn'
+  # #### toElement()
+  # This is just so it works with document.id, grab, adopt etc.
   toElement: ->
     @base
 }
@@ -311,7 +359,7 @@ provides: Core.Icon
 ...
 ###
 Core.Icon = new Class {
-  Extends: Core.Abstract
+  Extends:Core.Abstract
   Implements:[
     Interfaces.Enabled
     Interfaces.Controls
@@ -322,14 +370,15 @@ Core.Icon = new Class {
   }
   initialize: (options) ->
     @parent options
-  create: ->
+  create: ( ->
     @base.addClass @options.class
     if @options.image?
-      @base.setStyle 'background-image', 'url(' + @options.image + ')'
+      @base.setStyle 'background-image', 'url('+@options.image+')'
     @base.addEvent 'click', ((e) ->
       if @enabled
-        @fireEvent 'invoked', [@, e]
-    ).bindWithEvent @
+        @fireEvent 'invoked', [this, e]
+      ).bindWithEvent this
+    ).protect()
 }
 
 
@@ -342,7 +391,7 @@ description: Icon group with 4 types of layout.
 
 license: MIT-style license.
 
-requires: Core.Abstract
+requires: [Core.Abstract, Interfaces.Controls]
 
 provides: Core.IconGroup
 
@@ -350,24 +399,26 @@ provides: Core.IconGroup
 ###
 Core.IconGroup = new Class {
   Extends: Core.Abstract
+  Implements: Interfaces.Controls
   Binds: ['delegate']
-  options: {
-    mode: "horizontal" #horizontal / vertical / circular / grid
+  options:{
+    mode:"horizontal" #horizontal / vertical / circular / grid
     spacing: {
-      x: 0
-      y: 0
+      x:0
+      y:0
     }
-    startAngle: 0 #degree
-    radius: 0 #degree
-    degree: 360 #degree
+    startAngle:0 #degree
+    radius:0 #degree
+    degree:360 #degree
     class: GDotUI.Theme.IconGroup.class
   }
   initialize: (options) ->
     @icons = []
     @parent options
-  create: ->
+  create: ( ->
     @base.setStyle 'position', 'relative'
     @base.addClass @options.class
+    ).protect()
   delegate: ->
     @fireEvent 'invoked', arguments
   addIcon: (icon) ->
@@ -391,7 +442,7 @@ Core.IconGroup = new Class {
     if index isnt -1
       icon.removeEvent 'invoked', @delegate
       icon.base.dispose()
-      @icons.splice index, 1
+      @icons.splice index,1
       yes
     else no
   ready: ->
@@ -405,12 +456,12 @@ Core.IconGroup = new Class {
       when 'grid'
         if @options.columns?
           columns = @options.columns
-          rows = @icons.length / columns
+          rows = @icons.length/columns
         if @options.rows?
-          rows = @options.rows
+          rows = @options.rows;
           columns = Math.round @icons.length/rows
         icpos = @icons.map (item,i) ->
-          if i % columns == 0
+          if i%columns == 0
             x = 0
             y = if i==0 then y else y+item.base.getSize().y+spacing.y
           else
@@ -425,7 +476,7 @@ Core.IconGroup = new Class {
           @size.x = x+item.base.getSize().x
           @size.y = y+item.base.getSize().y
           {x:x, y:y}
-          ).bind @
+          ).bind this
       when 'horizontal'
         icpos = @icons.map ((item,i) ->
           x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
@@ -433,7 +484,7 @@ Core.IconGroup = new Class {
           @size.x = x+item.base.getSize().x
           @size.y = item.base.getSize().y
           {x:x, y:y}
-          ).bind @
+          ).bind this
       when 'vertical'
         icpos = @icons.map ((item,i) ->
           x = if i==0 then x else x+spacing.x
@@ -441,7 +492,7 @@ Core.IconGroup = new Class {
           @size.x = item.base.getSize().x
           @size.y = y+item.base.getSize().y
           {x:x,y:y}
-          ).bind @
+          ).bind this
       when 'circular'
         n = @icons.length
         radius = @options.radius
@@ -450,12 +501,12 @@ Core.IconGroup = new Class {
         fok = @options.degree/n
         icpos = @icons.map (item,i) ->
           if i==0
-            foks = startAngle * (Math.PI/180)
-            x = Math.round radius * Math.sin(foks)
-            y = -Math.round radius * Math.cos(foks)
+            foks = startAngle*(Math.PI/180)
+            x = Math.round radius*Math.sin(foks)
+            y = -Math.round radius*Math.cos(foks)
           else
-            x = Math.round radius * Math.sin(((fok * i) + startAngle) * (Math.PI/180))
-            y = -Math.round radius * Math.cos(((fok * i) + startAngle) * (Math.PI/180))
+            x = Math.round radius*Math.sin(((fok*i)+startAngle)*(Math.PI/180))
+            y = -Math.round radius*Math.cos(((fok*i)+startAngle)*(Math.PI/180))
           {x:x, y:y}
     @icons.each (item,i) ->
       item.base.setStyle 'top', icpos[i].y
@@ -485,14 +536,14 @@ Core.Tip = new Class {
          'leave']
   options:{
     class: GDotUI.Theme.Tip.class
-    label: ""
+    label:""
     location: GDotUI.Theme.Tip.location
     offset: GDotUI.Theme.Tip.offset
     zindex: GDotUI.Theme.Tip.zindex
   }
   initialize: (options) ->
     @parent options
-  create: ->
+  create:  ->
     @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
     @base.setStyle 'z-index', @options.tipZindex
@@ -554,75 +605,79 @@ provides: [Core.Slider, ResetSlider]
 ...
 ###
 ResetSlider = new Class {
-  Extends: Slider
-  initialize: (element, knob, options) ->
-    @parent element, knob, options
-  setRange: (range) ->
-    @min = if  $chk(range[0]) then range[0] else 0
-    @max = if $chk(range[1]) then range[1] else @options.steps
-    @range = @max - @min
-    @steps = @options.steps || @full
-    @stepSize = Math.abs(@range) / @steps
-    @stepWidth = @stepSize * @full / Math.abs(@range) 
-  draggedKnob: ->
-    dir = if @range < 0 then -1 else 1
-    position = @drag.value.now[this.axis]
-    position = position.limit(-@options.offset, @full -@options.offset)
-    @step = @min + dir * @toStep(position)
-    @checkStep()
+	Extends: Slider
+	initialize: (element, knob, options) ->
+		@parent element, knob, options
+	setRange: (range) ->
+		@min = if  $chk(range[0]) then range[0] else 0
+		@max = if $chk(range[1]) then range[1] else @options.steps
+		@range = @max - @min
+		@steps = @options.steps || @full
+		@stepSize = Math.abs(@range) / @steps
+		@stepWidth = @stepSize * @full / Math.abs(@range) 
+		#console.log @stepWidth,@stepSize
+	draggedKnob: ->
+		dir = if @range < 0 then -1 else 1
+		position = @drag.value.now[this.axis]
+		position = position.limit(-@options.offset, @full -@options.offset)
+		@step = @min + dir * @toStep(position)
+		#console.log @step, @toStep(position)
+		@checkStep()
   toStep: (position) ->
-    step = (position + @options.offset) * @stepSize / @full * @steps
-    if @options.steps then step -= step % @stepSize else step
+		step = (position + @options.offset) * @stepSize / @full * @steps;
+		#console.log @options.steps, step -= step % @stepSize, step
+		if @options.steps then step -= step % @stepSize else step
 }
 Core.Slider = new Class {
-  Extends:Core.Abstract
-  Implements:[ Interfaces.Controls ]
-  Delegates:{ 'slider':[
-    'set'
-    'setRange'
-  ]}
-  options:{
-    scrollBase: null
-    reset: off
-    steps: 0
-    range: [0,0]
-    mode: 'vertical'
-    class: GDotUI.Theme.Slider.barClass
-    knob: GDotUI.Theme.Slider.knobClass
-  }
-  initialize: (options) ->
-    @parent options
-  create: ->
-    @base.addClass @options.class
-    @base.addClass @options.mode
-    @knob = (new Element 'div').addClass @options.knob
-    @scrollBase = @options.scrollBase
-    @base.grab @knob
-  ready: ->
-    if @options.reset 
-      @slider = new ResetSlider @base, @knob, {
-        mode: @options.mode
-        steps: @options.steps
-        range: @options.range
-      }
-      @slider.set 0
-    else
-      @slider = new Slider @base, @knob, {
-        mode: @options.mode
-        range: @options.range
-        steps: @options.steps
-      }
-    @slider.addEvent 'complete', ((step) ->
-      @fireEvent 'complete', step+''
-    ).bindWithEvent @
-    @slider.addEvent 'change', ((step)->
-      if typeof(step) == 'object'
-        step = 0
-      @fireEvent 'change', step+''
-      if @scrollBase?
-        @scrollBase.scrollTop = (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
-    ).bindWithEvent @
-    @parent()
+	Extends:Core.Abstract
+	Implements:[ Interfaces.Controls ]
+	Delegates:{ 'slider':[
+		'set'
+		'setRange'
+	]}
+	options:{
+		scrollBase: null
+		reset: off
+		steps: 0
+		range: [0,0]
+		mode: 'vertical'
+		class: GDotUI.Theme.Slider.barClass
+		knob: GDotUI.Theme.Slider.knobClass
+	}
+	initialize: (options) ->
+		@parent options
+	create: ->
+		@base.addClass @options.class
+		@base.addClass @options.mode
+		@knob = (new Element 'div').addClass @options.knob
+		@scrollBase = @options.scrollBase
+		@base.grab @knob
+	ready: ->
+		if @options.reset 
+			@slider = new ResetSlider @base, @knob, {
+			  mode: @options.mode
+				steps: @options.steps
+				range: @options.range
+			}
+			@slider.set 0
+		else
+			@slider = new Slider @base, @knob, {
+			  mode: @options.mode
+			  range: @options.range
+			  steps: @options.steps
+			}
+		@slider.addEvent 'complete', ((step) ->
+			@fireEvent 'complete', step+''
+		).bindWithEvent this
+		@slider.addEvent 'change', ((step)->
+			#console.log step
+			if typeof(step) == 'object'
+				step = 0
+			@fireEvent 'change', step+''
+			if @scrollBase?
+				@scrollBase.scrollTop = (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
+		).bindWithEvent this
+		@parent()
 }
 
 
@@ -707,10 +762,10 @@ Core.Float = new Class {
 		@slider = new Core.Slider {scrollBase:@content, range:[0,100], steps: 100}
 		@slider.addEvent 'complete', ( ->
 			@scrolling = off
-		).bindWithEvent @
+		).bindWithEvent this
 		@slider.addEvent 'change', ( ->
 			@scrolling = on
-		).bindWithEvent @
+		).bindWithEvent this
 		
 		@slider.hide()
 		
@@ -720,7 +775,7 @@ Core.Float = new Class {
 		@close = new Core.Icon {image: @options.icons.remove}
 		@close.addEvent 'invoked', ( ->
 			@hide()
-		).bindWithEvent @
+		).bindWithEvent this
 
 		@edit = new Core.Icon {image:@options.icons.edit}
 		@edit.addEvent 'invoked', ( ->
@@ -728,7 +783,7 @@ Core.Float = new Class {
 				if @contentElement.toggleEdit?
 					@contentElement.toggleEdit()
 				@fireEvent('edit')
-		).bindWithEvent @
+		).bindWithEvent this
 		
 		if @options.closeable
 			@icons.addIcon @close
@@ -830,7 +885,7 @@ provides: Core.Button
 ...
 ###
 Core.Button = new Class {
-  Extends: Core.Abstract
+  Extends:Core.Abstract
   Implements:[
     Interfaces.Enabled
     Interfaces.Controls
@@ -849,8 +904,8 @@ Core.Button = new Class {
     @icon = new Core.Icon {image: @options.image}
     @base.addEvent 'click', ((e) ->
       if @enabled
-        @fireEvent 'invoked', [@, e]
-      ).bindWithEvent @
+        @fireEvent 'invoked', [this, e]
+      ).bindWithEvent this
   ready: ->
     @base.grab @icon
     @parent()
@@ -876,7 +931,7 @@ provides: [Core.Picker, outerClick]
   oldPrototypeStart = Drag.prototype.start
   Drag.prototype.start = ->
     window.fireEvent 'outer'
-    oldPrototypeStart.run arguments, @
+    oldPrototypeStart.run arguments, this
 )()
 Element.Events.outerClick = {
     base: 'mousedown'
@@ -949,7 +1004,7 @@ Core.Picker = new Class {
   attach: (input) ->
     if @attachedTo?
       @detach()
-    input.addEvent @options.event, @show
+    input.addEvent @options.event, @show #bind???
     if @contentElement?
       @contentElement.addEvent 'change', ((value) ->
         @attachedTo.set 'value', value
@@ -968,7 +1023,7 @@ Core.Picker = new Class {
       e.stop()
     if @contentElement?
       @contentElement.fireEvent 'show'
-    @base.addEvent 'outerClick', @hide.bindWithEvent @
+    @base.addEvent 'outerClick', @hide.bindWithEvent @ #bind here too???
   hide: (e) ->
     if @base.isVisible() and not  @base.hasChild(e.target)
       if @attachedTo?
@@ -1007,6 +1062,7 @@ Iterable.List = new Class {
   create: ->
     @base.addClass @options.class
     @sortable = new Sortables null
+    #TODO Sortable Events
     @editing = off
     if @options.search
       @sinput = new Element 'input', {class:'search'}
@@ -1025,13 +1081,13 @@ Iterable.List = new Class {
     ).bind @
   removeItem: (li) ->
     li.removeEvents 'invoked', 'edit', 'delete'
-    @items.erase li
     li.base.destroy()
   removeAll: ->
     if @options.search
       @sinput.set 'value', ''
     @selected = null
     @items.each ( (item) ->
+      console.log item
       @removeItem item
       ).bind @
     delete @items
@@ -1085,7 +1141,7 @@ Iterable.List = new Class {
 
 name: Core.Slot
 
-description: iOs style slot control.
+description: Generic icon element.
 
 license: MIT-style license.
 
@@ -1096,7 +1152,7 @@ provides: Core.Slot
 ...
 ###
 Core.Slot = new Class {
-  Extends: Core.Abstract
+  Extends:Core.Abstract
   Binds:['check'
          'complete']
   Delegates:{
@@ -1105,7 +1161,7 @@ Core.Slot = new Class {
             'select']
   }
   options:{
-    class: GDotUI.Theme.Slot.class
+    class:GDotUI.Theme.Slot.class
   }
   initilaize: (options) ->
     @parent options
@@ -1117,17 +1173,17 @@ Core.Slot = new Class {
     @list.addEvent 'select', ((item) ->
       @update()
       @fireEvent 'change', item
-    ).bindWithEvent @
+    ).bindWithEvent this
     @base.adopt @list.base, @overlay
   check: (el,e) ->
     @dragging = on
     lastDistance = 1000
     lastOne = null
     @list.items.each( ( (item,i) ->
-      distance = -item.base.getPosition(@base).y + @base.getSize().y/2
+      distance = -item.base.getPosition(@base).y+@base.getSize().y/2
       if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
         @list.select item
-    ).bind @ )
+    ).bind this )
   ready: -> 
     @parent()
     @base.setStyle 'overflow', 'hidden'
@@ -1137,7 +1193,7 @@ Core.Slot = new Class {
     @base.setStyle 'width', @list.base.getSize().x
     @overlay.setStyle 'width', @base.getSize().x
     @overlay.addEvent 'mousewheel',( (e) ->
-      e.stop()
+      e.stop();
       if @list.selected?
         index = @list.items.indexOf @list.selected
       else
@@ -1151,16 +1207,16 @@ Core.Slot = new Class {
         @list.select @list.items[@list.items.length-1]
       if index+e.wheel > @list.items.length-1
         @list.select @list.items[0]
-    ).bindWithEvent @
+    ).bindWithEvent this
     @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
     @drag.addEvent 'drag', @check
     @drag.addEvent 'beforeStart',( ->
       @list.base.setStyle '-webkit-transition-duration', '0s'
-    ).bindWithEvent @
+    ).bindWithEvent this
     @drag.addEvent 'complete', ( ->
       @dragging = off
       @update()
-    ).bindWithEvent @
+    ).bindWithEvent this
   update: ->
     if not @dragging
       @list.base.setStyle '-webkit-transition-duration', '0.3s' # get the property and store and retrieve it
@@ -1198,22 +1254,22 @@ Core.Tab = new Class {
   create: ->
     @base.addClass @options.class
     @base.addEvent 'click', ( ->
-      @fireEvent 'activate', @
-    ).bindWithEvent @
+      @fireEvent 'activate', this
+    ).bindWithEvent this
     @label = new Element 'div', {text: @options.label}
     @icon = new Core.Icon {image: @options.image}
     @icon.addEvent 'invoked', ( (ic,e) ->
       e.stop()
-      @fireEvent 'remove', @
-    ).bindWithEvent @
+      @fireEvent 'remove', this
+    ).bindWithEvent this
     @base.adopt @label
     if @options.removeable
       @base.grab @icon
   activate: ->
-    @fireEvent 'activated', @
+    @fireEvent 'activated', this
     @base.addClass @options.active 
   deactivate: ->
-    @fireEvent 'deactivated', @
+    @fireEvent 'deactivated', this
     @base.removeClass @options.active
 }
 
@@ -1247,15 +1303,15 @@ Core.Tabs = new Class {
   create: ->
     @base.addClass @options.class
   add: (tab) ->
-    if @tabs.indexOf tab == -1
+    if @tabs.indexOf(tab) == -1
       @tabs.push tab
       @base.grab tab
       tab.addEvent 'remove', @remove
       tab.addEvent 'activate', @change
   remove: (tab) ->
-    if @tabs.indexOf tab != -1
+    if @tabs.indexOf(tab) != -1
       if @options.autoRemove
-        @removeTab tab
+        @removeTab(tab)
       @fireEvent 'removed',tab
   removeTab: (tab) ->
     @tabs.erase tab
@@ -1287,7 +1343,7 @@ Core.Tabs = new Class {
 
 name: Core.TabFloat
 
-description: Tabbed float.
+description:
 
 license: MIT-style license.
 
@@ -1332,94 +1388,13 @@ Core.TabFloat = new Class {
 ###
 ---
 
-name: Core.Toggler
-
-description: iOs style checkboxes
-
-license: MIT-style license.
-
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled]
-
-provides: Core.Toggler
-
-...
-###
-Element.Properties.checked = {
-  get: ->
-    if @getChecked?
-      @getChecked()
-  set: (value) ->
-    if @on? and @off?
-      if value
-        @on()
-      else
-        @off()
-}
-Core.Toggler = new Class {
-  Extends: Core.Abstract
-  Implements:[
-    Interfaces.Enabled
-    Interfaces.Controls
-  ]
-  options:{
-    class: GDotUI.Theme.Toggler.class
-    onClass: GDotUI.Theme.Toggler.onClass
-    offClass: GDotUI.Theme.Toggler.offClass
-    sepClass: GDotUI.Theme.Toggler.separatorClass
-    onText: GDotUI.Theme.Toggler.onText
-    offText: GDotUI.Theme.Toggler.offText
-  }
-  initialize: (options) ->
-    @checked = yes
-    @parent options
-  create: ->
-    @base.addClass @options.class
-    @base.setStyle 'position','relative'
-    @onLabel = new Element 'div', {text:@options.onText, class:@options.onClass}
-    @offLabel = new Element 'div', {text:@options.offText, class:@options.offClass}
-    @separator = new Element 'div', {html: '&nbsp;', class:@options.sepClass}
-    @base.adopt @onLabel, @separator, @offLabel
-  ready: ->
-    $$(@onLabel,@offLabel,@separator).setStyles {
-      'position':'absolute'
-      'top': 0
-      'left': 0
-    }
-    @follow()
-    @base.addEvent 'click', ( ->
-       if @checked
-        @off()
-       else
-        @on()
-    ).bind @
-    @base.getChecked = ( ->
-      @checked
-      ).bind @
-    @base.on = @on.bind @
-    @base.off = @off.bind @
-  on: ->
-    @checked = yes
-    @onLabel.setStyle 'left', 0
-    @follow()
-  off: ->
-    @checked = no
-    @onLabel.setStyle 'left', -@onLabel.getSize().x
-    @follow()
-  follow: ->
-    left = @onLabel.getStyle('left')
-    @separator.setStyle 'left', Number(left[0..left.length-3])+@onLabel.getSize().x
-    @offLabel.setStyle 'left',Number(left[0..left.length-3])+@onLabel.getSize().x + @separator.getSize().x
-}
-
-
-###
----
-
 name: Data.Abstract
 
 description: "Abstract" base class for data elements.
 
 license: MIT-style license.
+
+requires: 
 
 provides: Data.Abstract
 
@@ -1436,10 +1411,10 @@ Data.Abstract = new Class {
     @base.store 'fn', fn
     @base.addEventListener 'DOMNodeInsertedIntoDocument', fn, no
     @create()
-    @
+    this
   create: ->
   ready: ->
-    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve ('fn'), no
+    @base.removeEventListener 'DOMNodeInsertedIntoDocument', @base.retrieve('fn'), no
     @base.eliminate 'fn'
   toElement: ->
     @base
@@ -1528,12 +1503,12 @@ Data.Number = new Class {
     @base.adopt @slider
     @slider.knob.addEvent 'click', ( ->
       @text.focus()
-    ).bindWithEvent @
+    ).bindWithEvent this
     @slider.addEvent 'complete', ( (step) ->
       if @options.reset
         @slider.setRange [step-@options.steps/2, Number(step)+@options.steps/2]
       @slider.set step
-      ).bindWithEvent @
+      ).bindWithEvent this
     @slider.addEvent 'change', ( (step) ->
       if typeof(step) == 'object'
         @text.set 'value', 0
@@ -1543,23 +1518,28 @@ Data.Number = new Class {
         @fireEvent 'change', step
       else
         @justSet = off
-      ).bindWithEvent @
+      ).bindWithEvent this
     @text.addEvent 'change', ( ->
       step = Number @text.get('value')
       if @options.reset
         @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
       @slider.set step
-      @fireEvent 'change', step
-    ).bindWithEvent @
+    ).bindWithEvent this
     @text.addEvent 'mousewheel', ( (e) ->
       @slider.set Number(@text.get('value'))+e.wheel
-    ).bindWithEvent @
+    ).bindWithEvent this
     @parent()
   getValue: ->
     @slider.slider.step
   setValue: (step) ->
     @justSet = on
     if @options.reset
+      #range = [Number(step)+@options.range[0],Number(step)+@options.range[1]]
+      #@slider.options.steps = @options.steps
+      #@slider.options.range = range
+      #@slider.slider.options.steps = @options.steps
+      #@slider.slider.options.range = range
+      #@slider.setRange range
       @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
     @slider.set step
 }
@@ -1598,19 +1578,19 @@ Forms.Input = new Class {
       @base = new Element 'select', {name: @options.name}
       @options.options.each ( (item) ->
         @base.grab new Element('option', {value:item.value,text:item.label})
-      ).bind @
+      ).bind this
     if @options.type is "radio"
       @base = new Element 'div'
       @options.options.each ( (item,i) ->
         label = new Element 'label', {'text':item.label}
         input = new Element 'input', {type:'radio',name:@options.name, value:item.value}
         @base.adopt label, input
-        ).bind @
+        ).bind this
     if @options.validate?
       $splat(@options.validate).each ( (val) ->
         if @options.type isnt "radio"
           @base.addClass val
-      ).bind @
+      ).bind this
     @base
 }
 
@@ -1693,7 +1673,7 @@ Data.Color = new Class {
     ).bind @
     @alpha.addEvent 'change',( (step) ->
       @setColor()
-    ).bindWithEvent @
+    ).bindWithEvent this
     @hue.addEvent 'change',( (step) ->
       if typeof(step) == "object"
         step = 0
@@ -1701,7 +1681,7 @@ Data.Color = new Class {
       colr = new $HSB step, 100, 100  
       @color.setStyle 'background-color', colr
       @setColor()
-    ).bindWithEvent @
+    ).bindWithEvent this
     @saturation.addEvent 'change',( (step) ->
       @xy.detach()
       @xy.set {
@@ -1709,15 +1689,14 @@ Data.Color = new Class {
         y:@xy.get().y
         }
       @xy.attach()
-    ).bindWithEvent @
+    ).bindWithEvent this
     @lightness.addEvent 'change',( (step) ->
       @xy.detach()
-      @xy.set {
-        x:@xy.get().x
-        y:100-step
-        }
+      @xy.set {x:@xy.get().x
+              y:100-step
+              }
       @xy.attach()
-    ).bindWithEvent @
+    ).bindWithEvent this
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
   setValue: (color, alpha, type) ->
@@ -1790,7 +1769,7 @@ Data.Color.SlotControls = new Class {
     @hue = new Data.Number {range:[0,360],reset: off, steps: [360]}
     @hue.addEvent 'change', ((value) ->
         @saturation.slider.base.setStyle 'background-color', new $HSB(value,100,100)
-      ).bindWithEvent @
+      ).bindWithEvent this
     @saturation = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}
@@ -1819,7 +1798,7 @@ provides: Data.Date
 ...
 ###
 Data.Date = new Class {
-  Extends: Data.Abstract
+  Extends:Data.Abstract
   options:{
     class: GDotUI.Theme.Date.class
     format: GDotUI.Theme.Date.format
@@ -1835,19 +1814,19 @@ Data.Date = new Class {
     @years.addEvent 'change', ( (item) ->
       @date.setYear item.value
       @setValue()
-    ).bindWithEvent @
+    ).bindWithEvent this
     @month.addEvent 'change', ( (item) ->
       @date.setMonth item.value
-      @setValue()
-    ).bindWithEvent @
+      @setValue();
+    ).bindWithEvent this
     @days.addEvent 'change', ( (item) ->
       @date.setDate item.value
       @setValue()
-    ).bindWithEvent @
+    ).bindWithEvent this
     i = 0
     while i < 30
       item = new Iterable.ListItem {title:i+1}
-      item.value = i+1
+      item.value = i+1;
       @days.addItem item
       i++
     i = 0
@@ -1859,7 +1838,7 @@ Data.Date = new Class {
     i = @options.yearFrom
     while i <= new Date().getFullYear()
       item = new Iterable.ListItem {title:i}
-      item.value = i
+      item.value = i;
       @years.addItem item
       i++
     @base.adopt @years, @month, @days
@@ -1924,13 +1903,13 @@ Data.Time = new Class {
     @hourList.addEvent 'change', ( (item) ->
       @time.setHours item.value
       @setValue()
-    ).bindWithEvent @
+    ).bindWithEvent this
     @minuteList.addEvent 'change', ( (item) ->
       @time.setMinutes item.value
       @setValue()
-    ).bindWithEvent @
+    ).bindWithEvent this
   getValue: ->
-    @time.format @options.format
+    @time.format(@options.format)
   setValue: (date) ->
     if date?
       @time = date
@@ -1943,7 +1922,7 @@ Data.Time = new Class {
       item = new Iterable.ListItem {title:i}
       item.value = i
       @hourList.addItem item
-      i++
+      i++;
     i = 0
     while i < 60
       item = new Iterable.ListItem {title: if i<10 then '0'+i else i}
@@ -1991,12 +1970,12 @@ Data.DateTime = new Class {
       @date.setMonth @datea.date.getMonth()
       @date.setDate @datea.date.getDate()
       @fireEvent 'change', @date.format(@options.format)
-    ).bindWithEvent @
+    ).bindWithEvent this
     @time.addEvent 'change',( ->
       @date.setHours @time.time.getHours()
       @date.setMinutes @time.time.getMinutes()
       @fireEvent 'change', @date.format(@options.format)
-    ).bindWithEvent @
+    ).bindWithEvent this
     @parent()
   getValue: ->
     @date.format(@options.format)
@@ -2059,7 +2038,7 @@ Data.Table = new Class {
           @removeLast()
     ).bindWithEvent @
     @table.grab @header
-    @addRow @columns
+    @addRow(@columns)
     @
   ready: ->
   addCloumn: (name) ->
@@ -2081,6 +2060,7 @@ Data.Table = new Class {
         @rows[index+1].cells[0].editStart()
     ).bindWithEvent @
     @rows.push row
+    #sortable here 
     @table.grab row
   removeRow: (row) ->
     row.removeEvents 'editEnd'
@@ -2093,7 +2073,7 @@ Data.Table = new Class {
     if not addColumn?
       addColumn = yes
     @header.removeAll()
-    @rows.each ( (row) ->
+    (@rows.filter -> true).each ( (row) ->
       @removeRow row
     ).bind @
     @columns = 0
@@ -2101,19 +2081,19 @@ Data.Table = new Class {
       @addCloumn()
       @addRow @columns
   update: ->
-    length = @rows.length
+    length = @rows.length-1
     longest = 0
     rowsToRemove = []
     @rows.each ( (row, i) ->
       empty = row.empty() # check is the row is empty
-      if empty
+      if empty and i isnt 0 and i isnt length
         rowsToRemove.push row
+      if i is length and not empty
+        @addRow @columns
     ).bind @
     rowsToRemove.each ( (item) ->
       @removeRow item
     ).bind @
-    if @rows.length is 0 or not @rows.getLast().empty()
-      @addRow @columns
     @fireEvent 'change', @getData()
   getData: ->
     ret = {}
@@ -2132,6 +2112,7 @@ Data.Table = new Class {
     @getData()
   setValue: (obj) ->
     @removeAll( no )
+    console.log @
     rowa = []
     j = 0
     self = @
@@ -2146,7 +2127,6 @@ Data.Table = new Class {
     rowa.each (item,i) ->
       self.addRow self.columns
       self.rows[i].setValue item
-    @update()
     @
 }
 Data.TableRow = new Class {
@@ -2243,19 +2223,16 @@ Data.TableCell = new Class {
     if @editing
       @editing = off
     @setValue @input.get 'value'
-    if @input?
-      @input.removeEvents ['change','keydown']
-      @input.destroy()
-      delete @input
+    @input.removeEvents ['change','keydown']
+    @input.destroy()
+    delete @input
     @fireEvent 'editEnd'
   setValue: (value) ->
     @value = value
     if not @editing
       @base.set 'text', @value
   getValue: ->
-    if not @editing
-      @base.get 'text'
-    else @input.get 'value'
+    @base.get 'text'
 }
 
 
@@ -2305,7 +2282,7 @@ Data.Select = new Class {
       @select.grab option
     ).bind @
   setValue: (value) ->
-    selected = @select.getElements "option[value=#{value}]"
+    selected = @select.getElements "option[value=$value]"
     if selected[0]?
       @select.getElements("option").set 'selected', null
       selected.set 'selected', true
@@ -2394,11 +2371,16 @@ Data.Unit = new Class {
     @sel = new Data.Select {list:UnitList}
     @number.addEvent 'change', ((value) ->
       @value = value
-      @fireEvent 'change', String(@value)+@sel.getValue()
+      @fireEvent 'change', String(@value)+@sel.value
     ).bindWithEvent @
     @sel.setValue 'px'
     @sel.addEvent 'change', ( ->
-      @fireEvent 'change', String(@value)+@sel.getValue()
+      #data = UnitTable[@sel.value] || UnitTable['default']
+      #console.log data
+      #@number.options.steps = data.steps
+      #@number.options.range = data.range
+      #@number.setValue @value
+      @fireEvent 'change', String(@value)+@sel.value
     ).bindWithEvent @
     @base.adopt @number, @sel
   setValue: (value) ->
@@ -2407,7 +2389,7 @@ Data.Unit = new Class {
       value = match[1]
       unit = match[2]
       @sel.setValue unit
-      @number.setValue value
+    @number.setValue value
   getValue: ->
     String(@value)+@sel.value
 }
@@ -2454,15 +2436,12 @@ Data.List = new Class {
   add: (value) ->
     cell = new Data.TableCell({value:value})
     cell.addEvent 'editEnd', @update
-    cell.addEvent 'next', ->
-      cell.input.blur()
     @cells.push cell
     tr = new Element 'tr'
     @table.grab tr
     tr.grab cell
   remove: (cell,remove)->
     cell.removeEvents 'editEnd'
-    cell.removeEvents 'next'
     @cells.erase cell
     cell.base.getParent('tr').destroy()
     cell.base.destroy()
@@ -2678,8 +2657,8 @@ provides: Core.Overlay
 ...
 ###
 Core.Overlay = new Class {
-  Extends: Core.Abstract
-  options: {
+  Extends:Core.Abstract
+  options:{
     class: GDotUI.Theme.Overlay.class
   }
   initialize: (options) ->
@@ -2697,7 +2676,7 @@ Core.Overlay = new Class {
     @base.addEventListener 'webkitTransitionEnd', ((e) ->
       if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
         @base.setStyle 'visiblity', 'hidden'
-      ).bindWithEvent @
+      ).bindWithEvent this
   hide: ->
     @base.setStyle 'opacity', 0
   show: ->
@@ -2742,22 +2721,21 @@ Forms.Field = new Class {
       @base.setStyle 'display', 'none'
   createS: (item,parent) ->
     if not parent?
-      null
-    else
-      switch $type(item)
-        when "object"
-          for key of item
-            data = new Hash(item).get key
-            if key == 'input'
-              @input = new Forms.Input @options  
-              el = @input
-            else if key == 'label'
-              @label = new Element 'label', {'text':@options.label}
-              el = @label
-            else
-              el = new Element key 
-            parent.grab el
-            @createS data , el
+      return null
+    switch $type(item)
+      when "object"
+        for key of item
+          data = new Hash(item).get key
+          if key == 'input'
+            @input = new Forms.Input @options  
+            el = @input
+          else if key == 'label'
+            @label = new Element 'label', {'text':@options.label}
+            el = @label
+          else
+            el = new Element key 
+          parent.grab el
+          @createS data , el
           
 }
 
@@ -2826,7 +2804,7 @@ Forms.Form = new Class {
     if @options.data?
       @options.data.each( ( (fs) ->
         @addFieldset(new Forms.Fieldset(fs))
-      ).bind @ )
+      ).bind this )
     @extra=@options.extra;
     @useRequest=@options.useRequest;
     if @useRequest
@@ -2851,7 +2829,7 @@ Forms.Form = new Class {
           @fireEvent 'passed', @geatherdata()
       else
         @fireEvent 'failed', {message:'Validation failed'}
-    ).bindWithEvent @
+    ).bindWithEvent this
   addFieldset: (fieldset)->
     if @fieldsets.indexOf(fieldset) == -1
       @fieldsets.push fieldset
@@ -2862,7 +2840,7 @@ Forms.Form = new Class {
       data[item.get('name')] = if item.get('type')=="checkbox" then true else item.get('value')
     data
   send: ->
-    @request.send {data: $extend(@geatherdata(), @extra)}
+    @request.send {data: $extend(@geatherdata(), this.extra)}
   success: (data) ->
     @fireEvent 'success', data
   faliure: ->
