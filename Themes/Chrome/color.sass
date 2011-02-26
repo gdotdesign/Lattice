@@ -20,6 +20,12 @@
   .slot
     :height 80px
 .color
+  :padding 10px
+  .wrapper
+    :position relative
+    :width 200px
+    :height 200px
+    :margin 10px
   .colorBox
     :width 20px
     :height 50px
@@ -61,10 +67,7 @@
   .white
     :background-image -moz-linear-gradient(100% 50%, rgba(255,255,255,0), rgba(255,255,255,1))
     :background-image -webkit-gradient(linear, 0% 0%, 100% 0%, from(rgba(255,255,255,1)), to(rgba(255,255,255,0)))
-  .wrapper
-    :margin 10px
   .hue, .wrapper, .colorBox
-    +box_shadow(0,0,5px,rgba(0,0,0,0.3))
   .hue
     :margin-top 10px
     :margin-right 10px
@@ -79,5 +82,5 @@
     :height 10px
   #xyknob, #knob
     +round_full(5px)
-    :border 1px solid rgba(255,255,255,0.4)
+    :border 1px solid rgba(255,255,255,0.8)
     +box_shadow(0,0,4px,rgba(0,0,0,0.4))

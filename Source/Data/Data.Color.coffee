@@ -13,6 +13,7 @@ provides: Data.Color
 
 ...
 ###
+
 Data.Color = new Class {
   Extends:Data.Abstract
   Binds: ['change']
@@ -30,50 +31,88 @@ Data.Color = new Class {
   create: ->
     @base.addClass @options.class
     
+    @hslacone = $(document.createElement('canvas'))
     @wrapper = new Element('div').addClass @options.wrapper
-    @white = new Element('div').addClass @options.white
-    @black = new Element('div').addClass @options.black
-    @color = new Element('div').addClass @options.sb
    
     @xyKnob=new Element('div').set 'id', 'xyknob'
     @xyKnob.setStyles {
       'position':'absolute'
-      'top':0
-      'left':0
       }
-    
-    @wrapper.adopt @color, @white, @black, @xyKnob
-   
     @colorData = new Data.Color.SlotControls()
     @bgColor = new Color('#fff')
-  ready: ->
     @base.adopt @wrapper
-    sbSize = @color.getSize()
-    @wrapper.setStyles {
-      width: sbSize.x
-      height: sbSize.y
-      'position': 'relative'
-      'float': 'left'
-      }
-    $$(@white,@black,@color).setStyles {
-      'position': 'absolute'
-      'top': 0
-      'left': 0
-      'width': 'inherit'
-      'height': 'inherit'
-      }
-    @xy = new Field @.black, @.xyKnob, {setOnClick:true, x:[0,1,100],y:[0,1,100]}
-    @hue = @colorData.hue
-    @saturation = @colorData.saturation
-    @lightness = @colorData.lightness
+  drawHSLACone: (width,brightness) ->
+    ctx = @hslacone.getContext '2d'
+    ang = width / 50
+    angle = (1/ang)*Math.PI/180
+    ctx.translate width/2, width/2
+    i = 0
+    for i in [0..(360)*(ang)-1]
+      c = $HSB(360+(i/ang),100,brightness)
+      c1 = $HSB(360+(i/ang),0,brightness)
+      grad = ctx.createLinearGradient(0,0,width/2,0)
+      grad.addColorStop(0, c1.hex)
+      grad.addColorStop(1, c.hex)
+      ctx.strokeStyle = grad
+      ctx.beginPath()
+      ctx.moveTo(0,0)
+      ctx.lineTo(width/2,0)
+      ctx.stroke()
+      ctx.rotate(angle)
+  ready: ->
+    @hue = 0
+    @saturation = 100
+    @wrapper.adopt @xyKnob
+    sbSize = @wrapper.getSize()
+    @hslacone.set 'width', sbSize.x
+    @hslacone.set 'height', sbSize.y
+    @wrapper.adopt @hslacone
+    @drawHSLACone sbSize.x, 100
+    @xy = new Drag.Move @xyKnob
+    rad = sbSize.x/2
+    size = @xyKnob.getSize()
+    @xyKnob.setStyles {left:sbSize.x/2-size.x/2, top:sbSize.y/2-size.y/2}
+    center = {x: sbSize.x/2, y:sbSize.y/2}
+    
+    
+    @xy.addEvent 'drag', ((el,e) ->
+      position = el.getPosition(@wrapper)
+      
+      x = center.x-position.x-size.x/2
+      y = center.y-position.y-size.y/2
+      radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+      angle = Math.atan2(y,x)
+      if radius > sbSize.x/2
+        el.setStyle 'top', -Math.sin(angle)*rad-size.y/2+center.y
+        el.setStyle 'left', -Math.cos(angle)*rad-size.x/2+center.x
+        @saturation = 100
+      else
+        sat =  Math.round radius 
+        @saturation = Math.round((sat/rad)*100)
+      #console.log radius, size, center, position, angle*(180/Math.PI)
+      
+      an = Math.round(angle*(180/Math.PI))
+      @hue = if an < 0 then 180-Math.abs(an) else 180+an
+      c = $HSB(@hue,@saturation,100)
+      @hueN.setValue @hue
+      @saturationN.setValue @saturation
+      $(document.body).setStyle 'background-color', c.hex
+    ).bind @
+    @hueN = @colorData.hue
+    @saturationN = @colorData.saturation
+    @lightnessN = @colorData.lightness
     @alpha = @colorData.alpha
+    
     @colorData.readyCallback = @readyCallback
     @base.adopt @colorData
+   
+    ###
     @colorData.base.getElements( 'input[type=radio]').each ((item) ->
       item.addEvent 'click',( ->
         @setColor()
       ).bindWithEvent @
     ).bind @
+    
     @alpha.addEvent 'change',( (step) ->
       @setColor()
     ).bindWithEvent @
@@ -103,7 +142,9 @@ Data.Color = new Class {
     ).bindWithEvent @
     @xy.addEvent 'tick', @change
     @xy.addEvent 'change', @change
+    ###
   setValue: (color, alpha, type) ->
+    ###
     color = new Color(color)
     @hue.setValue color.hsb[0]
     @saturation.setValue color.hsb[1]
@@ -118,7 +159,12 @@ Data.Color = new Class {
     @finalColor = color
     @color.setStyle 'background-color', colr
     @setColor()
+    ###
   setColor: ->
+    @finalColor = $HSB(@hue,@saturation,100)
+    type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
+    @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
+    ###
     @finalColor = @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
     type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
     @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
@@ -133,6 +179,7 @@ Data.Color = new Class {
     @lightness.setValue 100-pos.y
     @lightness.slider.slider.attach()
     @setColor()
+    ###
 }
 Data.Color.ReturnValues = {
   type: 'radio'

@@ -292,23 +292,37 @@ provides: Core.Abstract
 
 ...
 */
+Element.NativeEvents['DOMNodeInsertedIntoDocument'] = 2;
+Element.Events['addedToDom'] = {
+  base: 'DOMNodeInsertedIntoDocument'
+};
+Element.implement({
+  removeTransition: function() {
+    this.store('transition', this.getStyle('-webkit-transition-duration'));
+    return this.setStyle('-webkit-transition-duration', '0');
+  },
+  addTransition: function() {
+    this.setStyle('-webkit-transition-duration', this.retrieve('transition'));
+    return this.eliminate('transition');
+  }
+});
 Core.Abstract = new Class({
   Implements: [Events, Options, Interfaces.Mux],
   initialize: function(options) {
-    var fn;
     this.setOptions(options);
     this.base = new Element('div');
     this.create();
-    fn = this.ready.bindWithEvent(this);
-    this.base.store('fn', fn);
-    this.base.addEventListener('DOMNodeInsertedIntoDocument', fn, false);
+    this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
+    this.base.store('transition', this.base.getStyle('-webkit-transition-duration'));
+    this.base.setStyle('-webkit-transition-duration', '0');
     this.mux();
     return this;
   },
   create: function() {},
   ready: function() {
-    this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn', false));
-    return this.base.eliminate('fn');
+    this.base.removeEvents('addedToDom');
+    this.base.setStyle('-webkit-transition-duration', this.base.retrieve('transition'));
+    return this.base.eliminate('transition');
   },
   toElement: function() {
     return this.base;
@@ -365,6 +379,7 @@ provides: Core.IconGroup
 */
 Core.IconGroup = new Class({
   Extends: Core.Abstract,
+  Implements: Interfaces.Controls,
   Binds: ['delegate'],
   options: {
     mode: "horizontal",
@@ -397,15 +412,6 @@ Core.IconGroup = new Class({
     } else {
       return false;
     }
-  },
-  show: function() {
-    return this.base.setStyle('display', 'block');
-  },
-  hide: function() {
-    return this.base.setStyle('display', 'none');
-  },
-  toggle: function() {
-    return this.base.getStyle('display') === 'none' ? this.show() : this.hide();
   },
   removeIcon: function(icon) {
     var index;
@@ -1443,17 +1449,19 @@ Core.Tabs = new Class({
   },
   change: function(tab) {
     if (tab !== this.active) {
-      this.fireEvent('change', tab);
-      return this.setActive(tab);
+      this.setActive(tab);
+      return this.fireEvent('change', tab);
     }
   },
   setActive: function(tab) {
     var _a;
-    if (typeof (_a = this.active) !== "undefined" && _a !== null) {
-      this.active.deactivate();
+    if (this.active !== tab) {
+      if (typeof (_a = this.active) !== "undefined" && _a !== null) {
+        this.active.deactivate();
+      }
+      tab.activate();
+      return (this.active = tab);
     }
-    tab.activate();
-    return (this.active = tab);
   },
   getByLabel: function(label) {
     return (this.tabs.filter(function(item, i) {
@@ -1488,7 +1496,7 @@ Core.TabFloat = new Class({
     });
     this.tabs.addEvent('change', (function(tab) {
       var index;
-      this.lastTab = this.tabs.active;
+      this.lastTab = this.tabs.tabs[this.tabContents.indexOf(this.activeContent)];
       index = this.tabs.tabs.indexOf(tab);
       this.activeContent = this.tabContents[index];
       this.setContent(this.tabContents[index]);
@@ -1513,7 +1521,8 @@ Core.TabFloat = new Class({
     if (typeof index !== "undefined" && index !== null) {
       this.tabs.setActive(this.tabs.tabs[index]);
     }
-    return this.parent(element);
+    this.activeContent = this.tabContents[index];
+    return this.parent(this.tabContents[index]);
   }
 });
 /*---
@@ -1537,6 +1546,7 @@ Element.Properties.checked = {
   },
   set: function(value) {
     var _a, _b;
+    this.setAttribute('checked', value);
     return (typeof (_a = this.on) !== "undefined" && _a !== null) && (typeof (_b = this.off) !== "undefined" && _b !== null) ? (value ? this.on() : this.off()) : null;
   }
 };
@@ -1562,15 +1572,23 @@ Core.Toggler = new Class({
       text: this.options.onText,
       "class": this.options.onClass
     });
+    this.onLabel.removeTransition();
     this.offLabel = new Element('div', {
       text: this.options.offText,
       "class": this.options.offClass
     });
+    this.offLabel.removeTransition();
     this.separator = new Element('div', {
       html: '&nbsp;',
       "class": this.options.sepClass
     });
-    return this.base.adopt(this.onLabel, this.separator, this.offLabel);
+    this.separator.removeTransition();
+    this.base.adopt(this.onLabel, this.separator, this.offLabel);
+    this.base.getChecked = (function() {
+      return this.checked;
+    }).bind(this);
+    this.base.on = this.on.bind(this);
+    return (this.base.off = this.off.bind(this));
   },
   ready: function() {
     $$(this.onLabel, this.offLabel, this.separator).setStyles({
@@ -1578,15 +1596,25 @@ Core.Toggler = new Class({
       'top': 0,
       'left': 0
     });
-    this.follow();
+    if (this.checked) {
+      this.on();
+    } else {
+      this.off();
+    }
     this.base.addEvent('click', (function() {
-      return this.checked ? this.off() : this.on();
+      if (this.checked) {
+        this.off();
+        return this.base.fireEvent('change');
+      } else {
+        this.on();
+        return this.base.fireEvent('change');
+      }
     }).bind(this));
-    this.base.getChecked = (function() {
-      return this.checked;
-    }).bind(this);
-    this.base.on = this.on.bind(this);
-    return (this.base.off = this.off.bind(this));
+    this.onLabel.addTransition();
+    this.offLabel.getPosition();
+    this.offLabel.addTransition();
+    this.separator.addTransition();
+    return this.parent();
   },
   on: function() {
     this.checked = true;
@@ -1607,6 +1635,29 @@ Core.Toggler = new Class({
 });
 /*---
 
+name: Core.Textarea
+
+description: Html from markdown.
+
+license: MIT-style license.
+
+requires: [Core.Abstract]
+
+provides: Core.Textarea
+
+...
+*/
+Core.Textarea = new Class({
+  Extends: Core.Abstract,
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    return this.parent;
+  }
+});
+/*---
+
 name: Data.Abstract
 
 description: "Abstract" base class for data elements.
@@ -1621,19 +1672,15 @@ Data.Abstract = new Class({
   Implements: [Events, Options],
   options: {},
   initialize: function(options) {
-    var fn;
     this.setOptions(options);
     this.base = new Element('div');
-    fn = this.ready.bindWithEvent(this);
-    this.base.store('fn', fn);
-    this.base.addEventListener('DOMNodeInsertedIntoDocument', fn, false);
+    this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
     this.create();
     return this;
   },
   create: function() {},
   ready: function() {
-    this.base.removeEventListener('DOMNodeInsertedIntoDocument', this.base.retrieve('fn', false));
-    return this.base.eliminate('fn');
+    return this.base.removeEvents('addedToDom');
   },
   toElement: function() {
     return this.base;
@@ -1774,29 +1821,39 @@ description: Input elements for Forms.
 
 license: MIT-style license.
 
-requires: Core.Abstract
+requires:
 
 provides: Forms.Input
 
 ...
 */
 Forms.Input = new Class({
-  Extends: Core.Abstract,
+  Implements: [Events, Options],
   options: {
     type: '',
     name: ''
   },
   initialize: function(options) {
-    return this.parent(options);
+    this.setOptions(options);
+    this.base = new Element('div');
+    this.create();
+    return this;
   },
   create: function() {
-    var _a;
+    var _a, tg;
     delete this.base;
-    if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'checkbox' || this.options.type === 'button') {
+    if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'button') {
       this.base = new Element('input', {
         type: this.options.type,
         name: this.options.name
       });
+    }
+    if (this.options.type === 'checkbox') {
+      tg = new Core.Toggler();
+      tg.base.setAttribute('name', this.options.name);
+      tg.base.setAttribute('type', 'checkbox');
+      tg.checked = this.options.checked || false;
+      this.base = tg.base;
     }
     if (this.options.type === "textarea") {
       this.base = new Element('textarea', {
@@ -1835,6 +1892,9 @@ Forms.Input = new Class({
       }).bind(this));
     }
     return this.base;
+  },
+  toElement: function() {
+    return this.base;
   }
 });
 /*---
@@ -1868,128 +1928,167 @@ Data.Color = new Class({
   },
   create: function() {
     this.base.addClass(this.options["class"]);
+    this.hslacone = $(document.createElement('canvas'));
     this.wrapper = new Element('div').addClass(this.options.wrapper);
-    this.white = new Element('div').addClass(this.options.white);
-    this.black = new Element('div').addClass(this.options.black);
-    this.color = new Element('div').addClass(this.options.sb);
     this.xyKnob = new Element('div').set('id', 'xyknob');
     this.xyKnob.setStyles({
-      'position': 'absolute',
-      'top': 0,
-      'left': 0
+      'position': 'absolute'
     });
-    this.wrapper.adopt(this.color, this.white, this.black, this.xyKnob);
     this.colorData = new Data.Color.SlotControls();
-    return (this.bgColor = new Color('#fff'));
+    this.bgColor = new Color('#fff');
+    return this.base.adopt(this.wrapper);
+  },
+  drawHSLACone: function(width, brightness) {
+    var _a, ang, angle, c, c1, ctx, grad, i;
+    ctx = this.hslacone.getContext('2d');
+    ang = width / 50;
+    angle = (1 / ang) * Math.PI / 180;
+    ctx.translate(width / 2, width / 2);
+    i = 0;
+    _a = [];
+    for (i = 0; (0 <= (360) * (ang) - 1 ? i <= (360) * (ang) - 1 : i >= (360) * (ang) - 1); (0 <= (360) * (ang) - 1 ? i += 1 : i -= 1)) {
+      _a.push((function() {
+        c = $HSB(360 + (i / ang), 100, brightness);
+        c1 = $HSB(360 + (i / ang), 0, brightness);
+        grad = ctx.createLinearGradient(0, 0, width / 2, 0);
+        grad.addColorStop(0, c1.hex);
+        grad.addColorStop(1, c.hex);
+        ctx.strokeStyle = grad;
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.lineTo(width / 2, 0);
+        ctx.stroke();
+        return ctx.rotate(angle);
+      })());
+    }
+    return _a;
   },
   ready: function() {
-    var sbSize;
-    this.base.adopt(this.wrapper);
-    sbSize = this.color.getSize();
-    this.wrapper.setStyles({
-      width: sbSize.x,
-      height: sbSize.y,
-      'position': 'relative',
-      'float': 'left'
+    var center, rad, sbSize, size, type;
+    this.hue = 0;
+    this.saturation = 100;
+    this.wrapper.adopt(this.xyKnob);
+    sbSize = this.wrapper.getSize();
+    this.hslacone.set('width', sbSize.x);
+    this.hslacone.set('height', sbSize.y);
+    this.wrapper.adopt(this.hslacone);
+    this.drawHSLACone(sbSize.x, 100);
+    this.xy = new Drag.Move(this.xyKnob);
+    rad = sbSize.x / 2;
+    size = this.xyKnob.getSize();
+    this.xyKnob.setStyles({
+      left: sbSize.x / 2 - size.x / 2,
+      top: sbSize.y / 2 - size.y / 2
     });
-    $$(this.white, this.black, this.color).setStyles({
-      'position': 'absolute',
-      'top': 0,
-      'left': 0,
-      'width': 'inherit',
-      'height': 'inherit'
-    });
-    this.xy = new Field(this.black, this.xyKnob, {
-      setOnClick: true,
-      x: [0, 1, 100],
-      y: [0, 1, 100]
-    });
-    this.hue = this.colorData.hue;
-    this.saturation = this.colorData.saturation;
-    this.lightness = this.colorData.lightness;
+    center = {
+      x: sbSize.x / 2,
+      y: sbSize.y / 2
+    };
+    this.xy.addEvent('drag', (function(el, e) {
+      var an, angle, c, position, radius, sat, x, y;
+      position = el.getPosition(this.wrapper);
+      x = center.x - position.x - size.x / 2;
+      y = center.y - position.y - size.y / 2;
+      radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+      angle = Math.atan2(y, x);
+      if (radius > sbSize.x / 2) {
+        el.setStyle('top', -Math.sin(angle) * rad - size.y / 2 + center.y);
+        el.setStyle('left', -Math.cos(angle) * rad - size.x / 2 + center.x);
+        this.saturation = 100;
+      } else {
+        sat = Math.round(radius);
+        this.saturation = Math.round((sat / rad) * 100);
+      }
+      an = Math.round(angle * (180 / Math.PI));
+      this.hue = an < 0 ? 180 - Math.abs(an) : 180 + an;
+      c = $HSB(this.hue, this.saturation, 100);
+      this.hueN.setValue(this.hue);
+      this.saturationN.setValue(this.saturation);
+      return $(document.body).setStyle('background-color', c.hex);
+    }).bind(this));
+    this.hueN = this.colorData.hue;
+    this.saturationN = this.colorData.saturation;
+    this.lightnessN = this.colorData.lightness;
     this.alpha = this.colorData.alpha;
     this.colorData.readyCallback = this.readyCallback;
     this.base.adopt(this.colorData);
-    this.colorData.base.getElements('input[type=radio]').each((function(item) {
-      return item.addEvent('click', (function() {
-        return this.setColor();
-      }).bindWithEvent(this));
-    }).bind(this));
-    this.alpha.addEvent('change', (function(step) {
-      return this.setColor();
-    }).bindWithEvent(this));
-    this.hue.addEvent('change', (function(step) {
-      var colr;
-      if (typeof (step) === "object") {
-        step = 0;
-      }
-      this.bgColor.setHue(Number(step));
-      colr = new $HSB(step, 100, 100);
-      this.color.setStyle('background-color', colr);
-      return this.setColor();
-    }).bindWithEvent(this));
-    this.saturation.addEvent('change', (function(step) {
-      this.xy.detach();
-      this.xy.set({
-        x: step,
-        y: this.xy.get().y
-      });
-      return this.xy.attach();
-    }).bindWithEvent(this));
-    this.lightness.addEvent('change', (function(step) {
-      this.xy.detach();
-      this.xy.set({
-        x: this.xy.get().x,
-        y: 100 - step
-      });
-      return this.xy.attach();
-    }).bindWithEvent(this));
-    this.xy.addEvent('tick', this.change);
-    return this.xy.addEvent('change', this.change);
-  },
-  setValue: function(color, alpha, type) {
-    var colr;
-    color = new Color(color);
-    this.hue.setValue(color.hsb[0]);
-    this.saturation.setValue(color.hsb[1]);
-    this.lightness.setValue(color.hsb[2]);
-    this.alpha.setValue(alpha);
-    this.colorData.base.getElements('input[type=radio]').each(function(item) {
-      return item.get('value') === type ? item.set('checked', true) : null;
+    /*@colorData.base.getElements( 'input[type=radio]').each ((item) ->
+      item.addEvent 'click',( ->
+        @setColor()
+      ).bindWithEvent @
+    ).bind @
+
+    @alpha.addEvent 'change',( (step) ->
+      @setColor()
+    ).bindWithEvent @
+    @hue.addEvent 'change',( (step) ->
+      if typeof(step) == "object"
+        step = 0
+      @bgColor.setHue Number(step)
+      colr = new $HSB step, 100, 100
+      @color.setStyle 'background-color', colr
+      @setColor()
+    ).bindWithEvent @
+    @saturation.addEvent 'change',( (step) ->
+      @xy.detach()
+      @xy.set {
+        x:step
+        y:@xy.get().y
+        }
+      @xy.attach()
+    ).bindWithEvent @
+    @lightness.addEvent 'change',( (step) ->
+      @xy.detach()
+      @xy.set {
+        x:@xy.get().x
+        y:100-step
+        }
+      @xy.attach()
+    ).bindWithEvent @
+    @xy.addEvent 'tick', @change
+    @xy.addEvent 'change', @change
+    */
+    ({
+      setValue: function(color, alpha, type) {},
+      /*color = new Color(color)
+      @hue.setValue color.hsb[0]
+      @saturation.setValue color.hsb[1]
+      @lightness.setValue color.hsb[2]
+      @alpha.setValue alpha
+      @colorData.base.getElements( 'input[type=radio]').each (item) ->
+        if item.get('value') is type
+          item.set 'checked', true
+      @xy.set {x: color.hsb[1], y:100-color.hsb[2]}
+      colr = new $HSB color.hsb[0], 100, 100
+      @bgColor = color
+      @finalColor = color
+      @color.setStyle 'background-color', colr
+      @setColor()
+      */
+      setColor: function() {}
     });
-    this.xy.set({
-      x: color.hsb[1],
-      y: 100 - color.hsb[2]
-    });
-    colr = new $HSB(color.hsb[0], 100, 100);
-    this.bgColor = color;
-    this.finalColor = color;
-    console.log(this);
-    this.color.setStyle('background-color', colr);
-    return this.setColor();
-  },
-  setColor: function() {
-    var type;
-    this.finalColor = this.bgColor.setSaturation(this.saturation.getValue()).setBrightness(this.lightness.getValue()).setHue(this.hue.getValue());
+    this.finalColor = $HSB(this.hue, this.saturation, 100);
     type = this.colorData.base.getElements('input[type=radio]:checked')[0].get('value');
-    this.fireEvent('change', {
+    return this.fireEvent('change', {
       color: this.finalColor,
       type: type,
       alpha: this.alpha.getValue()
     });
-    return (this.value = this.finalColor);
-  },
-  getValue: function() {
-    return this.finalColor;
-  },
-  change: function(pos) {
-    this.saturation.slider.slider.detach();
-    this.saturation.setValue(pos.x);
-    this.saturation.slider.slider.attach();
-    this.lightness.slider.slider.detach();
-    this.lightness.setValue(100 - pos.y);
-    this.lightness.slider.slider.attach();
-    return this.setColor();
+    /*@finalColor = @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
+    type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
+    @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
+    @value = @finalColor
+      getValue: ->
+    @finalColor
+      change: (pos) ->
+    @saturation.slider.slider.detach()
+    @saturation.setValue pos.x
+    @saturation.slider.slider.attach()
+    @lightness.slider.slider.detach()
+    @lightness.setValue 100-pos.y
+    @lightness.slider.slider.attach()
+    @setColor()
+    */
   }
 });
 Data.Color.ReturnValues = {
@@ -2235,7 +2334,7 @@ Data.Time = new Class({
       i++;
     }
     this.base.adopt(this.hourList, this.minuteList);
-    this.setValue(new Date());
+    this.setValue(this.time || new Date());
     return this.parent();
   }
 });
@@ -2269,17 +2368,17 @@ Data.DateTime = new Class({
   },
   ready: function() {
     this.base.adopt(this.datea, this.time);
-    this.setValue(new Date());
+    this.setValue(this.date || new Date());
     this.datea.addEvent('change', (function() {
       this.date.setYear(this.datea.date.getFullYear());
       this.date.setMonth(this.datea.date.getMonth());
       this.date.setDate(this.datea.date.getDate());
-      return this.fireEvent('change', this.date.format(this.options.format));
+      return this.fireEvent('change', this.date);
     }).bindWithEvent(this));
     this.time.addEvent('change', (function() {
       this.date.setHours(this.time.time.getHours());
       this.date.setMinutes(this.time.time.getMinutes());
-      return this.fireEvent('change', this.date.format(this.options.format));
+      return this.fireEvent('change', this.date);
     }).bindWithEvent(this));
     return this.parent();
   },
@@ -2292,7 +2391,7 @@ Data.DateTime = new Class({
     }
     this.datea.setValue(this.date);
     this.time.setValue(this.date);
-    return this.fireEvent('change', this.date.format(this.options.format));
+    return this.fireEvent('change', this.date);
   }
 });
 /*---
@@ -2377,11 +2476,16 @@ Data.Table = new Class({
     this.rows.push(row);
     return this.table.grab(row);
   },
-  removeRow: function(row) {
+  removeRow: function(row, erase) {
+    if (!(typeof erase !== "undefined" && erase !== null)) {
+      erase = true;
+    }
     row.removeEvents('editEnd');
     row.removeEvents('next');
     row.removeAll();
-    this.rows.erase(row);
+    if (erase) {
+      this.rows.erase(row);
+    }
     row.base.destroy();
     return delete row;
   },
@@ -2391,8 +2495,9 @@ Data.Table = new Class({
     }
     this.header.removeAll();
     this.rows.each((function(row) {
-      return this.removeRow(row);
+      return this.removeRow(row, false);
     }).bind(this));
+    this.rows.empty();
     this.columns = 0;
     if (addColumn) {
       this.addCloumn();
@@ -2450,8 +2555,7 @@ Data.Table = new Class({
         if (!(typeof (_a = rowa[i]) !== "undefined" && _a !== null)) {
           rowa[i] = [];
         }
-        rowa[i][j] = item;
-        return i++;
+        return (rowa[i][j] = item);
       });
       return j++;
     });
@@ -2887,19 +2991,6 @@ provides: Iterable.ListItem
 
 ...
 */
-Element.implement({
-  toggleTransition: function() {
-    var old;
-    old = this.retrieve('transition-dur');
-    if (typeof old !== "undefined" && old !== null) {
-      this.setStyle('-webkit-transition-duration', old);
-      return this.eliminate('transition-dur');
-    } else {
-      this.setStyle('-webkit-transition-duration', 0);
-      return this.store('transition-dur', this.getStyle('-webkit-transition-duration'));
-    }
-  }
-});
 Iterable.ListItem = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Draggable, Interfaces.Enabled],
@@ -2942,8 +3033,6 @@ Iterable.ListItem = new Class({
     $$(this.remove.base, this.handles.base).setStyle('position', 'absolute');
     this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
     this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
-    this.remove.base.toggleTransition();
-    this.handles.base.toggleTransition();
     this.base.adopt(this.title, this.subtitle);
     if (this.options.removeable) {
       this.base.grab(this.remove);
@@ -3004,8 +3093,6 @@ Iterable.ListItem = new Class({
         "left": -handSize.x,
         "top": (baseSize.y - handSize.y) / 2
       });
-      this.remove.base.toggleTransition();
-      this.handles.base.toggleTransition();
       this.parent();
       return this.options.draggable ? this.drag.addEvent('beforeStart', (function() {
         return this.fireEvent('select', this);

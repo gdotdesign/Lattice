@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+      <title>GDotUI.Demo</title>
+      <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
+      <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
+      <script type="text/javascript" src="../mootools/Field.js"></script>
+      <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
+      <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
+      <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
+      <script>
+        window.addEvent('domready', function(){
+        Pickers.Color.attach($("canvas"));
+        function drawColorWheel(width,ang,b){
+          ctx = $("canvas").getContext('2d');
+          angle = (1/ang)*Math.PI/180
+          ctx.translate(width/2, width/2);
+          var c = 0;
+          for (var i=0; i < (360)*(ang); i++) {
+            c = $HSB(270+(i/ang),100,b);
+            c1 = $HSB(270+(i/ang),0,b);
+            grad = ctx.createLinearGradient(0,0,width/2,0);
+            grad.addColorStop(0, c1.hex);
+            grad.addColorStop(1, c.hex);
+            ctx.strokeStyle = grad;
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.lineTo(width/2,0);
+            ctx.stroke();
+            ctx.rotate(angle);
+        }
+          /*grad = ctx.createRadialGradient(0,0,0,0,0,width/2);
+          grad.addColorStop(0, 'rgba(255,255,255,1)');
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grad;
+          ctx.fillRect(-width/2,-width/2,width,width);*/
+        }
+        drawColorWheel(200,4,100)
+        });
+      </script>
+  </head>
+  <body>
+    <canvas id="canvas" width="200" height="200">
+  </body>
+  </html>
