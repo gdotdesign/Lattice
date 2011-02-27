@@ -984,10 +984,10 @@ Core.Picker = new Class {
       @contentElement.fireEvent 'show'
     @base.addEvent 'outerClick', @hide.bindWithEvent @
   hide: (e) ->
-    if @base.isVisible() and not  @base.hasChild(e.target)
+    if @base.isVisible() and not @base.hasChild(e.target)
       if @attachedTo?
         @attachedTo.removeClass @options.picking
-        @detach()
+        #@detach()
       @base.dispose()
   setContent: (element) ->
     @contentElement = element
@@ -1709,24 +1709,57 @@ Data.Color = new Class {
   }
   initialize: (options) ->
     @parent(options)
+
+    @angle = 0
+    @radius = 0    
+    
+    #color
+    @hue = 0
+    @saturation = 100
+    @brightness = 100
+    
+    @center = {}
+    @size = {}
+    
+    @
   create: ->
     @base.addClass @options.class
     
     @hslacone = $(document.createElement('canvas'))
+    @background = $(document.createElement('canvas'))
     @wrapper = new Element('div').addClass @options.wrapper
    
-    @xyKnob=new Element('div').set 'id', 'xyknob'
-    @xyKnob.setStyles {
+    @knob=new Element('div').set 'id', 'xyknob'
+    @knob.setStyles {
       'position':'absolute'
+      'z-index': 1
       }
+      
     @colorData = new Data.Color.SlotControls()
     @bgColor = new Color('#fff')
     @base.adopt @wrapper
+    @hueN = @colorData.hue
+    @saturationN = @colorData.saturation
+    @lightness = @colorData.lightness
+    @alpha = @colorData.alpha
+    @hueN.addEvent 'change',( (step) ->
+      if typeof(step) == "object"
+        step = 0
+      @setHue(step)
+    ).bindWithEvent @
+    @saturationN.addEvent 'change',( (step) ->
+      @setSaturation step
+    ).bindWithEvent @
+    @lightness.addEvent 'change',( (step) ->
+      @hslacone.setStyle 'opacity',step/100
+      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
+    ).bindWithEvent @
+    
   drawHSLACone: (width,brightness) ->
     ctx = @hslacone.getContext '2d'
+    w2 = -width/2
     ang = width / 50
     angle = (1/ang)*Math.PI/180
-    ctx.translate width/2, width/2
     i = 0
     for i in [0..(360)*(ang)-1]
       c = $HSB(360+(i/ang),100,brightness)
@@ -1740,116 +1773,101 @@ Data.Color = new Class {
       ctx.lineTo(width/2,0)
       ctx.stroke()
       ctx.rotate(angle)
+      
   ready: ->
-    @hue = 0
-    @saturation = 100
-    @wrapper.adopt @xyKnob
-    sbSize = @wrapper.getSize()
-    @hslacone.set 'width', sbSize.x
-    @hslacone.set 'height', sbSize.y
-    @wrapper.adopt @hslacone
-    @drawHSLACone sbSize.x, 100
-    @xy = new Drag.Move @xyKnob
-    rad = sbSize.x/2
-    size = @xyKnob.getSize()
-    @xyKnob.setStyles {left:sbSize.x/2-size.x/2, top:sbSize.y/2-size.y/2}
-    center = {x: sbSize.x/2, y:sbSize.y/2}
+
+    @width = @wrapper.getSize().x
+    
+    @background.setStyles {
+      'background-color': "#000"
+      '-webkit-border-radius': @width/2+"px"
+      'position': 'absolute'
+      'z-index': -3
+    }
+    
+    @hslacone.setStyles {
+      'position': 'absolute'
+      'z-index': 0
+    }
+    
+    @hslacone.set 'width', @width
+    @hslacone.set 'height', @width
+    @background.set 'width', @width
+    @background.set 'height', @width
+    
+    @wrapper.adopt @background, @hslacone, @knob
+    
+    ctx = @hslacone.getContext '2d'
+    ctx.translate @width/2, @width/2
+    @drawHSLACone @width, 100
+    
+    @xy = new Drag.Move @knob
+    
+    @halfWidth = @width/2
+    @size = @knob.getSize()
+    @knob.setStyles {left:@halfWidth-@size.x/2, top:@halfWidth-@size.y/2}
+    
+    @center = {x: @halfWidth, y:@halfWidth}
     
     
     @xy.addEvent 'drag', ((el,e) ->
       position = el.getPosition(@wrapper)
       
-      x = center.x-position.x-size.x/2
-      y = center.y-position.y-size.y/2
-      radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
-      angle = Math.atan2(y,x)
-      if radius > sbSize.x/2
-        el.setStyle 'top', -Math.sin(angle)*rad-size.y/2+center.y
-        el.setStyle 'left', -Math.cos(angle)*rad-size.x/2+center.x
+      x = @center.x-position.x-@size.x/2
+      y = @center.y-position.y-@size.y/2
+      
+      @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+      @angle = Math.atan2(y,x)
+      
+      if @radius > @halfWidth
+        el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@size.y/2+@center.y
+        el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@size.x/2+@center.x
         @saturation = 100
       else
-        sat =  Math.round radius 
-        @saturation = Math.round((sat/rad)*100)
-      #console.log radius, size, center, position, angle*(180/Math.PI)
+        sat =  Math.round @radius 
+        @saturation = Math.round((sat/@halfWidth)*100)
       
-      an = Math.round(angle*(180/Math.PI))
+      an = Math.round(@angle*(180/Math.PI))
       @hue = if an < 0 then 180-Math.abs(an) else 180+an
-      c = $HSB(@hue,@saturation,100)
       @hueN.setValue @hue
       @saturationN.setValue @saturation
-      $(document.body).setStyle 'background-color', c.hex
+      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
     ).bind @
-    @hueN = @colorData.hue
-    @saturationN = @colorData.saturation
-    @lightnessN = @colorData.lightness
-    @alpha = @colorData.alpha
+   
     
     @colorData.readyCallback = @readyCallback
     @base.adopt @colorData
    
-    ###
+    
     @colorData.base.getElements( 'input[type=radio]').each ((item) ->
-      item.addEvent 'click',( ->
-        @setColor()
+      item.addEvent 'click',( (e)->
+        @type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
+        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
       ).bindWithEvent @
     ).bind @
     
     @alpha.addEvent 'change',( (step) ->
-      @setColor()
+      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
     ).bindWithEvent @
-    @hue.addEvent 'change',( (step) ->
-      if typeof(step) == "object"
-        step = 0
-      @bgColor.setHue Number(step)
-      colr = new $HSB step, 100, 100  
-      @color.setStyle 'background-color', colr
-      @setColor()
-    ).bindWithEvent @
-    @saturation.addEvent 'change',( (step) ->
-      @xy.detach()
-      @xy.set {
-        x:step
-        y:@xy.get().y
-        }
-      @xy.attach()
-    ).bindWithEvent @
-    @lightness.addEvent 'change',( (step) ->
-      @xy.detach()
-      @xy.set {
-        x:@xy.get().x
-        y:100-step
-        }
-      @xy.attach()
-    ).bindWithEvent @
-    @xy.addEvent 'tick', @change
-    @xy.addEvent 'change', @change
-    ###
+    
+    
+  setHue: (hue) ->
+    @angle = -((180-hue)*(Math.PI/180))
+    @hue = hue
+    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
+    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
+    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
+  setSaturation: (sat) ->
+    @radius = sat
+    @saturation = sat
+    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
+    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
+    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
   setValue: (color, alpha, type) ->
-    ###
-    color = new Color(color)
-    @hue.setValue color.hsb[0]
-    @saturation.setValue color.hsb[1]
-    @lightness.setValue color.hsb[2]
-    @alpha.setValue alpha
-    @colorData.base.getElements( 'input[type=radio]').each (item) ->
-      if item.get('value') is type
-        item.set 'checked', true
-    @xy.set {x: color.hsb[1], y:100-color.hsb[2]}
-    colr = new $HSB color.hsb[0], 100, 100
-    @bgColor = color
-    @finalColor = color
-    @color.setStyle 'background-color', colr
-    @setColor()
-    ###
   setColor: ->
     @finalColor = $HSB(@hue,@saturation,100)
-    type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
+    type = 
     @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
-    ###
-    @finalColor = @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
-    type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
-    @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
-    @value = @finalColor
   getValue: ->
     @finalColor
   change: (pos) ->
@@ -1860,7 +1878,6 @@ Data.Color = new Class {
     @lightness.setValue 100-pos.y
     @lightness.slider.slider.attach()
     @setColor()
-    ###
 }
 Data.Color.ReturnValues = {
   type: 'radio'

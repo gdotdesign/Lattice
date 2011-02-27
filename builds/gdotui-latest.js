@@ -1112,7 +1112,6 @@ Core.Picker = new Class({
     if (this.base.isVisible() && !this.base.hasChild(e.target)) {
       if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
         this.attachedTo.removeClass(this.options.picking);
-        this.detach();
       }
       return this.base.dispose();
     }
@@ -1924,26 +1923,57 @@ Data.Color = new Class({
     format: GDotUI.Theme.Color.format
   },
   initialize: function(options) {
-    return this.parent(options);
+    this.parent(options);
+    this.angle = 0;
+    this.radius = 0;
+    this.hue = 0;
+    this.saturation = 100;
+    this.brightness = 100;
+    this.center = {};
+    this.size = {};
+    return this;
   },
   create: function() {
     this.base.addClass(this.options["class"]);
     this.hslacone = $(document.createElement('canvas'));
+    this.background = $(document.createElement('canvas'));
     this.wrapper = new Element('div').addClass(this.options.wrapper);
-    this.xyKnob = new Element('div').set('id', 'xyknob');
-    this.xyKnob.setStyles({
-      'position': 'absolute'
+    this.knob = new Element('div').set('id', 'xyknob');
+    this.knob.setStyles({
+      'position': 'absolute',
+      'z-index': 1
     });
     this.colorData = new Data.Color.SlotControls();
     this.bgColor = new Color('#fff');
-    return this.base.adopt(this.wrapper);
+    this.base.adopt(this.wrapper);
+    this.hueN = this.colorData.hue;
+    this.saturationN = this.colorData.saturation;
+    this.lightness = this.colorData.lightness;
+    this.alpha = this.colorData.alpha;
+    this.hueN.addEvent('change', (function(step) {
+      if (typeof (step) === "object") {
+        step = 0;
+      }
+      return this.setHue(step);
+    }).bindWithEvent(this));
+    this.saturationN.addEvent('change', (function(step) {
+      return this.setSaturation(step);
+    }).bindWithEvent(this));
+    return this.lightness.addEvent('change', (function(step) {
+      this.hslacone.setStyle('opacity', step / 100);
+      return this.fireEvent('change', {
+        color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+        type: this.type,
+        alpha: this.alpha.getValue()
+      });
+    }).bindWithEvent(this));
   },
   drawHSLACone: function(width, brightness) {
-    var _a, ang, angle, c, c1, ctx, grad, i;
+    var _a, ang, angle, c, c1, ctx, grad, i, w2;
     ctx = this.hslacone.getContext('2d');
+    w2 = -width / 2;
     ang = width / 50;
     angle = (1 / ang) * Math.PI / 180;
-    ctx.translate(width / 2, width / 2);
     i = 0;
     _a = [];
     for (i = 0; (0 <= (360) * (ang) - 1 ? i <= (360) * (ang) - 1 : i >= (360) * (ang) - 1); (0 <= (360) * (ang) - 1 ? i += 1 : i -= 1)) {
@@ -1964,131 +1994,125 @@ Data.Color = new Class({
     return _a;
   },
   ready: function() {
-    var center, rad, sbSize, size, type;
-    this.hue = 0;
-    this.saturation = 100;
-    this.wrapper.adopt(this.xyKnob);
-    sbSize = this.wrapper.getSize();
-    this.hslacone.set('width', sbSize.x);
-    this.hslacone.set('height', sbSize.y);
-    this.wrapper.adopt(this.hslacone);
-    this.drawHSLACone(sbSize.x, 100);
-    this.xy = new Drag.Move(this.xyKnob);
-    rad = sbSize.x / 2;
-    size = this.xyKnob.getSize();
-    this.xyKnob.setStyles({
-      left: sbSize.x / 2 - size.x / 2,
-      top: sbSize.y / 2 - size.y / 2
+    var ctx;
+    this.width = this.wrapper.getSize().x;
+    this.background.setStyles({
+      'background-color': "#000",
+      '-webkit-border-radius': this.width / 2 + "px",
+      'position': 'absolute',
+      'z-index': -3
     });
-    center = {
-      x: sbSize.x / 2,
-      y: sbSize.y / 2
+    this.hslacone.setStyles({
+      'position': 'absolute',
+      'z-index': 0
+    });
+    this.hslacone.set('width', this.width);
+    this.hslacone.set('height', this.width);
+    this.background.set('width', this.width);
+    this.background.set('height', this.width);
+    this.wrapper.adopt(this.background, this.hslacone, this.knob);
+    ctx = this.hslacone.getContext('2d');
+    ctx.translate(this.width / 2, this.width / 2);
+    this.drawHSLACone(this.width, 100);
+    this.xy = new Drag.Move(this.knob);
+    this.halfWidth = this.width / 2;
+    this.size = this.knob.getSize();
+    this.knob.setStyles({
+      left: this.halfWidth - this.size.x / 2,
+      top: this.halfWidth - this.size.y / 2
+    });
+    this.center = {
+      x: this.halfWidth,
+      y: this.halfWidth
     };
     this.xy.addEvent('drag', (function(el, e) {
-      var an, angle, c, position, radius, sat, x, y;
+      var an, position, sat, x, y;
       position = el.getPosition(this.wrapper);
-      x = center.x - position.x - size.x / 2;
-      y = center.y - position.y - size.y / 2;
-      radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-      angle = Math.atan2(y, x);
-      if (radius > sbSize.x / 2) {
-        el.setStyle('top', -Math.sin(angle) * rad - size.y / 2 + center.y);
-        el.setStyle('left', -Math.cos(angle) * rad - size.x / 2 + center.x);
+      x = this.center.x - position.x - this.size.x / 2;
+      y = this.center.y - position.y - this.size.y / 2;
+      this.radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+      this.angle = Math.atan2(y, x);
+      if (this.radius > this.halfWidth) {
+        el.setStyle('top', -Math.sin(this.angle) * this.halfWidth - this.size.y / 2 + this.center.y);
+        el.setStyle('left', -Math.cos(this.angle) * this.halfWidth - this.size.x / 2 + this.center.x);
         this.saturation = 100;
       } else {
-        sat = Math.round(radius);
-        this.saturation = Math.round((sat / rad) * 100);
+        sat = Math.round(this.radius);
+        this.saturation = Math.round((sat / this.halfWidth) * 100);
       }
-      an = Math.round(angle * (180 / Math.PI));
+      an = Math.round(this.angle * (180 / Math.PI));
       this.hue = an < 0 ? 180 - Math.abs(an) : 180 + an;
-      c = $HSB(this.hue, this.saturation, 100);
       this.hueN.setValue(this.hue);
       this.saturationN.setValue(this.saturation);
-      return $(document.body).setStyle('background-color', c.hex);
+      return this.fireEvent('change', {
+        color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+        type: this.type,
+        alpha: this.alpha.getValue()
+      });
     }).bind(this));
-    this.hueN = this.colorData.hue;
-    this.saturationN = this.colorData.saturation;
-    this.lightnessN = this.colorData.lightness;
-    this.alpha = this.colorData.alpha;
     this.colorData.readyCallback = this.readyCallback;
     this.base.adopt(this.colorData);
-    /*@colorData.base.getElements( 'input[type=radio]').each ((item) ->
-      item.addEvent 'click',( ->
-        @setColor()
-      ).bindWithEvent @
-    ).bind @
-
-    @alpha.addEvent 'change',( (step) ->
-      @setColor()
-    ).bindWithEvent @
-    @hue.addEvent 'change',( (step) ->
-      if typeof(step) == "object"
-        step = 0
-      @bgColor.setHue Number(step)
-      colr = new $HSB step, 100, 100
-      @color.setStyle 'background-color', colr
-      @setColor()
-    ).bindWithEvent @
-    @saturation.addEvent 'change',( (step) ->
-      @xy.detach()
-      @xy.set {
-        x:step
-        y:@xy.get().y
-        }
-      @xy.attach()
-    ).bindWithEvent @
-    @lightness.addEvent 'change',( (step) ->
-      @xy.detach()
-      @xy.set {
-        x:@xy.get().x
-        y:100-step
-        }
-      @xy.attach()
-    ).bindWithEvent @
-    @xy.addEvent 'tick', @change
-    @xy.addEvent 'change', @change
-    */
-    ({
-      setValue: function(color, alpha, type) {},
-      /*color = new Color(color)
-      @hue.setValue color.hsb[0]
-      @saturation.setValue color.hsb[1]
-      @lightness.setValue color.hsb[2]
-      @alpha.setValue alpha
-      @colorData.base.getElements( 'input[type=radio]').each (item) ->
-        if item.get('value') is type
-          item.set 'checked', true
-      @xy.set {x: color.hsb[1], y:100-color.hsb[2]}
-      colr = new $HSB color.hsb[0], 100, 100
-      @bgColor = color
-      @finalColor = color
-      @color.setStyle 'background-color', colr
-      @setColor()
-      */
-      setColor: function() {}
-    });
-    this.finalColor = $HSB(this.hue, this.saturation, 100);
-    type = this.colorData.base.getElements('input[type=radio]:checked')[0].get('value');
+    this.colorData.base.getElements('input[type=radio]').each((function(item) {
+      return item.addEvent('click', (function(e) {
+        this.type = this.colorData.base.getElements('input[type=radio]:checked')[0].get('value');
+        return this.fireEvent('change', {
+          color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+          type: this.type,
+          alpha: this.alpha.getValue()
+        });
+      }).bindWithEvent(this));
+    }).bind(this));
+    return this.alpha.addEvent('change', (function(step) {
+      return this.fireEvent('change', {
+        color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+        type: this.type,
+        alpha: this.alpha.getValue()
+      });
+    }).bindWithEvent(this));
+  },
+  setHue: function(hue) {
+    this.angle = -((180 - hue) * (Math.PI / 180));
+    this.hue = hue;
+    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.size.y / 2 + this.center.y);
+    this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.size.x / 2 + this.center.x);
     return this.fireEvent('change', {
+      color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+      type: this.type,
+      alpha: this.alpha.getValue()
+    });
+  },
+  setSaturation: function(sat) {
+    this.radius = sat;
+    this.saturation = sat;
+    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.size.y / 2 + this.center.y);
+    this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.size.x / 2 + this.center.x);
+    return this.fireEvent('change', {
+      color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+      type: this.type,
+      alpha: this.alpha.getValue()
+    });
+  },
+  setValue: function(color, alpha, type) {},
+  setColor: function() {
+    var type;
+    this.finalColor = $HSB(this.hue, this.saturation, 100);
+    return (type = this.fireEvent('change', {
       color: this.finalColor,
       type: type,
       alpha: this.alpha.getValue()
-    });
-    /*@finalColor = @bgColor.setSaturation(@saturation.getValue()).setBrightness(@lightness.getValue()).setHue(@hue.getValue())
-    type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
-    @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
-    @value = @finalColor
-      getValue: ->
-    @finalColor
-      change: (pos) ->
-    @saturation.slider.slider.detach()
-    @saturation.setValue pos.x
-    @saturation.slider.slider.attach()
-    @lightness.slider.slider.detach()
-    @lightness.setValue 100-pos.y
-    @lightness.slider.slider.attach()
-    @setColor()
-    */
+    }));
+  },
+  getValue: function() {
+    return this.finalColor;
+  },
+  change: function(pos) {
+    this.saturation.slider.slider.detach();
+    this.saturation.setValue(pos.x);
+    this.saturation.slider.slider.attach();
+    this.lightness.slider.slider.detach();
+    this.lightness.setValue(100 - pos.y);
+    this.lightness.slider.slider.attach();
+    return this.setColor();
   }
 });
 Data.Color.ReturnValues = {

@@ -12,6 +12,11 @@
       <script>
         window.addEvent('domready', function(){
         Pickers.Color.attach($("canvas"));
+        $("canvas").addEvent('change', function(e){
+          this.setStyle('background-color',e.color)
+          console.log(e.type)
+          console.log(e.alpha)
+        });
         function drawColorWheel(width,ang,b){
           ctx = $("canvas").getContext('2d');
           angle = (1/ang)*Math.PI/180
