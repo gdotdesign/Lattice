@@ -9,15 +9,20 @@ body {
   float: left;
   width: 500px; }
 
+a {
+  color: #eeeeee;
+  text-decoration: none; }
+
 .code {
   float: left;
   color: #333333;
-  border-left: 1px solid #bbbbbb; }
+  border-left: 1px dashed #bbbbbb; }
   .code * {
-    padding-left: 10px; }
+    padding-left: 20px; }
   .code h1 {
     font-size: 16px;
     margin-top: 10px;
+    font-weight: normal;
     margin-bottom: 10px; }
   .code pre {
     font-size: 14px; }
@@ -29,7 +34,9 @@ body {
   border-bottom: 3px solid #aaaaaa;
   margin-bottom: 10px; }
   .header h1 {
-    font-size: 16px; }
+    font-size: 16px;
+    font-weight: normal;
+    color: white; }
   .header h2 {
     font-size: 14px;
     font-weight: normal; }

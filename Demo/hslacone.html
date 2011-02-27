@@ -21,6 +21,7 @@
           text-align: center;
           font-size: 14px;
           color: #333;
+          cursor: pointer;
         }
       </style>
       <script>
@@ -39,26 +40,50 @@
   <body>
     <div class="header">
       <h1>
-        G.UI Demos :
+        G.UI Demos :: Pickers :: HSLA
       </h1>
-      <h2>
-        : Color pickers
-      </h2>
+        
       <ul class="nav">
-        <li>Elements</li>
-        <li>Forms</li>
+        <li>
+          <a href="#">
+            Core
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            Forms
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            Data
+          </a>
+        </li>
+        <li>
+          <a href="#">
+            Pickers
+          </a>
+        </li>
       </ul>
       <div class="clear"></div>
     </div>
     <div class="demo">
       <div id="cpick">
-        Click here for a color picker.
+        Click here for a color picker!
       </div>
     </div>
     <div class="code">
       <h1>
         HSLA Color picker
       </h1>
+      <h3>
+        Event
+      </h3>
+      <div>
+        color - The final color
+        type - hex, rgb, rgba, hsl, hsla
+        alpha - Alpha
+      </div>
       <h3>
         Javascript
       </h3>
@@ -80,7 +105,7 @@ $("cpick").addEvent('change', function(e){
       <pre>
         <code>
 &lt;div id="cpick"&gt;
-  Click here for a color picker.
+  Click here for a color picker!
 &lt;/div&gt;
         </code>
       </pre>
@@ -98,6 +123,7 @@ $("cpick").addEvent('change', function(e){
   text-align: center;
   font-size: 14px;
   color: #333;
+  cursor: pointer;
 }
         </code>
       </pre>

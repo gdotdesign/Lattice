@@ -1,1 +1,3 @@
-This library is being developed for offline web application in the google web store.
+This library is being developed for web applications.
+
+CSS Driven.
