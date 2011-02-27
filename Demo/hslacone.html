@@ -2,50 +2,106 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
-      <title>GDotUI.Demo</title>
+      <title>GDotUI.Demos :: Color Pickers</title>
       <script type="text/javascript" src="../mootools/mootools-1.2.4-core.js"></script>
       <script type="text/javascript" src="../mootools/mootools-1.2.4-more.js"></script>
       <script type="text/javascript" src="../mootools/Field.js"></script>
       <script type="text/javascript" src="../Themes/Chrome/theme.js"></script>
+      <link type="text/css" rel="stylesheet" href="../Themes/Blank/reset.css"/>
       <link type="text/css" rel="stylesheet" href="../Themes/Chrome/theme.css"/>
+      <link type="text/css" rel="stylesheet" href="css/style.css"/>
       <script type="text/javascript" src="../builds/gdotui-latest.js"></script>
+      <style>
+        #cpick{
+          width: 200px;
+          height: 200px;
+          margin-left: 20px;
+          line-height: 200px;
+          border: 1px dashed #aaa;
+          text-align: center;
+          font-size: 14px;
+          color: #333;
+        }
+      </style>
       <script>
         window.addEvent('domready', function(){
-        Pickers.Color.attach($("canvas"));
-        $("canvas").addEvent('change', function(e){
+        Pickers.Color.attach($("cpick"));
+        $("cpick").addEvent('change', function(e){
           this.setStyle('background-color',e.color)
-          console.log(e.type)
-          console.log(e.alpha)
+          if(e.color.hsb[2] < 50)
+            this.setStyle('color','#fff');
+          else
+            this.setStyle('color','#333');
         });
-        function drawColorWheel(width,ang,b){
-          ctx = $("canvas").getContext('2d');
-          angle = (1/ang)*Math.PI/180
-          ctx.translate(width/2, width/2);
-          var c = 0;
-          for (var i=0; i < (360)*(ang); i++) {
-            c = $HSB(270+(i/ang),100,b);
-            c1 = $HSB(270+(i/ang),0,b);
-            grad = ctx.createLinearGradient(0,0,width/2,0);
-            grad.addColorStop(0, c1.hex);
-            grad.addColorStop(1, c.hex);
-            ctx.strokeStyle = grad;
-            ctx.beginPath();
-            ctx.moveTo(0,0);
-            ctx.lineTo(width/2,0);
-            ctx.stroke();
-            ctx.rotate(angle);
-        }
-          /*grad = ctx.createRadialGradient(0,0,0,0,0,width/2);
-          grad.addColorStop(0, 'rgba(255,255,255,1)');
-          grad.addColorStop(1, 'rgba(255,255,255,0)');
-          ctx.fillStyle = grad;
-          ctx.fillRect(-width/2,-width/2,width,width);*/
-        }
-        drawColorWheel(200,4,100)
         });
       </script>
   </head>
   <body>
-    <canvas id="canvas" width="200" height="200">
+    <div class="header">
+      <h1>
+        G.UI Demos :
+      </h1>
+      <h2>
+        : Color pickers
+      </h2>
+      <ul class="nav">
+        <li>Elements</li>
+        <li>Forms</li>
+      </ul>
+      <div class="clear"></div>
+    </div>
+    <div class="demo">
+      <div id="cpick">
+        Click here for a color picker.
+      </div>
+    </div>
+    <div class="code">
+      <h1>
+        HSLA Color picker
+      </h1>
+      <h3>
+        Javascript
+      </h3>
+      <pre>
+        <code>
+Pickers.Color.attach($("cpick"));
+$("cpick").addEvent('change', function(e){
+  this.setStyle('background-color',e.color)
+  if(e.color.hsb[2] < 50)
+    this.setStyle('color','#fff');
+  else
+    this.setStyle('color','#333');
+});
+        </code>
+      </pre>
+      <h3>
+        Html
+      </h3>
+      <pre>
+        <code>
+&lt;div id="cpick"&gt;
+  Click here for a color picker.
+&lt;/div&gt;
+        </code>
+      </pre>
+      <h3>
+        CSS
+      </h3>
+      <pre>
+        <code>
+#cpick{
+  width: 200px;
+  height: 200px;
+  margin-left: 20px;
+  line-height: 200px;
+  border: 1px dashed #aaa;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+}
+        </code>
+      </pre>
+    </div>
+    <div class="clear"></div>
   </body>
   </html>

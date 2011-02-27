@@ -202,7 +202,7 @@
   background-color: rgba(0, 0, 0, 0.7);
   z-index: 800; }
 
-* {
+body {
   font-family: Verdana, Sans;
   font-size: 11px; }
 
