@@ -94,7 +94,6 @@ Data.Color = new Class {
       ctx.rotate(angle)
       
   ready: ->
-
     @width = @wrapper.getSize().x
     
     @background.setStyles {
@@ -169,12 +168,13 @@ Data.Color = new Class {
     @alpha.addEvent 'change',( (step) ->
       @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
     ).bindWithEvent @
-    
+    @parent()
   readyCallback: ->  
     @alpha.setValue 100
     @lightness.setValue 100
     @hue.setValue 0
     @saturation.setValue 0
+    delete @readyCallback
   setHue: (hue) ->
     @angle = -((180-hue)*(Math.PI/180))
     @hue = hue
@@ -188,6 +188,22 @@ Data.Color = new Class {
     @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
     @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
   setValue: (color, alpha, type) ->
+    @hue = color.hsb[0]
+    @saturation = color.hsb[1]
+    @angle = -((180-color.hsb[0])*(Math.PI/180))
+    @radius = color.hsb[1]
+    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
+    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
+    @hueN.setValue color.hsb[0]
+    @saturationN.setValue color.hsb[1]
+    @alpha.setValue alpha
+    @lightness.setValue color.hsb[2]
+    @hslacone.setStyle 'opacity',color.hsb[2]/100
+    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
+      if item.get('value') == type
+        item.set 'checked', true
+    ).bind @
+    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()}
   setColor: ->
     @finalColor = $HSB(@hue,@saturation,100)
     type = 
@@ -251,4 +267,5 @@ Data.Color.SlotControls = new Class {
     @base.getElements('input[type=radio]')[0].set('checked',true)
     if @readyCallback?
       @readyCallback()
+    @parent()
 }

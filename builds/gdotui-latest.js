@@ -2062,19 +2062,21 @@ Data.Color = new Class({
         });
       }).bindWithEvent(this));
     }).bind(this));
-    return this.alpha.addEvent('change', (function(step) {
+    this.alpha.addEvent('change', (function(step) {
       return this.fireEvent('change', {
         color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
         type: this.type,
         alpha: this.alpha.getValue()
       });
     }).bindWithEvent(this));
+    return this.parent();
   },
   readyCallback: function() {
     this.alpha.setValue(100);
     this.lightness.setValue(100);
     this.hue.setValue(0);
-    return this.saturation.setValue(0);
+    this.saturation.setValue(0);
+    return delete this.readyCallback;
   },
   setHue: function(hue) {
     this.angle = -((180 - hue) * (Math.PI / 180));
@@ -2098,7 +2100,27 @@ Data.Color = new Class({
       alpha: this.alpha.getValue()
     });
   },
-  setValue: function(color, alpha, type) {},
+  setValue: function(color, alpha, type) {
+    this.hue = color.hsb[0];
+    this.saturation = color.hsb[1];
+    this.angle = -((180 - color.hsb[0]) * (Math.PI / 180));
+    this.radius = color.hsb[1];
+    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.size.y / 2 + this.center.y);
+    this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.size.x / 2 + this.center.x);
+    this.hueN.setValue(color.hsb[0]);
+    this.saturationN.setValue(color.hsb[1]);
+    this.alpha.setValue(alpha);
+    this.lightness.setValue(color.hsb[2]);
+    this.hslacone.setStyle('opacity', color.hsb[2] / 100);
+    this.colorData.base.getElements('input[type=radio]').each((function(item) {
+      return item.get('value') === type ? item.set('checked', true) : null;
+    }).bind(this));
+    return this.fireEvent('change', {
+      color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+      type: this.type,
+      alpha: this.alpha.getValue()
+    });
+  },
   setColor: function() {
     var type;
     this.finalColor = $HSB(this.hue, this.saturation, 100);
@@ -2182,7 +2204,10 @@ Data.Color.SlotControls = new Class({
     var _a;
     this.base.adopt(this.hue, this.saturation, this.lightness, this.alpha, this.col);
     this.base.getElements('input[type=radio]')[0].set('checked', true);
-    return (typeof (_a = this.readyCallback) !== "undefined" && _a !== null) ? this.readyCallback() : null;
+    if (typeof (_a = this.readyCallback) !== "undefined" && _a !== null) {
+      this.readyCallback();
+    }
+    return this.parent();
   }
 });
 /*---
