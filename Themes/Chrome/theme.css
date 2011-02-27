@@ -240,10 +240,10 @@ input {
 
 input[type=text], input[type=password], textarea, select {
   border: 1px solid #c6c6c6;
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -khtml-border-radius: 5px;
-  border-radius: 5px; }
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px; }
 
 input[type=button] {
   background-color: #87b5ed;
@@ -285,10 +285,10 @@ body {
   background-color: #d3d3d3; }
 
 .bar, .knob {
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -khtml-border-radius: 5px;
-  border-radius: 5px; }
+  -moz-border-radius: 10px;
+  -webkit-border-radius: 10px;
+  -khtml-border-radius: 10px;
+  border-radius: 10px; }
 
 .bar {
   background-color: #dbdbdb;

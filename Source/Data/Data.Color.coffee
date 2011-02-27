@@ -34,7 +34,7 @@ Data.Color = new Class {
     
     #color
     @hue = 0
-    @saturation = 100
+    @saturation = 0
     @brightness = 100
     
     @center = {}
@@ -156,6 +156,7 @@ Data.Color = new Class {
     
     @colorData.readyCallback = @readyCallback
     @base.adopt @colorData
+    
    
     
     @colorData.base.getElements( 'input[type=radio]').each ((item) ->
@@ -169,7 +170,11 @@ Data.Color = new Class {
       @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
     ).bindWithEvent @
     
-    
+  readyCallback: ->  
+    @alpha.setValue 100
+    @lightness.setValue 100
+    @hue.setValue 0
+    @saturation.setValue 0
   setHue: (hue) ->
     @angle = -((180-hue)*(Math.PI/180))
     @hue = hue

@@ -29,10 +29,7 @@
         Pickers.Color.attach($("cpick"));
         $("cpick").addEvent('change', function(e){
           this.setStyle('background-color',e.color)
-          if(e.color.hsb[2] < 50)
-            this.setStyle('color','#fff');
-          else
-            this.setStyle('color','#333');
+          this.setStyle('color',e.color.hsb[2] < 50?'#fff':'#333');
         });
         });
       </script>
@@ -92,10 +89,7 @@
 Pickers.Color.attach($("cpick"));
 $("cpick").addEvent('change', function(e){
   this.setStyle('background-color',e.color)
-  if(e.color.hsb[2] < 50)
-    this.setStyle('color','#fff');
-  else
-    this.setStyle('color','#333');
+  this.setStyle('color',e.color.hsb[2] < 50?'#fff':'#333');
 });
         </code>
       </pre>

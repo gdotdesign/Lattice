@@ -1927,7 +1927,7 @@ Data.Color = new Class({
     this.angle = 0;
     this.radius = 0;
     this.hue = 0;
-    this.saturation = 100;
+    this.saturation = 0;
     this.brightness = 100;
     this.center = {};
     this.size = {};
@@ -2069,6 +2069,12 @@ Data.Color = new Class({
         alpha: this.alpha.getValue()
       });
     }).bindWithEvent(this));
+  },
+  readyCallback: function() {
+    this.alpha.setValue(100);
+    this.lightness.setValue(100);
+    this.hue.setValue(0);
+    return this.saturation.setValue(0);
   },
   setHue: function(hue) {
     this.angle = -((180 - hue) * (Math.PI / 180));
