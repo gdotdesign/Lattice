@@ -1,0 +1,39 @@
+---usage
+  Pickers.Color.attach(element);
+  element.addEvent('change',function(e){});
+---HTML
+<div id="cpick">
+  Click here for a color picker!
+</div>
+---CSS
+#cpick{
+  width: 225px;
+  height: 225px;
+  margin-left: 20px;
+  line-height: 225px;
+  border: 1px dashed #aaa;
+  text-align: center;
+  font-size: 14px;
+  color: #333;
+  cursor: pointer;
+}
+---JS
+window.addEvent('domready', function(){
+  Pickers.Color.attach($("cpick"));
+  $("cpick").addEvent('change', function(e){
+    this.setStyle('background-color',e.color);
+    this.setStyle('color',e.color.hsb[2] < 50?'#fff':'#333');
+  });
+});
+---CLASSES
+Color:{
+   sb:'sb',
+   black:'black',
+   white:'white',
+   wrapper:'wrapper',
+   class:'color',
+   format: 'hex', 
+   controls:{
+       class:'slotcontrol'
+   }
+}

@@ -1,0 +1,54 @@
+---EVENTS
+invoked:Dispatches when clicked
+---CSS
+.redButton{
+  background-image: -moz-linear-gradient(100% 100% 90deg, #FF8800, #FFCC00);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#FFCC00), to(#FF8800));
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
+  -moz-border-radius: 3px;
+  -webkit-border-radius: 3px;
+  -khtml-border-radius: 3px;
+  border-radius: 3px;
+  border: none;
+  padding: 10px;
+  padding-top: 7px;
+  font-size: 14px;
+  background-color: #a22;
+  color: #333;
+  font-weight: bold;
+  text-shadow: 0 0 5px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+.redButton .icon{
+  margin-right: 5px;
+  float: left;
+}
+.redButton:active{
+  position: relative;
+  top: 1px;
+  left: 1px;
+}
+---JS
+window.addEvent('domready', function(){
+  defaultBtn = new Core.Button({text:"Default Button! Depends on the Theme."});
+  redBtn = new Core.Button({
+    text: "I'm red, with custom Style!",
+    image: "../Themes/Chrome/images/delete.png",
+    'class': "redButton"})
+  $$(".demo").adopt(defaultBtn,redBtn);
+});
+---CLASSES
+Button:{
+  class:'button',
+  defaultText: '',
+  defaultIcon: ''
+}
+---OPTIONS
+class:Class that applies to the base class.
+text:The text (label) of the button.
+icon:Url for an image (icon) for the button.
+---USAGE
+var myButton = new Core.Button()
+document.body.grab(myButton);

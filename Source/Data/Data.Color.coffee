@@ -13,7 +13,6 @@ provides: Data.Color
 
 ...
 ###
-
 Data.Color = new Class {
   Extends:Data.Abstract
   Binds: ['change']

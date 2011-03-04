@@ -1,0 +1,73 @@
+.demo
+  = @stuff[:html]
+  %style
+    = @stuff[:css]
+  %script{:type=>"text/javascript"}
+    = @stuff[:js]
+.code
+  %h2
+    Quick reference
+  -if @stuff[:usage] 
+    %h3
+      &raquo; Usage
+    .co
+      = Uv.parse( @stuff[:usage], "xhtml", "javascript", false, "slush_poppies")
+  -if @stuff[:options]
+    %h3
+      &raquo; Options
+    .co
+      - options = @stuff[:options].split "\n"
+      %ul
+        - options.each do |option|
+          - parts = option.split ":"
+          %li
+            %b
+              = parts[0]+":"
+            =parts[1]
+  -if @stuff[:events]
+    %h3
+      &raquo; Special Events
+    .co
+      - options = @stuff[:events].split "\n"
+      %ul
+        - options.each do |option|
+          - parts = option.split ":"
+          %li
+            %b
+              = parts[0]+":"
+            =parts[1]
+  -if @stuff[:classes]
+    %h3
+      &raquo; Theme settings
+    .co
+      = Uv.parse( @stuff[:classes], "xhtml", "javascript", false, "slush_poppies")
+  %h2
+    Demo code
+  -if @stuff[:html]
+    %h3
+      &raquo; Html
+    .co
+      = Uv.parse( @stuff[:html], "xhtml", "html", false, "slush_poppies")
+  -if @stuff[:css]
+    %h3
+      &raquo; CSS
+    .co
+      = Uv.parse( @stuff[:css], "xhtml", "css", false, "slush_poppies")
+  -if @stuff[:js]
+    %h3
+      &raquo; Javascript
+    .co
+      = Uv.parse( @stuff[:js], "xhtml", "javascript", false, "slush_poppies")
+.clear
+:javascript
+  window.addEvent('domready',function(){
+    $$(".co").each(function(item){
+      item.set('tween',{duration:'short'});
+      item.set('rel',item.getSize().y);
+      item.setStyle('height',0)
+    })
+    $$("h3").addEvent('click',function(){
+      pre = this.getNext(".co");    
+      pre.tween('height',pre.getSize().y == 0?pre.get('rel'):0);
+    })
+  });
