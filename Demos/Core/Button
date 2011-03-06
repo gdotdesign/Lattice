@@ -50,5 +50,5 @@ class:Class that applies to the base class.
 text:The text (label) of the button.
 icon:Url for an image (icon) for the button.
 ---USAGE
-var myButton = new Core.Button()
+var myButton = new Core.Button(options)
 document.body.grab(myButton);

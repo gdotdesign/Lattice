@@ -7,6 +7,7 @@ require 'syntax'
 require 'sass'
 require 'uv'
 require 'json'
+require 'yaml'
 
 class Gdotui < Sinatra::Application
   
@@ -40,6 +41,10 @@ class Gdotui < Sinatra::Application
     sass :style
   end
 
+  get "/home" do
+    haml :home
+  end
+
   get "/Themes/*" do
     puts 'style'
     send_file "../Themes/#{params[:splat][0]}"
@@ -59,6 +64,9 @@ class Gdotui < Sinatra::Application
     lines = IO.readlines "../Demos/#{params[:package]}/#{params[:class]}"
     @stuff = parse lines
     haml :demo
+    #@stuff = YAML::load(File.new("../Docs/#{params[:package]}/#{params[:class]}"))
+    #puts @stuff.inspect
+    #haml :docs
   end
   
   get '*' do

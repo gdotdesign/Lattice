@@ -1,0 +1,32 @@
+.doc
+  %h1.class
+    = @stuff["class"]
+  %p
+    = @stuff["description"]
+  - if @stuff["implements"]
+    %h2.implements
+      Implements
+    %ul.imp
+      - @stuff["implements"].each do |imp|
+        %li
+          = imp
+  - if @stuff['functions']
+    %ul
+      - @stuff["functions"].each do |func|
+        %li.function
+          %h3
+            Function:
+            = func.key(nil)
+          %p
+            = func['description']
+          -if func['arguments']
+            %h4
+              Arguments
+            %ul.argument
+              - func['arguments'].each do |arg|
+                %li
+                  = arg.key(nil)
+                  :plain
+                    -
+                  ="(#{arg['type']})"
+                  = arg['description']

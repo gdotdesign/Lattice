@@ -2,9 +2,9 @@
 !!! strict
 %html{:lang=>"en",:"xml:lang"=>"en", :xmlns=>"http://www.w3.org/1999/xhtml"}
   %head
-    %link{:href => "style.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
     %link{:href => "../Themes/Blank/reset.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
     %link{:href => "../Themes/Chrome/theme.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
+    %link{:href => "style.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
     %script{:src=>"../mootools/mootools-1.2.4-core.js", :type=>"text/javascript"}
     %script{:src=>"../mootools/mootools-1.2.4-more.js", :type=>"text/javascript"}
     %script{:src=>"../Themes/Chrome/theme.js", :type=>"text/javascript"}
@@ -17,24 +17,23 @@
       = title
   %body
     .header
-      %h1
-        = title
       .nav
         %ul.main
-          - d = Dir.entries '../Demos'
-          - d.delete '..'
-          - d.delete '.'
-          - for dir in d
-            %li.first
-              = dir
-              %ul.sec
-                - d1 = Dir.entries "../Demos/#{dir}"
-                - d1.delete '..'
-                - d1.delete '.'
-                - for file in d1
-                  %li
-                    %a{:href=>"/#{dir}/#{file}"}
-                      = file
+          %li.first
+            %a{:href=>"/home",:style=>"background-image:url(/home.png)"}
+              Home
+          %li.first
+            %a{:href=>"/home",:style=>"background-image:url(/documents-inv.png)"}
+              Docs
+          %li.first
+            %a{:href=>"/home",:style=>"background-image:url(/idea-inv.png)"}
+              Demos
+          %li.first
+            %a{:href=>"/home",:style=>"background-image:url(/layers-inv.png)"}
+              Themes
+          %li.first.right
+            %a{:href=>"/home",:style=>"background-image:url(/save-inv.png)"}
+              Build
       .clear
     = yield
     
