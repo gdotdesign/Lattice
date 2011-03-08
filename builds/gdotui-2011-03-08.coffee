@@ -9,8 +9,6 @@ license: MIT-style license.
 
 provides: GDotUI
 
-requires: Something.Something
-
 ...
 ###
 ###

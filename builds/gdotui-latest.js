@@ -1,6 +1,5 @@
-var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider, UnitList, UnitTable, checkForKey;
-var __hasProp = Object.prototype.hasOwnProperty;
-/*---
+/*
+---
 
 name: GDotUI
 
@@ -10,11 +9,10 @@ license: MIT-style license.
 
 provides: GDotUI
 
-requires: Something.Something
-
 ...
 */
-/*---
+/*
+---
 description: Class Mutator. Exposes methods as its own by delegating specified method calls directly to specified elements within the Class.
 
 license: MIT-style
@@ -30,17 +28,21 @@ provides:
   - Class.Delegates
 
 ...
-*/
+*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider, UnitList, UnitTable, checkForKey;
 Class.Mutators.Delegates = function(delegations) {
   var self;
   self = this;
   return new Hash(delegations).each(function(delegates, target) {
     return $splat(delegates).each(function(delegate) {
-      return (self.prototype[delegate] = function() {
+      return self.prototype[delegate] = function() {
         var ret;
         ret = this[target][delegate].apply(this[target], arguments);
-        return ret === this[target] ? this : ret;
-      });
+        if (ret === this[target]) {
+          return this;
+        } else {
+          return ret;
+        }
+      };
     });
   });
 };
@@ -50,7 +52,7 @@ Data = {};
 Iterable = {};
 Pickers = {};
 Forms = {};
-if (!(typeof GDotUI !== "undefined" && GDotUI !== null)) {
+if (!(typeof GDotUI != "undefined" && GDotUI !== null)) {
   GDotUI = {};
 }
 GDotUI.Config = {
@@ -58,7 +60,8 @@ GDotUI.Config = {
   floatZindex: 0,
   cookieDuration: 7 * 1000
 };
-/*---
+/*
+---
 
 name: Interfaces.Mux
 
@@ -73,11 +76,14 @@ provides: Interfaces.Mux
 Interfaces.Mux = new Class({
   mux: function() {
     return (new Hash(this)).each((function(value, key) {
-      return (key.test(/^_\$/) && $type(value) === "function") ? value.run(null, this) : null;
+      if (key.test(/^_\$/) && $type(value) === "function") {
+        return value.run(null, this);
+      }
     }).bind(this));
   }
 });
-/*---
+/*
+---
 
 name: Interfaces.Enabled
 
@@ -91,7 +97,7 @@ provides: Interfaces.Enabled
 */
 Interfaces.Enabled = new Class({
   _$Enabled: function() {
-    return (this.enabled = true);
+    return this.enabled = true;
   },
   enable: function() {
     this.enabled = true;
@@ -104,7 +110,8 @@ Interfaces.Enabled = new Class({
     return this.fireEvent('disabled');
   }
 });
-/*---
+/*
+---
 
 name: Interfaces.Draggable
 
@@ -122,7 +129,9 @@ Drag.Float = new Class({
     return this.parent(el, options);
   },
   start: function(event) {
-    return this.options.target === event.target ? this.parent(event) : null;
+    if (this.options.target === event.target) {
+      return this.parent(event);
+    }
   }
 });
 Drag.Ghost = new Class({
@@ -171,7 +180,7 @@ Drag.Ghost = new Class({
       });
     }
     this.element.destroy();
-    return (this.element = e);
+    return this.element = e;
   }
 });
 Interfaces.Draggable = new Class({
@@ -206,7 +215,8 @@ Interfaces.Draggable = new Class({
     }
   }
 });
-/*---
+/*
+---
 
 name: Interfaces.Restoreable
 
@@ -226,14 +236,18 @@ Interfaces.Restoreable = new Class({
   },
   _$Restoreable: function() {
     this.addEvent('dropped', this.savePosition);
-    return this.options.resizeable ? this.sizeDrag.addEvent('complete', (function() {
-      return window.localStorage.setItem(this.options.cookieID + '.height', this.scrollBase.getSize().y);
-    }).bindWithEvent(this)) : null;
+    if (this.options.resizeable) {
+      return this.sizeDrag.addEvent('complete', (function() {
+        return window.localStorage.setItem(this.options.cookieID + '.height', this.scrollBase.getSize().y);
+      }).bindWithEvent(this));
+    }
   },
   saveState: function() {
     var state;
     state = this.base.isVisible() ? 'visible' : 'hidden';
-    return this.options.cookieID !== null ? window.localStorage.setItem(this.options.cookieID + '.state', state) : null;
+    if (this.options.cookieID !== null) {
+      return window.localStorage.setItem(this.options.cookieID + '.state', state);
+    }
   },
   savePosition: function() {
     var position, state;
@@ -249,15 +263,18 @@ Interfaces.Restoreable = new Class({
     if (this.options.cookieID !== null) {
       this.base.setStyle('top', window.localStorage.getItem(this.options.cookieID + '.y') + "px");
       this.base.setStyle('left', window.localStorage.getItem(this.options.cookieID + '.x') + "px");
-      this.scrollBase.setStyle('height', window.localStorage.getItem(this.options.cookieID + '.height') + "px");
+      this.scrollBase.setStyle('height', window.localStorage.getItem(this.options.cookieID(+'.height')) + "px");
       if (window.localStorage.getItem(this.options.cookieID + '.x') === null) {
         this.center();
       }
-      return window.localStorage.getItem(this.options.cookieID + '.state') === "hidden" ? this.hide() : null;
+      if (window.localStorage.getItem(this.options.cookieID + '.state') === "hidden") {
+        return this.hide();
+      }
     }
   }
 });
-/*---
+/*
+---
 
 name: Interfaces.Controls
 
@@ -277,10 +294,15 @@ Interfaces.Controls = new Class({
     return this.base.setStyle('opacity', 1);
   },
   toggle: function() {
-    return this.base.getStyle(('opacity') === 0) ? this.show() : this.hide();
+    if (this.base.getStyle('opacity' === 0)) {
+      return this.show();
+    } else {
+      return this.hide();
+    }
   }
 });
-/*---
+/*
+---
 
 name: Core.Abstract
 
@@ -316,7 +338,8 @@ Core.Abstract = new Class({
     return this.base;
   }
 });
-/*---
+/*
+---
 
 name: Core.Icon
 
@@ -341,17 +364,19 @@ Core.Icon = new Class({
     return this.parent(options);
   },
   create: function() {
-    var _a;
     this.base.addClass(this.options["class"]);
-    if (typeof (_a = this.options.image) !== "undefined" && _a !== null) {
+    if (this.options.image != null) {
       this.base.setStyle('background-image', 'url(' + this.options.image + ')');
     }
     return this.base.addEvent('click', (function(e) {
-      return this.enabled ? this.fireEvent('invoked', [this, e]) : null;
+      if (this.enabled) {
+        return this.fireEvent('invoked', [this, e]);
+      }
     }).bindWithEvent(this));
   }
 });
-/*---
+/*
+---
 
 name: Core.IconGroup
 
@@ -417,7 +442,7 @@ Core.IconGroup = new Class({
     return this.positionIcons();
   },
   positionIcons: function() {
-    var _a, _b, columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
+    var columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
     x = 0;
     y = 0;
     this.size = {
@@ -426,88 +451,87 @@ Core.IconGroup = new Class({
     };
     spacing = this.options.spacing;
     switch (this.options.mode) {
-    case 'grid':
-      if (typeof (_a = this.options.columns) !== "undefined" && _a !== null) {
-        columns = this.options.columns;
-        rows = this.icons.length / columns;
-      }
-      if (typeof (_b = this.options.rows) !== "undefined" && _b !== null) {
-        rows = this.options.rows;
-        columns = Math.round(this.icons.length / rows);
-      }
-      icpos = this.icons.map(function(item, i) {
-        if (i % columns === 0) {
-          x = 0;
-          y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
-        } else {
-          x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
+      case 'grid':
+        if (this.options.columns != null) {
+          columns = this.options.columns;
+          rows = this.icons.length / columns;
         }
-        this.size.x = x + item.base.getSize().x;
-        this.size.y = y + item.base.getSize().y;
-        return {
-          x: x,
-          y: y
-        };
-      });
-      break;
-    case 'linear':
-      icpos = this.icons.map((function(item, i) {
-        x = i === 0 ? x + x : x + spacing.x;
-        y = i === 0 ? y + y : y + spacing.y;
-        this.size.x = x + item.base.getSize().x;
-        this.size.y = y + item.base.getSize().y;
-        return {
-          x: x,
-          y: y
-        };
-      }).bind(this));
-      break;
-    case 'horizontal':
-      icpos = this.icons.map((function(item, i) {
-        x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
-        y = i === 0 ? y : y + spacing.y;
-        this.size.x = x + item.base.getSize().x;
-        this.size.y = item.base.getSize().y;
-        return {
-          x: x,
-          y: y
-        };
-      }).bind(this));
-      break;
-    case 'vertical':
-      icpos = this.icons.map((function(item, i) {
-        x = i === 0 ? x : x + spacing.x;
-        y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
-        this.size.x = item.base.getSize().x;
-        this.size.y = y + item.base.getSize().y;
-        return {
-          x: x,
-          y: y
-        };
-      }).bind(this));
-      break;
-    case 'circular':
-      n = this.icons.length;
-      radius = this.options.radius;
-      startAngle = this.options.startAngle;
-      ker = 2 * this.radius * Math.PI;
-      fok = this.options.degree / n;
-      icpos = this.icons.map(function(item, i) {
-        var foks;
-        if (i === 0) {
-          foks = startAngle * (Math.PI / 180);
-          x = Math.round(radius * Math.sin(foks));
-          y = -Math.round(radius * Math.cos(foks));
-        } else {
-          x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180)));
-          y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180)));
+        if (this.options.rows != null) {
+          rows = this.options.rows;
+          columns = Math.round(this.icons.length / rows);
         }
-        return {
-          x: x,
-          y: y
-        };
-      });
-      break;
+        icpos = this.icons.map(function(item, i) {
+          if (i % columns === 0) {
+            x = 0;
+            y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
+          } else {
+            x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
+          }
+          this.size.x = x + item.base.getSize().x;
+          this.size.y = y + item.base.getSize().y;
+          return {
+            x: x,
+            y: y
+          };
+        });
+        break;
+      case 'linear':
+        icpos = this.icons.map((function(item, i) {
+          x = i === 0 ? x + x : x + spacing.x;
+          y = i === 0 ? y + y : y + spacing.y;
+          this.size.x = x + item.base.getSize().x;
+          this.size.y = y + item.base.getSize().y;
+          return {
+            x: x,
+            y: y
+          };
+        }).bind(this));
+        break;
+      case 'horizontal':
+        icpos = this.icons.map((function(item, i) {
+          x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
+          y = i === 0 ? y : y + spacing.y;
+          this.size.x = x + item.base.getSize().x;
+          this.size.y = item.base.getSize().y;
+          return {
+            x: x,
+            y: y
+          };
+        }).bind(this));
+        break;
+      case 'vertical':
+        icpos = this.icons.map((function(item, i) {
+          x = i === 0 ? x : x + spacing.x;
+          y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
+          this.size.x = item.base.getSize().x;
+          this.size.y = y + item.base.getSize().y;
+          return {
+            x: x,
+            y: y
+          };
+        }).bind(this));
+        break;
+      case 'circular':
+        n = this.icons.length;
+        radius = this.options.radius;
+        startAngle = this.options.startAngle;
+        ker = 2 * this.radius * Math.PI;
+        fok = this.options.degree / n;
+        icpos = this.icons.map(function(item, i) {
+          var foks;
+          if (i === 0) {
+            foks = startAngle * (Math.PI / 180);
+            x = Math.round(radius * Math.sin(foks));
+            y = -Math.round(radius * Math.cos(foks));
+          } else {
+            x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180)));
+            y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180)));
+          }
+          return {
+            x: x,
+            y: y
+          };
+        });
     }
     return this.icons.each(function(item, i) {
       item.base.setStyle('top', icpos[i].y);
@@ -516,7 +540,8 @@ Core.IconGroup = new Class({
     });
   }
 });
-/*---
+/*
+---
 
 name: Core.Tip
 
@@ -550,24 +575,27 @@ Core.Tip = new Class({
     return this.base.set('html', this.options.label);
   },
   attach: function(item) {
-    var _a;
-    if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
+    if (this.attachedTo != null) {
       this.detach();
     }
     item.base.addEvent('mouseenter', this.enter);
     item.base.addEvent('mouseleave', this.leave);
-    return (this.attachedTo = item);
+    return this.attachedTo = item;
   },
   detach: function(item) {
     item.base.removeEvent('mouseenter', this.enter);
     item.base.removeEvent('mouseleave', this.leave);
-    return (this.attachedTo = null);
+    return this.attachedTo = null;
   },
   enter: function() {
-    return this.attachedTo.enabled ? this.show() : null;
+    if (this.attachedTo.enabled) {
+      return this.show();
+    }
   },
   leave: function() {
-    return this.attachedTo.enabled ? this.hide() : null;
+    if (this.attachedTo.enabled) {
+      return this.hide();
+    }
   },
   ready: function() {
     var p, s, s1;
@@ -575,23 +603,22 @@ Core.Tip = new Class({
     s = this.attachedTo.base.getSize();
     s1 = this.base.getSize();
     switch (this.options.location.x) {
-    case "left":
-      this.base.setStyle('left', p.x - (s1.x + this.options.offset));
-      break;
-    case "right":
-      this.base.setStyle('left', p.x + (s.x + this.options.offset));
-      break;
-    case "center":
-      this.base.setStyle('left', p.x - s1.x / 2 + s.x / 2);
-      break;
+      case "left":
+        this.base.setStyle('left', p.x - (s1.x + this.options.offset));
+        break;
+      case "right":
+        this.base.setStyle('left', p.x + (s.x + this.options.offset));
+        break;
+      case "center":
+        this.base.setStyle('left', p.x - s1.x / 2 + s.x / 2);
     }
     switch (this.options.location.y) {
-    case "top":
-      return this.base.setStyle('top', p.y - (s.y + this.options.offset));
-    case "bottom":
-      return this.base.setStyle('top', p.y + (s.y + this.options.offset));
-    case "center":
-      return this.base.setStyle('top', p.y - s1.y / 2 + s.y / 2);
+      case "top":
+        return this.base.setStyle('top', p.y - (s.y + this.options.offset));
+      case "bottom":
+        return this.base.setStyle('top', p.y + (s.y + this.options.offset));
+      case "center":
+        return this.base.setStyle('top', p.y - s1.y / 2 + s.y / 2);
     }
   },
   hide: function() {
@@ -601,7 +628,8 @@ Core.Tip = new Class({
     return document.getElement('body').grab(this.base);
   }
 });
-/*---
+/*
+---
 
 name: Core.Slider
 
@@ -626,20 +654,24 @@ ResetSlider = new Class({
     this.range = this.max - this.min;
     this.steps = this.options.steps || this.full;
     this.stepSize = Math.abs(this.range) / this.steps;
-    return (this.stepWidth = this.stepSize * this.full / Math.abs(this.range));
+    return this.stepWidth = this.stepSize * this.full / Math.abs(this.range);
   },
   draggedKnob: function() {
     var dir, position;
     dir = this.range < 0 ? -1 : 1;
     position = this.drag.value.now[this.axis];
-    position = position.limit(-this.options.offset, this.full - this.options.offset);
+    position = position.limit(-this.options.offset, this.full(-this.options.offset));
     this.step = this.min + dir * this.toStep(position);
     return this.checkStep();
   },
   toStep: function(position) {
     var step;
     step = (position + this.options.offset) * this.stepSize / this.full * this.steps;
-    return this.options.steps ? step -= step % this.stepSize : step;
+    if (this.options.steps) {
+      return step -= step % this.stepSize;
+    } else {
+      return step;
+    }
   }
 });
 Core.Slider = new Class({
@@ -686,17 +718,19 @@ Core.Slider = new Class({
       return this.fireEvent('complete', step + '');
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function(step) {
-      var _a;
-      if (typeof (step) === 'object') {
+      if (typeof step === 'object') {
         step = 0;
       }
       this.fireEvent('change', step + '');
-      return (typeof (_a = this.scrollBase) !== "undefined" && _a !== null) ? (this.scrollBase.scrollTop = (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100 * step) : null;
+      if (this.scrollBase != null) {
+        return this.scrollBase.scrollTop = (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100 * step;
+      }
     }).bindWithEvent(this));
     return this.parent();
   }
 });
-/*---
+/*
+---
 
 name: Core.Float
 
@@ -742,9 +776,8 @@ Core.Float = new Class({
     return this.parent(options);
   },
   ready: function() {
-    var _a;
     this.base.adopt(this.controls);
-    if (typeof (_a = this.contentElement) !== "undefined" && _a !== null) {
+    if (this.contentElement != null) {
       this.content.grab(this.contentElement);
     }
     if (this.options.restoreable) {
@@ -761,10 +794,9 @@ Core.Float = new Class({
       }
     }
     this.parent();
-    return (this.readyr = true);
+    return this.readyr = true;
   },
   create: function() {
-    var _a;
     this.base.addClass(this.options.classes["class"]);
     this.base.setStyle('position', 'fixed');
     this.base.setPosition({
@@ -791,10 +823,10 @@ Core.Float = new Class({
       steps: 100
     });
     this.slider.addEvent('complete', (function() {
-      return (this.scrolling = false);
+      return this.scrolling = false;
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function() {
-      return (this.scrolling = true);
+      return this.scrolling = true;
     }).bindWithEvent(this));
     this.slider.hide();
     this.icons = new Core.IconGroup(this.options.iconOptions);
@@ -809,9 +841,8 @@ Core.Float = new Class({
       image: this.options.icons.edit
     });
     this.edit.addEvent('invoked', (function() {
-      var _a, _b;
-      if (typeof (_b = this.contentElement) !== "undefined" && _b !== null) {
-        if (typeof (_a = this.contentElement.toggleEdit) !== "undefined" && _a !== null) {
+      if (this.contentElement != null) {
+        if (this.contentElement.toggleEdit != null) {
           this.contentElement.toggleEdit();
         }
         return this.fireEvent('edit');
@@ -824,7 +855,7 @@ Core.Float = new Class({
       this.icons.addIcon(this.edit);
     }
     this.icons.hide();
-    if (typeof (_a = this.options.scrollBase) !== "undefined" && _a !== null) {
+    if (this.options.scrollBase != null) {
       this.scrollBase = this.options.scrollBase;
     } else {
       this.scrollBase = this.content;
@@ -843,7 +874,9 @@ Core.Float = new Class({
         if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
           if (!this.showSlider) {
             this.showSlider = true;
-            return this.mouseisover ? this.slider.show() : null;
+            if (this.mouseisover) {
+              return this.slider.show();
+            }
           }
         } else {
           if (this.showSlider) {
@@ -865,7 +898,7 @@ Core.Float = new Class({
         this.slider.show();
       }
       this.icons.show();
-      return (this.mouseisover = true);
+      return this.mouseisover = true;
     }).bindWithEvent(this));
     return this.base.addEvent('mouseleave', (function() {
       this.base.toggleClass(this.options.classes.active);
@@ -876,8 +909,8 @@ Core.Float = new Class({
         }
       }
       this.iconsTimout = this.icons.hide.delay(200, this.icons);
-      return (this.mouseisover = false);
-    }).bindWithEvent(this), this.options.overlay ? (this.overlay = new Core.Overlay()) : null);
+      return this.mouseisover = false;
+    }).bindWithEvent(this), this.options.overlay ? this.overlay = new Core.Overlay() : void 0);
   },
   show: function() {
     if (this.options.overlay) {
@@ -895,7 +928,11 @@ Core.Float = new Class({
     return this.saveState();
   },
   toggle: function(el) {
-    return this.base.isVisible() ? this.hide(el) : this.show(el);
+    if (this.base.isVisible()) {
+      return this.hide(el);
+    } else {
+      return this.show(el);
+    }
   },
   setContent: function(element) {
     this.contentElement = element;
@@ -904,7 +941,9 @@ Core.Float = new Class({
       this.content.grab(this.contentElement);
       if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
         this.showSlider = true;
-        return this.mouseisover ? this.slider.show() : null;
+        if (this.mouseisover) {
+          return this.slider.show();
+        }
       } else {
         this.showSlider = false;
         return this.slider.hide();
@@ -915,7 +954,8 @@ Core.Float = new Class({
     return this.base.position();
   }
 });
-/*---
+/*
+---
 
 name: Core.Button
 
@@ -948,7 +988,9 @@ Core.Button = new Class({
       image: this.options.image
     });
     return this.base.addEvent('click', (function(e) {
-      return this.enabled ? this.fireEvent('invoked', [this, e]) : null;
+      if (this.enabled) {
+        return this.fireEvent('invoked', [this, e]);
+      }
     }).bindWithEvent(this));
   },
   ready: function() {
@@ -956,7 +998,8 @@ Core.Button = new Class({
     return this.parent();
   }
 });
-/*---
+/*
+---
 
 name: Core.Picker
 
@@ -973,10 +1016,10 @@ provides: [Core.Picker, outerClick]
 (function() {
   var oldPrototypeStart;
   oldPrototypeStart = Drag.prototype.start;
-  return (Drag.prototype.start = function() {
+  return Drag.prototype.start = function() {
     window.fireEvent('outer');
     return oldPrototypeStart.run(arguments, this);
-  });
+  };
 })();
 Element.Events.outerClick = {
   base: 'mousedown',
@@ -1052,29 +1095,27 @@ Core.Picker = new Class({
     });
   },
   detach: function() {
-    var _a, _b;
-    if (typeof (_a = this.contentElement) !== "undefined" && _a !== null) {
+    if (this.contentElement != null) {
       this.contentElement.removeEvents('change');
     }
-    if (typeof (_b = this.attachedTo) !== "undefined" && _b !== null) {
+    if (this.attachedTo != null) {
       this.attachedTo.removeEvent(this.options.event, this.show);
       this.attachedTo = null;
       return this.fireEvent('detached');
     }
   },
   attach: function(input) {
-    var _a, _b;
-    if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
+    if (this.attachedTo != null) {
       this.detach();
     }
     input.addEvent(this.options.event, this.show);
-    if (typeof (_b = this.contentElement) !== "undefined" && _b !== null) {
+    if (this.contentElement != null) {
       this.contentElement.addEvent('change', (function(value) {
         this.attachedTo.set('value', value);
         return this.attachedTo.fireEvent('change', value);
       }).bindWithEvent(this));
     }
-    return (this.attachedTo = input);
+    return this.attachedTo = input;
   },
   attachAndShow: function(el, e, callback) {
     this.contentElement.readyCallback = callback;
@@ -1082,33 +1123,32 @@ Core.Picker = new Class({
     return this.show(e);
   },
   show: function(e) {
-    var _a, _b, _c;
     document.getElement('body').grab(this.base);
-    if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
+    if (this.attachedTo != null) {
       this.attachedTo.addClass(this.options.picking);
     }
-    if (typeof (_b = e.stop) !== "undefined" && _b !== null) {
+    if (e.stop != null) {
       e.stop();
     }
-    if (typeof (_c = this.contentElement) !== "undefined" && _c !== null) {
+    if (this.contentElement != null) {
       this.contentElement.fireEvent('show');
     }
     return this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
   },
   hide: function(e) {
-    var _a;
     if (this.base.isVisible() && !this.base.hasChild(e.target)) {
-      if (typeof (_a = this.attachedTo) !== "undefined" && _a !== null) {
+      if (this.attachedTo != null) {
         this.attachedTo.removeClass(this.options.picking);
       }
       return this.base.dispose();
     }
   },
   setContent: function(element) {
-    return (this.contentElement = element);
+    return this.contentElement = element;
   }
 });
-/*---
+/*
+---
 
 name: Iterable.List
 
@@ -1145,13 +1185,17 @@ Iterable.List = new Class({
         return this.search();
       }).bindWithEvent(this));
     }
-    return (this.items = []);
+    return this.items = [];
   },
   search: function() {
     var svalue;
     svalue = this.sinput.get('value');
     return this.items.each((function(item) {
-      return item.title.get('text').test(new RegExp("" + (svalue), "ig")) || item.subtitle.get('text').test(new RegExp("" + (svalue), "ig")) ? item.base.setStyle('display', 'block') : item.base.setStyle('display', 'none');
+      if (item.title.get('text').test(/#{svalue}/ig) || item.subtitle.get('text').test(/#{svalue}/ig)) {
+        return item.base.setStyle('display', 'block');
+      } else {
+        return item.base.setStyle('display', 'none');
+      }
     }).bind(this));
   },
   removeItem: function(li) {
@@ -1168,7 +1212,7 @@ Iterable.List = new Class({
       return this.removeItem(item);
     }).bind(this));
     delete this.items;
-    return (this.items = []);
+    return this.items = [];
   },
   toggleEdit: function() {
     var bases;
@@ -1180,26 +1224,29 @@ Iterable.List = new Class({
       this.items.each(function(item) {
         return item.toggleEdit();
       });
-      return (this.editing = false);
+      return this.editing = false;
     } else {
       this.sortable.addItems(bases);
       this.items.each(function(item) {
         return item.toggleEdit();
       });
-      return (this.editing = true);
+      return this.editing = true;
     }
   },
   getItemFromTitle: function(title) {
     var filtered;
     filtered = this.items.filter(function(item) {
-      return item.title.get('text') === String(title) ? true : false;
+      if (item.title.get('text') === String(title)) {
+        return true;
+      } else {
+        return false;
+      }
     });
     return filtered[0];
   },
   select: function(item) {
-    var _a;
     if (this.selected !== item) {
-      if (typeof (_a = this.selected) !== "undefined" && _a !== null) {
+      if (this.selected != null) {
         this.selected.base.removeClass(this.options.selected);
       }
       this.selected = item;
@@ -1224,7 +1271,8 @@ Iterable.List = new Class({
     }).bindWithEvent(this));
   }
 });
-/*---
+/*
+---
 
 name: Core.Slot
 
@@ -1271,7 +1319,9 @@ Core.Slot = new Class({
     return this.list.items.each((function(item, i) {
       var distance;
       distance = -item.base.getPosition(this.base).y + this.base.getSize().y / 2;
-      return distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2 ? this.list.select(item) : null;
+      if (distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2) {
+        return this.list.select(item);
+      }
     }).bind(this));
   },
   ready: function() {
@@ -1283,9 +1333,9 @@ Core.Slot = new Class({
     this.base.setStyle('width', this.list.base.getSize().x);
     this.overlay.setStyle('width', this.base.getSize().x);
     this.overlay.addEvent('mousewheel', (function(e) {
-      var _a, index;
+      var index;
       e.stop();
-      if (typeof (_a = this.list.selected) !== "undefined" && _a !== null) {
+      if (this.list.selected != null) {
         index = this.list.items.indexOf(this.list.selected);
       } else {
         if (e.wheel === 1) {
@@ -1294,13 +1344,15 @@ Core.Slot = new Class({
           index = 1;
         }
       }
-      if ((index + e.wheel >= 0) && index + e.wheel < this.list.items.length) {
+      if (index + e.wheel >= 0 && index + e.wheel < this.list.items.length) {
         this.list.select(this.list.items[index + e.wheel]);
       }
       if (index + e.wheel < 0) {
         this.list.select(this.list.items[this.list.items.length - 1]);
       }
-      return index + e.wheel > this.list.items.length - 1 ? this.list.select(this.list.items[0]) : null;
+      if (index + e.wheel > this.list.items.length - 1) {
+        return this.list.select(this.list.items[0]);
+      }
     }).bindWithEvent(this));
     this.drag = new Drag(this.list.base, {
       modifiers: {
@@ -1319,14 +1371,16 @@ Core.Slot = new Class({
     }).bindWithEvent(this));
   },
   update: function() {
-    var _a;
     if (!this.dragging) {
       this.list.base.setStyle('-webkit-transition-duration', '0.3s');
-      return (typeof (_a = this.list.selected) !== "undefined" && _a !== null) ? this.list.base.setStyle('top', -this.list.selected.base.getPosition(this.list.base).y + this.base.getSize().y / 2 - this.list.selected.base.getSize().y / 2) : null;
+      if (this.list.selected != null) {
+        return this.list.base.setStyle('top', -this.list.selected.base.getPosition(this.list.base).y + this.base.getSize().y / 2 - this.list.selected.base.getSize().y / 2);
+      }
     }
   }
 });
-/*---
+/*
+---
 
 name: Core.Tab
 
@@ -1368,7 +1422,9 @@ Core.Tab = new Class({
       return this.fireEvent('remove', this);
     }).bindWithEvent(this));
     this.base.adopt(this.label);
-    return this.options.removeable ? this.base.grab(this.icon) : null;
+    if (this.options.removeable) {
+      return this.base.grab(this.icon);
+    }
   },
   activate: function() {
     this.fireEvent('activated', this);
@@ -1379,7 +1435,8 @@ Core.Tab = new Class({
     return this.base.removeClass(this.options.active);
   }
 });
-/*---
+/*
+---
 
 name: Core.Tabs
 
@@ -1441,22 +1498,26 @@ Core.Tabs = new Class({
     }
   },
   setActive: function(tab) {
-    var _a;
     if (this.active !== tab) {
-      if (typeof (_a = this.active) !== "undefined" && _a !== null) {
+      if (this.active != null) {
         this.active.deactivate();
       }
       tab.activate();
-      return (this.active = tab);
+      return this.active = tab;
     }
   },
   getByLabel: function(label) {
     return (this.tabs.filter(function(item, i) {
-      return item.options.label === label ? true : false;
+      if (item.options.label === label) {
+        return true;
+      } else {
+        return false;
+      }
     }))[0];
   }
 });
-/*---
+/*
+---
 
 name: Core.TabFloat
 
@@ -1503,16 +1564,19 @@ Core.TabFloat = new Class({
     var index;
     index = null;
     this.tabContents.each(function(item, i) {
-      return item === element ? (index = i) : null;
+      if (item === element) {
+        return index = i;
+      }
     });
-    if (typeof index !== "undefined" && index !== null) {
+    if (index != null) {
       this.tabs.setActive(this.tabs.tabs[index]);
     }
     this.activeContent = this.tabContents[index];
     return this.parent(this.tabContents[index]);
   }
 });
-/*---
+/*
+---
 
 name: Core.Toggler
 
@@ -1528,13 +1592,19 @@ provides: Core.Toggler
 */
 Element.Properties.checked = {
   get: function() {
-    var _a;
-    return (typeof (_a = this.getChecked) !== "undefined" && _a !== null) ? this.getChecked() : null;
+    if (this.getChecked != null) {
+      return this.getChecked();
+    }
   },
   set: function(value) {
-    var _a, _b;
     this.setAttribute('checked', value);
-    return (typeof (_a = this.on) !== "undefined" && _a !== null) && (typeof (_b = this.off) !== "undefined" && _b !== null) ? (value ? this.on() : this.off()) : null;
+    if ((this.on != null) && (this.off != null)) {
+      if (value) {
+        return this.on();
+      } else {
+        return this.off();
+      }
+    }
   }
 };
 Core.Toggler = new Class({
@@ -1575,7 +1645,7 @@ Core.Toggler = new Class({
       return this.checked;
     }).bind(this);
     this.base.on = this.on.bind(this);
-    return (this.base.off = this.off.bind(this));
+    return this.base.off = this.off.bind(this);
   },
   ready: function() {
     $$(this.onLabel, this.offLabel, this.separator).setStyles({
@@ -1616,11 +1686,12 @@ Core.Toggler = new Class({
   follow: function() {
     var left;
     left = this.onLabel.getStyle('left');
-    this.separator.setStyle('left', Number(left.slice(0, left.length - 3 + 1)) + this.onLabel.getSize().x);
-    return this.offLabel.setStyle('left', Number(left.slice(0, left.length - 3 + 1)) + this.onLabel.getSize().x + this.separator.getSize().x);
+    this.separator.setStyle('left', Number(left.slice(0, (left.length - 3 + 1) || 9e9)) + this.onLabel.getSize().x);
+    return this.offLabel.setStyle('left', Number(left.slice(0, (left.length - 3 + 1) || 9e9)) + this.onLabel.getSize().x + this.separator.getSize().x);
   }
 });
-/*---
+/*
+---
 
 name: Core.Textarea
 
@@ -1643,7 +1714,8 @@ Core.Textarea = new Class({
     return this.parent;
   }
 });
-/*---
+/*
+---
 
 name: Data.Abstract
 
@@ -1677,7 +1749,8 @@ Data.Abstract = new Class({
     return this.value;
   }
 });
-/*---
+/*
+---
 
 name: Data.Text
 
@@ -1717,7 +1790,8 @@ Data.Text = new Class({
     return this.text.set('value', text);
   }
 });
-/*---
+/*
+---
 
 name: Data.Number
 
@@ -1747,12 +1821,12 @@ Data.Number = new Class({
     this.text = new Element('input', {
       'type': 'text'
     });
-    return (this.slider = new Core.Slider({
+    return this.slider = new Core.Slider({
       reset: this.options.reset,
       range: this.options.range,
       steps: this.options.steps,
       mode: 'horizontal'
-    }));
+    });
   },
   ready: function() {
     this.justSet = false;
@@ -1768,12 +1842,16 @@ Data.Number = new Class({
       return this.slider.set(step);
     }).bindWithEvent(this));
     this.slider.addEvent('change', (function(step) {
-      if (typeof (step) === 'object') {
+      if (typeof step === 'object') {
         this.text.set('value', 0);
       } else {
         this.text.set('value', step);
       }
-      return !this.justSet ? this.fireEvent('change', step) : (this.justSet = false);
+      if (!this.justSet) {
+        return this.fireEvent('change', step);
+      } else {
+        return this.justSet = false;
+      }
     }).bindWithEvent(this));
     this.text.addEvent('change', (function() {
       var step;
@@ -1800,7 +1878,8 @@ Data.Number = new Class({
     return this.slider.set(step);
   }
 });
-/*---
+/*
+---
 
 name: Forms.Input
 
@@ -1827,7 +1906,7 @@ Forms.Input = new Class({
     return this;
   },
   create: function() {
-    var _a, tg;
+    var tg;
     delete this.base;
     if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'button') {
       this.base = new Element('input', {
@@ -1873,9 +1952,11 @@ Forms.Input = new Class({
         return this.base.adopt(label, input);
       }).bind(this));
     }
-    if (typeof (_a = this.options.validate) !== "undefined" && _a !== null) {
+    if (this.options.validate != null) {
       $splat(this.options.validate).each((function(val) {
-        return this.options.type !== "radio" ? this.base.addClass(val) : null;
+        if (this.options.type !== "radio") {
+          return this.base.addClass(val);
+        }
       }).bind(this));
     }
     return this.base;
@@ -1884,7 +1965,8 @@ Forms.Input = new Class({
     return this.base;
   }
 });
-/*---
+/*
+---
 
 name: Data.Color
 
@@ -1939,7 +2021,7 @@ Data.Color = new Class({
     this.lightness = this.colorData.lightness;
     this.alpha = this.colorData.alpha;
     this.hueN.addEvent('change', (function(step) {
-      if (typeof (step) === "object") {
+      if (typeof step === "object") {
         step = 0;
       }
       return this.setHue(step);
@@ -1957,29 +2039,27 @@ Data.Color = new Class({
     }).bindWithEvent(this));
   },
   drawHSLACone: function(width, brightness) {
-    var _a, ang, angle, c, c1, ctx, grad, i, w2;
+    var ang, angle, c, c1, ctx, grad, i, w2, _ref, _results;
     ctx = this.hslacone.getContext('2d');
     w2 = -width / 2;
     ang = width / 50;
     angle = (1 / ang) * Math.PI / 180;
     i = 0;
-    _a = [];
-    for (i = 0; (0 <= (360) * (ang) - 1 ? i <= (360) * (ang) - 1 : i >= (360) * (ang) - 1); (0 <= (360) * (ang) - 1 ? i += 1 : i -= 1)) {
-      _a.push((function() {
-        c = $HSB(360 + (i / ang), 100, brightness);
-        c1 = $HSB(360 + (i / ang), 0, brightness);
-        grad = ctx.createLinearGradient(0, 0, width / 2, 0);
-        grad.addColorStop(0, c1.hex);
-        grad.addColorStop(1, c.hex);
-        ctx.strokeStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(0, 0);
-        ctx.lineTo(width / 2, 0);
-        ctx.stroke();
-        return ctx.rotate(angle);
-      })());
+    _results = [];
+    for (i = 0, _ref = 360 * ang - 1; (0 <= _ref ? i <= _ref : i >= _ref); (0 <= _ref ? i += 1 : i -= 1)) {
+      c = $HSB(360 + (i / ang), 100, brightness);
+      c1 = $HSB(360 + (i / ang), 0, brightness);
+      grad = ctx.createLinearGradient(0, 0, width / 2, 0);
+      grad.addColorStop(0, c1.hex);
+      grad.addColorStop(1, c.hex);
+      ctx.strokeStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(width / 2, 0);
+      ctx.stroke();
+      _results.push(ctx.rotate(angle));
     }
-    return _a;
+    return _results;
   },
   ready: function() {
     var ctx;
@@ -2101,7 +2181,9 @@ Data.Color = new Class({
     this.lightness.setValue(color.hsb[2]);
     this.hslacone.setStyle('opacity', color.hsb[2] / 100);
     this.colorData.base.getElements('input[type=radio]').each((function(item) {
-      return item.get('value') === type ? item.set('checked', true) : null;
+      if (item.get('value') === type) {
+        return item.set('checked', true);
+      }
     }).bind(this));
     return this.fireEvent('change', {
       color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
@@ -2112,11 +2194,11 @@ Data.Color = new Class({
   setColor: function() {
     var type;
     this.finalColor = $HSB(this.hue, this.saturation, 100);
-    return (type = this.fireEvent('change', {
+    return type = this.fireEvent('change', {
       color: this.finalColor,
       type: type,
       alpha: this.alpha.getValue()
-    }));
+    });
   },
   getValue: function() {
     return this.finalColor;
@@ -2186,19 +2268,19 @@ Data.Color.SlotControls = new Class({
       reset: false,
       steps: [100]
     });
-    return (this.col = new Forms.Input(Data.Color.ReturnValues));
+    return this.col = new Forms.Input(Data.Color.ReturnValues);
   },
   ready: function() {
-    var _a;
     this.base.adopt(this.hue, this.saturation, this.lightness, this.alpha, this.col);
     this.base.getElements('input[type=radio]')[0].set('checked', true);
-    if (typeof (_a = this.readyCallback) !== "undefined" && _a !== null) {
+    if (this.readyCallback != null) {
       this.readyCallback();
     }
     return this.parent();
   }
 });
-/*---
+/*
+---
 
 name: Data.Date
 
@@ -2270,14 +2352,15 @@ Data.Date = new Class({
     return this.base.adopt(this.years, this.month, this.days);
   },
   ready: function() {
-    var _a;
-    return !(typeof (_a = this.date) !== "undefined" && _a !== null) ? this.setValue(new Date()) : null;
+    if (!(this.date != null)) {
+      return this.setValue(new Date());
+    }
   },
   getValue: function() {
     return this.date.format(this.options.format);
   },
   setValue: function(date) {
-    if (typeof date !== "undefined" && date !== null) {
+    if (date != null) {
       this.date = date;
     }
     this.update();
@@ -2309,7 +2392,8 @@ Data.Date = new Class({
     return this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
   }
 });
-/*---
+/*
+---
 
 name: Data.Time
 
@@ -2349,7 +2433,7 @@ Data.Time = new Class({
     return this.time.format(this.options.format);
   },
   setValue: function(date) {
-    if (typeof date !== "undefined" && date !== null) {
+    if (date != null) {
       this.time = date;
     }
     this.hourList.select(this.hourList.list.items[this.time.getHours()]);
@@ -2381,7 +2465,8 @@ Data.Time = new Class({
     return this.parent();
   }
 });
-/*---
+/*
+---
 
 name: Data.DateTime
 
@@ -2407,7 +2492,7 @@ Data.DateTime = new Class({
   create: function() {
     this.base.addClass(this.options["class"]);
     this.datea = new Data.Date();
-    return (this.time = new Data.Time());
+    return this.time = new Data.Time();
   },
   ready: function() {
     this.base.adopt(this.datea, this.time);
@@ -2429,7 +2514,7 @@ Data.DateTime = new Class({
     return this.date.format(this.options.format);
   },
   setValue: function(date) {
-    if (typeof date !== "undefined" && date !== null) {
+    if (date != null) {
       this.date = date;
     }
     this.datea.setValue(this.date);
@@ -2437,7 +2522,8 @@ Data.DateTime = new Class({
     return this.fireEvent('change', this.date);
   }
 });
-/*---
+/*
+---
 
 name: Data.Table
 
@@ -2450,11 +2536,18 @@ provides: Data.Table
 ...
 */
 checkForKey = function(key, hash, i) {
-  var _a, _b;
-  if (!(typeof i !== "undefined" && i !== null)) {
+  if (!(i != null)) {
     i = 0;
   }
-  return !(typeof (_a = hash[key]) !== "undefined" && _a !== null) ? key : (!(typeof (_b = hash[key + i]) !== "undefined" && _b !== null) ? key + i : checkForKey(key, hash, i + 1));
+  if (!(hash[key] != null)) {
+    return key;
+  } else {
+    if (!(hash[key + i] != null)) {
+      return key + i;
+    } else {
+      return checkForKey(key, hash, i + 1);
+    }
+  }
 };
 Data.Table = new Class({
   Extends: Data.Abstract,
@@ -2484,7 +2577,11 @@ Data.Table = new Class({
     }).bindWithEvent(this));
     this.header.addEvent('editEnd', (function() {
       this.fireEvent('change', this.getData());
-      return !this.header.cells.getLast().editing ? (this.header.cells.getLast().getValue() === '' ? this.removeLast() : null) : null;
+      if (!this.header.cells.getLast().editing) {
+        if (this.header.cells.getLast().getValue() === '') {
+          return this.removeLast();
+        }
+      }
     }).bindWithEvent(this));
     this.table.grab(this.header);
     this.addRow(this.columns);
@@ -2514,13 +2611,15 @@ Data.Table = new Class({
     row.addEvent('next', (function(row) {
       var index;
       index = this.rows.indexOf(row);
-      return index !== this.rows.length - 1 ? this.rows[index + 1].cells[0].editStart() : null;
+      if (index !== this.rows.length - 1) {
+        return this.rows[index + 1].cells[0].editStart();
+      }
     }).bindWithEvent(this));
     this.rows.push(row);
     return this.table.grab(row);
   },
   removeRow: function(row, erase) {
-    if (!(typeof erase !== "undefined" && erase !== null)) {
+    if (!(erase != null)) {
       erase = true;
     }
     row.removeEvents('editEnd');
@@ -2533,7 +2632,7 @@ Data.Table = new Class({
     return delete row;
   },
   removeAll: function(addColumn) {
-    if (!(typeof addColumn !== "undefined" && addColumn !== null)) {
+    if (!(addColumn != null)) {
       addColumn = true;
     }
     this.header.removeAll();
@@ -2555,7 +2654,9 @@ Data.Table = new Class({
     this.rows.each((function(row, i) {
       var empty;
       empty = row.empty();
-      return empty ? rowsToRemove.push(row) : null;
+      if (empty) {
+        return rowsToRemove.push(row);
+      }
     }).bind(this));
     rowsToRemove.each((function(item) {
       return this.removeRow(item);
@@ -2576,9 +2677,11 @@ Data.Table = new Class({
       return headers.push(ret[value]);
     });
     this.rows.each((function(row) {
-      return !row.empty() ? row.getValue().each(function(item, i) {
-        return headers[i].push(item);
-      }) : null;
+      if (!row.empty()) {
+        return row.getValue().each(function(item, i) {
+          return headers[i].push(item);
+        });
+      }
     }).bind(this));
     return ret;
   },
@@ -2594,11 +2697,10 @@ Data.Table = new Class({
     new Hash(obj).each(function(value, key) {
       self.addCloumn(key);
       value.each(function(item, i) {
-        var _a;
-        if (!(typeof (_a = rowa[i]) !== "undefined" && _a !== null)) {
+        if (!(rowa[i] != null)) {
           rowa[i] = [];
         }
-        return (rowa[i][j] = item);
+        return rowa[i][j] = item;
       });
       return j++;
     });
@@ -2623,20 +2725,18 @@ Data.TableRow = new Class({
     return this.parent(options);
   },
   create: function() {
-    var _a, i;
+    var i, _results;
     delete this.base;
     this.base = new Element('tr');
     this.base.addClass(this.options["class"]);
     this.cells = [];
     i = 0;
-    _a = [];
+    _results = [];
     while (i < this.options.columns) {
-      _a.push((function() {
-        this.add('');
-        return i++;
-      }).call(this));
+      this.add('');
+      _results.push(i++);
     }
-    return _a;
+    return _results;
   },
   add: function(value) {
     var cell;
@@ -2649,7 +2749,11 @@ Data.TableRow = new Class({
     cell.addEvent('next', (function(cell) {
       var index;
       index = this.cells.indexOf(cell);
-      return index === this.cells.length - 1 ? this.fireEvent('next', this) : this.cells[index + 1].editStart();
+      if (index === this.cells.length - 1) {
+        return this.fireEvent('next', this);
+      } else {
+        return this.cells[index + 1].editStart();
+      }
     }).bindWithEvent(this));
     this.cells.push(cell);
     return this.base.grab(cell);
@@ -2657,9 +2761,17 @@ Data.TableRow = new Class({
   empty: function() {
     var filtered;
     filtered = this.cells.filter(function(item) {
-      return item.getValue() !== '' ? true : false;
+      if (item.getValue() !== '') {
+        return true;
+      } else {
+        return false;
+      }
     });
-    return filtered.length > 0 ? false : true;
+    if (filtered.length > 0) {
+      return false;
+    } else {
+      return true;
+    }
   },
   removeLast: function() {
     return this.remove(this.cells.getLast());
@@ -2705,7 +2817,9 @@ Data.TableCell = new Class({
       text: this.options.value
     });
     this.value = this.options.value;
-    return this.options.editable ? this.base.addEvent('click', this.editStart) : null;
+    if (this.options.editable) {
+      return this.base.addEvent('click', this.editStart);
+    }
   },
   editStart: function() {
     var size;
@@ -2739,12 +2853,11 @@ Data.TableCell = new Class({
     }
   },
   editEnd: function(e) {
-    var _a;
     if (this.editing) {
       this.editing = false;
     }
     this.setValue(this.input.get('value'));
-    if (typeof (_a = this.input) !== "undefined" && _a !== null) {
+    if (this.input != null) {
       this.input.removeEvents(['change', 'keydown']);
       this.input.destroy();
       delete this.input;
@@ -2753,13 +2866,20 @@ Data.TableCell = new Class({
   },
   setValue: function(value) {
     this.value = value;
-    return !this.editing ? this.base.set('text', this.value) : null;
+    if (!this.editing) {
+      return this.base.set('text', this.value);
+    }
   },
   getValue: function() {
-    return !this.editing ? this.base.get('text') : this.input.get('value');
+    if (!this.editing) {
+      return this.base.get('text');
+    } else {
+      return this.input.get('value');
+    }
   }
 });
-/*---
+/*
+---
 
 name: Data.Select
 
@@ -2809,23 +2929,23 @@ Data.Select = new Class({
     }).bind(this));
   },
   setValue: function(value) {
-    var _a, selected;
-    selected = this.select.getElements("option[value=" + (value) + "]");
-    if (typeof (_a = selected[0]) !== "undefined" && _a !== null) {
+    var selected;
+    selected = this.select.getElements("option[value=" + value + "]");
+    if (selected[0] != null) {
       this.select.getElements("option").set('selected', null);
       selected.set('selected', true);
-      return (this.value = value);
+      return this.value = value;
     }
   },
   getValue: function() {
-    var _a;
-    if (!(typeof (_a = this.value) !== "undefined" && _a !== null)) {
+    if (!(this.value != null)) {
       this.value = this.select.get('value');
     }
     return this.value;
   }
 });
-/*---
+/*
+---
 
 name: Data.Unit
 
@@ -2929,7 +3049,8 @@ Data.Unit = new Class({
     return String(this.value) + this.sel.value;
   }
 });
-/*---
+/*
+---
 
 name: Data.List
 
@@ -2962,7 +3083,9 @@ Data.List = new Class({
   },
   update: function() {
     this.cells.each((function(item) {
-      return item.getValue() === '' ? this.remove(item) : null;
+      if (item.getValue() === '') {
+        return this.remove(item);
+      }
     }).bind(this));
     if (this.cells.length === 0) {
       this.add('');
@@ -3020,7 +3143,8 @@ Data.List = new Class({
     });
   }
 });
-/*---
+/*
+---
 
 name: Iterable.ListItem
 
@@ -3087,13 +3211,19 @@ Iterable.ListItem = new Class({
       return this.fireEvent('select', this);
     }).bindWithEvent(this));
     this.base.addEvent(this.options.invokeEvent, (function() {
-      return this.enabled && !this.options.draggable && !this.editing ? this.fireEvent('invoked', this) : null;
+      if (this.enabled && !this.options.draggable && !this.editing) {
+        return this.fireEvent('invoked', this);
+      }
     }).bindWithEvent(this));
     this.addEvent('dropped', (function(el, drop, e) {
       return this.fireEvent('invoked', [this, e, drop]);
     }).bindWithEvent(this));
     this.base.addEvent('dblclick', (function() {
-      return this.enabled ? (this.editing ? this.fireEvent('edit', this) : null) : null;
+      if (this.enabled) {
+        if (this.editing) {
+          return this.fireEvent('edit', this);
+        }
+      }
     }).bindWithEvent(this));
     return this.remove.addEvent('invoked', (function() {
       return this.fireEvent('delete', this);
@@ -3108,7 +3238,7 @@ Iterable.ListItem = new Class({
       this.handles.base.setStyle('left', -this.handles.base.getSize().x);
       this.base.setStyle('padding-left', this.base.retrieve('padding-left:old'));
       this.base.setStyle('padding-right', this.base.retrieve('padding-right:old'));
-      return (this.editing = false);
+      return this.editing = false;
     } else {
       if (this.options.draggable) {
         this.drag.detach();
@@ -3119,7 +3249,7 @@ Iterable.ListItem = new Class({
       this.base.store('padding-right:old', this.base.getStyle('padding-left'));
       this.base.setStyle('padding-left', Number(this.base.getStyle('padding-left').slice(0, -2)) + this.handles.base.getSize().x);
       this.base.setStyle('padding-right', Number(this.base.getStyle('padding-right').slice(0, -2)) + this.remove.base.getSize().x);
-      return (this.editing = true);
+      return this.editing = true;
     }
   },
   ready: function() {
@@ -3137,13 +3267,16 @@ Iterable.ListItem = new Class({
         "top": (baseSize.y - handSize.y) / 2
       });
       this.parent();
-      return this.options.draggable ? this.drag.addEvent('beforeStart', (function() {
-        return this.fireEvent('select', this);
-      }).bindWithEvent(this)) : null;
+      if (this.options.draggable) {
+        return this.drag.addEvent('beforeStart', (function() {
+          return this.fireEvent('select', this);
+        }).bindWithEvent(this));
+      }
     }
   }
 });
-/*---
+/*
+---
 
 name: Pickers
 
@@ -3204,7 +3337,8 @@ Pickers.Select = new Pickers.Base({
 Pickers.List = new Pickers.Base({
   type: 'List'
 });
-/*---
+/*
+---
 
 name: Core.Overlay
 
@@ -3237,7 +3371,9 @@ Core.Overlay = new Class({
     });
     this.base.addClass(this.options["class"]);
     return this.base.addEventListener('webkitTransitionEnd', (function(e) {
-      return e.propertyName === "opacity" && this.base.getStyle('opacity') === 0 ? this.base.setStyle('visiblity', 'hidden') : null;
+      if (e.propertyName === "opacity" && this.base.getStyle('opacity') === 0) {
+        return this.base.setStyle('visiblity', 'hidden');
+      }
     }).bindWithEvent(this));
   },
   hide: function() {
@@ -3250,7 +3386,8 @@ Core.Overlay = new Class({
     });
   }
 });
-/*---
+/*
+---
 
 name: Forms.Field
 
@@ -3275,30 +3412,26 @@ Forms.Field = new Class({
     return this;
   },
   create: function() {
-    var _a, _b, h, key;
+    var h, key;
     h = new Hash(this.options.structure);
-    _b = h;
-    for (key in _b) {
-      if (!__hasProp.call(_b, key)) continue;
-      _a = _b[key];
+    for (key in h) {
       this.base = new Element(key);
       this.createS(h.get(key), this.base);
       break;
     }
-    return this.options.hidden ? this.base.setStyle('display', 'none') : null;
+    if (this.options.hidden) {
+      return this.base.setStyle('display', 'none');
+    }
   },
   createS: function(item, parent) {
-    var _a, _b, _c, data, el, key;
-    if (!(typeof parent !== "undefined" && parent !== null)) {
+    var data, el, key, _results;
+    if (!(parent != null)) {
       return null;
     } else {
       switch ($type(item)) {
-      case "object":
-        _b = []; _c = item;
-        for (key in _c) {
-          if (!__hasProp.call(_c, key)) continue;
-          _a = _c[key];
-          _b.push((function() {
+        case "object":
+          _results = [];
+          for (key in item) {
             data = new Hash(item).get(key);
             if (key === 'input') {
               this.input = new Forms.Input(this.options);
@@ -3312,16 +3445,15 @@ Forms.Field = new Class({
               el = new Element(key);
             }
             parent.grab(el);
-            return this.createS(data, el);
-          }).call(this));
-        }
-        return _b;
-        break;
+            _results.push(this.createS(data, el));
+          }
+          return _results;
       }
     }
   }
 });
-/*---
+/*
+---
 
 name: Forms.Fieldset
 
@@ -3356,7 +3488,8 @@ Forms.Fieldset = new Class({
     }).bindWithEvent(this));
   }
 });
-/*---
+/*
+---
 
 name: Forms.Form
 
@@ -3381,10 +3514,9 @@ Forms.Form = new Class({
     return this.parent(options);
   },
   create: function() {
-    var _a;
     delete this.base;
     this.base = new Element('form');
-    if (typeof (_a = this.options.data) !== "undefined" && _a !== null) {
+    if (this.options.data != null) {
       this.options.data.each((function(fs) {
         return this.addFieldset(new Forms.Fieldset(fs));
       }).bind(this));
@@ -3413,9 +3545,17 @@ Forms.Form = new Class({
     });
     this.validator.start();
     return this.submit.addEvent('click', (function() {
-      return this.validator.validate() ? (this.useRequest ? this.send() : this.fireEvent('passed', this.geatherdata())) : this.fireEvent('failed', {
-        message: 'Validation failed'
-      });
+      if (this.validator.validate()) {
+        if (this.useRequest) {
+          return this.send();
+        } else {
+          return this.fireEvent('passed', this.geatherdata());
+        }
+      } else {
+        return this.fireEvent('failed', {
+          message: 'Validation failed'
+        });
+      }
     }).bindWithEvent(this));
   },
   addFieldset: function(fieldset) {
@@ -3428,7 +3568,7 @@ Forms.Form = new Class({
     var data;
     data = {};
     this.base.getElements('select, input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each(function(item) {
-      return (data[item.get('name')] = item.get('type') === "checkbox" ? true : item.get('value'));
+      return data[item.get('name')] = item.get('type') === "checkbox" ? true : item.get('value');
     });
     return data;
   },
