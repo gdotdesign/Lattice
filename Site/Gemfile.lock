@@ -36,6 +36,7 @@ GEM
     spox-textpow (0.10.3)
       spox-plist
     syntax (1.0.0)
+    therubyracer-heroku (0.8.1.pre3)
     tilt (1.2.2)
 
 PLATFORMS
@@ -49,4 +50,5 @@ DEPENDENCIES
   sass
   sinatra
   textpow!
+  therubyracer-heroku (= 0.8.1.pre3)
   ultraviolet!

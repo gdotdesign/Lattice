@@ -2,9 +2,6 @@
 <div id="cpick">
   Click here for a date picker!
 </div>
-<div id="date">
-  No date has been picked yet!
-</div>
 ---css
 #cpick, #date{
   width: 250px;
@@ -22,7 +19,7 @@
 window.addEvent('domready', function(){
   Pickers.DateTime.attach($("cpick"));
   $("cpick").addEvent('change', function(e){
-    $("date").set('text',e.format("%x"));
+  $("cpick").set('text',e.format("%x"));
   });
 });
 

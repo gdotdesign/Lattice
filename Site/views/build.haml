@@ -1,7 +1,12 @@
 - p = Packager.new("../package.yml")
 .box
   %h1
-    Build
+    Download
+  %p
+    You are downloading G.UI.
+  %p
+    This page will generate a single JavaScript file, containing the chosen components.
+  %hr
   %form#packager{:method=>"post", :action=>"/build"}
     .package{:id=>"package-G.UI"}
       %table
@@ -24,5 +29,7 @@
               = comp.provides.join(', ')
             %td.provides
               = comp.description
-    %input{:type=>"submit", :value=>"Build!"}
+    .wrap
+      .border
+      %input{:type=>"submit", :value=>"Download!"}
 
