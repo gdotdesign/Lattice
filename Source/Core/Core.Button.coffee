@@ -7,7 +7,7 @@ description: Basic button element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls]
+requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI]
 
 provides: Core.Button
 

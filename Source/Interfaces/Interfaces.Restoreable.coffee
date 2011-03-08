@@ -9,6 +9,8 @@ license: MIT-style license.
 
 provides: Interfaces.Restoreable
 
+requires: [GDotUI]
+
 ...
 ###
 Interfaces.Restoreable = new Class {

@@ -7,7 +7,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Forms.Input]
+requires: [Data.Abstract, Forms.Input, GDotUI]
 
 provides: Data.Color
 

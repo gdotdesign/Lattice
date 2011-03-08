@@ -188,6 +188,7 @@ var Packager = this.Packager = {
     },
 
     require: function(name, req){
+      console.log(name);
         var component = components[name];
         if (!component) return;
 

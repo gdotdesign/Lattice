@@ -7,7 +7,7 @@ description: Field Element for Forms.Fieldset.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Forms.Input]
+requires: [Core.Abstract, Forms.Input, GDotUI]
 
 provides: Forms.Field
 

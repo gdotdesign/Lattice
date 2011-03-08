@@ -5,6 +5,14 @@
   %form#packager{:method=>"post", :action=>"/build"}
     .package{:id=>"package-G.UI"}
       %table
+        %tr
+          %th
+          %th
+            Name
+          %th
+            Provides
+          %th
+            Description
         - p.components.each do |comp|
           %tr.check
             %td.chekk
@@ -14,4 +22,7 @@
               = comp.name
             %td.provides
               = comp.provides.join(', ')
+            %td.provides
+              = comp.description
+    %input{:type=>"submit", :value=>"Build!"}
 

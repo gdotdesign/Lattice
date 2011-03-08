@@ -7,7 +7,7 @@ description: Overlay for modal dialogs and stuff.
 
 license: MIT-style license.
 
-requires: Core.Abstract
+requires: [Core.Abstract, GDotUI]
 
 provides: Core.Overlay
 

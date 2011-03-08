@@ -7,7 +7,7 @@ description: Abstract base class for Core U.I. elements.
 
 license: MIT-style license.
 
-requires: [Interfaces.Mux]
+requires: [Interfaces.Mux, GDotUI]
 
 provides: Core.Abstract
 

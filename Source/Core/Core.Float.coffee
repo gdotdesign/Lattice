@@ -7,7 +7,7 @@ description: Core.Float is a "floating" panel, with controls. Think of it as a w
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider, Core.IconGroup]
+requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider, Core.IconGroup, GDotUI]
 
 provides: Core.Float
 

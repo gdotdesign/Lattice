@@ -7,7 +7,7 @@ description: Generic icon element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled]
+requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
 
 provides: Core.Icon
 

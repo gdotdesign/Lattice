@@ -7,7 +7,7 @@ description: Class for creating forms from javascript objects.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Forms.Fieldset]
+requires: [Core.Abstract, Forms.Fieldset, GDotUI]
 
 provides: Forms.Form
 

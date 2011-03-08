@@ -9,6 +9,8 @@ license: MIT-style license.
 
 provides: Interfaces.Mux
 
+requires: [GDotUI]
+
 ...
 ###
 Interfaces.Mux = new Class {

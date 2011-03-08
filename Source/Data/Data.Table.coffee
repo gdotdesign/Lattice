@@ -5,7 +5,7 @@ name: Data.Table
 
 description: Text data element.
 
-requires: Data.Abstract
+requires: [Data.Abstract, GDotUI]
 
 provides: Data.Table
 

@@ -9,6 +9,7 @@ license: MIT-style license.
 
 provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
+requires: [GDotUI]
 ...
 ###
 Drag.Float = new Class {

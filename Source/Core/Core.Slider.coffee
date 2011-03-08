@@ -7,7 +7,7 @@ description: Slider element for other elements.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls]
+requires: [Core.Abstract, Interfaces.Controls, GDotUI]
 
 provides: [Core.Slider, ResetSlider]
 

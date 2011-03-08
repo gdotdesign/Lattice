@@ -7,7 +7,7 @@ description: iOs style slot control.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Iterable.List]
+requires: [Core.Abstract, Iterable.List, GDotUI]
 
 provides: Core.Slot
 

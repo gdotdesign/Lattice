@@ -7,7 +7,7 @@ description: Number data element.
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Core.Slider]
+requires: [Data.Abstract, Core.Slider, GDotUI]
 
 provides: Data.Number
 

@@ -7,7 +7,7 @@ description: Data picker class.
 
 license: MIT-style license.
 
-requires: [Core.Abstract]
+requires: [Core.Abstract, GDotUI]
 
 provides: [Core.Picker, outerClick]
 

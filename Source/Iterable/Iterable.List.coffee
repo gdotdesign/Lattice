@@ -11,6 +11,7 @@ requires: Core.Abstract
 
 provides: Iterable.List
 
+requires: [GDotUI]
 ...
 ###
 Iterable.List = new Class {

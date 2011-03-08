@@ -7,7 +7,7 @@ description: Html from markdown.
 
 license: MIT-style license.
 
-requires: [Core.Abstract]
+requires: [Core.Abstract, GDotUI]
 
 provides: Core.Textarea
 

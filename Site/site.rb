@@ -81,10 +81,10 @@ class Gdotui < Sinatra::Application
   end
   
   post '/build' do
-    content_type 'text/plain'
+    content_type 'application/octet-stream'
+    response['Content-disposition'] = "attachment; filename=gdotui.js;"
     p = Packager.new("../package.yml")
-    p.build
-    puts params.inspect
+    p.build params['files']
   end
   
   get '*' do

@@ -7,7 +7,7 @@ description: Tabbed float.
 
 license: MIT-style license.
 
-requires: [Core.Float, Core.Tabs]
+requires: [Core.Float, Core.Tabs, GDotUI]
 
 provides: Core.TabFloat
 

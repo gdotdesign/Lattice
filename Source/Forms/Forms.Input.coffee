@@ -7,7 +7,7 @@ description: Input elements for Forms.
 
 license: MIT-style license.
 
-requires: 
+requires: GDotUI
 
 provides: Forms.Input
 

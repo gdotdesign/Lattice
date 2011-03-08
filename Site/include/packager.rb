@@ -57,10 +57,23 @@ class Packager
     end
   end
   
-  def build
+  def build(files=nil)
+    unless files
+      files = @components
+    else
+      f = []
+      files.each do |file|
+        @components.each do |comp|
+          if file == comp.name
+            f.push comp
+          end
+        end
+      end
+      files = f
+    end
     validate
     @ordered = []
-    @components.each do |component|
+    files.each do |component|
       createOrder(component)
     end
     concated = ''
@@ -72,7 +85,7 @@ class Packager
   end
 end
 class Unit 
-  attr_accessor :name, :requires, :filename, :provides, :source
+  attr_accessor :name, :requires, :filename, :provides, :source, :description
   @requires = []
   @provides = []
   @filename = ''
@@ -106,5 +119,6 @@ class Unit
       @provides = []
     end    
     @name = stuff['name']
+    @description = stuff['description']
   end
 end

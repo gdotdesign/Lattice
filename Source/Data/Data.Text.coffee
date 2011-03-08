@@ -7,7 +7,7 @@ description: Text data element.
 
 license: MIT-style license.
 
-requires: Data.Abstract
+requires: [Data.Abstract, GDotUI]
 
 provides: Data.Text
 

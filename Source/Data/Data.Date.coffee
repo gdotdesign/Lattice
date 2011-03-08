@@ -7,7 +7,7 @@ description: Date picker element with Core.Slot-s
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Core.Slot]
+requires: [Data.Abstract, Core.Slot, GDotUI]
 
 provides: Data.Date
 

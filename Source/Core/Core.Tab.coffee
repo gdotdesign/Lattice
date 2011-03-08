@@ -7,7 +7,7 @@ description: Tab element for Core.Tabs.
 
 license: MIT-style license.
 
-requires: [Core.Abstract]
+requires: [Core.Abstract, GDotUI]
 
 provides: Core.Tab
 

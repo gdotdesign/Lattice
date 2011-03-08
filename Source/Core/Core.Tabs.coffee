@@ -7,7 +7,7 @@ description: Tab navigation element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Core.Tab]
+requires: [Core.Abstract, Core.Tab, GDotUI]
 
 provides: Core.Tabs
 

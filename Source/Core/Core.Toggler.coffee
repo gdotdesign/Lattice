@@ -7,7 +7,7 @@ description: iOs style checkboxes
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled]
+requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
 
 provides: Core.Toggler
 
