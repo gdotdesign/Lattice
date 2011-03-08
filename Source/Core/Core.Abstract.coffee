@@ -3,7 +3,7 @@
 
 name: Core.Abstract
 
-description: "Abstract" base class for Core U.I. elements.
+description: Abstract base class for Core U.I. elements.
 
 license: MIT-style license.
 

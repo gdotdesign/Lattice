@@ -1,0 +1,14 @@
+.box
+  %ul
+    - Dir.entries('../Demos').each do |dir|
+      - if not dir =~ /^\./
+        %li.dir
+          %span
+            = dir
+          %ul
+            - Dir.entries("../Demos/#{dir}").each do |file|
+              - if not file =~ /^\./
+                %li.file 
+                  %a{:href=>"/demos/#{dir}/#{file}"}
+                    = file
+    .clear

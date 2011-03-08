@@ -10,6 +10,8 @@ license: MIT-style license.
 
 provides: GDotUI
 
+requires: Something.Something
+
 ...
 */
 /*---
@@ -282,7 +284,7 @@ Interfaces.Controls = new Class({
 
 name: Core.Abstract
 
-description: "Abstract" base class for Core U.I. elements.
+description: Abstract base class for Core U.I. elements.
 
 license: MIT-style license.
 
@@ -296,16 +298,6 @@ Element.NativeEvents['DOMNodeInsertedIntoDocument'] = 2;
 Element.Events['addedToDom'] = {
   base: 'DOMNodeInsertedIntoDocument'
 };
-Element.implement({
-  removeTransition: function() {
-    this.store('transition', this.getStyle('-webkit-transition-duration'));
-    return this.setStyle('-webkit-transition-duration', '0');
-  },
-  addTransition: function() {
-    this.setStyle('-webkit-transition-duration', this.retrieve('transition'));
-    return this.eliminate('transition');
-  }
-});
 Core.Abstract = new Class({
   Implements: [Events, Options, Interfaces.Mux],
   initialize: function(options) {
@@ -313,16 +305,12 @@ Core.Abstract = new Class({
     this.base = new Element('div');
     this.create();
     this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
-    this.base.store('transition', this.base.getStyle('-webkit-transition-duration'));
-    this.base.setStyle('-webkit-transition-duration', '0');
     this.mux();
     return this;
   },
   create: function() {},
   ready: function() {
-    this.base.removeEvents('addedToDom');
-    this.base.setStyle('-webkit-transition-duration', this.base.retrieve('transition'));
-    return this.base.eliminate('transition');
+    return this.base.removeEvents('addedToDom');
   },
   toElement: function() {
     return this.base;
@@ -1659,7 +1647,7 @@ Core.Textarea = new Class({
 
 name: Data.Abstract
 
-description: "Abstract" base class for data elements.
+description: Abstract base class for data elements.
 
 license: MIT-style license.
 

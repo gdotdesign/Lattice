@@ -1,6 +1,28 @@
 @import _mixins.sass
 @import url(http://fonts.googleapis.com/css?family=Ubuntu:regular,bold,italic)
+body
+  :background-color #D3D3D3
+h1
+  :font-size 20px
+  :font-weight normal
+  :border-bottom 1px dashed #ccc
+  :padding-bottom 5px
+  :margin-bottom 15px
+.dir
+  span
+    :font-size 16px
+    :display block
+    :margin-bottom 5px
+    :border-bottom 1px dotted #ccc
+  :float left
+  :margin-right 20px
+  a
+    :color #555
+  .file
+    :margin-bottom 5px
+    :margin-top 5px
 .header
+  +box_shadow(0,2px,1px,rgba(0,0,0,0.2))
   +round(0,0,20px,20px)
   +linear_gradient(#444,#333)
   :margin 0 auto

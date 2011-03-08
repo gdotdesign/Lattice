@@ -3,7 +3,7 @@
 
 name: Data.Abstract
 
-description: "Abstract" base class for data elements.
+description: Abstract base class for data elements.
 
 license: MIT-style license.
 

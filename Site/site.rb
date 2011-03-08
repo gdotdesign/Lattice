@@ -8,6 +8,9 @@ require 'sass'
 require 'uv'
 require 'json'
 require 'yaml'
+require 'coffee-script'
+
+load 'include/packager.rb'
 
 class Gdotui < Sinatra::Application
   
@@ -24,11 +27,10 @@ class Gdotui < Sinatra::Application
       index = ''
       lines.each do |line|
         line.rstrip!
-        if line =~ /^---(.*)/
+        if line =~ /^---(.*)//home/gdotdesign/github/mootools-core
           index = line.match(/^---(.*)/)[1].downcase
           ret[:"#{index}"] = ''
         else
-          puts index
           ret[:"#{index}"] += line+"\n"
         end
       end
@@ -45,30 +47,40 @@ class Gdotui < Sinatra::Application
     haml :home
   end
 
-  get "/Themes/*" do
-    puts 'style'
-    send_file "../Themes/#{params[:splat][0]}"
+  get /\/Themes\/(.*)/ do
+    send_file "../Themes/#{params[:captures].first}"
   end
   
-  get "/mootools/*" do
-    puts 'style'
-    send_file "../mootools/#{params[:splat][0]}"
+  get /\/mootools\/(.*)/ do
+    send_file "../mootools/#{params[:captures].first}"
   end
 
-  get "/builds/*" do
-    puts 'style'
-    send_file "../builds/#{params[:splat][0]}"
+  get /\/builds\/(.*)/ do
+    send_file "../builds/#{params[:captures].first}"
   end
 
-  get "/:package/:class" do
+  get "/docs" do
+    haml :docindex
+  end
+  
+  get "/demos" do
+    haml :demoindex
+  end
+  
+  get "/demos/:package/:class" do
     lines = IO.readlines "../Demos/#{params[:package]}/#{params[:class]}"
     @stuff = parse lines
     haml :demo
-    #@stuff = YAML::load(File.new("../Docs/#{params[:package]}/#{params[:class]}"))
-    #puts @stuff.inspect
-    #haml :docs
   end
-  
+  get "/docs/:package/:class" do
+    @stuff = YAML::load(File.new("../Docs/#{params[:package]}/#{params[:class]}"))
+    haml :docs
+  end
+  get '/build' do
+    content_type 'text/plain'
+    p = Packager.new("../package.yml")
+    p.build
+  end
   get '*' do
     haml '%div'
   end

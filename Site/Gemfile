@@ -6,3 +6,4 @@ gem 'maruku'
 gem 'plist', :git => "https://github.com/spox/plist.git"
 gem 'textpow', :git => "https://github.com/spox/textpow.git"
 gem 'ultraviolet', :git => "https://github.com/spox/ultraviolet.git"
+gem 'coffee-script'
