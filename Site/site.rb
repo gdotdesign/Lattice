@@ -27,7 +27,7 @@ class Gdotui < Sinatra::Application
       index = ''
       lines.each do |line|
         line.rstrip!
-        if line =~ /^---(.*)//home/gdotdesign/github/mootools-core
+        if line =~ /^---(.*)/
           index = line.match(/^---(.*)/)[1].downcase
           ret[:"#{index}"] = ''
         else
@@ -77,10 +77,16 @@ class Gdotui < Sinatra::Application
     haml :docs
   end
   get '/build' do
+    haml :build
+  end
+  
+  post '/build' do
     content_type 'text/plain'
     p = Packager.new("../package.yml")
     p.build
+    puts params.inspect
   end
+  
   get '*' do
     haml '%div'
   end

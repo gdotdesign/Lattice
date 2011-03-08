@@ -1,0 +1,17 @@
+- p = Packager.new("../package.yml")
+.box
+  %h1
+    Build
+  %form#packager{:method=>"post", :action=>"/build"}
+    .package{:id=>"package-G.UI"}
+      %table
+        - p.components.each do |comp|
+          %tr.check
+            %td.chekk
+              .checkbox
+              %input{:type=>"checkbox", :style=>"display:none", :value=>comp.name, :"data-depends"=>comp.requires.join(', '), :name=>"files[]"}
+            %td.name
+              = comp.name
+            %td.provides
+              = comp.provides.join(', ')
+

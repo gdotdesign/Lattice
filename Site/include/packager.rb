@@ -1,4 +1,5 @@
 class Packager
+  attr_accessor :components
   def initialize(path)
     parse_manifest path
   end
@@ -64,6 +65,7 @@ class Packager
     end
     concated = ''
     @ordered.each do |comp|
+      puts comp.name
       concated += comp.source+"\n"
     end
     CoffeeScript.compile concated, :bare=>true

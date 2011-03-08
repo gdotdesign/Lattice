@@ -660,7 +660,7 @@ ResetSlider = new Class({
     var dir, position;
     dir = this.range < 0 ? -1 : 1;
     position = this.drag.value.now[this.axis];
-    position = position.limit(-this.options.offset, this.full(-this.options.offset));
+    position = position.limit(-this.options.offset, this.full - this.options.offset);
     this.step = this.min + dir * this.toStep(position);
     return this.checkStep();
   },

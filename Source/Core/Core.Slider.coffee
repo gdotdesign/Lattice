@@ -27,7 +27,7 @@ ResetSlider = new Class {
   draggedKnob: ->
     dir = if @range < 0 then -1 else 1
     position = @drag.value.now[this.axis]
-    position = position.limit(-@options.offset, @full -@options.offset)
+    position = position.limit(-@options.offset, @full-@options.offset)
     @step = @min + dir * @toStep(position)
     @checkStep()
   toStep: (position) ->
