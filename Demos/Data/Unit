@@ -1,11 +1,10 @@
 ---html
 <div id="cpick">
-  Click here for a date picker!
+  Click here for a unit picker!
 </div>
 ---css
-#cpick, #date{
-  width: 250px;
-  margin-bottom: 10px;
+#cpick{
+  width: 500px;
   height: 50px;
   line-height: 50px;
   border: 1px dashed #aaa;
@@ -16,9 +15,10 @@
 }
 ---js
 window.addEvent('domready', function(){
-  Pickers.Date.attach($("cpick"));
-  $("cpick").addEvent('change', function(e){
-  $("cpick").set('text',e.format("%x"));
+  unit = new Data.Unit();
+  $(unit).inject($("cpick"),'before')
+  unit.addEvent('change', function(e){
+    $("cpick").setStyle('border-width', e)
   });
 });
 

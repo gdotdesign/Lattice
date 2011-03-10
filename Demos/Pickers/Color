@@ -35,6 +35,7 @@ change:Main event, dispatches when the picked color changes.
 window.addEvent('domready', function(){
   Pickers.Color.attach($("cpick"));
   $("cpick").addEvent('change', function(e){
+    document.body.setStyle('background-color',e.color);
     this.setStyle('background-color',e.color);
     this.setStyle('color',e.color.hsb[2] < 50?'#fff':'#333');
   });

@@ -6,7 +6,6 @@
 #cpick{
   width: 225px;
   height: 225px;
-  margin-left: 20px;
   line-height: 225px;
   border: 1px dashed #aaa;
   text-align: center;

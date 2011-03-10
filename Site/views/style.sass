@@ -12,6 +12,26 @@ hr
   :background-color rgba(255,255,255,0.7)
   .checkbox
     :background-color #4E9FBF
+
+.demotabs
+  :margin 0 auto
+  :width 930px
+  :height 40px
+  :margin-top -10px
+  .demotab
+    +box_shadow(0,2px,1px,rgba(0,0,0,0.2))
+    +round(0,0,5px,5px)
+    +linear_gradient(#efefef,#e3e3e3)
+    :cursor pointer
+    :margin-right 5px
+    :line-height 30px
+    :font-weight bold
+    :padding 5px 15px
+    :float left
+    &:hover, &.active
+      +linear_gradient(#444,#212121)
+      :color #eee
+
 #packager
   .wrap
     :margin 0 auto
@@ -275,11 +295,6 @@ body
   :font-family Ubuntu
 .clear
   :clear both
-.demo
-  :float left
-  :width 500px
-  :min-height 500px
-
 a
   :color #eee
   :text-decoration none  

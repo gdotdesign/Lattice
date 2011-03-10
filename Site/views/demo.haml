@@ -7,16 +7,14 @@
     %script{:type=>"text/javascript"}
       = @stuff[:js]
   .code
-    %h2
-      Quick reference
     -if @stuff[:usage] 
       %h3
-        &raquo; Usage
+        Usage
       .co
         = Uv.parse( @stuff[:usage], "xhtml", "javascript", false, "slush_poppies")
     -if @stuff[:options]
       %h3
-        &raquo; Options
+        Options
       .co
         - options = @stuff[:options].split "\n"
         %ul
@@ -28,7 +26,7 @@
               =parts[1]
     -if @stuff[:events]
       %h3
-        &raquo; Events
+        Events
       .co
         - options = @stuff[:events].split "\n"
         %ul
@@ -40,28 +38,49 @@
               =parts[1]
     -if @stuff[:classes]
       %h3
-        &raquo; Theme settings
+        Theme settings
       .co
         = Uv.parse( @stuff[:classes], "xhtml", "javascript", false, "slush_poppies")
-    %h2
-      Demo code
     -if @stuff[:html]
       %h3
-        &raquo; Html
+        Html
       .co
         = Uv.parse( @stuff[:html], "xhtml", "html", false, "slush_poppies")
     -if @stuff[:css]
       %h3
-        &raquo; CSS
+        CSS
       .co
         = Uv.parse( @stuff[:css], "xhtml", "css", false, "slush_poppies")
     -if @stuff[:js]
       %h3
-        &raquo; Javascript
+        Javascript
       .co
         = Uv.parse( @stuff[:js], "xhtml", "javascript", false, "slush_poppies")
-  .clear
+  .clear   
 :javascript
+  window.addEvent('domready',function(){
+    tabs = new Core.Tabs({class:'demotabs'});
+    tabs.addEvent('change',function(tab){
+      $$(".box")[1].getChildren().dispose()
+      $$(".box")[1].adopt(tab.content)
+    });
+    tab2 = new Core.Tab({label:"Demo",class:'demotab'});
+    tab2.content = $$(".demo")[0];
+    tab2.content.dispose();
+    tabs.add(tab2);
+    $$("h3").each(function(item){
+      pre = item.getNext(".co"); 
+      item.dispose();
+      tab = new Core.Tab({label:item.get('text'),class:'demotab'})
+      tab.content = pre
+      tab.content.dispose();
+      tabs.add(tab);
+    });
+    $(tabs).inject($$(".box")[1],'after');
+    tabs.setActive(tab2)
+    $$(".box")[1].adopt(tab2.content)
+  });
+  /*
   window.addEvent('domready',function(){
     $$(".co").each(function(item){
       item.set('tween',{duration:'short'});
@@ -73,4 +92,5 @@
       pre.tween('height',pre.getSize().y == 0?pre.get('rel'):0);
     })
   });
+  */
 
