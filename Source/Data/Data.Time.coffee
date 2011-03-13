@@ -33,15 +33,6 @@ Data.Time = new Class {
       @time.setMinutes item.value
       @setValue()
     ).bindWithEvent @
-  getValue: ->
-    @time.format @options.format
-  setValue: (date) ->
-    if date?
-      @time = date
-    @hourList.select @hourList.list.items[@time.getHours()]
-    @minuteList.select @minuteList.list.items[@time.getMinutes()]
-    @fireEvent 'change', @time.format(@options.format)
-  ready: ->
     i = 0
     while i < 24
       item = new Iterable.ListItem {title:i}
@@ -54,7 +45,16 @@ Data.Time = new Class {
       item.value = i
       @minuteList.addItem item
       i++
+    @hourList.ready()
+    @minuteList.ready()
     @base.adopt @hourList, @minuteList
     @setValue(@time or new Date())
-    @parent()
+  getValue: ->
+    @time.format @options.format
+  setValue: (date) ->
+    if date?
+      @time = date
+    @hourList.select @hourList.list.items[@time.getHours()]
+    @minuteList.select @minuteList.list.items[@time.getMinutes()]
+    @fireEvent 'change', @time.format(@options.format)
 }

@@ -9,8 +9,8 @@
       %script{:src=>"/Packager.js", :type=>"text/javascript"}
     - if request.path_info =~ /^\/demos/
       %script{:src=>"../Themes/Chrome/theme.js", :type=>"text/javascript"}
-      %script{:src=>"../builds/gdotui-latest.js", :type=>"text/javascript"}
       %link{:href => "../Themes/Chrome/theme.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
+      %script{:src=>"../builds/gdotui-latest.js", :type=>"text/javascript"}
     %link{:href => "style.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
     %title
       - if request.path_info =~ /^\/home/

@@ -16,6 +16,7 @@
     height: 80px; }
 
 .color {
+  width: 200px;
   padding: 10px; }
   .color .wrapper {
     position: relative;

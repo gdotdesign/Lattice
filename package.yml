@@ -41,6 +41,7 @@ sources:
   - "Source/Data/Data.Unit.coffee"
   - "Source/Data/Data.List.coffee"
   - "Source/Interfaces/Interfaces.Mux.coffee" 
+  - "Source/Interfaces/Interfaces.Reflow.coffee" 
   - "Source/Interfaces/Interfaces.Enabled.coffee"
   - "Source/Interfaces/Interfaces.Draggable.coffee"
   - "Source/Interfaces/Interfaces.Restoreable.coffee"

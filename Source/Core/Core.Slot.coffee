@@ -46,14 +46,14 @@ Core.Slot = new Class {
       if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
         @list.select item
     ).bind @ )
-  ready: -> 
-    @parent()
+  ready: ->
     @base.setStyle 'overflow', 'hidden'
     @base.setStyle 'position', 'relative'
     @list.base.setStyle 'position', 'absolute'
     @list.base.setStyle 'top', '0'
-    @base.setStyle 'width', @list.base.getSize().x
-    @overlay.setStyle 'width', @base.getSize().x
+    @width = @list.width
+    @base.setStyle 'width', @width
+    @overlay.setStyle 'width', @width
     @overlay.addEvent 'mousewheel',( (e) ->
       e.stop()
       if @list.selected?
@@ -79,6 +79,7 @@ Core.Slot = new Class {
       @dragging = off
       @update()
     ).bindWithEvent @
+    @update()
   update: ->
     if not @dragging
       @list.base.setStyle '-webkit-transition-duration', '0.3s' # get the property and store and retrieve it

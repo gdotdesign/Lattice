@@ -96,9 +96,9 @@ Iterable.ListItem = new Class {
       @editing = on
   ready: ->
     if not @editing
-      handSize = @handles.base.getSize()
-      remSize = @remove.base.getSize()
-      baseSize = @base.getSize()
+      handSize = getCSS("/\\.#{@options.classes.handle}$/","width")
+      remSize = getCSS("/\\.#{@options.classes.handle}$/","width")
+      baseSize = getCSS("/\\.#{@options.classes.handle}$/","width")
       @remove.base.setStyles {
         "right":-remSize.x
         "top":(baseSize.y-remSize.y)/2

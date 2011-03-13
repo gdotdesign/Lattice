@@ -35,7 +35,5 @@ Core.Button = new Class {
       if @enabled
         @fireEvent 'invoked', [@, e]
       ).bindWithEvent @
-  ready: ->
     @base.grab @icon
-    @parent()
 }

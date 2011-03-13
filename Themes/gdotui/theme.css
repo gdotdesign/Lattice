@@ -1,0 +1,20 @@
+.color {
+  width: 200px;
+  padding: 10px; }
+  .color .wrapper {
+    position: relative;
+    width: 200px;
+    height: 200px;
+    margin: 10px; }
+  .color #xyknob {
+    width: 10px;
+    cursor: crosshair;
+    height: 10px;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    -moz-box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    -webkit-box-shadow: 0 0 4px rgba(0, 0, 0, 0.4); }

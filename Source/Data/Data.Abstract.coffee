@@ -15,17 +15,18 @@ provides: Data.Abstract
 ###
 Data.Abstract = new Class {
   Implements:[Events
-              Options]
+              Options
+              Interfaces.Reflow]
   options:{}
   initialize: (options) ->
     @setOptions options
     @base = new Element 'div'
-    @base.addEvent 'addedToDom', @ready.bindWithEvent @
+    @createTemp()
+    #@base.addEvent 'addedToDom', @pollReflow.bindWithEvent @
     @create()
     @
   create: ->
   ready: ->
-    @base.removeEvents 'addedToDom'
   toElement: ->
     @base
   setValue: ->

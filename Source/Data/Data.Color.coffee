@@ -93,18 +93,18 @@ Data.Color = new Class {
       ctx.rotate(angle)
       
   ready: ->
-    @width = @wrapper.getSize().x
+    @width = @wrapper.getSize().y
     
     @background.setStyles {
       'background-color': "#000"
       '-webkit-border-radius': @width/2+"px"
       'position': 'absolute'
-      'z-index': -3
+      'z-index': 0
     }
     
     @hslacone.setStyles {
       'position': 'absolute'
-      'z-index': 0
+      'z-index': 1
     }
     
     @hslacone.set 'width', @width
