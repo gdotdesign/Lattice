@@ -21,18 +21,30 @@ Core.Slider = new Class {
     'setRange'
   ]}
   options:{
-    scrollBase: null
     reset: off
-    steps: 0
+    steps: 100
     range: [0,0]
     mode: 'horizontal'
     class: GDotUI.Theme.Slider.classes.base
     bar: GDotUI.Theme.Slider.classes.bar
-    text: GDotUI.Theme.Slider.classes.text
   }
   initialize: (options) ->
+    @value = 0
     @parent options
   set: (position) ->
+    if @options.reset
+      @value = Number.from position
+    else
+      position = Math.round((position/@options.steps)*@size)
+      percent = Math.round((position/@size)*@options.steps)
+      if position < 0
+        @progress.setStyle @modifier, 0+"px"
+      if position > @size
+        @progress.setStyle @modifier, @size+"px"
+      if not(position < 0) and not(position > @size)
+        @progress.setStyle @modifier, (percent/@options.steps)*@size+"px"
+    console.log position, @size, @options.steps
+    if @options.reset then @value else Math.round((position/@size)*@options.steps)
   create: ->
     @base.addClass @options.class
     @base.addClass @options.mode
@@ -49,17 +61,17 @@ Core.Slider = new Class {
     if @options.mode is 'horizontal'
       @modifier = 'width'
       modifiers = {x: 'width',y:''}
-      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width').slice(0,-2)
+      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width')
       @progress.setStyles {
         top: 0
-        width: 0
+        width: if @options.reset then @size/2 else 0
       }
     if @options.mode is 'vertical'
-      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.vertical$/",'height').slice(0,-2)
+      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
       modifiers = {x: '',y: 'height'}
       @modifier = 'height'
       @progress.setStyles {
-        height: 0
+        height: if @options.reset then @size/2 else 0
         right: 0
       }
       
@@ -68,16 +80,29 @@ Core.Slider = new Class {
     @drag = new Drag @progress, {handle:@base, modifiers:modifiers, invert: if @options.mode is 'vertical' then true else false}
     
     @drag.addEvent 'beforeStart', ( (el,e) ->
+      @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@options.steps)
       if not @enabled
         @disabledTop = el.getStyle @modifier
     ).bind @
+    
+    if @options.reset
+      @drag.addEvent 'complete', ( (el,e) ->
+        if @enabled
+          el.setStyle @modifier, @size/2+"px"
+      ).bind @
+      
     @drag.addEvent 'drag', ( (el,e) ->
       if @enabled
         pos = Number.from el.getStyle(@modifier)
+        offset = Math.round((pos/@size)*@options.steps)-@lastpos
+        @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@options.steps)
         if pos > @size
-          el.setStyle @modifier, @width+"px"
+          el.setStyle @modifier, @size+"px"
           pos = @size
-        @fireEvent 'step', Math.round((pos/@size)*100)
+        else
+          if @options.reset
+            @value+=offset
+        @fireEvent 'step', if @options.reset then @value else Math.round((pos/@size)*@options.steps)
       else
         el.setStyle @modifier, @disabledTop
     ).bind @
@@ -85,19 +110,20 @@ Core.Slider = new Class {
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
       offset = Number.from e.wheel
-      pos = Number.from @progress.getStyle(@modifier)
-      console.log offset, pos
-      if pos+offset < 0
-        console.log '<0'
-        @progress.setStyle @modifier, 0+"px"
-        pos = 0
-      if pos+offset > @size
-        console.log '> @width'
-        @progress.setStyle @modifier, @size+"px"
-        pos = pos+offset
-      if not(pos+offset < 0) and not(pos+offset > @size)
-        console.log 'in range'
-        @progress.setStyle @modifier, (pos+offset/100*@size)+"px"
+      if @options.reset
+        @value += offset
+      else
+        pos = Number.from @progress.getStyle(@modifier)
+        if pos+offset < 0
+          @progress.setStyle @modifier, 0+"px"
+          pos = 0
+        if pos+offset > @size
+          @progress.setStyle @modifier, @size+"px"
+          pos = pos+offset
+        if not(pos+offset < 0) and not(pos+offset > @size)
+          @progress.setStyle @modifier, (pos+offset/@options.steps*@size)+"px"
+          pos = pos+offset
+      @fireEvent 'step', if @options.reset then @value else Math.round((pos/@size)*@options.steps)
     ).bind @
 
 }

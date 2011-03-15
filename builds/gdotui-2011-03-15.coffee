@@ -267,7 +267,8 @@ Interfaces.Enabled = new Class {
   enable: ->
     if @children?
       @children.each (item) ->
-        item.enable()
+        if item.enable?
+          item.enable()
     @enabled = on
     @base.removeClass 'disabled'
     @fireEvent 'enabled'
@@ -275,7 +276,8 @@ Interfaces.Enabled = new Class {
     console.log @children
     if @children?
       @children.each (item) ->
-        item.disable()
+        if item.disable?
+          item.disable()
     @enabled = off
     @base.addClass 'disabled'
     @fireEvent 'disabled'
@@ -549,18 +551,30 @@ Core.Slider = new Class {
     'setRange'
   ]}
   options:{
-    scrollBase: null
     reset: off
-    steps: 0
+    steps: 100
     range: [0,0]
     mode: 'horizontal'
     class: GDotUI.Theme.Slider.classes.base
     bar: GDotUI.Theme.Slider.classes.bar
-    text: GDotUI.Theme.Slider.classes.text
   }
   initialize: (options) ->
+    @value = 0
     @parent options
   set: (position) ->
+    if @options.reset
+      @value = Number.from position
+    else
+      position = Math.round((position/@options.steps)*@size)
+      percent = Math.round((position/@size)*@options.steps)
+      if position < 0
+        @progress.setStyle @modifier, 0+"px"
+      if position > @size
+        @progress.setStyle @modifier, @size+"px"
+      if not(position < 0) and not(position > @size)
+        @progress.setStyle @modifier, (percent/@options.steps)*@size+"px"
+    console.log position, @size, @options.steps
+    if @options.reset then @value else Math.round((position/@size)*@options.steps)
   create: ->
     @base.addClass @options.class
     @base.addClass @options.mode
@@ -577,17 +591,17 @@ Core.Slider = new Class {
     if @options.mode is 'horizontal'
       @modifier = 'width'
       modifiers = {x: 'width',y:''}
-      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width').slice(0,-2)
+      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width')
       @progress.setStyles {
         top: 0
-        width: 0
+        width: if @options.reset then @size/2 else 0
       }
     if @options.mode is 'vertical'
-      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.vertical$/",'height').slice(0,-2)
+      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
       modifiers = {x: '',y: 'height'}
       @modifier = 'height'
       @progress.setStyles {
-        height: 0
+        height: if @options.reset then @size/2 else 0
         right: 0
       }
       
@@ -596,16 +610,29 @@ Core.Slider = new Class {
     @drag = new Drag @progress, {handle:@base, modifiers:modifiers, invert: if @options.mode is 'vertical' then true else false}
     
     @drag.addEvent 'beforeStart', ( (el,e) ->
+      @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@options.steps)
       if not @enabled
         @disabledTop = el.getStyle @modifier
     ).bind @
+    
+    if @options.reset
+      @drag.addEvent 'complete', ( (el,e) ->
+        if @enabled
+          el.setStyle @modifier, @size/2+"px"
+      ).bind @
+      
     @drag.addEvent 'drag', ( (el,e) ->
       if @enabled
         pos = Number.from el.getStyle(@modifier)
+        offset = Math.round((pos/@size)*@options.steps)-@lastpos
+        @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@options.steps)
         if pos > @size
-          el.setStyle @modifier, @width+"px"
+          el.setStyle @modifier, @size+"px"
           pos = @size
-        @fireEvent 'step', Math.round((pos/@size)*100)
+        else
+          if @options.reset
+            @value+=offset
+        @fireEvent 'step', if @options.reset then @value else Math.round((pos/@size)*@options.steps)
       else
         el.setStyle @modifier, @disabledTop
     ).bind @
@@ -613,19 +640,20 @@ Core.Slider = new Class {
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
       offset = Number.from e.wheel
-      pos = Number.from @progress.getStyle(@modifier)
-      console.log offset, pos
-      if pos+offset < 0
-        console.log '<0'
-        @progress.setStyle @modifier, 0+"px"
-        pos = 0
-      if pos+offset > @size
-        console.log '> @width'
-        @progress.setStyle @modifier, @size+"px"
-        pos = pos+offset
-      if not(pos+offset < 0) and not(pos+offset > @size)
-        console.log 'in range'
-        @progress.setStyle @modifier, (pos+offset/100*@size)+"px"
+      if @options.reset
+        @value += offset
+      else
+        pos = Number.from @progress.getStyle(@modifier)
+        if pos+offset < 0
+          @progress.setStyle @modifier, 0+"px"
+          pos = 0
+        if pos+offset > @size
+          @progress.setStyle @modifier, @size+"px"
+          pos = pos+offset
+        if not(pos+offset < 0) and not(pos+offset > @size)
+          @progress.setStyle @modifier, (pos+offset/@options.steps*@size)+"px"
+          pos = pos+offset
+      @fireEvent 'step', if @options.reset then @value else Math.round((pos/@size)*@options.steps)
     ).bind @
 
 }
@@ -1564,6 +1592,7 @@ Core.Toggler = new Class {
     @checked = yes
     @parent options
   create: ->
+    @width = @options.width or Number.from getCSS("/\\.#{@options.onClass}$/",'width')
     @base.addClass @options.class
     @base.setStyle 'position','relative'
     @onLabel = new Element 'div', {text:@options.onText, class:@options.onClass}
@@ -1572,47 +1601,46 @@ Core.Toggler = new Class {
     @offLabel.removeTransition()
     @separator = new Element 'div', {html: '&nbsp;', class:@options.sepClass}
     @separator.removeTransition()
-    @base.adopt @onLabel, @separator, @offLabel
+    @base.adopt @onLabel, @offLabel, @separator
     @base.getChecked = ( ->
       @checked
       ).bind @
     @base.on = @on.bind @
     @base.off = @off.bind @
-  ready: ->
     $$(@onLabel,@offLabel,@separator).setStyles {
       'position':'absolute'
       'top': 0
       'left': 0
     }
+    if @options.width
+      $$(@onLabel,@offLabel,@separator).setStyles {
+        width: @width
+      }
+      @base.setStyle 'width', @width*2
+    @offLabel.setStyle 'left', @width
     if @checked
       @on()
     else
       @off()
     @base.addEvent 'click', ( ->
-       if @checked
-        @off()
-        @base.fireEvent 'change'
-       else
-        @on()
-        @base.fireEvent 'change'
+       if @enabled
+         if @checked
+          @off()
+          @base.fireEvent 'change'
+         else
+          @on()
+          @base.fireEvent 'change'
     ).bind @
     @onLabel.addTransition()
-    @offLabel.getPosition()
     @offLabel.addTransition()
     @separator.addTransition()
     @parent()
   on: ->
     @checked = yes
-    @onLabel.setStyle 'left', 0
-    @follow()
+    @separator.setStyle 'left', @width
   off: ->
     @checked = no
-    @onLabel.setStyle 'left', -@onLabel.getSize().x
-    @follow()
-  follow: ->
-    left = @onLabel.getStyle('left')
-    @separator.setStyle 'left', Number(left[0..left.length-3])+@onLabel.getSize().x
-    @offLabel.setStyle 'left',Number(left[0..left.length-3])+@onLabel.getSize().x + @separator.getSize().x
+    @separator.setStyle 'left', 0
 }
 
 
@@ -1778,9 +1806,11 @@ provides: Data.Number
 ...
 ###
 Data.Number = new Class {
-  Extends:Data.Abstract
+  Extends: Core.Slider
   options:{
-    class: GDotUI.Theme.Number.class
+    class: GDotUI.Theme.Number.classes.base
+    bar: GDotUI.Theme.Number.classes.bar
+    text: GDotUI.Theme.Number.classes.text
     range: GDotUI.Theme.Number.range
     reset: GDotUI.Theme.Number.reset
     steps: GDotUI.Theme.Number.steps
@@ -1788,54 +1818,28 @@ Data.Number = new Class {
   initialize: (options) ->
     @parent options
   create: ->
-    @base.addClass @options.class
-    @text = new Element 'input', {'type':'text'}
-    @slider = new Core.Slider {
-      reset: @options.reset
-      range: @options.range
-      steps: @options.steps
-      mode:'horizontal'
-    }
-  ready: ->
-    @justSet = off
-    #@slider.knob.grab @text
-    @base.adopt @slider
-    @slider.knob.addEvent 'click', ( ->
-      @text.focus()
-    ).bindWithEvent @
-    @slider.addEvent 'complete', ( (step) ->
-      if @options.reset
-        @slider.setRange [step-@options.steps/2, Number(step)+@options.steps/2]
-      @slider.set step
-      ).bindWithEvent @
-    @slider.addEvent 'step', ( (step) ->
-      if typeof(step) == 'object'
-        @text.set 'value', 0
-      else
-        @text.set 'value', step
-      if not @justSet
-        @fireEvent 'change', step
-      else
-        @justSet = off
-      ).bindWithEvent @
-    @text.addEvent 'change', ( ->
-      step = Number @text.get('value')
-      if @options.reset
-        @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
-      @slider.set step
-      @fireEvent 'change', step
-    ).bindWithEvent @
-    @text.addEvent 'mousewheel', ( (e) ->
-      @slider.set Number(@text.get('value'))+e.wheel
-    ).bindWithEvent @
     @parent()
+    @text = new Element "div.#{@options.text}"
+    @text.setStyles {
+      position: 'absolute'
+      bottom: 0
+      left: 0
+      right: 0
+      top: 0
+    }
+    @base.grab @text
+    @addEvent 'step',( (e) ->
+      @text.set 'text', e
+      @fireEvent 'change', e
+    ).bind @
   getValue: ->
-    @slider.slider.step
-  setValue: (step) ->
-    @justSet = on
     if @options.reset
-      @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
-    @slider.set step
+      @value
+    else
+      Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@options.steps)
+  setValue: (step) ->
+    real = @set step
+    @text.set 'text', real
 }
 
 
@@ -1918,6 +1922,7 @@ provides: Data.Color
 ###
 Data.Color = new Class {
   Extends:Data.Abstract
+  Implements: [Interfaces.Enabled,Interfaces.Children]
   Binds: ['change']
   options:{
     class: GDotUI.Theme.Color.class
@@ -2029,34 +2034,40 @@ Data.Color = new Class {
     
     @center = {x: @halfWidth, y:@halfWidth}
     
-    
+    @xy.addEvent 'beforeStart',((el,e) ->
+        @lastPosition = el.getPosition(@wrapper)
+      ).bind @
     @xy.addEvent 'drag', ((el,e) ->
-      position = el.getPosition(@wrapper)
-      
-      x = @center.x-position.x-@size.x/2
-      y = @center.y-position.y-@size.y/2
-      
-      @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
-      @angle = Math.atan2(y,x)
-      
-      if @radius > @halfWidth
-        el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@size.y/2+@center.y
-        el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@size.x/2+@center.x
-        @saturation = 100
+      if @enabled
+        position = el.getPosition(@wrapper)
+        
+        x = @center.x-position.x-@size.x/2
+        y = @center.y-position.y-@size.y/2
+        
+        @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+        @angle = Math.atan2(y,x)
+        
+        if @radius > @halfWidth
+          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@size.y/2+@center.y
+          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@size.x/2+@center.x
+          @saturation = 100
+        else
+          sat =  Math.round @radius 
+          @saturation = Math.round((sat/@halfWidth)*100)
+        
+        an = Math.round(@angle*(180/Math.PI))
+        @hue = if an < 0 then 180-Math.abs(an) else 180+an
+        @hueN.setValue @hue
+        @saturationN.setValue @saturation
+        @colorData.updateControls()
+        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
       else
-        sat =  Math.round @radius 
-        @saturation = Math.round((sat/@halfWidth)*100)
-      
-      an = Math.round(@angle*(180/Math.PI))
-      @hue = if an < 0 then 180-Math.abs(an) else 180+an
-      @hueN.setValue @hue
-      @saturationN.setValue @saturation
-      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
+        el.setPosition @lastPosition
     ).bind @
    
     
     @colorData.readyCallback = @readyCallback
-    @base.adopt @colorData
+    @addChild @colorData
     
    
     
@@ -2076,6 +2087,7 @@ Data.Color = new Class {
     @lightness.setValue 100
     @hue.setValue 0
     @saturation.setValue 0
+    @updateControls()
     delete @readyCallback
   setHue: (hue) ->
     @angle = -((180-hue)*(Math.PI/180))
@@ -2100,6 +2112,7 @@ Data.Color = new Class {
     @saturationN.setValue color.hsb[1]
     @alpha.setValue alpha
     @lightness.setValue color.hsb[2]
+    @colorData.updateControls()
     @hslacone.setStyle 'opacity',color.hsb[2]/100
     @colorData.base.getElements( 'input[type=radio]').each ((item) ->
       if item.get('value') == type
@@ -2149,23 +2162,28 @@ Data.Color.ReturnValues = {
 }
 Data.Color.SlotControls = new Class {
   Extends:Data.Abstract
+  Implements: [Interfaces.Enabled,Interfaces.Children]
   options:{
     class:GDotUI.Theme.Color.controls.class
   }
   initialize: (options) ->
     @parent(options)
+  updateControls: ->
+    @hue.base.setStyle 'background-color', new $HSB(@hue.getValue(),100,100)
+    @saturation.base.setStyle 'background-color', new $HSB(@hue.getValue(),@saturation.getValue(),100)
+    @lightness.base.setStyle 'background-color', new $HSB(0,0,@lightness.getValue())
   create: ->
     @base.addClass @options.class  
     @hue = new Data.Number {range:[0,360],reset: off, steps: [360]}
-    @hue.addEvent 'change', ((value) ->
-        @saturation.slider.base.setStyle 'background-color', new $HSB(value,100,100)
-      ).bindWithEvent @
+    @hue.addEvent 'change', @updateControls.bind(@)
     @saturation = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @saturation.addEvent 'change', @updateControls.bind(@)
     @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @lightness.addEvent 'change', @updateControls.bind(@)
     @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @col = new Forms.Input Data.Color.ReturnValues
   ready: ->
-    @base.adopt @hue, @saturation, @lightness, @alpha, @col
+    @adoptChildren @hue, @saturation, @lightness, @alpha, @col
     @base.getElements('input[type=radio]')[0].set('checked',true)
     if @readyCallback?
       @readyCallback()
@@ -3249,14 +3267,14 @@ Pickers.Base = new Class {
     @
 }
 
-#Pickers.Color = new Pickers.Base {type:'Color'}
-#Pickers.Number = new Pickers.Base {type:'Number'}
+Pickers.Color = new Pickers.Base {type:'Color'}
+Pickers.Number = new Pickers.Base {type:'Number'}
 Pickers.Time = new Pickers.Base {type:'Time'}
 Pickers.Text = new Pickers.Base {type:'Text'}
 Pickers.Date = new Pickers.Base {type:'Date'}
 Pickers.DateTime = new Pickers.Base {type:'DateTime'}
 Pickers.Table = new Pickers.Base {type:'Table'}
-#Pickers.Unit = new Pickers.Base {type:'Unit'}
+Pickers.Unit = new Pickers.Base {type:'Unit'}
 Pickers.Select = new Pickers.Base {type:'Select'}
 Pickers.List = new Pickers.Base {type:'List'}
 

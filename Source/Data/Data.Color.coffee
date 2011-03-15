@@ -15,6 +15,7 @@ provides: Data.Color
 ###
 Data.Color = new Class {
   Extends:Data.Abstract
+  Implements: [Interfaces.Enabled,Interfaces.Children]
   Binds: ['change']
   options:{
     class: GDotUI.Theme.Color.class
@@ -126,34 +127,40 @@ Data.Color = new Class {
     
     @center = {x: @halfWidth, y:@halfWidth}
     
-    
+    @xy.addEvent 'beforeStart',((el,e) ->
+        @lastPosition = el.getPosition(@wrapper)
+      ).bind @
     @xy.addEvent 'drag', ((el,e) ->
-      position = el.getPosition(@wrapper)
-      
-      x = @center.x-position.x-@size.x/2
-      y = @center.y-position.y-@size.y/2
-      
-      @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
-      @angle = Math.atan2(y,x)
-      
-      if @radius > @halfWidth
-        el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@size.y/2+@center.y
-        el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@size.x/2+@center.x
-        @saturation = 100
+      if @enabled
+        position = el.getPosition(@wrapper)
+        
+        x = @center.x-position.x-@size.x/2
+        y = @center.y-position.y-@size.y/2
+        
+        @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+        @angle = Math.atan2(y,x)
+        
+        if @radius > @halfWidth
+          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@size.y/2+@center.y
+          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@size.x/2+@center.x
+          @saturation = 100
+        else
+          sat =  Math.round @radius 
+          @saturation = Math.round((sat/@halfWidth)*100)
+        
+        an = Math.round(@angle*(180/Math.PI))
+        @hue = if an < 0 then 180-Math.abs(an) else 180+an
+        @hueN.setValue @hue
+        @saturationN.setValue @saturation
+        @colorData.updateControls()
+        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
       else
-        sat =  Math.round @radius 
-        @saturation = Math.round((sat/@halfWidth)*100)
-      
-      an = Math.round(@angle*(180/Math.PI))
-      @hue = if an < 0 then 180-Math.abs(an) else 180+an
-      @hueN.setValue @hue
-      @saturationN.setValue @saturation
-      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
+        el.setPosition @lastPosition
     ).bind @
    
     
     @colorData.readyCallback = @readyCallback
-    @base.adopt @colorData
+    @addChild @colorData
     
    
     
@@ -173,6 +180,7 @@ Data.Color = new Class {
     @lightness.setValue 100
     @hue.setValue 0
     @saturation.setValue 0
+    @updateControls()
     delete @readyCallback
   setHue: (hue) ->
     @angle = -((180-hue)*(Math.PI/180))
@@ -197,6 +205,7 @@ Data.Color = new Class {
     @saturationN.setValue color.hsb[1]
     @alpha.setValue alpha
     @lightness.setValue color.hsb[2]
+    @colorData.updateControls()
     @hslacone.setStyle 'opacity',color.hsb[2]/100
     @colorData.base.getElements( 'input[type=radio]').each ((item) ->
       if item.get('value') == type
@@ -246,23 +255,28 @@ Data.Color.ReturnValues = {
 }
 Data.Color.SlotControls = new Class {
   Extends:Data.Abstract
+  Implements: [Interfaces.Enabled,Interfaces.Children]
   options:{
     class:GDotUI.Theme.Color.controls.class
   }
   initialize: (options) ->
     @parent(options)
+  updateControls: ->
+    @hue.base.setStyle 'background-color', new $HSB(@hue.getValue(),100,100)
+    @saturation.base.setStyle 'background-color', new $HSB(@hue.getValue(),@saturation.getValue(),100)
+    @lightness.base.setStyle 'background-color', new $HSB(0,0,@lightness.getValue())
   create: ->
     @base.addClass @options.class  
     @hue = new Data.Number {range:[0,360],reset: off, steps: [360]}
-    @hue.addEvent 'change', ((value) ->
-        @saturation.slider.base.setStyle 'background-color', new $HSB(value,100,100)
-      ).bindWithEvent @
+    @hue.addEvent 'change', @updateControls.bind(@)
     @saturation = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @saturation.addEvent 'change', @updateControls.bind(@)
     @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @lightness.addEvent 'change', @updateControls.bind(@)
     @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @col = new Forms.Input Data.Color.ReturnValues
   ready: ->
-    @base.adopt @hue, @saturation, @lightness, @alpha, @col
+    @adoptChildren @hue, @saturation, @lightness, @alpha, @col
     @base.getElements('input[type=radio]')[0].set('checked',true)
     if @readyCallback?
       @readyCallback()

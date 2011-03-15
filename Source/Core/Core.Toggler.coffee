@@ -44,6 +44,7 @@ Core.Toggler = new Class {
     @checked = yes
     @parent options
   create: ->
+    @width = @options.width or Number.from getCSS("/\\.#{@options.onClass}$/",'width')
     @base.addClass @options.class
     @base.setStyle 'position','relative'
     @onLabel = new Element 'div', {text:@options.onText, class:@options.onClass}
@@ -52,45 +53,44 @@ Core.Toggler = new Class {
     @offLabel.removeTransition()
     @separator = new Element 'div', {html: '&nbsp;', class:@options.sepClass}
     @separator.removeTransition()
-    @base.adopt @onLabel, @separator, @offLabel
+    @base.adopt @onLabel, @offLabel, @separator
     @base.getChecked = ( ->
       @checked
       ).bind @
     @base.on = @on.bind @
     @base.off = @off.bind @
-  ready: ->
     $$(@onLabel,@offLabel,@separator).setStyles {
       'position':'absolute'
       'top': 0
       'left': 0
     }
+    if @options.width
+      $$(@onLabel,@offLabel,@separator).setStyles {
+        width: @width
+      }
+      @base.setStyle 'width', @width*2
+    @offLabel.setStyle 'left', @width
     if @checked
       @on()
     else
       @off()
     @base.addEvent 'click', ( ->
-       if @checked
-        @off()
-        @base.fireEvent 'change'
-       else
-        @on()
-        @base.fireEvent 'change'
+       if @enabled
+         if @checked
+          @off()
+          @base.fireEvent 'change'
+         else
+          @on()
+          @base.fireEvent 'change'
     ).bind @
     @onLabel.addTransition()
-    @offLabel.getPosition()
     @offLabel.addTransition()
     @separator.addTransition()
     @parent()
   on: ->
     @checked = yes
-    @onLabel.setStyle 'left', 0
-    @follow()
+    @separator.setStyle 'left', @width
   off: ->
     @checked = no
-    @onLabel.setStyle 'left', -@onLabel.getSize().x
-    @follow()
-  follow: ->
-    left = @onLabel.getStyle('left')
-    @separator.setStyle 'left', Number(left[0..left.length-3])+@onLabel.getSize().x
-    @offLabel.setStyle 'left',Number(left[0..left.length-3])+@onLabel.getSize().x + @separator.getSize().x
+    @separator.setStyle 'left', 0
 }

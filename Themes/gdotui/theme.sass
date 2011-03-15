@@ -11,10 +11,29 @@
 
 .disabled
   :opacity 0.5
+
+.toggler
+  +basic_style
+  :width 100px
+  :height 30px
+  :overflow hidden
+  :cursor pointer
+  .on
+    :width 50px
+  .on, .off, .sep
+    :font-size 16px
+    :font-weight bold
+    :line-height 30px
+    :text-align center
+    :-webkit-transition-duration 0.3s
+    +round_full(3px)
+    :width 50px
+    :color #333
+  .sep
+    +linear_gradient(#444,#212121)
   
 .button
   +basic_style(5px, 0.1s)
-  :border none
   :cursor pointer
   +linear_gradient(#444,#212121)
   &:hover
@@ -27,19 +46,29 @@
   :color #eee
   :padding 10px
 
+.number
+  +basic_style
+  &.horizontal
+    :width 200px  
+    :height 20px
+  &.vertical
+    :width 20px
+    :height 200px
+
 .slider
+  +basic_style(2px,0s,2px)
   &.horizontal
     :width 200px  
     :height 10px
   &.vertical
     :width 10px
     :height 200px
-  +basic_style(2px,0s,2px)
+.slider, .number
   :background-color #888
   :cursor move
   :overflow hidden
   .progress
-    :background-color rgba(0,0,0,0.5)
+    +linear_gradient(#444,#212121)
   .text, input
     :text-shadow 0 1px 1px #222
     :color #eee

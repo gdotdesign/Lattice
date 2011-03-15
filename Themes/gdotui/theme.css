@@ -1,11 +1,27 @@
 .color {
-  width: 200px;
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #666666;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  background-clip: padding-box;
+  background-color: white;
+  -webkit-transition-duration: 0.1s;
+  width: 210px;
   padding: 10px; }
+  .color .number {
+    -webkit-transition-duration: 0; }
   .color .wrapper {
     position: relative;
     width: 200px;
     height: 200px;
-    margin: 10px; }
+    margin: 10px 0;
+    margin-left: 5px; }
   .color #xyknob {
     width: 10px;
     cursor: crosshair;
@@ -85,6 +101,42 @@
 .disabled {
   opacity: 0.5; }
 
+.toggler {
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #666666;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  background-clip: padding-box;
+  background-color: white;
+  -webkit-transition-duration: 0.5s;
+  width: 100px;
+  height: 30px;
+  overflow: hidden;
+  cursor: pointer; }
+  .toggler .on {
+    width: 50px; }
+  .toggler .on, .toggler .off, .toggler .sep {
+    font-size: 16px;
+    font-weight: bold;
+    line-height: 30px;
+    text-align: center;
+    -webkit-transition-duration: 0.3s;
+    -moz-border-radius: 3px;
+    -webkit-border-radius: 3px;
+    -khtml-border-radius: 3px;
+    border-radius: 3px;
+    width: 50px;
+    color: #333333; }
+  .toggler .sep {
+    background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121)); }
+
 .button {
   border: 5px solid rgba(255, 255, 255, 0.1);
   font-size: 12px;
@@ -99,7 +151,6 @@
   background-clip: padding-box;
   background-color: white;
   -webkit-transition-duration: 0.1s;
-  border: none;
   cursor: pointer;
   background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121));
@@ -115,6 +166,27 @@
     position: relative;
     top: 1px; }
 
+.number {
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #666666;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  background-clip: padding-box;
+  background-color: white;
+  -webkit-transition-duration: 0.5s; }
+  .number.horizontal {
+    width: 200px;
+    height: 20px; }
+  .number.vertical {
+    width: 20px;
+    height: 200px; }
+
 .slider {
   border: 2px solid rgba(255, 255, 255, 0.1);
   font-size: 12px;
@@ -128,26 +200,29 @@
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
   background-color: white;
-  -webkit-transition-duration: 0s;
-  background-color: #888888;
-  cursor: move;
-  overflow: hidden; }
+  -webkit-transition-duration: 0s; }
   .slider.horizontal {
     width: 200px;
     height: 10px; }
   .slider.vertical {
     width: 10px;
     height: 200px; }
-  .slider .progress {
-    background-color: rgba(0, 0, 0, 0.5); }
-  .slider .text, .slider input {
+
+.slider, .number {
+  background-color: #888888;
+  cursor: move;
+  overflow: hidden; }
+  .slider .progress, .number .progress {
+    background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121)); }
+  .slider .text, .slider input, .number .text, .number input {
     text-shadow: 0 1px 1px #222222;
     color: #eeeeee;
     font-size: 12px;
     font-weight: bold;
     text-align: center;
     line-height: 20px; }
-  .slider input {
+  .slider input, .number input {
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;
     -khtml-border-radius: 10px;

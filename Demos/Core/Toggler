@@ -1,0 +1,5 @@
+---JS
+window.addEvent('domready', function(){
+  defaultBtn = new Core.Toggler();
+  $$(".demo").adopt(defaultBtn);
+});

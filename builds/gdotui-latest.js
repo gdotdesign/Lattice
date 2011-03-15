@@ -296,7 +296,9 @@ Interfaces.Enabled = new Class({
   enable: function() {
     if (this.children != null) {
       this.children.each(function(item) {
-        return item.enable();
+        if (item.enable != null) {
+          return item.enable();
+        }
       });
     }
     this.enabled = true;
@@ -307,7 +309,9 @@ Interfaces.Enabled = new Class({
     console.log(this.children);
     if (this.children != null) {
       this.children.each(function(item) {
-        return item.disable();
+        if (item.disable != null) {
+          return item.disable();
+        }
       });
     }
     this.enabled = false;
@@ -627,19 +631,41 @@ Core.Slider = new Class({
     'slider': ['set', 'setRange']
   },
   options: {
-    scrollBase: null,
     reset: false,
-    steps: 0,
+    steps: 100,
     range: [0, 0],
     mode: 'horizontal',
     "class": GDotUI.Theme.Slider.classes.base,
-    bar: GDotUI.Theme.Slider.classes.bar,
-    text: GDotUI.Theme.Slider.classes.text
+    bar: GDotUI.Theme.Slider.classes.bar
   },
   initialize: function(options) {
+    this.value = 0;
     return this.parent(options);
   },
-  set: function(position) {},
+  set: function(position) {
+    var percent;
+    if (this.options.reset) {
+      this.value = Number.from(position);
+    } else {
+      position = Math.round((position / this.options.steps) * this.size);
+      percent = Math.round((position / this.size) * this.options.steps);
+      if (position < 0) {
+        this.progress.setStyle(this.modifier, 0 + "px");
+      }
+      if (position > this.size) {
+        this.progress.setStyle(this.modifier, this.size + "px");
+      }
+      if (!(position < 0) && !(position > this.size)) {
+        this.progress.setStyle(this.modifier, (percent / this.options.steps) * this.size + "px");
+      }
+    }
+    console.log(position, this.size, this.options.steps);
+    if (this.options.reset) {
+      return this.value;
+    } else {
+      return Math.round((position / this.size) * this.options.steps);
+    }
+  },
   create: function() {
     var modifiers;
     this.base.addClass(this.options["class"]);
@@ -657,21 +683,21 @@ Core.Slider = new Class({
         x: 'width',
         y: ''
       };
-      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".horizontal$/", 'width').slice(0, -2));
+      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".horizontal$/", 'width'));
       this.progress.setStyles({
         top: 0,
-        width: 0
+        width: this.options.reset ? this.size / 2 : 0
       });
     }
     if (this.options.mode === 'vertical') {
-      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height').slice(0, -2));
+      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height'));
       modifiers = {
         x: '',
         y: 'height'
       };
       this.modifier = 'height';
       this.progress.setStyles({
-        height: 0,
+        height: this.options.reset ? this.size / 2 : 0,
         right: 0
       });
     }
@@ -682,19 +708,33 @@ Core.Slider = new Class({
       invert: this.options.mode === 'vertical' ? true : false
     });
     this.drag.addEvent('beforeStart', (function(el, e) {
+      this.lastpos = Math.round((Number.from(el.getStyle(this.modifier)) / this.size) * this.options.steps);
       if (!this.enabled) {
         return this.disabledTop = el.getStyle(this.modifier);
       }
     }).bind(this));
+    if (this.options.reset) {
+      this.drag.addEvent('complete', (function(el, e) {
+        if (this.enabled) {
+          return el.setStyle(this.modifier, this.size / 2 + "px");
+        }
+      }).bind(this));
+    }
     this.drag.addEvent('drag', (function(el, e) {
-      var pos;
+      var offset, pos;
       if (this.enabled) {
         pos = Number.from(el.getStyle(this.modifier));
+        offset = Math.round((pos / this.size) * this.options.steps) - this.lastpos;
+        this.lastpos = Math.round((Number.from(el.getStyle(this.modifier)) / this.size) * this.options.steps);
         if (pos > this.size) {
-          el.setStyle(this.modifier, this.width + "px");
+          el.setStyle(this.modifier, this.size + "px");
           pos = this.size;
+        } else {
+          if (this.options.reset) {
+            this.value += offset;
+          }
         }
-        return this.fireEvent('step', Math.round((pos / this.size) * 100));
+        return this.fireEvent('step', this.options.reset ? this.value : Math.round((pos / this.size) * this.options.steps));
       } else {
         return el.setStyle(this.modifier, this.disabledTop);
       }
@@ -703,22 +743,24 @@ Core.Slider = new Class({
       var offset, pos;
       e.stop();
       offset = Number.from(e.wheel);
-      pos = Number.from(this.progress.getStyle(this.modifier));
-      console.log(offset, pos);
-      if (pos + offset < 0) {
-        console.log('<0');
-        this.progress.setStyle(this.modifier, 0 + "px");
-        pos = 0;
+      if (this.options.reset) {
+        this.value += offset;
+      } else {
+        pos = Number.from(this.progress.getStyle(this.modifier));
+        if (pos + offset < 0) {
+          this.progress.setStyle(this.modifier, 0 + "px");
+          pos = 0;
+        }
+        if (pos + offset > this.size) {
+          this.progress.setStyle(this.modifier, this.size + "px");
+          pos = pos + offset;
+        }
+        if (!(pos + offset < 0) && !(pos + offset > this.size)) {
+          this.progress.setStyle(this.modifier, (pos + offset / this.options.steps * this.size) + "px");
+          pos = pos + offset;
+        }
       }
-      if (pos + offset > this.size) {
-        console.log('> @width');
-        this.progress.setStyle(this.modifier, this.size + "px");
-        pos = pos + offset;
-      }
-      if (!(pos + offset < 0) && !(pos + offset > this.size)) {
-        console.log('in range');
-        return this.progress.setStyle(this.modifier, (pos + offset / 100 * this.size) + "px");
-      }
+      return this.fireEvent('step', this.options.reset ? this.value : Math.round((pos / this.size) * this.options.steps));
     }).bind(this));
   }
 });
@@ -1837,6 +1879,7 @@ Core.Toggler = new Class({
     return this.parent(options);
   },
   create: function() {
+    this.width = this.options.width || Number.from(getCSS("/\\." + this.options.onClass + "$/", 'width'));
     this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'relative');
     this.onLabel = new Element('div', {
@@ -1854,54 +1897,52 @@ Core.Toggler = new Class({
       "class": this.options.sepClass
     });
     this.separator.removeTransition();
-    this.base.adopt(this.onLabel, this.separator, this.offLabel);
+    this.base.adopt(this.onLabel, this.offLabel, this.separator);
     this.base.getChecked = (function() {
       return this.checked;
     }).bind(this);
     this.base.on = this.on.bind(this);
-    return this.base.off = this.off.bind(this);
-  },
-  ready: function() {
+    this.base.off = this.off.bind(this);
     $$(this.onLabel, this.offLabel, this.separator).setStyles({
       'position': 'absolute',
       'top': 0,
       'left': 0
     });
+    if (this.options.width) {
+      $$(this.onLabel, this.offLabel, this.separator).setStyles({
+        width: this.width
+      });
+      this.base.setStyle('width', this.width * 2);
+    }
+    this.offLabel.setStyle('left', this.width);
     if (this.checked) {
       this.on();
     } else {
       this.off();
     }
     this.base.addEvent('click', (function() {
-      if (this.checked) {
-        this.off();
-        return this.base.fireEvent('change');
-      } else {
-        this.on();
-        return this.base.fireEvent('change');
+      if (this.enabled) {
+        if (this.checked) {
+          this.off();
+          return this.base.fireEvent('change');
+        } else {
+          this.on();
+          return this.base.fireEvent('change');
+        }
       }
     }).bind(this));
     this.onLabel.addTransition();
-    this.offLabel.getPosition();
     this.offLabel.addTransition();
     this.separator.addTransition();
     return this.parent();
   },
   on: function() {
     this.checked = true;
-    this.onLabel.setStyle('left', 0);
-    return this.follow();
+    return this.separator.setStyle('left', this.width);
   },
   off: function() {
     this.checked = false;
-    this.onLabel.setStyle('left', -this.onLabel.getSize().x);
-    return this.follow();
-  },
-  follow: function() {
-    var left;
-    left = this.onLabel.getStyle('left');
-    this.separator.setStyle('left', Number(left.slice(0, (left.length - 3 + 1) || 9e9)) + this.onLabel.getSize().x);
-    return this.offLabel.setStyle('left', Number(left.slice(0, (left.length - 3 + 1) || 9e9)) + this.onLabel.getSize().x + this.separator.getSize().x);
+    return this.separator.setStyle('left', 0);
   }
 });
 /*
@@ -2070,9 +2111,11 @@ provides: Data.Number
 ...
 */
 Data.Number = new Class({
-  Extends: Data.Abstract,
+  Extends: Core.Slider,
   options: {
-    "class": GDotUI.Theme.Number["class"],
+    "class": GDotUI.Theme.Number.classes.base,
+    bar: GDotUI.Theme.Number.classes.bar,
+    text: GDotUI.Theme.Number.classes.text,
     range: GDotUI.Theme.Number.range,
     reset: GDotUI.Theme.Number.reset,
     steps: GDotUI.Theme.Number.steps
@@ -2081,64 +2124,32 @@ Data.Number = new Class({
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options["class"]);
-    this.text = new Element('input', {
-      'type': 'text'
+    this.parent();
+    this.text = new Element("div." + this.options.text);
+    this.text.setStyles({
+      position: 'absolute',
+      bottom: 0,
+      left: 0,
+      right: 0,
+      top: 0
     });
-    return this.slider = new Core.Slider({
-      reset: this.options.reset,
-      range: this.options.range,
-      steps: this.options.steps,
-      mode: 'horizontal'
-    });
-  },
-  ready: function() {
-    this.justSet = false;
-    this.base.adopt(this.slider);
-    this.slider.knob.addEvent('click', (function() {
-      return this.text.focus();
-    }).bindWithEvent(this));
-    this.slider.addEvent('complete', (function(step) {
-      if (this.options.reset) {
-        this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]);
-      }
-      return this.slider.set(step);
-    }).bindWithEvent(this));
-    this.slider.addEvent('step', (function(step) {
-      if (typeof step === 'object') {
-        this.text.set('value', 0);
-      } else {
-        this.text.set('value', step);
-      }
-      if (!this.justSet) {
-        return this.fireEvent('change', step);
-      } else {
-        return this.justSet = false;
-      }
-    }).bindWithEvent(this));
-    this.text.addEvent('change', (function() {
-      var step;
-      step = Number(this.text.get('value'));
-      if (this.options.reset) {
-        this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]);
-      }
-      this.slider.set(step);
-      return this.fireEvent('change', step);
-    }).bindWithEvent(this));
-    this.text.addEvent('mousewheel', (function(e) {
-      return this.slider.set(Number(this.text.get('value')) + e.wheel);
-    }).bindWithEvent(this));
-    return this.parent();
+    this.base.grab(this.text);
+    return this.addEvent('step', (function(e) {
+      this.text.set('text', e);
+      return this.fireEvent('change', e);
+    }).bind(this));
   },
   getValue: function() {
-    return this.slider.slider.step;
+    if (this.options.reset) {
+      return this.value;
+    } else {
+      return Math.round((Number.from(this.progress.getStyle(this.modifier)) / this.size) * this.options.steps);
+    }
   },
   setValue: function(step) {
-    this.justSet = true;
-    if (this.options.reset) {
-      this.slider.setRange([step - this.options.steps / 2, Number(step) + this.options.steps / 2]);
-    }
-    return this.slider.set(step);
+    var real;
+    real = this.set(step);
+    return this.text.set('text', real);
   }
 });
 /*
@@ -2245,6 +2256,7 @@ provides: Data.Color
 */
 Data.Color = new Class({
   Extends: Data.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Children],
   Binds: ['change'],
   options: {
     "class": GDotUI.Theme.Color["class"],
@@ -2356,33 +2368,41 @@ Data.Color = new Class({
       x: this.halfWidth,
       y: this.halfWidth
     };
+    this.xy.addEvent('beforeStart', (function(el, e) {
+      return this.lastPosition = el.getPosition(this.wrapper);
+    }).bind(this));
     this.xy.addEvent('drag', (function(el, e) {
       var an, position, sat, x, y;
-      position = el.getPosition(this.wrapper);
-      x = this.center.x - position.x - this.size.x / 2;
-      y = this.center.y - position.y - this.size.y / 2;
-      this.radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-      this.angle = Math.atan2(y, x);
-      if (this.radius > this.halfWidth) {
-        el.setStyle('top', -Math.sin(this.angle) * this.halfWidth - this.size.y / 2 + this.center.y);
-        el.setStyle('left', -Math.cos(this.angle) * this.halfWidth - this.size.x / 2 + this.center.x);
-        this.saturation = 100;
+      if (this.enabled) {
+        position = el.getPosition(this.wrapper);
+        x = this.center.x - position.x - this.size.x / 2;
+        y = this.center.y - position.y - this.size.y / 2;
+        this.radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+        this.angle = Math.atan2(y, x);
+        if (this.radius > this.halfWidth) {
+          el.setStyle('top', -Math.sin(this.angle) * this.halfWidth - this.size.y / 2 + this.center.y);
+          el.setStyle('left', -Math.cos(this.angle) * this.halfWidth - this.size.x / 2 + this.center.x);
+          this.saturation = 100;
+        } else {
+          sat = Math.round(this.radius);
+          this.saturation = Math.round((sat / this.halfWidth) * 100);
+        }
+        an = Math.round(this.angle * (180 / Math.PI));
+        this.hue = an < 0 ? 180 - Math.abs(an) : 180 + an;
+        this.hueN.setValue(this.hue);
+        this.saturationN.setValue(this.saturation);
+        this.colorData.updateControls();
+        return this.fireEvent('change', {
+          color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
+          type: this.type,
+          alpha: this.alpha.getValue()
+        });
       } else {
-        sat = Math.round(this.radius);
-        this.saturation = Math.round((sat / this.halfWidth) * 100);
+        return el.setPosition(this.lastPosition);
       }
-      an = Math.round(this.angle * (180 / Math.PI));
-      this.hue = an < 0 ? 180 - Math.abs(an) : 180 + an;
-      this.hueN.setValue(this.hue);
-      this.saturationN.setValue(this.saturation);
-      return this.fireEvent('change', {
-        color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-        type: this.type,
-        alpha: this.alpha.getValue()
-      });
     }).bind(this));
     this.colorData.readyCallback = this.readyCallback;
-    this.base.adopt(this.colorData);
+    this.addChild(this.colorData);
     this.colorData.base.getElements('input[type=radio]').each((function(item) {
       return item.addEvent('click', (function(e) {
         this.type = this.colorData.base.getElements('input[type=radio]:checked')[0].get('value');
@@ -2407,6 +2427,7 @@ Data.Color = new Class({
     this.lightness.setValue(100);
     this.hue.setValue(0);
     this.saturation.setValue(0);
+    this.updateControls();
     return delete this.readyCallback;
   },
   setHue: function(hue) {
@@ -2442,6 +2463,7 @@ Data.Color = new Class({
     this.saturationN.setValue(color.hsb[1]);
     this.alpha.setValue(alpha);
     this.lightness.setValue(color.hsb[2]);
+    this.colorData.updateControls();
     this.hslacone.setStyle('opacity', color.hsb[2] / 100);
     this.colorData.base.getElements('input[type=radio]').each((function(item) {
       if (item.get('value') === type) {
@@ -2500,11 +2522,17 @@ Data.Color.ReturnValues = {
 };
 Data.Color.SlotControls = new Class({
   Extends: Data.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Children],
   options: {
     "class": GDotUI.Theme.Color.controls["class"]
   },
   initialize: function(options) {
     return this.parent(options);
+  },
+  updateControls: function() {
+    this.hue.base.setStyle('background-color', new $HSB(this.hue.getValue(), 100, 100));
+    this.saturation.base.setStyle('background-color', new $HSB(this.hue.getValue(), this.saturation.getValue(), 100));
+    return this.lightness.base.setStyle('background-color', new $HSB(0, 0, this.lightness.getValue()));
   },
   create: function() {
     this.base.addClass(this.options["class"]);
@@ -2513,19 +2541,19 @@ Data.Color.SlotControls = new Class({
       reset: false,
       steps: [360]
     });
-    this.hue.addEvent('change', (function(value) {
-      return this.saturation.slider.base.setStyle('background-color', new $HSB(value, 100, 100));
-    }).bindWithEvent(this));
+    this.hue.addEvent('change', this.updateControls.bind(this));
     this.saturation = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: [100]
     });
+    this.saturation.addEvent('change', this.updateControls.bind(this));
     this.lightness = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: [100]
     });
+    this.lightness.addEvent('change', this.updateControls.bind(this));
     this.alpha = new Data.Number({
       range: [0, 100],
       reset: false,
@@ -2534,7 +2562,7 @@ Data.Color.SlotControls = new Class({
     return this.col = new Forms.Input(Data.Color.ReturnValues);
   },
   ready: function() {
-    this.base.adopt(this.hue, this.saturation, this.lightness, this.alpha, this.col);
+    this.adoptChildren(this.hue, this.saturation, this.lightness, this.alpha, this.col);
     this.base.getElements('input[type=radio]')[0].set('checked', true);
     if (this.readyCallback != null) {
       this.readyCallback();
@@ -3887,6 +3915,12 @@ Pickers.Base = new Class({
     return this;
   }
 });
+Pickers.Color = new Pickers.Base({
+  type: 'Color'
+});
+Pickers.Number = new Pickers.Base({
+  type: 'Number'
+});
 Pickers.Time = new Pickers.Base({
   type: 'Time'
 });
@@ -3901,6 +3935,9 @@ Pickers.DateTime = new Pickers.Base({
 });
 Pickers.Table = new Pickers.Base({
   type: 'Table'
+});
+Pickers.Unit = new Pickers.Base({
+  type: 'Unit'
 });
 Pickers.Select = new Pickers.Base({
   type: 'Select'

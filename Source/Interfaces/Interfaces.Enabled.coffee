@@ -18,7 +18,8 @@ Interfaces.Enabled = new Class {
   enable: ->
     if @children?
       @children.each (item) ->
-        item.enable()
+        if item.enable?
+          item.enable()
     @enabled = on
     @base.removeClass 'disabled'
     @fireEvent 'enabled'
@@ -26,7 +27,8 @@ Interfaces.Enabled = new Class {
     console.log @children
     if @children?
       @children.each (item) ->
-        item.disable()
+        if item.disable?
+          item.disable()
     @enabled = off
     @base.addClass 'disabled'
     @fireEvent 'disabled'

@@ -71,7 +71,6 @@ GDotUI.Theme={
       classes: {
         base: 'slider',
         bar: 'progress',
-        text: 'text'
       }
     },
     Slot:{
@@ -103,10 +102,15 @@ GDotUI.Theme={
       }
     },
     Number:{
-        'class':'number',
         range:[-100,100],
         steps:200,
-        reset: true
+        reset: true,
+        mode: 'vertical',
+        classes: {
+          base: 'number',
+          bar: 'progress',
+          text: 'text'
+        }
     },
     List:{
       'class':'list',

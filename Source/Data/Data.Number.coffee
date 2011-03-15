@@ -14,9 +14,11 @@ provides: Data.Number
 ...
 ###
 Data.Number = new Class {
-  Extends:Data.Abstract
+  Extends: Core.Slider
   options:{
-    class: GDotUI.Theme.Number.class
+    class: GDotUI.Theme.Number.classes.base
+    bar: GDotUI.Theme.Number.classes.bar
+    text: GDotUI.Theme.Number.classes.text
     range: GDotUI.Theme.Number.range
     reset: GDotUI.Theme.Number.reset
     steps: GDotUI.Theme.Number.steps
@@ -24,52 +26,26 @@ Data.Number = new Class {
   initialize: (options) ->
     @parent options
   create: ->
-    @base.addClass @options.class
-    @text = new Element 'input', {'type':'text'}
-    @slider = new Core.Slider {
-      reset: @options.reset
-      range: @options.range
-      steps: @options.steps
-      mode:'horizontal'
-    }
-  ready: ->
-    @justSet = off
-    #@slider.knob.grab @text
-    @base.adopt @slider
-    @slider.knob.addEvent 'click', ( ->
-      @text.focus()
-    ).bindWithEvent @
-    @slider.addEvent 'complete', ( (step) ->
-      if @options.reset
-        @slider.setRange [step-@options.steps/2, Number(step)+@options.steps/2]
-      @slider.set step
-      ).bindWithEvent @
-    @slider.addEvent 'step', ( (step) ->
-      if typeof(step) == 'object'
-        @text.set 'value', 0
-      else
-        @text.set 'value', step
-      if not @justSet
-        @fireEvent 'change', step
-      else
-        @justSet = off
-      ).bindWithEvent @
-    @text.addEvent 'change', ( ->
-      step = Number @text.get('value')
-      if @options.reset
-        @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
-      @slider.set step
-      @fireEvent 'change', step
-    ).bindWithEvent @
-    @text.addEvent 'mousewheel', ( (e) ->
-      @slider.set Number(@text.get('value'))+e.wheel
-    ).bindWithEvent @
     @parent()
+    @text = new Element "div.#{@options.text}"
+    @text.setStyles {
+      position: 'absolute'
+      bottom: 0
+      left: 0
+      right: 0
+      top: 0
+    }
+    @base.grab @text
+    @addEvent 'step',( (e) ->
+      @text.set 'text', e
+      @fireEvent 'change', e
+    ).bind @
   getValue: ->
-    @slider.slider.step
-  setValue: (step) ->
-    @justSet = on
     if @options.reset
-      @slider.setRange [step-@options.steps/2,Number(step)+@options.steps/2]
-    @slider.set step
+      @value
+    else
+      Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@options.steps)
+  setValue: (step) ->
+    real = @set step
+    @text.set 'text', real
 }
