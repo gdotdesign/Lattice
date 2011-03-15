@@ -16,10 +16,17 @@ Interfaces.Enabled = new Class {
   _$Enabled: ->
     @enabled = on
   enable: ->
+    if @children?
+      @children.each (item) ->
+        item.enable()
     @enabled = on
     @base.removeClass 'disabled'
     @fireEvent 'enabled'
   disable: ->
+    console.log @children
+    if @children?
+      @children.each (item) ->
+        item.disable()
     @enabled = off
     @base.addClass 'disabled'
     @fireEvent 'disabled'

@@ -141,6 +141,33 @@ provides: Core.Abstract
 
 ...
 */
+Class.Mutators.Refactors = function(refactors) {
+  return Object.each(refactors, function(item, name) {
+    var origin;
+    origin = this.prototype[name];
+    if (origin && origin.$origin) {
+      origin = origin.$origin;
+    }
+    return origin.implement(name, typeof item === 'function' ? function() {
+      var old, value;
+      old = this.previous;
+      this.previous = origin || function() {};
+      value = item.apply(this, arguments);
+      this.previous = old;
+      return value;
+    } : item);
+  }, this);
+};
+Element.implement({
+  removeTransition: function() {
+    this.store('transition', this.getStyle('-webkit-transition-duration'));
+    return this.setStyle('-webkit-transition-duration', '0');
+  },
+  addTransition: function() {
+    this.setStyle('-webkit-transition-duration', this.retrieve('transition'));
+    return this.eliminate('transition');
+  }
+});
 getCSS = function(selector, property) {
   var checkStyleSheet, ret;
   ret = null;
@@ -163,47 +190,57 @@ getCSS = function(selector, property) {
   });
   return ret;
 };
-/*
-(->
-  Element.implement {
-    inTheDom: ->
-      if @parentNode
-        if @parentNode.tagName.toLowerCase() is "html"
-          true
-        else
-          $(@parentNode).inTheDom
-      else
-        false
-    grab: (el, where) ->
-      Element::grab.call(arguments, @)
-      el.fireEvent 'addedToDom'
-      @
-    inject: (el, where) ->
-      console.log @parent
-      Element::inject.call(arguments, @)
-      @fireEvent 'addedToDom'
-      @
-    adopt: ->
-      elements = Array.flatten(arguments)
-      elements.each (el) ->
-        el.fireEvent 'addedToDom'
-      Element::adopt.call(arguments, @)
-      @
-
-  }
-)()
-*/
+(function() {
+  return Element.implement({
+    oldGrab: Element.prototype.grab,
+    oldInject: Element.prototype.inject,
+    oldAdopt: Element.prototype.adopt,
+    inTheDom: function() {
+      if (this.parentNode) {
+        if (this.parentNode.tagName.toLowerCase() === "html") {
+          return true;
+        } else {
+          return $(this.parentNode).inTheDom;
+        }
+      } else {
+        return false;
+      }
+    },
+    grab: function(el, where) {
+      this.oldGrab.attempt(arguments, this);
+      document.id(el).fireEvent('addedToDom');
+      return this;
+    },
+    inject: function(el, where) {
+      this.oldInject.attempt(arguments, this);
+      this.fireEvent('addedToDom');
+      return this;
+    },
+    adopt: function() {
+      var elements;
+      elements = Array.flatten(arguments);
+      elements.each(function(el) {
+        return document.id(el).fireEvent('addedToDom');
+      });
+      this.oldAdopt.attempt(arguments, this);
+      return this;
+    }
+  });
+})();
 Core.Abstract = new Class({
   Implements: [Events, Options, Interfaces.Mux, Interfaces.Reflow],
   initialize: function(options) {
     this.setOptions(options);
     this.base = new Element('div');
     this.create();
+    this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
     this.mux();
     return this;
   },
   create: function() {},
-  ready: function() {},
+  ready: function() {
+    return this.base.removeEvents('addedToDom');
+  },
   toElement: function() {
     return this.base;
   }
@@ -257,11 +294,22 @@ Interfaces.Enabled = new Class({
     return this.enabled = true;
   },
   enable: function() {
+    if (this.children != null) {
+      this.children.each(function(item) {
+        return item.enable();
+      });
+    }
     this.enabled = true;
     this.base.removeClass('disabled');
     return this.fireEvent('enabled');
   },
   disable: function() {
+    console.log(this.children);
+    if (this.children != null) {
+      this.children.each(function(item) {
+        return item.disable();
+      });
+    }
     this.enabled = false;
     this.base.addClass('disabled');
     return this.fireEvent('disabled');
@@ -1093,13 +1141,43 @@ Core.Button = new Class({
 /*
 ---
 
+name: Interfaces.Children
+
+description:
+
+license: MIT-style license.
+
+requires: [GDotUI]
+
+provides: Interfaces.Children
+
+...
+*/
+Interfaces.Children = new Class({
+  _$Children: function() {
+    return this.children = [];
+  },
+  adoptChildren: function() {
+    var children;
+    children = Array.from(arguments);
+    this.children.append(children);
+    return this.base.adopt(arguments);
+  },
+  addChild: function(el) {
+    this.children.push(el);
+    return this.base.grab(el);
+  }
+});
+/*
+---
+
 name: Core.Picker
 
 description: Data picker class.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires: [Core.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children]
 
 provides: [Core.Picker, outerClick]
 
@@ -1130,6 +1208,7 @@ Element.Events.outerClick = {
 };
 Core.Picker = new Class({
   Extends: Core.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Children],
   Binds: ['show', 'hide'],
   options: {
     "class": GDotUI.Theme.Picker["class"],
@@ -1145,10 +1224,10 @@ Core.Picker = new Class({
     this.base.addClass(this.options["class"]);
     return this.base.setStyle('position', 'absolute');
   },
-  ready: function() {
+  onReady: function() {
     var asize, offset, position, size, winscroll, winsize, x, xpos, y, ypos;
     if (!this.base.hasChild(this.contentElement)) {
-      this.base.grab(this.contentElement);
+      this.addChild(this.contentElement);
     }
     winsize = window.getSize();
     winscroll = window.getScroll();
@@ -1225,14 +1304,17 @@ Core.Picker = new Class({
     if (this.contentElement != null) {
       this.contentElement.fireEvent('show');
     }
-    return this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
+    this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
+    return this.onReady();
   },
   hide: function(e) {
-    if (this.base.isVisible() && !this.base.hasChild(e.target)) {
-      if (this.attachedTo != null) {
-        this.attachedTo.removeClass(this.options.picking);
+    if (e != null) {
+      if (this.base.isVisible() && !this.base.hasChild(e.target)) {
+        if (this.attachedTo != null) {
+          this.attachedTo.removeClass(this.options.picking);
+        }
+        return this.base.dispose();
       }
-      return this.base.dispose();
     }
   },
   setContent: function(element) {
@@ -1280,6 +1362,7 @@ Iterable.List = new Class({
     }
     return this.items = [];
   },
+  ready: function() {},
   search: function() {
     var svalue;
     svalue = this.sinput.get('value');
@@ -1347,13 +1430,6 @@ Iterable.List = new Class({
       return this.fireEvent('select', item);
     }
   },
-  updateWidth: function(item) {
-    var width;
-    if (!(this.width != null)) {
-      width = getCSS("/\\." + item.options.classes["class"] + "$/", "width");
-      return this.width = width;
-    }
-  },
   addItem: function(li) {
     this.items.push(li);
     this.base.grab(li);
@@ -1366,10 +1442,9 @@ Iterable.List = new Class({
     li.addEvent('edit', (function() {
       return this.fireEvent('edit', arguments);
     }).bindWithEvent(this));
-    li.addEvent('delete', (function() {
+    return li.addEvent('delete', (function() {
       return this.fireEvent('delete', arguments);
     }).bindWithEvent(this));
-    return this.updateWidth(li);
   }
 });
 /*
@@ -1385,10 +1460,12 @@ requires: [Core.Abstract, Iterable.List, GDotUI]
 
 provides: Core.Slot
 
+todo: horizontal/vertical
 ...
 */
 Core.Slot = new Class({
   Extends: Core.Abstract,
+  Implements: Interfaces.Enabled,
   Binds: ['check', 'complete'],
   Delegates: {
     'list': ['addItem', 'removeAll', 'select']
@@ -1406,35 +1483,70 @@ Core.Slot = new Class({
     });
     this.overlay.addClass('over');
     this.list = new Iterable.List();
-    this.list.addEvent('select', (function(item) {
+    this.list.base.addEvent('addedToDom', (function() {
+      return this.readyList();
+    }).bindWithEvent(this));
+    return this.list.addEvent('select', (function(item) {
       this.update();
       return this.fireEvent('change', item);
     }).bindWithEvent(this));
+  },
+  ready: function() {
     return this.base.adopt(this.list.base, this.overlay);
   },
   check: function(el, e) {
     var lastDistance, lastOne;
-    this.dragging = true;
-    lastDistance = 1000;
-    lastOne = null;
-    return this.list.items.each((function(item, i) {
-      var distance;
-      distance = -item.base.getPosition(this.base).y + this.base.getSize().y / 2;
-      if (distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2) {
-        return this.list.select(item);
-      }
-    }).bind(this));
+    if (this.enabled) {
+      this.dragging = true;
+      lastDistance = 1000;
+      lastOne = null;
+      return this.list.items.each((function(item, i) {
+        var distance;
+        distance = -item.base.getPosition(this.base).y + this.base.getSize().y / 2;
+        if (distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2) {
+          return this.list.select(item);
+        }
+      }).bind(this));
+    } else {
+      return el.setStyle('top', this.disabledTop);
+    }
   },
-  ready: function() {
+  readyList: function() {
     this.base.setStyle('overflow', 'hidden');
     this.base.setStyle('position', 'relative');
-    this.list.base.setStyle('position', 'absolute');
+    this.list.base.setStyle('position', 'relative');
     this.list.base.setStyle('top', '0');
-    this.width = this.list.width;
-    this.base.setStyle('width', this.width);
-    this.overlay.setStyle('width', this.width);
-    this.overlay.addEvent('mousewheel', (function(e) {
-      var index;
+    this.overlay.setStyles({
+      'position': 'absolute',
+      'top': 0,
+      'left': 0,
+      'right': 0,
+      'bottom': 0
+    });
+    this.overlay.addEvent('mousewheel', this.mouseWheel.bindWithEvent(this));
+    this.drag = new Drag(this.list.base, {
+      modifiers: {
+        x: '',
+        y: 'top'
+      },
+      handle: this.overlay
+    });
+    this.drag.addEvent('drag', this.check);
+    this.drag.addEvent('beforeStart', (function() {
+      if (!this.enabled) {
+        this.disabledTop = this.list.base.getStyle('top');
+      }
+      return this.list.base.removeTransition();
+    }).bindWithEvent(this));
+    this.drag.addEvent('complete', (function() {
+      this.dragging = false;
+      return this.update();
+    }).bindWithEvent(this));
+    return this.update();
+  },
+  mouseWheel: function(e) {
+    var index;
+    if (this.enabled) {
       e.stop();
       if (this.list.selected != null) {
         index = this.list.items.indexOf(this.list.selected);
@@ -1454,27 +1566,11 @@ Core.Slot = new Class({
       if (index + e.wheel > this.list.items.length - 1) {
         return this.list.select(this.list.items[0]);
       }
-    }).bindWithEvent(this));
-    this.drag = new Drag(this.list.base, {
-      modifiers: {
-        x: '',
-        y: 'top'
-      },
-      handle: this.overlay
-    });
-    this.drag.addEvent('drag', this.check);
-    this.drag.addEvent('beforeStart', (function() {
-      return this.list.base.setStyle('-webkit-transition-duration', '0s');
-    }).bindWithEvent(this));
-    this.drag.addEvent('complete', (function() {
-      this.dragging = false;
-      return this.update();
-    }).bindWithEvent(this));
-    return this.update();
+    }
   },
   update: function() {
     if (!this.dragging) {
-      this.list.base.setStyle('-webkit-transition-duration', '0.3s');
+      this.list.base.addTransition();
       if (this.list.selected != null) {
         return this.list.base.setStyle('top', -this.list.selected.base.getPosition(this.list.base).y + this.base.getSize().y / 2 - this.list.selected.base.getSize().y / 2);
       }
@@ -1874,19 +1970,20 @@ description: Abstract base class for data elements.
 
 license: MIT-style license.
 
-requires: [GDotUI]
+requires: [GDotUI,Interfaces.Mux]
 
 provides: Data.Abstract
 
 ...
 */
 Data.Abstract = new Class({
-  Implements: [Events, Options, Interfaces.Reflow],
+  Implements: [Events, Options, Interfaces.Mux],
   options: {},
   initialize: function(options) {
     this.setOptions(options);
     this.base = new Element('div');
-    this.createTemp();
+    this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
+    this.mux();
     this.create();
     return this;
   },
@@ -2476,7 +2573,8 @@ Data.Date = new Class({
     i = 0;
     while (i < 30) {
       item = new Iterable.ListItem({
-        title: i + 1
+        title: i + 1,
+        removeable: false
       });
       item.value = i + 1;
       this.days.addItem(item);
@@ -2485,7 +2583,8 @@ Data.Date = new Class({
     i = 0;
     while (i < 12) {
       item = new Iterable.ListItem({
-        title: i + 1
+        title: i + 1,
+        removeable: false
       });
       item.value = i;
       this.month.addItem(item);
@@ -2494,7 +2593,8 @@ Data.Date = new Class({
     i = this.options.yearFrom;
     while (i <= new Date().getFullYear()) {
       item = new Iterable.ListItem({
-        title: i
+        title: i,
+        removeable: false
       });
       item.value = i;
       this.years.addItem(item);
@@ -2508,7 +2608,7 @@ Data.Date = new Class({
     }
   },
   getValue: function() {
-    return this.date.format(this.options.format);
+    return this.date;
   },
   setValue: function(date) {
     if (date != null) {
@@ -2552,7 +2652,7 @@ description: Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI]
+requires: [Data.Abstract, GDotUI, Interfaces.Children]
 
 provides: Data.Time
 
@@ -2560,6 +2660,7 @@ provides: Data.Time
 */
 Data.Time = new Class({
   Extends: Data.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Children],
   options: {
     "class": GDotUI.Theme.Date.Time["class"],
     format: GDotUI.Theme.Date.Time.format
@@ -2568,10 +2669,11 @@ Data.Time = new Class({
     return this.parent(options);
   },
   create: function() {
-    var i, item;
+    var i, item, _results;
     this.base.addClass(this.options["class"]);
     this.hourList = new Core.Slot();
     this.minuteList = new Core.Slot();
+    this.toDisable = [this.hourList, this.minuteList];
     this.hourList.addEvent('change', (function(item) {
       this.time.setHours(item.value);
       return this.setValue();
@@ -2583,28 +2685,32 @@ Data.Time = new Class({
     i = 0;
     while (i < 24) {
       item = new Iterable.ListItem({
-        title: i
+        title: (i < 10 ? '0' + i : i),
+        removeable: false
       });
       item.value = i;
       this.hourList.addItem(item);
       i++;
     }
     i = 0;
+    _results = [];
     while (i < 60) {
       item = new Iterable.ListItem({
-        title: i < 10 ? '0' + i : i
+        title: (i < 10 ? '0' + i : i),
+        removeable: false
       });
       item.value = i;
       this.minuteList.addItem(item);
-      i++;
+      _results.push(i++);
     }
-    this.hourList.ready();
-    this.minuteList.ready();
-    this.base.adopt(this.hourList, this.minuteList);
+    return _results;
+  },
+  ready: function() {
+    this.adoptChildren(this.hourList, this.minuteList);
     return this.setValue(this.time || new Date());
   },
   getValue: function() {
-    return this.time.format(this.options.format);
+    return this.time;
   },
   setValue: function(date) {
     if (date != null) {
@@ -2612,7 +2718,7 @@ Data.Time = new Class({
     }
     this.hourList.select(this.hourList.list.items[this.time.getHours()]);
     this.minuteList.select(this.minuteList.list.items[this.time.getMinutes()]);
-    return this.fireEvent('change', this.time.format(this.options.format));
+    return this.fireEvent('change', this.time);
   }
 });
 /*
@@ -2632,43 +2738,150 @@ provides: Data.DateTime
 */
 Data.DateTime = new Class({
   Extends: Data.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Children],
   options: {
     "class": GDotUI.Theme.Date.DateTime["class"],
-    format: GDotUI.Theme.Date.DateTime.format
+    format: GDotUI.Theme.Date.DateTime.format,
+    yearFrom: GDotUI.Theme.Date.yearFrom
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
     this.base.addClass(this.options["class"]);
-    this.datea = new Data.Date();
-    return this.time = new Data.Time();
+    this.days = new Core.Slot();
+    this.month = new Core.Slot();
+    this.years = new Core.Slot();
+    this.hourList = new Core.Slot();
+    this.minuteList = new Core.Slot();
+    this.date = new Date();
+    this.populate();
+    this.adoptChildren(this.years, this.month, this.days, this.hourList, this.minuteList);
+    this.addEvents();
+    return this;
+  },
+  populate: function() {
+    var i, item, _results;
+    i = 0;
+    while (i < 24) {
+      item = new Iterable.ListItem({
+        title: (i < 10 ? '0' + i : i),
+        removeable: false
+      });
+      item.value = i;
+      this.hourList.addItem(item);
+      i++;
+    }
+    i = 0;
+    while (i < 60) {
+      item = new Iterable.ListItem({
+        title: (i < 10 ? '0' + i : i),
+        removeable: false
+      });
+      item.value = i;
+      this.minuteList.addItem(item);
+      i++;
+    }
+    i = 0;
+    while (i < 30) {
+      item = new Iterable.ListItem({
+        title: i + 1,
+        removeable: false
+      });
+      item.value = i + 1;
+      this.days.addItem(item);
+      i++;
+    }
+    i = 0;
+    while (i < 12) {
+      item = new Iterable.ListItem({
+        title: i + 1,
+        removeable: false
+      });
+      item.value = i;
+      this.month.addItem(item);
+      i++;
+    }
+    i = this.options.yearFrom;
+    _results = [];
+    while (i <= new Date().getFullYear()) {
+      item = new Iterable.ListItem({
+        title: i,
+        removeable: false
+      });
+      item.value = i;
+      this.years.addItem(item);
+      _results.push(i++);
+    }
+    return _results;
+  },
+  addEvents: function() {
+    var i;
+    this.hourList.addEvent('change', (function(item) {
+      this.date.setHours(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    this.minuteList.addEvent('change', (function(item) {
+      this.date.setMinutes(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    this.years.addEvent('change', (function(item) {
+      this.date.setYear(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    this.month.addEvent('change', (function(item) {
+      this.date.setMonth(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    this.days.addEvent('change', (function(item) {
+      this.date.setDate(item.value);
+      return this.setValue();
+    }).bindWithEvent(this));
+    return i = 0;
   },
   ready: function() {
-    this.base.adopt(this.datea, this.time);
-    this.setValue(this.date || new Date());
-    this.datea.addEvent('change', (function() {
-      this.date.setYear(this.datea.date.getFullYear());
-      this.date.setMonth(this.datea.date.getMonth());
-      this.date.setDate(this.datea.date.getDate());
-      return this.fireEvent('change', this.date);
-    }).bindWithEvent(this));
-    this.time.addEvent('change', (function() {
-      this.date.setHours(this.time.time.getHours());
-      this.date.setMinutes(this.time.time.getMinutes());
-      return this.fireEvent('change', this.date);
-    }).bindWithEvent(this));
+    this.setValue();
     return this.parent();
   },
+  update: function() {
+    var cdays, i, item, listlength, _results, _results2;
+    cdays = this.date.get('lastdayofmonth');
+    listlength = this.days.list.items.length;
+    if (cdays > listlength) {
+      i = listlength + 1;
+      _results = [];
+      while (i <= cdays) {
+        item = new Iterable.ListItem({
+          title: i
+        });
+        item.value = i;
+        this.days.addItem(item);
+        _results.push(i++);
+      }
+      return _results;
+    } else if (cdays < listlength) {
+      i = listlength;
+      _results2 = [];
+      while (i > cdays) {
+        this.days.list.removeItem(this.days.list.items[i - 1]);
+        _results2.push(i--);
+      }
+      return _results2;
+    }
+  },
   getValue: function() {
-    return this.date.format(this.options.format);
+    return this.date;
   },
   setValue: function(date) {
     if (date != null) {
       this.date = date;
     }
-    this.datea.setValue(this.date);
-    this.time.setValue(this.date);
+    this.days.select(this.days.list.items[this.date.getDate() - 1]);
+    this.update();
+    this.month.select(this.month.list.items[this.date.getMonth()]);
+    this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
+    this.hourList.select(this.hourList.list.items[this.date.getHours()]);
+    this.minuteList.select(this.minuteList.list.items[this.date.getMinutes()]);
     return this.fireEvent('change', this.date);
   }
 });
@@ -3376,9 +3589,10 @@ Iterable.ListItem = new Class({
         }
       }
     }).bindWithEvent(this));
-    return this.remove.addEvent('invoked', (function() {
+    this.remove.addEvent('invoked', (function() {
       return this.fireEvent('delete', this);
     }).bindWithEvent(this));
+    return this;
   },
   toggleEdit: function() {
     if (this.editing) {
@@ -3406,9 +3620,9 @@ Iterable.ListItem = new Class({
   ready: function() {
     var baseSize, handSize, remSize;
     if (!this.editing) {
-      handSize = getCSS("/\\." + this.options.classes.handle + "$/", "width");
-      remSize = getCSS("/\\." + this.options.classes.handle + "$/", "width");
-      baseSize = getCSS("/\\." + this.options.classes.handle + "$/", "width");
+      handSize = this.handles.base.getSize();
+      remSize = this.remove.base.getSize();
+      baseSize = this.base.getSize();
       this.remove.base.setStyles({
         "right": -remSize.x,
         "top": (baseSize.y - remSize.y) / 2
@@ -3645,7 +3859,7 @@ Pickers.Base = new Class({
   Implements: Options,
   Delegates: {
     picker: ['attach', 'detach', 'attachAndShow'],
-    data: ['setValue', 'getValue']
+    data: ['setValue', 'getValue', 'disable', 'enable']
   },
   options: {
     type: ''
@@ -3658,15 +3872,33 @@ Pickers.Base = new Class({
     return this;
   }
 });
-/*
-Pickers.Color = new Pickers.Base {type:'Color'}
-Pickers.Number = new Pickers.Base {type:'Number'}
-Pickers.Time = new Pickers.Base {type:'Time'}
-Pickers.Text = new Pickers.Base {type:'Text'}
-Pickers.Date = new Pickers.Base {type:'Date'}
-Pickers.DateTime = new Pickers.Base {type:'DateTime'}
-Pickers.Table = new Pickers.Base {type:'Table'}
-Pickers.Unit = new Pickers.Base {type:'Unit'}
-Pickers.Select = new Pickers.Base {type:'Select'}
-Pickers.List = new Pickers.Base {type:'List'}
-*/
+Pickers.Color = new Pickers.Base({
+  type: 'Color'
+});
+Pickers.Number = new Pickers.Base({
+  type: 'Number'
+});
+Pickers.Time = new Pickers.Base({
+  type: 'Time'
+});
+Pickers.Text = new Pickers.Base({
+  type: 'Text'
+});
+Pickers.Date = new Pickers.Base({
+  type: 'Date'
+});
+Pickers.DateTime = new Pickers.Base({
+  type: 'DateTime'
+});
+Pickers.Table = new Pickers.Base({
+  type: 'Table'
+});
+Pickers.Unit = new Pickers.Base({
+  type: 'Unit'
+});
+Pickers.Select = new Pickers.Base({
+  type: 'Select'
+});
+Pickers.List = new Pickers.Base({
+  type: 'List'
+});

@@ -49,6 +49,7 @@ Iterable.ListItem = new Class {
     @remove = new Core.Icon {image: @options.icons.remove}
     @handles = new Core.Icon {image: @options.icons.handle}
     @handles.base.addClass  @options.classes.handle
+    
     $$(@remove.base,@handles.base).setStyle 'position','absolute'
     @title = new Element('div').addClass(@options.classes.title).set 'text', @options.title
     @subtitle = new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
@@ -75,6 +76,7 @@ Iterable.ListItem = new Class {
     @remove.addEvent 'invoked', ( ->
       @fireEvent 'delete', @
     ).bindWithEvent @
+    @
   toggleEdit: ->
     if @editing
       if @options.draggable
@@ -96,9 +98,9 @@ Iterable.ListItem = new Class {
       @editing = on
   ready: ->
     if not @editing
-      handSize = getCSS("/\\.#{@options.classes.handle}$/","width")
-      remSize = getCSS("/\\.#{@options.classes.handle}$/","width")
-      baseSize = getCSS("/\\.#{@options.classes.handle}$/","width")
+      handSize = @handles.base.getSize()
+      remSize = @remove.base.getSize()
+      baseSize = @base.getSize()
       @remove.base.setStyles {
         "right":-remSize.x
         "top":(baseSize.y-remSize.y)/2

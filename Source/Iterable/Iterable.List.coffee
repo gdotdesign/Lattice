@@ -34,6 +34,7 @@ Iterable.List = new Class {
           @search()
       ).bindWithEvent @
     @items = []
+  ready: ->
   search: ->
     svalue = @sinput.get 'value'
     @items.each ( (item) ->
@@ -81,10 +82,6 @@ Iterable.List = new Class {
       @selected = item
       @selected.base.addClass @options.selected
       @fireEvent 'select', item
-  updateWidth: (item) ->
-    if !@width?
-      width = getCSS("/\\.#{item.options.classes.class}$/","width")
-      @width = width
   addItem: (li) -> 
     @items.push li
     @base.grab li
@@ -100,5 +97,4 @@ Iterable.List = new Class {
     li.addEvent 'delete', ( ->
       @fireEvent 'delete', arguments
       ).bindWithEvent @
-    @updateWidth li
 }

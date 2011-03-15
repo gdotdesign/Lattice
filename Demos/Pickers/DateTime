@@ -18,7 +18,7 @@
 window.addEvent('domready', function(){
   Pickers.DateTime.attach($("cpick"));
   $("cpick").addEvent('change', function(e){
-  $("cpick").set('text',e.format("%x"));
+    $("cpick").set('text',e.format('%Y %B %d - %A %H:%M'));
   });
 });
 

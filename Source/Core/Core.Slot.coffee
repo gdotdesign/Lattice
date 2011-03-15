@@ -11,10 +11,12 @@ requires: [Core.Abstract, Iterable.List, GDotUI]
 
 provides: Core.Slot
 
+todo: horizontal/vertical
 ...
 ###
 Core.Slot = new Class {
   Extends: Core.Abstract
+  Implements: Interfaces.Enabled
   Binds:['check'
          'complete']
   Delegates:{
@@ -32,29 +34,55 @@ Core.Slot = new Class {
     @overlay = new Element 'div', {'text':' '}
     @overlay.addClass 'over'
     @list = new Iterable.List()
+    @list.base.addEvent 'addedToDom', ( ->
+      @readyList()
+    ).bindWithEvent @
     @list.addEvent 'select', ((item) ->
       @update()
       @fireEvent 'change', item
     ).bindWithEvent @
+  ready: ->
     @base.adopt @list.base, @overlay
   check: (el,e) ->
-    @dragging = on
-    lastDistance = 1000
-    lastOne = null
-    @list.items.each( ( (item,i) ->
-      distance = -item.base.getPosition(@base).y + @base.getSize().y/2
-      if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
-        @list.select item
-    ).bind @ )
-  ready: ->
+    if @enabled
+      @dragging = on
+      lastDistance = 1000
+      lastOne = null
+      @list.items.each( ( (item,i) ->
+        distance = -item.base.getPosition(@base).y + @base.getSize().y/2
+        if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
+          @list.select item
+      ).bind @ )
+    else
+      el.setStyle 'top', @disabledTop
+  readyList: ->
     @base.setStyle 'overflow', 'hidden'
     @base.setStyle 'position', 'relative'
-    @list.base.setStyle 'position', 'absolute'
+    @list.base.setStyle 'position', 'relative'
     @list.base.setStyle 'top', '0'
-    @width = @list.width
-    @base.setStyle 'width', @width
-    @overlay.setStyle 'width', @width
-    @overlay.addEvent 'mousewheel',( (e) ->
+    @overlay.setStyles {
+      'position': 'absolute'
+      'top': 0
+      'left': 0
+      'right': 0
+      'bottom': 0
+    
+    }
+    @overlay.addEvent 'mousewheel',@mouseWheel.bindWithEvent @
+    @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
+    @drag.addEvent 'drag', @check
+    @drag.addEvent 'beforeStart',( ->
+      if not @enabled
+        @disabledTop = @list.base.getStyle 'top' 
+      @list.base.removeTransition()
+    ).bindWithEvent @
+    @drag.addEvent 'complete', ( ->
+      @dragging = off
+      @update()
+    ).bindWithEvent @
+    @update()
+  mouseWheel: (e) ->
+    if @enabled
       e.stop()
       if @list.selected?
         index = @list.items.indexOf @list.selected
@@ -69,20 +97,9 @@ Core.Slot = new Class {
         @list.select @list.items[@list.items.length-1]
       if index+e.wheel > @list.items.length-1
         @list.select @list.items[0]
-    ).bindWithEvent @
-    @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
-    @drag.addEvent 'drag', @check
-    @drag.addEvent 'beforeStart',( ->
-      @list.base.setStyle '-webkit-transition-duration', '0s'
-    ).bindWithEvent @
-    @drag.addEvent 'complete', ( ->
-      @dragging = off
-      @update()
-    ).bindWithEvent @
-    @update()
   update: ->
     if not @dragging
-      @list.base.setStyle '-webkit-transition-duration', '0.3s' # get the property and store and retrieve it
+      @list.base.addTransition()
       if @list.selected?
         @list.base.setStyle 'top',-@list.selected.base.getPosition(@list.base).y+@base.getSize().y/2-@list.selected.base.getSize().y/2
 }

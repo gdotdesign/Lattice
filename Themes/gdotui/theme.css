@@ -18,3 +18,69 @@
     box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
     -moz-box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
     -webkit-box-shadow: 0 0 4px rgba(0, 0, 0, 0.4); }
+
+.time, .date, .date-time {
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #666666;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  background-clip: padding-box;
+  background-color: white;
+  -webkit-transition-duration: 0.5s;
+  height: 100px;
+  margin-bottom: 10px;
+  cursor: pointer; }
+  .time .list, .date .list, .date-time .list {
+    -webkit-transition-duration: 0.3s; }
+  .time .slot:first-child .selected, .date .slot:first-child .selected, .date-time .slot:first-child .selected {
+    -moz-border-radius: 5px 0 0 5px;
+    -webkit-border-radius: 5px 0 0 5px;
+    -khtml-border-radius: 5px 0 0 5px;
+    border-radius: 5px 0 0 5px; }
+  .time .slot:last-child .selected, .date .slot:last-child .selected, .date-time .slot:last-child .selected {
+    -moz-border-radius: 0 5px 5px 0;
+    -webkit-border-radius: 0 5px 5px 0;
+    -khtml-border-radius: 0 5px 5px 0;
+    border-radius: 0 5px 5px 0; }
+  .time .selected, .date .selected, .date-time .selected {
+    background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121));
+    background-color: #333333;
+    color: #eeeeee; }
+  .time .slot, .date .slot, .date-time .slot {
+    float: left; }
+
+.date {
+  width: 135px; }
+  .date .slot {
+    width: 45px; }
+
+.time {
+  width: 70px; }
+  .time .slot {
+    width: 35px; }
+
+.date-time {
+  width: 186px; }
+  .date-time .slot {
+    width: 35px; }
+  .date-time .slot:nth-child(3) {
+    border-right: 1px solid #eeeeee; }
+  .date-time .slot:first-child {
+    width: 45px; }
+
+.slot {
+  height: 100px; }
+
+.list-item {
+  padding: 5px;
+  text-align: center; }
+
+.disabled {
+  opacity: 0.5; }

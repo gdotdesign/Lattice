@@ -7,7 +7,7 @@ description: Data picker class.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires: [Core.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children]
 
 provides: [Core.Picker, outerClick]
 
@@ -33,6 +33,7 @@ Element.Events.outerClick = {
 }
 Core.Picker = new Class {
   Extends: Core.Abstract
+  Implements: [Interfaces.Enabled,Interfaces.Children]
   Binds: ['show'
           'hide']
   options:{
@@ -47,9 +48,9 @@ Core.Picker = new Class {
   create: ->
     @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
-  ready: ->
+  onReady: ->
     if not @base.hasChild @contentElement
-       @base.grab @contentElement
+       @addChild @contentElement
     winsize = window.getSize()
     winscroll = window.getScroll()
     asize = @attachedTo.getSize()
@@ -110,12 +111,14 @@ Core.Picker = new Class {
     if @contentElement?
       @contentElement.fireEvent 'show'
     @base.addEvent 'outerClick', @hide.bindWithEvent @
+    @onReady()
   hide: (e) ->
-    if @base.isVisible() and not @base.hasChild(e.target)
-      if @attachedTo?
-        @attachedTo.removeClass @options.picking
+    if e?
+      if @base.isVisible() and not @base.hasChild(e.target)
+        if @attachedTo?
+          @attachedTo.removeClass @options.picking
         #@detach()
-      @base.dispose()
+        @base.dispose()
   setContent: (element) ->
     @contentElement = element
 }

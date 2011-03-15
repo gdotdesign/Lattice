@@ -19,7 +19,7 @@ window.addEvent('domready', function(){
   date = new Data.Time();
   $(date).inject($("cpick"),'before');
   date.addEvent('change', function(e){
-    $("cpick").set('text',e);
+    $("cpick").set('text',e.format('%H:%M'));
   });
 });
 

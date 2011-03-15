@@ -7,7 +7,7 @@ description: Abstract base class for data elements.
 
 license: MIT-style license.
 
-requires: [GDotUI]
+requires: [GDotUI,Interfaces.Mux]
 
 provides: Data.Abstract
 
@@ -16,13 +16,13 @@ provides: Data.Abstract
 Data.Abstract = new Class {
   Implements:[Events
               Options
-              Interfaces.Reflow]
+              Interfaces.Mux]
   options:{}
   initialize: (options) ->
     @setOptions options
     @base = new Element 'div'
-    @createTemp()
-    #@base.addEvent 'addedToDom', @pollReflow.bindWithEvent @
+    @base.addEvent 'addedToDom', @ready.bindWithEvent @
+    @mux()
     @create()
     @
   create: ->
