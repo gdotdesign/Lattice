@@ -5,6 +5,9 @@
 @import tabs.css
 @import float.css
 
+.disabled
+  :opacity 0.5
+
 .toggler
   :width 120px
   :overflow hidden
@@ -13,6 +16,8 @@
   :cursor pointer
   +round_full(5px)
   +linear_gradient(#85A7EA,#6F95DB)
+  .on
+    :width 60px
   .on, .off, .sep
     :font-size 10px
     :font-weight bold

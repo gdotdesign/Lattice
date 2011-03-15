@@ -3,6 +3,9 @@
 @import url(forms.css);
 @import url(tabs.css);
 @import url(float.css);
+.disabled {
+  opacity: 0.5; }
+
 .toggler {
   width: 120px;
   overflow: hidden;
@@ -15,6 +18,8 @@
   border-radius: 5px;
   background-image: -moz-linear-gradient(100% 100% 90deg, #6f95db, #85a7ea);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#85a7ea), to(#6f95db)); }
+  .toggler .on {
+    width: 60px; }
   .toggler .on, .toggler .off, .toggler .sep {
     font-size: 10px;
     font-weight: bold;
@@ -211,6 +216,7 @@ body {
   background-image: -moz-linear-gradient(100% 100% 90deg, #d9d9d9, #e0e0e0);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#e0e0e0), to(#d9d9d9));
   padding: 8px;
+  face-width: 10px;
   cursor: pointer; }
   .list-item .icon {
     -webkit-transition-duration: 0.3s; }

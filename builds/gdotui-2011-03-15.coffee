@@ -191,10 +191,10 @@ getCSS = (selector, property) ->
       @fireEvent 'addedToDom'
       @
     adopt: ->
+      @oldAdopt.attempt arguments, @
       elements = Array.flatten(arguments)
       elements.each (el) ->
         document.id(el).fireEvent 'addedToDom'
-      @oldAdopt.attempt arguments, @
       @
       
   }
@@ -264,20 +264,31 @@ requires: [GDotUI]
 Interfaces.Enabled = new Class {
   _$Enabled: ->
     @enabled = on
+  supress: ->
+    if @children?
+      @children.each (item) ->
+        if item.disable?
+          item.supress()
+    @enabled = off
+  unsupress: ->
+    if @children?
+      @children.each (item) ->
+        if item.enable?
+          item.unsupress()
+    @enabled = on
   enable: ->
     if @children?
       @children.each (item) ->
         if item.enable?
-          item.enable()
+          item.unsupress()
     @enabled = on
     @base.removeClass 'disabled'
     @fireEvent 'enabled'
   disable: ->
-    console.log @children
     if @children?
       @children.each (item) ->
         if item.disable?
-          item.disable()
+          item.supress()
     @enabled = off
     @base.addClass 'disabled'
     @fireEvent 'disabled'
@@ -1717,6 +1728,96 @@ Core.Overlay = new Class {
 ###
 ---
 
+name: Core.Push
+
+description: Basic button element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Enabled, GDotUI]
+
+provides: Core.Push
+
+...
+###
+Core.Push = new Class {
+  Extends: Core.Abstract
+  Implements:[
+    Interfaces.Enabled
+  ]
+  options:{
+    text: GDotUI.Theme.Push.defaultText
+    class: GDotUI.Theme.Push.class
+  }
+  initialize: (options) ->
+    @parent options 
+  on: ->
+    @base.addClass 'pushed'
+  off: ->
+    @base.removeClass 'pushed'
+  getState: ->
+    if @base.hasClass 'pushed' then true else false
+  create: ->
+    @width = Number.from getCSS("/\\.#{@options.class}$/",'width')
+    @base.addClass(@options.class).set 'text', @options.text
+    @base.addEvent 'click', ( ->
+      @base.toggleClass 'pushed'
+      ).bind @  
+    @base.addEvent 'click', ((e) ->
+      if @enabled
+        @fireEvent 'invoked', [@, e]
+      ).bind @
+}
+
+
+###
+---
+
+name: Core.PushGroup
+
+description: Basic button element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Children, GDotUI]
+
+provides: Core.PushGroup
+
+...
+###
+Core.PushGroup = new Class {
+  Extends: Core.Abstract
+  Implements:[
+    Interfaces.Enabled
+    Interfaces.Children
+  ]
+  options:{
+    class: GDotUI.Theme.PushGroup.class
+  }
+  initialize: (options) ->
+    @buttons = []
+    @parent options 
+  setActive: (item) ->
+    @buttons.each (btn) ->
+      if btn isnt item
+        btn.off()
+  create: ->
+    @base.addClass @options.class
+  addItem: (item) ->
+    if @buttons.indexOf(item) is -1
+      @buttons.push item  
+      @addChild item
+      item.addEvent 'invoked', ( (it) ->
+        @setActive item
+        @fireEvent 'changed', it
+      ).bind @
+      @base.setStyle 'width', Number.from(@base.getStyle('width'))+item.width
+}
+
+
+###
+---
+
 name: Data.Abstract
 
 description: Abstract base class for data elements.
@@ -1982,7 +2083,14 @@ Data.Color = new Class {
     ).bindWithEvent @
     
   drawHSLACone: (width,brightness) ->
+    ctx = @background.getContext '2d'
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(width/2, width/2, width/2, 0, Math.PI*2, true); 
+    ctx.closePath();
+    ctx.fill();
     ctx = @hslacone.getContext '2d'
+    ctx.translate width/2, width/2
     w2 = -width/2
     ang = width / 50
     angle = (1/ang)*Math.PI/180
@@ -2002,10 +2110,7 @@ Data.Color = new Class {
       
   ready: ->
     @width = @wrapper.getSize().y
-    
     @background.setStyles {
-      'background-color': "#000"
-      '-webkit-border-radius': @width/2+"px"
       'position': 'absolute'
       'z-index': 0
     }
@@ -2022,8 +2127,6 @@ Data.Color = new Class {
     
     @wrapper.adopt @background, @hslacone, @knob
     
-    ctx = @hslacone.getContext '2d'
-    ctx.translate @width/2, @width/2
     @drawHSLACone @width, 100
     
     @xy = new Drag.Move @knob
@@ -2070,14 +2173,14 @@ Data.Color = new Class {
     @addChild @colorData
     
    
-    
+    ###
     @colorData.base.getElements( 'input[type=radio]').each ((item) ->
       item.addEvent 'click',( (e)->
         @type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
         @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
       ).bindWithEvent @
     ).bind @
-    
+    ###
     @alpha.addEvent 'change',( (step) ->
       @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
     ).bindWithEvent @
@@ -2181,10 +2284,13 @@ Data.Color.SlotControls = new Class {
     @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @lightness.addEvent 'change', @updateControls.bind(@)
     @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}
-    @col = new Forms.Input Data.Color.ReturnValues
+    @col = new Core.PushGroup()
+    Data.Color.ReturnValues.options.each ((item) ->
+      @col.addItem new Core.Push({text:item.label})
+    ).bind @
   ready: ->
     @adoptChildren @hue, @saturation, @lightness, @alpha, @col
-    @base.getElements('input[type=radio]')[0].set('checked',true)
+    #@base.getElements('input[type=radio]')[0].set('checked',true)
     if @readyCallback?
       @readyCallback()
     @parent()

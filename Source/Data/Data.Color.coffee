@@ -75,7 +75,14 @@ Data.Color = new Class {
     ).bindWithEvent @
     
   drawHSLACone: (width,brightness) ->
+    ctx = @background.getContext '2d'
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(width/2, width/2, width/2, 0, Math.PI*2, true); 
+    ctx.closePath();
+    ctx.fill();
     ctx = @hslacone.getContext '2d'
+    ctx.translate width/2, width/2
     w2 = -width/2
     ang = width / 50
     angle = (1/ang)*Math.PI/180
@@ -95,10 +102,7 @@ Data.Color = new Class {
       
   ready: ->
     @width = @wrapper.getSize().y
-    
     @background.setStyles {
-      'background-color': "#000"
-      '-webkit-border-radius': @width/2+"px"
       'position': 'absolute'
       'z-index': 0
     }
@@ -115,8 +119,6 @@ Data.Color = new Class {
     
     @wrapper.adopt @background, @hslacone, @knob
     
-    ctx = @hslacone.getContext '2d'
-    ctx.translate @width/2, @width/2
     @drawHSLACone @width, 100
     
     @xy = new Drag.Move @knob
@@ -163,14 +165,14 @@ Data.Color = new Class {
     @addChild @colorData
     
    
-    
+    ###
     @colorData.base.getElements( 'input[type=radio]').each ((item) ->
       item.addEvent 'click',( (e)->
         @type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
         @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
       ).bindWithEvent @
     ).bind @
-    
+    ###
     @alpha.addEvent 'change',( (step) ->
       @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
     ).bindWithEvent @
@@ -274,10 +276,13 @@ Data.Color.SlotControls = new Class {
     @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
     @lightness.addEvent 'change', @updateControls.bind(@)
     @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}
-    @col = new Forms.Input Data.Color.ReturnValues
+    @col = new Core.PushGroup()
+    Data.Color.ReturnValues.options.each ((item) ->
+      @col.addItem new Core.Push({text:item.label})
+    ).bind @
   ready: ->
     @adoptChildren @hue, @saturation, @lightness, @alpha, @col
-    @base.getElements('input[type=radio]')[0].set('checked',true)
+    #@base.getElements('input[type=radio]')[0].set('checked',true)
     if @readyCallback?
       @readyCallback()
     @parent()

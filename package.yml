@@ -29,6 +29,8 @@ sources:
   - "Source/Core/Core.Overlay.coffee"
   - "Source/Core/Core.Tab.coffee"
   - "Source/Core/Core.Tabs.coffee"
+  - "Source/Core/Core.Push.coffee"
+  - "Source/Core/Core.PushGroup.coffee"
   - "Source/Data/Data.Abstract.coffee"
   - "Source/Data/Data.Text.coffee"
   - "Source/Data/Data.Number.coffee"

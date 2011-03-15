@@ -87,6 +87,9 @@ class Gdotui < Sinatra::Application
     p.build params['files']
   end
   
+  get '/themes' do
+    haml :themes
+  end
   get '*' do
     haml '%div'
   end

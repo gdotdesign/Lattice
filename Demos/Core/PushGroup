@@ -1,0 +1,8 @@
+---JS
+window.addEvent('domready', function(){
+  group = new Core.PushGroup();
+  for(i=0;i<5;i++){
+    group.addItem(new Core.Push({text:i}));  
+  }
+  $$(".demo").grab(group);
+});

@@ -12,6 +12,26 @@
 .disabled
   :opacity 0.5
 
+.pushgroup
+  +basic_style
+  :height 22px
+  .push
+    :width 40px
+    :background-color #999
+    :border-right 1px solid #ccc
+    :margin-left -1px
+    :height 22px
+    :float left
+    :text-align center
+    :line-height 22px
+    :font-weight bold
+    :cursor pointer
+    &.pushed
+      +linear_gradient(#444,#212121)
+      :color #eee
+  .push:last-child
+    :border-right none
+
 .toggler
   +basic_style
   :width 100px

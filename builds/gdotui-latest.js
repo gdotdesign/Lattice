@@ -218,11 +218,11 @@ getCSS = function(selector, property) {
     },
     adopt: function() {
       var elements;
+      this.oldAdopt.attempt(arguments, this);
       elements = Array.flatten(arguments);
       elements.each(function(el) {
         return document.id(el).fireEvent('addedToDom');
       });
-      this.oldAdopt.attempt(arguments, this);
       return this;
     }
   });
@@ -293,11 +293,31 @@ Interfaces.Enabled = new Class({
   _$Enabled: function() {
     return this.enabled = true;
   },
+  supress: function() {
+    if (this.children != null) {
+      this.children.each(function(item) {
+        if (item.disable != null) {
+          return item.supress();
+        }
+      });
+    }
+    return this.enabled = false;
+  },
+  unsupress: function() {
+    if (this.children != null) {
+      this.children.each(function(item) {
+        if (item.enable != null) {
+          return item.unsupress();
+        }
+      });
+    }
+    return this.enabled = true;
+  },
   enable: function() {
     if (this.children != null) {
       this.children.each(function(item) {
         if (item.enable != null) {
-          return item.enable();
+          return item.unsupress();
         }
       });
     }
@@ -306,11 +326,10 @@ Interfaces.Enabled = new Class({
     return this.fireEvent('enabled');
   },
   disable: function() {
-    console.log(this.children);
     if (this.children != null) {
       this.children.each(function(item) {
         if (item.disable != null) {
-          return item.disable();
+          return item.supress();
         }
       });
     }
@@ -2021,6 +2040,104 @@ Core.Overlay = new Class({
 /*
 ---
 
+name: Core.Push
+
+description: Basic button element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Enabled, GDotUI]
+
+provides: Core.Push
+
+...
+*/
+Core.Push = new Class({
+  Extends: Core.Abstract,
+  Implements: [Interfaces.Enabled],
+  options: {
+    text: GDotUI.Theme.Push.defaultText,
+    "class": GDotUI.Theme.Push["class"]
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  on: function() {
+    return this.base.addClass('pushed');
+  },
+  off: function() {
+    return this.base.removeClass('pushed');
+  },
+  getState: function() {
+    if (this.base.hasClass('pushed')) {
+      return true;
+    } else {
+      return false;
+    }
+  },
+  create: function() {
+    this.width = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
+    this.base.addClass(this.options["class"]).set('text', this.options.text);
+    this.base.addEvent('click', (function() {
+      return this.base.toggleClass('pushed');
+    }).bind(this));
+    return this.base.addEvent('click', (function(e) {
+      if (this.enabled) {
+        return this.fireEvent('invoked', [this, e]);
+      }
+    }).bind(this));
+  }
+});
+/*
+---
+
+name: Core.PushGroup
+
+description: Basic button element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Children, GDotUI]
+
+provides: Core.PushGroup
+
+...
+*/
+Core.PushGroup = new Class({
+  Extends: Core.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Children],
+  options: {
+    "class": GDotUI.Theme.PushGroup["class"]
+  },
+  initialize: function(options) {
+    this.buttons = [];
+    return this.parent(options);
+  },
+  setActive: function(item) {
+    return this.buttons.each(function(btn) {
+      if (btn !== item) {
+        return btn.off();
+      }
+    });
+  },
+  create: function() {
+    return this.base.addClass(this.options["class"]);
+  },
+  addItem: function(item) {
+    if (this.buttons.indexOf(item) === -1) {
+      this.buttons.push(item);
+      this.addChild(item);
+      item.addEvent('invoked', (function(it) {
+        this.setActive(item);
+        return this.fireEvent('changed', it);
+      }).bind(this));
+      return this.base.setStyle('width', Number.from(this.base.getStyle('width')) + item.width);
+    }
+  }
+});
+/*
+---
+
 name: Data.Abstract
 
 description: Abstract base class for data elements.
@@ -2315,7 +2432,14 @@ Data.Color = new Class({
   },
   drawHSLACone: function(width, brightness) {
     var ang, angle, c, c1, ctx, grad, i, w2, _ref, _results;
+    ctx = this.background.getContext('2d');
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(width / 2, width / 2, width / 2, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
     ctx = this.hslacone.getContext('2d');
+    ctx.translate(width / 2, width / 2);
     w2 = -width / 2;
     ang = width / 50;
     angle = (1 / ang) * Math.PI / 180;
@@ -2337,11 +2461,8 @@ Data.Color = new Class({
     return _results;
   },
   ready: function() {
-    var ctx;
     this.width = this.wrapper.getSize().y;
     this.background.setStyles({
-      'background-color': "#000",
-      '-webkit-border-radius': this.width / 2 + "px",
       'position': 'absolute',
       'z-index': 0
     });
@@ -2354,8 +2475,6 @@ Data.Color = new Class({
     this.background.set('width', this.width);
     this.background.set('height', this.width);
     this.wrapper.adopt(this.background, this.hslacone, this.knob);
-    ctx = this.hslacone.getContext('2d');
-    ctx.translate(this.width / 2, this.width / 2);
     this.drawHSLACone(this.width, 100);
     this.xy = new Drag.Move(this.knob);
     this.halfWidth = this.width / 2;
@@ -2403,16 +2522,14 @@ Data.Color = new Class({
     }).bind(this));
     this.colorData.readyCallback = this.readyCallback;
     this.addChild(this.colorData);
-    this.colorData.base.getElements('input[type=radio]').each((function(item) {
-      return item.addEvent('click', (function(e) {
-        this.type = this.colorData.base.getElements('input[type=radio]:checked')[0].get('value');
-        return this.fireEvent('change', {
-          color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-          type: this.type,
-          alpha: this.alpha.getValue()
-        });
-      }).bindWithEvent(this));
-    }).bind(this));
+    /*
+    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
+      item.addEvent 'click',( (e)->
+        @type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
+        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()}
+      ).bindWithEvent @
+    ).bind @
+    */
     this.alpha.addEvent('change', (function(step) {
       return this.fireEvent('change', {
         color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
@@ -2559,11 +2676,15 @@ Data.Color.SlotControls = new Class({
       reset: false,
       steps: [100]
     });
-    return this.col = new Forms.Input(Data.Color.ReturnValues);
+    this.col = new Core.PushGroup();
+    return Data.Color.ReturnValues.options.each((function(item) {
+      return this.col.addItem(new Core.Push({
+        text: item.label
+      }));
+    }).bind(this));
   },
   ready: function() {
     this.adoptChildren(this.hue, this.saturation, this.lightness, this.alpha, this.col);
-    this.base.getElements('input[type=radio]')[0].set('checked', true);
     if (this.readyCallback != null) {
       this.readyCallback();
     }

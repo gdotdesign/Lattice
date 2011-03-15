@@ -101,6 +101,39 @@
 .disabled {
   opacity: 0.5; }
 
+.pushgroup {
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #666666;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  background-clip: padding-box;
+  background-color: white;
+  -webkit-transition-duration: 0.5s;
+  height: 22px; }
+  .pushgroup .push {
+    width: 40px;
+    background-color: #999999;
+    border-right: 1px solid #cccccc;
+    margin-left: -1px;
+    height: 22px;
+    float: left;
+    text-align: center;
+    line-height: 22px;
+    font-weight: bold;
+    cursor: pointer; }
+    .pushgroup .push.pushed {
+      background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
+      background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121));
+      color: #eeeeee; }
+  .pushgroup .push:last-child {
+    border-right: none; }
+
 .toggler {
   border: 5px solid rgba(255, 255, 255, 0.1);
   font-size: 12px;

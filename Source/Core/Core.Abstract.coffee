@@ -71,10 +71,10 @@ getCSS = (selector, property) ->
       @fireEvent 'addedToDom'
       @
     adopt: ->
+      @oldAdopt.attempt arguments, @
       elements = Array.flatten(arguments)
       elements.each (el) ->
         document.id(el).fireEvent 'addedToDom'
-      @oldAdopt.attempt arguments, @
       @
       
   }

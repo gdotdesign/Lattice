@@ -18,6 +18,13 @@ GDotUI.Theme={
         defaultText: 'Button',
         defaultIcon: '../Themes/Chrome/images/pencil.png'
     },
+    Push:{
+        'class':'push',
+        defaultText: 'Push!',
+    },
+    PushGroup:{
+        'class':'pushgroup',
+    },
     Toggler:{
       'class': 'toggler',
       onClass: 'on',
