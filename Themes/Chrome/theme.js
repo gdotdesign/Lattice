@@ -68,8 +68,11 @@ GDotUI.Theme={
         'class':'data-list'
     },
     Slider:{
-        barClass:'bar',
-        knobClass:'knob'
+      classes: {
+        base: 'slider',
+        bar: 'progress',
+        text: 'text'
+      }
     },
     Slot:{
         'class':'slot'  

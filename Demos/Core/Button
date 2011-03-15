@@ -4,17 +4,16 @@ invoked:Dispatches when clicked
 .redButton{
   background-image: -moz-linear-gradient(100% 100% 90deg, #FF8800, #FFCC00);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#FFCC00), to(#FF8800));
-  box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  -moz-box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  -webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.3);
-  -moz-border-radius: 3px;
-  -webkit-border-radius: 3px;
-  -khtml-border-radius: 3px;
-  border-radius: 3px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
   border: none;
   padding: 10px;
-  padding-top: 7px;
-  font-size: 14px;
+  font-size: 12px;
   background-color: #a22;
   color: #333;
   font-weight: bold;

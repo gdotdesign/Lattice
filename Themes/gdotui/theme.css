@@ -84,3 +84,72 @@
 
 .disabled {
   opacity: 0.5; }
+
+.button {
+  border: 5px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #666666;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  background-clip: padding-box;
+  background-color: white;
+  -webkit-transition-duration: 0.1s;
+  border: none;
+  cursor: pointer;
+  background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121));
+  font-weight: bold;
+  color: #eeeeee;
+  padding: 10px; }
+  .button:hover {
+    background-image: -moz-linear-gradient(100% 100% 90deg, #313131, #555555);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#555555), to(#313131)); }
+  .button:active {
+    background-image: -moz-linear-gradient(100% 100% 90deg, #444444, #212121);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#212121), to(#444444));
+    position: relative;
+    top: 1px; }
+
+.slider {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: #666666;
+  -moz-border-radius: 2px;
+  -webkit-border-radius: 2px;
+  -khtml-border-radius: 2px;
+  border-radius: 2px;
+  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
+  background-clip: padding-box;
+  background-color: white;
+  -webkit-transition-duration: 0s;
+  background-color: #888888;
+  cursor: move;
+  overflow: hidden; }
+  .slider.horizontal {
+    width: 200px;
+    height: 10px; }
+  .slider.vertical {
+    width: 10px;
+    height: 200px; }
+  .slider .progress {
+    background-color: rgba(0, 0, 0, 0.5); }
+  .slider .text, .slider input {
+    text-shadow: 0 1px 1px #222222;
+    color: #eeeeee;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    line-height: 20px; }
+  .slider input {
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -khtml-border-radius: 10px;
+    border-radius: 10px;
+    background-color: rgba(0, 0, 0, 0.5); }

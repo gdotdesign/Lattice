@@ -34,7 +34,7 @@ Data.Number = new Class {
     }
   ready: ->
     @justSet = off
-    @slider.knob.grab @text
+    #@slider.knob.grab @text
     @base.adopt @slider
     @slider.knob.addEvent 'click', ( ->
       @text.focus()
@@ -44,7 +44,7 @@ Data.Number = new Class {
         @slider.setRange [step-@options.steps/2, Number(step)+@options.steps/2]
       @slider.set step
       ).bindWithEvent @
-    @slider.addEvent 'change', ( (step) ->
+    @slider.addEvent 'step', ( (step) ->
       if typeof(step) == 'object'
         @text.set 'value', 0
       else

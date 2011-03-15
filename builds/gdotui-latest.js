@@ -28,7 +28,7 @@ provides:
   - Class.Delegates
 
 ...
-*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, ResetSlider, UnitList, UnitTable, checkForKey, getCSS;
+*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, UnitList, UnitTable, checkForKey, getCSS;
 Class.Mutators.Delegates = function(delegations) {
   var self;
   self = this;
@@ -620,40 +620,9 @@ provides: [Core.Slider, ResetSlider]
 
 ...
 */
-ResetSlider = new Class({
-  Extends: Slider,
-  initialize: function(element, knob, options) {
-    return this.parent(element, knob, options);
-  },
-  setRange: function(range) {
-    this.min = $chk(range[0]) ? range[0] : 0;
-    this.max = $chk(range[1]) ? range[1] : this.options.steps;
-    this.range = this.max - this.min;
-    this.steps = this.options.steps || this.full;
-    this.stepSize = Math.abs(this.range) / this.steps;
-    return this.stepWidth = this.stepSize * this.full / Math.abs(this.range);
-  },
-  draggedKnob: function() {
-    var dir, position;
-    dir = this.range < 0 ? -1 : 1;
-    position = this.drag.value.now[this.axis];
-    position = position.limit(-this.options.offset, this.full - this.options.offset);
-    this.step = this.min + dir * this.toStep(position);
-    return this.checkStep();
-  },
-  toStep: function(position) {
-    var step;
-    step = (position + this.options.offset) * this.stepSize / this.full * this.steps;
-    if (this.options.steps) {
-      return step -= step % this.stepSize;
-    } else {
-      return step;
-    }
-  }
-});
 Core.Slider = new Class({
   Extends: Core.Abstract,
-  Implements: [Interfaces.Controls],
+  Implements: [Interfaces.Controls, Interfaces.Enabled],
   Delegates: {
     'slider': ['set', 'setRange']
   },
@@ -662,48 +631,95 @@ Core.Slider = new Class({
     reset: false,
     steps: 0,
     range: [0, 0],
-    mode: 'vertical',
-    "class": GDotUI.Theme.Slider.barClass,
-    knob: GDotUI.Theme.Slider.knobClass
+    mode: 'horizontal',
+    "class": GDotUI.Theme.Slider.classes.base,
+    bar: GDotUI.Theme.Slider.classes.bar,
+    text: GDotUI.Theme.Slider.classes.text
   },
   initialize: function(options) {
     return this.parent(options);
   },
+  set: function(position) {},
   create: function() {
+    var modifiers;
     this.base.addClass(this.options["class"]);
     this.base.addClass(this.options.mode);
-    this.knob = (new Element('div')).addClass(this.options.knob);
-    this.scrollBase = this.options.scrollBase;
-    return this.base.grab(this.knob);
-  },
-  ready: function() {
-    if (this.options.reset) {
-      this.slider = new ResetSlider(this.base, this.knob, {
-        mode: this.options.mode,
-        steps: this.options.steps,
-        range: this.options.range
-      });
-      this.slider.set(0);
-    } else {
-      this.slider = new Slider(this.base, this.knob, {
-        mode: this.options.mode,
-        range: this.options.range,
-        steps: this.options.steps
+    this.progress = new Element("div." + this.options.bar);
+    this.base.setStyle('position', 'relative');
+    this.progress.setStyles({
+      position: 'absolute',
+      bottom: 0,
+      left: 0
+    });
+    if (this.options.mode === 'horizontal') {
+      this.modifier = 'width';
+      modifiers = {
+        x: 'width',
+        y: ''
+      };
+      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".horizontal$/", 'width').slice(0, -2));
+      this.progress.setStyles({
+        top: 0,
+        width: 0
       });
     }
-    this.slider.addEvent('complete', (function(step) {
-      return this.fireEvent('complete', step + '');
-    }).bindWithEvent(this));
-    this.slider.addEvent('change', (function(step) {
-      if (typeof step === 'object') {
-        step = 0;
+    if (this.options.mode === 'vertical') {
+      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height').slice(0, -2));
+      modifiers = {
+        x: '',
+        y: 'height'
+      };
+      this.modifier = 'height';
+      this.progress.setStyles({
+        height: 0,
+        right: 0
+      });
+    }
+    this.base.adopt(this.progress);
+    this.drag = new Drag(this.progress, {
+      handle: this.base,
+      modifiers: modifiers,
+      invert: this.options.mode === 'vertical' ? true : false
+    });
+    this.drag.addEvent('beforeStart', (function(el, e) {
+      if (!this.enabled) {
+        return this.disabledTop = el.getStyle(this.modifier);
       }
-      this.fireEvent('change', step + '');
-      if (this.scrollBase != null) {
-        return this.scrollBase.scrollTop = (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100 * step;
+    }).bind(this));
+    this.drag.addEvent('drag', (function(el, e) {
+      var pos;
+      if (this.enabled) {
+        pos = Number.from(el.getStyle(this.modifier));
+        if (pos > this.size) {
+          el.setStyle(this.modifier, this.width + "px");
+          pos = this.size;
+        }
+        return this.fireEvent('step', Math.round((pos / this.size) * 100));
+      } else {
+        return el.setStyle(this.modifier, this.disabledTop);
       }
-    }).bindWithEvent(this));
-    return this.parent();
+    }).bind(this));
+    return this.base.addEvent('mousewheel', (function(e) {
+      var offset, pos;
+      e.stop();
+      offset = Number.from(e.wheel);
+      pos = Number.from(this.progress.getStyle(this.modifier));
+      console.log(offset, pos);
+      if (pos + offset < 0) {
+        console.log('<0');
+        this.progress.setStyle(this.modifier, 0 + "px");
+        pos = 0;
+      }
+      if (pos + offset > this.size) {
+        console.log('> @width');
+        this.progress.setStyle(this.modifier, this.size + "px");
+        pos = pos + offset;
+      }
+      if (!(pos + offset < 0) && !(pos + offset > this.size)) {
+        console.log('in range');
+        return this.progress.setStyle(this.modifier, (pos + offset / 100 * this.size) + "px");
+      }
+    }).bind(this));
   }
 });
 /*
@@ -2078,7 +2094,6 @@ Data.Number = new Class({
   },
   ready: function() {
     this.justSet = false;
-    this.slider.knob.grab(this.text);
     this.base.adopt(this.slider);
     this.slider.knob.addEvent('click', (function() {
       return this.text.focus();
@@ -2089,7 +2104,7 @@ Data.Number = new Class({
       }
       return this.slider.set(step);
     }).bindWithEvent(this));
-    this.slider.addEvent('change', (function(step) {
+    this.slider.addEvent('step', (function(step) {
       if (typeof step === 'object') {
         this.text.set('value', 0);
       } else {
@@ -3872,12 +3887,6 @@ Pickers.Base = new Class({
     return this;
   }
 });
-Pickers.Color = new Pickers.Base({
-  type: 'Color'
-});
-Pickers.Number = new Pickers.Base({
-  type: 'Number'
-});
 Pickers.Time = new Pickers.Base({
   type: 'Time'
 });
@@ -3892,9 +3901,6 @@ Pickers.DateTime = new Pickers.Base({
 });
 Pickers.Table = new Pickers.Base({
   type: 'Table'
-});
-Pickers.Unit = new Pickers.Base({
-  type: 'Unit'
 });
 Pickers.Select = new Pickers.Base({
   type: 'Select'

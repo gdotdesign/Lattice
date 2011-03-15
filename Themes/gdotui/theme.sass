@@ -12,7 +12,41 @@
 .disabled
   :opacity 0.5
   
+.button
+  +basic_style(5px, 0.1s)
+  :border none
+  :cursor pointer
+  +linear_gradient(#444,#212121)
+  &:hover
+    +linear_gradient(#555,#313131)
+  &:active
+    +linear_gradient(#212121,#444)
+    :position relative
+    :top 1px
+  :font-weight bold
+  :color #eee
+  :padding 10px
 
-  
-
-
+.slider
+  &.horizontal
+    :width 200px  
+    :height 10px
+  &.vertical
+    :width 10px
+    :height 200px
+  +basic_style(2px,0s,2px)
+  :background-color #888
+  :cursor move
+  :overflow hidden
+  .progress
+    :background-color rgba(0,0,0,0.5)
+  .text, input
+    :text-shadow 0 1px 1px #222
+    :color #eee
+    :font-size 12px
+    :font-weight bold
+    :text-align center
+    :line-height 20px
+  input
+    +round_full(10px)
+    :background-color rgba(0,0,0,0.5)

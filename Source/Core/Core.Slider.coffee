@@ -13,30 +13,9 @@ provides: [Core.Slider, ResetSlider]
 
 ...
 ###
-ResetSlider = new Class {
-  Extends: Slider
-  initialize: (element, knob, options) ->
-    @parent element, knob, options
-  setRange: (range) ->
-    @min = if  $chk(range[0]) then range[0] else 0
-    @max = if $chk(range[1]) then range[1] else @options.steps
-    @range = @max - @min
-    @steps = @options.steps || @full
-    @stepSize = Math.abs(@range) / @steps
-    @stepWidth = @stepSize * @full / Math.abs(@range) 
-  draggedKnob: ->
-    dir = if @range < 0 then -1 else 1
-    position = @drag.value.now[this.axis]
-    position = position.limit(-@options.offset, @full-@options.offset)
-    @step = @min + dir * @toStep(position)
-    @checkStep()
-  toStep: (position) ->
-    step = (position + @options.offset) * @stepSize / @full * @steps
-    if @options.steps then step -= step % @stepSize else step
-}
 Core.Slider = new Class {
   Extends:Core.Abstract
-  Implements:[ Interfaces.Controls ]
+  Implements:[ Interfaces.Controls, Interfaces.Enabled ]
   Delegates:{ 'slider':[
     'set'
     'setRange'
@@ -46,41 +25,79 @@ Core.Slider = new Class {
     reset: off
     steps: 0
     range: [0,0]
-    mode: 'vertical'
-    class: GDotUI.Theme.Slider.barClass
-    knob: GDotUI.Theme.Slider.knobClass
+    mode: 'horizontal'
+    class: GDotUI.Theme.Slider.classes.base
+    bar: GDotUI.Theme.Slider.classes.bar
+    text: GDotUI.Theme.Slider.classes.text
   }
   initialize: (options) ->
     @parent options
+  set: (position) ->
   create: ->
     @base.addClass @options.class
     @base.addClass @options.mode
-    @knob = (new Element 'div').addClass @options.knob
-    @scrollBase = @options.scrollBase
-    @base.grab @knob
-  ready: ->
-    if @options.reset 
-      @slider = new ResetSlider @base, @knob, {
-        mode: @options.mode
-        steps: @options.steps
-        range: @options.range
+
+    @progress = new Element "div.#{@options.bar}"
+
+    @base.setStyle 'position', 'relative'
+    @progress.setStyles {
+      position: 'absolute'
+      bottom: 0
+      left: 0
+    }
+    
+    if @options.mode is 'horizontal'
+      @modifier = 'width'
+      modifiers = {x: 'width',y:''}
+      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width').slice(0,-2)
+      @progress.setStyles {
+        top: 0
+        width: 0
       }
-      @slider.set 0
-    else
-      @slider = new Slider @base, @knob, {
-        mode: @options.mode
-        range: @options.range
-        steps: @options.steps
+    if @options.mode is 'vertical'
+      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.vertical$/",'height').slice(0,-2)
+      modifiers = {x: '',y: 'height'}
+      @modifier = 'height'
+      @progress.setStyles {
+        height: 0
+        right: 0
       }
-    @slider.addEvent 'complete', ((step) ->
-      @fireEvent 'complete', step+''
-    ).bindWithEvent @
-    @slider.addEvent 'change', ((step)->
-      if typeof(step) == 'object'
-        step = 0
-      @fireEvent 'change', step+''
-      if @scrollBase?
-        @scrollBase.scrollTop = (@scrollBase.scrollHeight-@scrollBase.getSize().y)/100*step
-    ).bindWithEvent @
-    @parent()
+      
+    @base.adopt @progress
+    
+    @drag = new Drag @progress, {handle:@base, modifiers:modifiers, invert: if @options.mode is 'vertical' then true else false}
+    
+    @drag.addEvent 'beforeStart', ( (el,e) ->
+      if not @enabled
+        @disabledTop = el.getStyle @modifier
+    ).bind @
+    @drag.addEvent 'drag', ( (el,e) ->
+      if @enabled
+        pos = Number.from el.getStyle(@modifier)
+        if pos > @size
+          el.setStyle @modifier, @width+"px"
+          pos = @size
+        @fireEvent 'step', Math.round((pos/@size)*100)
+      else
+        el.setStyle @modifier, @disabledTop
+    ).bind @
+    
+    @base.addEvent 'mousewheel', ( (e) ->
+      e.stop()
+      offset = Number.from e.wheel
+      pos = Number.from @progress.getStyle(@modifier)
+      console.log offset, pos
+      if pos+offset < 0
+        console.log '<0'
+        @progress.setStyle @modifier, 0+"px"
+        pos = 0
+      if pos+offset > @size
+        console.log '> @width'
+        @progress.setStyle @modifier, @size+"px"
+        pos = pos+offset
+      if not(pos+offset < 0) and not(pos+offset > @size)
+        console.log 'in range'
+        @progress.setStyle @modifier, (pos+offset/100*@size)+"px"
+    ).bind @
+
 }
