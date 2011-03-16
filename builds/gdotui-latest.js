@@ -2079,7 +2079,9 @@ Core.Push = new Class({
     this.width = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
     this.base.addClass(this.options["class"]).set('text', this.options.text);
     this.base.addEvent('click', (function() {
-      return this.base.toggleClass('pushed');
+      if (this.enabled) {
+        return this.base.toggleClass('pushed');
+      }
     }).bind(this));
     return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
@@ -2235,7 +2237,8 @@ Data.Number = new Class({
     text: GDotUI.Theme.Number.classes.text,
     range: GDotUI.Theme.Number.range,
     reset: GDotUI.Theme.Number.reset,
-    steps: GDotUI.Theme.Number.steps
+    steps: GDotUI.Theme.Number.steps,
+    label: null
   },
   initialize: function(options) {
     return this.parent(options);
@@ -2252,7 +2255,7 @@ Data.Number = new Class({
     });
     this.base.grab(this.text);
     return this.addEvent('step', (function(e) {
-      this.text.set('text', e);
+      this.text.set('text', this.options.label != null ? this.options.label + " : " + e : e);
       return this.fireEvent('change', e);
     }).bind(this));
   },
@@ -2266,94 +2269,7 @@ Data.Number = new Class({
   setValue: function(step) {
     var real;
     real = this.set(step);
-    return this.text.set('text', real);
-  }
-});
-/*
----
-
-name: Forms.Input
-
-description: Input elements for Forms.
-
-license: MIT-style license.
-
-requires: GDotUI
-
-provides: Forms.Input
-
-...
-*/
-Forms.Input = new Class({
-  Implements: [Events, Options],
-  options: {
-    type: '',
-    name: ''
-  },
-  initialize: function(options) {
-    this.setOptions(options);
-    this.base = new Element('div');
-    this.create();
-    return this;
-  },
-  create: function() {
-    var tg;
-    delete this.base;
-    if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'button') {
-      this.base = new Element('input', {
-        type: this.options.type,
-        name: this.options.name
-      });
-    }
-    if (this.options.type === 'checkbox') {
-      tg = new Core.Toggler();
-      tg.base.setAttribute('name', this.options.name);
-      tg.base.setAttribute('type', 'checkbox');
-      tg.checked = this.options.checked || false;
-      this.base = tg.base;
-    }
-    if (this.options.type === "textarea") {
-      this.base = new Element('textarea', {
-        name: this.options.name
-      });
-    }
-    if (this.options.type === "select") {
-      this.base = new Element('select', {
-        name: this.options.name
-      });
-      this.options.options.each((function(item) {
-        return this.base.grab(new Element('option', {
-          value: item.value,
-          text: item.label
-        }));
-      }).bind(this));
-    }
-    if (this.options.type === "radio") {
-      this.base = new Element('div');
-      this.options.options.each((function(item, i) {
-        var input, label;
-        label = new Element('label', {
-          'text': item.label
-        });
-        input = new Element('input', {
-          type: 'radio',
-          name: this.options.name,
-          value: item.value
-        });
-        return this.base.adopt(label, input);
-      }).bind(this));
-    }
-    if (this.options.validate != null) {
-      $splat(this.options.validate).each((function(val) {
-        if (this.options.type !== "radio") {
-          return this.base.addClass(val);
-        }
-      }).bind(this));
-    }
-    return this.base;
-  },
-  toElement: function() {
-    return this.base;
+    return this.text.set('text', this.options.label != null ? this.options.label + " : " + real : real);
   }
 });
 /*
@@ -2365,7 +2281,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Forms.Input, GDotUI]
+requires: [Data.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children, Data.Number]
 
 provides: Data.Color
 
@@ -2646,35 +2562,35 @@ Data.Color.SlotControls = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
-  updateControls: function() {
-    this.hue.base.setStyle('background-color', new $HSB(this.hue.getValue(), 100, 100));
-    this.saturation.base.setStyle('background-color', new $HSB(this.hue.getValue(), this.saturation.getValue(), 100));
-    return this.lightness.base.setStyle('background-color', new $HSB(0, 0, this.lightness.getValue()));
-  },
+  updateControls: function() {},
   create: function() {
     this.base.addClass(this.options["class"]);
     this.hue = new Data.Number({
       range: [0, 360],
       reset: false,
-      steps: [360]
+      steps: [360],
+      label: 'Hue'
     });
     this.hue.addEvent('change', this.updateControls.bind(this));
     this.saturation = new Data.Number({
       range: [0, 100],
       reset: false,
-      steps: [100]
+      steps: [100],
+      label: 'Saturation'
     });
     this.saturation.addEvent('change', this.updateControls.bind(this));
     this.lightness = new Data.Number({
       range: [0, 100],
       reset: false,
-      steps: [100]
+      steps: [100],
+      label: 'Lightness'
     });
     this.lightness.addEvent('change', this.updateControls.bind(this));
     this.alpha = new Data.Number({
       range: [0, 100],
       reset: false,
-      steps: [100]
+      steps: [100],
+      label: 'Alpha'
     });
     this.col = new Core.PushGroup();
     return Data.Color.ReturnValues.options.each((function(item) {
@@ -2888,13 +2804,147 @@ Data.Time = new Class({
 /*
 ---
 
+name: Iterable.ListItem
+
+description: List items for Iterable.List.
+
+license: MIT-style license.
+
+requires: Core.Abstract
+
+provides: Iterable.ListItem
+
+requires: [GDotUI]
+...
+*/
+Iterable.ListItem = new Class({
+  Extends: Core.Abstract,
+  Implements: [Interfaces.Draggable, Interfaces.Enabled],
+  options: {
+    classes: {
+      "class": GDotUI.Theme.ListItem["class"],
+      title: GDotUI.Theme.ListItem.title,
+      subtitle: GDotUI.Theme.ListItem.subTitle,
+      handle: GDotUI.Theme.ListItem.handle
+    },
+    icons: {
+      remove: GDotUI.Theme.Icons.remove,
+      handle: GDotUI.Theme.Icons.handleVertical
+    },
+    offset: GDotUI.Theme.ListItem.offset,
+    title: '',
+    subtitle: '',
+    draggable: true,
+    dragreset: true,
+    ghost: true,
+    removeClasses: '.' + GDotUI.Theme.Icon["class"],
+    invokeEvent: 'click',
+    selectEvent: 'click',
+    removeable: true,
+    sortable: false,
+    dropppables: ''
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addClass(this.options.classes["class"]).setStyle('position', 'relative');
+    this.remove = new Core.Icon({
+      image: this.options.icons.remove
+    });
+    this.handles = new Core.Icon({
+      image: this.options.icons.handle
+    });
+    this.handles.base.addClass(this.options.classes.handle);
+    $$(this.remove.base, this.handles.base).setStyle('position', 'absolute');
+    this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
+    this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
+    this.base.adopt(this.title, this.subtitle);
+    if (this.options.removeable) {
+      this.base.grab(this.remove);
+    }
+    if (this.options.sortable) {
+      this.base.grab(this.handle);
+    }
+    this.base.addEvent(this.options.selectEvent, (function() {
+      return this.fireEvent('select', this);
+    }).bindWithEvent(this));
+    this.base.addEvent(this.options.invokeEvent, (function() {
+      if (this.enabled && !this.options.draggable && !this.editing) {
+        return this.fireEvent('invoked', this);
+      }
+    }).bindWithEvent(this));
+    this.addEvent('dropped', (function(el, drop, e) {
+      return this.fireEvent('invoked', [this, e, drop]);
+    }).bindWithEvent(this));
+    this.base.addEvent('dblclick', (function() {
+      if (this.enabled) {
+        if (this.editing) {
+          return this.fireEvent('edit', this);
+        }
+      }
+    }).bindWithEvent(this));
+    this.remove.addEvent('invoked', (function() {
+      return this.fireEvent('delete', this);
+    }).bindWithEvent(this));
+    return this;
+  },
+  toggleEdit: function() {
+    if (this.editing) {
+      if (this.options.draggable) {
+        this.drag.attach();
+      }
+      this.remove.base.setStyle('right', -this.remove.base.getSize().x);
+      this.handles.base.setStyle('left', -this.handles.base.getSize().x);
+      this.base.setStyle('padding-left', this.base.retrieve('padding-left:old'));
+      this.base.setStyle('padding-right', this.base.retrieve('padding-right:old'));
+      return this.editing = false;
+    } else {
+      if (this.options.draggable) {
+        this.drag.detach();
+      }
+      this.remove.base.setStyle('right', this.options.offset);
+      this.handles.base.setStyle('left', this.options.offset);
+      this.base.store('padding-left:old', this.base.getStyle('padding-left'));
+      this.base.store('padding-right:old', this.base.getStyle('padding-left'));
+      this.base.setStyle('padding-left', Number(this.base.getStyle('padding-left').slice(0, -2)) + this.handles.base.getSize().x);
+      this.base.setStyle('padding-right', Number(this.base.getStyle('padding-right').slice(0, -2)) + this.remove.base.getSize().x);
+      return this.editing = true;
+    }
+  },
+  ready: function() {
+    var baseSize, handSize, remSize;
+    if (!this.editing) {
+      handSize = this.handles.base.getSize();
+      remSize = this.remove.base.getSize();
+      baseSize = this.base.getSize();
+      this.remove.base.setStyles({
+        "right": -remSize.x,
+        "top": (baseSize.y - remSize.y) / 2
+      });
+      this.handles.base.setStyles({
+        "left": -handSize.x,
+        "top": (baseSize.y - handSize.y) / 2
+      });
+      this.parent();
+      if (this.options.draggable) {
+        return this.drag.addEvent('beforeStart', (function() {
+          return this.fireEvent('select', this);
+        }).bindWithEvent(this));
+      }
+    }
+  }
+});
+/*
+---
+
 name: Data.DateTime
 
 description:  Date & Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Data.Date, Data.Time, GDotUI]
+requires: [Data.Abstract, GDotUI, Core.Slot, Iterable.ListItem]
 
 provides: Data.DateTime
 
@@ -3673,135 +3723,88 @@ Data.List = new Class({
 /*
 ---
 
-name: Iterable.ListItem
+name: Forms.Input
 
-description: List items for Iterable.List.
+description: Input elements for Forms.
 
 license: MIT-style license.
 
-requires: Core.Abstract
+requires: GDotUI
 
-provides: Iterable.ListItem
+provides: Forms.Input
 
-requires: [GDotUI]
 ...
 */
-Iterable.ListItem = new Class({
-  Extends: Core.Abstract,
-  Implements: [Interfaces.Draggable, Interfaces.Enabled],
+Forms.Input = new Class({
+  Implements: [Events, Options],
   options: {
-    classes: {
-      "class": GDotUI.Theme.ListItem["class"],
-      title: GDotUI.Theme.ListItem.title,
-      subtitle: GDotUI.Theme.ListItem.subTitle,
-      handle: GDotUI.Theme.ListItem.handle
-    },
-    icons: {
-      remove: GDotUI.Theme.Icons.remove,
-      handle: GDotUI.Theme.Icons.handleVertical
-    },
-    offset: GDotUI.Theme.ListItem.offset,
-    title: '',
-    subtitle: '',
-    draggable: true,
-    dragreset: true,
-    ghost: true,
-    removeClasses: '.' + GDotUI.Theme.Icon["class"],
-    invokeEvent: 'click',
-    selectEvent: 'click',
-    removeable: true,
-    sortable: false,
-    dropppables: ''
+    type: '',
+    name: ''
   },
   initialize: function(options) {
-    return this.parent(options);
-  },
-  create: function() {
-    this.base.addClass(this.options.classes["class"]).setStyle('position', 'relative');
-    this.remove = new Core.Icon({
-      image: this.options.icons.remove
-    });
-    this.handles = new Core.Icon({
-      image: this.options.icons.handle
-    });
-    this.handles.base.addClass(this.options.classes.handle);
-    $$(this.remove.base, this.handles.base).setStyle('position', 'absolute');
-    this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
-    this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
-    this.base.adopt(this.title, this.subtitle);
-    if (this.options.removeable) {
-      this.base.grab(this.remove);
-    }
-    if (this.options.sortable) {
-      this.base.grab(this.handle);
-    }
-    this.base.addEvent(this.options.selectEvent, (function() {
-      return this.fireEvent('select', this);
-    }).bindWithEvent(this));
-    this.base.addEvent(this.options.invokeEvent, (function() {
-      if (this.enabled && !this.options.draggable && !this.editing) {
-        return this.fireEvent('invoked', this);
-      }
-    }).bindWithEvent(this));
-    this.addEvent('dropped', (function(el, drop, e) {
-      return this.fireEvent('invoked', [this, e, drop]);
-    }).bindWithEvent(this));
-    this.base.addEvent('dblclick', (function() {
-      if (this.enabled) {
-        if (this.editing) {
-          return this.fireEvent('edit', this);
-        }
-      }
-    }).bindWithEvent(this));
-    this.remove.addEvent('invoked', (function() {
-      return this.fireEvent('delete', this);
-    }).bindWithEvent(this));
+    this.setOptions(options);
+    this.base = new Element('div');
+    this.create();
     return this;
   },
-  toggleEdit: function() {
-    if (this.editing) {
-      if (this.options.draggable) {
-        this.drag.attach();
-      }
-      this.remove.base.setStyle('right', -this.remove.base.getSize().x);
-      this.handles.base.setStyle('left', -this.handles.base.getSize().x);
-      this.base.setStyle('padding-left', this.base.retrieve('padding-left:old'));
-      this.base.setStyle('padding-right', this.base.retrieve('padding-right:old'));
-      return this.editing = false;
-    } else {
-      if (this.options.draggable) {
-        this.drag.detach();
-      }
-      this.remove.base.setStyle('right', this.options.offset);
-      this.handles.base.setStyle('left', this.options.offset);
-      this.base.store('padding-left:old', this.base.getStyle('padding-left'));
-      this.base.store('padding-right:old', this.base.getStyle('padding-left'));
-      this.base.setStyle('padding-left', Number(this.base.getStyle('padding-left').slice(0, -2)) + this.handles.base.getSize().x);
-      this.base.setStyle('padding-right', Number(this.base.getStyle('padding-right').slice(0, -2)) + this.remove.base.getSize().x);
-      return this.editing = true;
+  create: function() {
+    var tg;
+    delete this.base;
+    if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'button') {
+      this.base = new Element('input', {
+        type: this.options.type,
+        name: this.options.name
+      });
     }
+    if (this.options.type === 'checkbox') {
+      tg = new Core.Toggler();
+      tg.base.setAttribute('name', this.options.name);
+      tg.base.setAttribute('type', 'checkbox');
+      tg.checked = this.options.checked || false;
+      this.base = tg.base;
+    }
+    if (this.options.type === "textarea") {
+      this.base = new Element('textarea', {
+        name: this.options.name
+      });
+    }
+    if (this.options.type === "select") {
+      this.base = new Element('select', {
+        name: this.options.name
+      });
+      this.options.options.each((function(item) {
+        return this.base.grab(new Element('option', {
+          value: item.value,
+          text: item.label
+        }));
+      }).bind(this));
+    }
+    if (this.options.type === "radio") {
+      this.base = new Element('div');
+      this.options.options.each((function(item, i) {
+        var input, label;
+        label = new Element('label', {
+          'text': item.label
+        });
+        input = new Element('input', {
+          type: 'radio',
+          name: this.options.name,
+          value: item.value
+        });
+        return this.base.adopt(label, input);
+      }).bind(this));
+    }
+    if (this.options.validate != null) {
+      $splat(this.options.validate).each((function(val) {
+        if (this.options.type !== "radio") {
+          return this.base.addClass(val);
+        }
+      }).bind(this));
+    }
+    return this.base;
   },
-  ready: function() {
-    var baseSize, handSize, remSize;
-    if (!this.editing) {
-      handSize = this.handles.base.getSize();
-      remSize = this.remove.base.getSize();
-      baseSize = this.base.getSize();
-      this.remove.base.setStyles({
-        "right": -remSize.x,
-        "top": (baseSize.y - remSize.y) / 2
-      });
-      this.handles.base.setStyles({
-        "left": -handSize.x,
-        "top": (baseSize.y - handSize.y) / 2
-      });
-      this.parent();
-      if (this.options.draggable) {
-        return this.drag.addEvent('beforeStart', (function() {
-          return this.fireEvent('select', this);
-        }).bindWithEvent(this));
-      }
-    }
+  toElement: function() {
+    return this.base;
   }
 });
 /*

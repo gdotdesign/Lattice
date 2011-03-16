@@ -54,19 +54,11 @@
   cursor: pointer; }
   .time .list, .date .list, .date-time .list {
     -webkit-transition-duration: 0.3s; }
-  .time .slot:first-child .selected, .date .slot:first-child .selected, .date-time .slot:first-child .selected {
-    -moz-border-radius: 5px 0 0 5px;
-    -webkit-border-radius: 5px 0 0 5px;
-    -khtml-border-radius: 5px 0 0 5px;
-    border-radius: 5px 0 0 5px; }
-  .time .slot:last-child .selected, .date .slot:last-child .selected, .date-time .slot:last-child .selected {
-    -moz-border-radius: 0 5px 5px 0;
-    -webkit-border-radius: 0 5px 5px 0;
-    -khtml-border-radius: 0 5px 5px 0;
-    border-radius: 0 5px 5px 0; }
   .time .selected, .date .selected, .date-time .selected {
     background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
     background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121));
+    text-shadow: 0 1px 1px #222222;
+    font-weight: bold;
     background-color: #333333;
     color: #eeeeee; }
   .time .slot, .date .slot, .date-time .slot {
@@ -118,7 +110,8 @@
   height: 22px; }
   .pushgroup .push {
     width: 40px;
-    background-color: #999999;
+    background-color: #666666;
+    color: #888888;
     border-right: 1px solid #cccccc;
     margin-left: -1px;
     height: 22px;
@@ -128,6 +121,7 @@
     font-weight: bold;
     cursor: pointer; }
     .pushgroup .push.pushed {
+      text-shadow: 0 1px 1px #222222;
       background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
       background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121));
       color: #eeeeee; }
@@ -155,20 +149,18 @@
   .toggler .on {
     width: 50px; }
   .toggler .on, .toggler .off, .toggler .sep {
+    background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121));
     font-size: 16px;
     font-weight: bold;
     line-height: 30px;
     text-align: center;
     -webkit-transition-duration: 0.3s;
-    -moz-border-radius: 3px;
-    -webkit-border-radius: 3px;
-    -khtml-border-radius: 3px;
-    border-radius: 3px;
     width: 50px;
-    color: #333333; }
+    color: #eeeeee; }
   .toggler .sep {
-    background-image: -moz-linear-gradient(100% 100% 90deg, #212121, #444444);
-    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#444444), to(#212121)); }
+    background-image: -moz-linear-gradient(100% 100% 90deg, #dddddd, #eeeeee);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#eeeeee), to(#dddddd)); }
 
 .button {
   border: 5px solid rgba(255, 255, 255, 0.1);
@@ -242,7 +234,7 @@
     height: 200px; }
 
 .slider, .number {
-  background-color: #888888;
+  background-color: #666666;
   cursor: move;
   overflow: hidden; }
   .slider .progress, .number .progress {

@@ -17,7 +17,8 @@
   :height 22px
   .push
     :width 40px
-    :background-color #999
+    :background-color #666
+    :color #888
     :border-right 1px solid #ccc
     :margin-left -1px
     :height 22px
@@ -27,6 +28,7 @@
     :font-weight bold
     :cursor pointer
     &.pushed
+      :text-shadow 0 1px 1px #222
       +linear_gradient(#444,#212121)
       :color #eee
   .push:last-child
@@ -41,16 +43,16 @@
   .on
     :width 50px
   .on, .off, .sep
+    +linear_gradient(#444,#212121)
     :font-size 16px
     :font-weight bold
     :line-height 30px
     :text-align center
     :-webkit-transition-duration 0.3s
-    +round_full(3px)
     :width 50px
-    :color #333
+    :color #eee
   .sep
-    +linear_gradient(#444,#212121)
+    +linear_gradient(#eee,#ddd)
   
 .button
   +basic_style(5px, 0.1s)
@@ -84,7 +86,7 @@
     :width 10px
     :height 200px
 .slider, .number
-  :background-color #888
+  :background-color #666
   :cursor move
   :overflow hidden
   .progress

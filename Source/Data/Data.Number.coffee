@@ -22,6 +22,7 @@ Data.Number = new Class {
     range: GDotUI.Theme.Number.range
     reset: GDotUI.Theme.Number.reset
     steps: GDotUI.Theme.Number.steps
+    label: null
   }
   initialize: (options) ->
     @parent options
@@ -37,7 +38,7 @@ Data.Number = new Class {
     }
     @base.grab @text
     @addEvent 'step',( (e) ->
-      @text.set 'text', e
+      @text.set 'text', if @options.label? then @options.label + " : " + e else e
       @fireEvent 'change', e
     ).bind @
   getValue: ->
@@ -47,5 +48,5 @@ Data.Number = new Class {
       Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@options.steps)
   setValue: (step) ->
     real = @set step
-    @text.set 'text', real
+    @text.set 'text', if @options.label? then @options.label + " : " + real else real
 }

@@ -7,7 +7,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Forms.Input, GDotUI]
+requires: [Data.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children, Data.Number]
 
 provides: Data.Color
 
@@ -264,18 +264,18 @@ Data.Color.SlotControls = new Class {
   initialize: (options) ->
     @parent(options)
   updateControls: ->
-    @hue.base.setStyle 'background-color', new $HSB(@hue.getValue(),100,100)
-    @saturation.base.setStyle 'background-color', new $HSB(@hue.getValue(),@saturation.getValue(),100)
-    @lightness.base.setStyle 'background-color', new $HSB(0,0,@lightness.getValue())
+    #@hue.base.setStyle 'background-color', new $HSB(@hue.getValue(),100,100)
+    #@saturation.base.setStyle 'background-color', new $HSB(@hue.getValue(),@saturation.getValue(),100)
+    #@lightness.base.setStyle 'background-color', new $HSB(0,0,@lightness.getValue())
   create: ->
     @base.addClass @options.class  
-    @hue = new Data.Number {range:[0,360],reset: off, steps: [360]}
+    @hue = new Data.Number {range:[0,360],reset: off, steps: [360], label:'Hue'}
     @hue.addEvent 'change', @updateControls.bind(@)
-    @saturation = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @saturation = new Data.Number {range:[0,100],reset: off, steps: [100] , label:'Saturation'}
     @saturation.addEvent 'change', @updateControls.bind(@)
-    @lightness = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @lightness = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Lightness'}
     @lightness.addEvent 'change', @updateControls.bind(@)
-    @alpha = new Data.Number {range:[0,100],reset: off, steps: [100]}
+    @alpha = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Alpha'}
     @col = new Core.PushGroup()
     Data.Color.ReturnValues.options.each ((item) ->
       @col.addItem new Core.Push({text:item.label})

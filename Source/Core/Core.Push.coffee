@@ -34,7 +34,8 @@ Core.Push = new Class {
     @width = Number.from getCSS("/\\.#{@options.class}$/",'width')
     @base.addClass(@options.class).set 'text', @options.text
     @base.addEvent 'click', ( ->
-      @base.toggleClass 'pushed'
+      if @enabled
+        @base.toggleClass 'pushed'
       ).bind @  
     @base.addEvent 'click', ((e) ->
       if @enabled

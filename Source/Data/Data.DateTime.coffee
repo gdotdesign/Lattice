@@ -7,7 +7,7 @@ description:  Date & Time picker element with Core.Slot-s
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Data.Date, Data.Time, GDotUI]
+requires: [Data.Abstract, GDotUI, Core.Slot, Iterable.ListItem]
 
 provides: Data.DateTime
 
