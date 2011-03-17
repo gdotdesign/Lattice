@@ -19,18 +19,27 @@ Core.Icon = new Class {
     Interfaces.Enabled
     Interfaces.Controls
   ]
+  Attributes: {
+    image: {
+      setter: (value) ->
+        @options.image = value
+        @update()
+    }
+  }
   options:{
     image: null
     class: GDotUI.Theme.Icon.class
   }
   initialize: (options) ->
     @parent options
-  create: ->
-    @base.addClass @options.class
+  update: ->
     if @options.image?
       @base.setStyle 'background-image', 'url(' + @options.image + ')'
+  create: ->
+    @base.addClass @options.class
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]
     ).bindWithEvent @
+    @update()
 }

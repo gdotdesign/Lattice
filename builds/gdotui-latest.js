@@ -1,34 +1,77 @@
 /*
 ---
 
-name: GDotUI
+name: Element.Extras
 
-description: G.UI
+description: Extra functions and monkeypatches for moootols Element.
 
 license: MIT-style license.
 
-provides: GDotUI
+provides: Element.Extras
 
 ...
-*/
+*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, UnitList, UnitTable, checkForKey, getCSS;
+(function() {
+  return Element.implement({
+    oldGrab: Element.prototype.grab,
+    oldInject: Element.prototype.inject,
+    oldAdopt: Element.prototype.adopt,
+    removeTransition: function() {
+      this.store('transition', this.getStyle('-webkit-transition-duration'));
+      return this.setStyle('-webkit-transition-duration', '0');
+    },
+    addTransition: function() {
+      this.setStyle('-webkit-transition-duration', this.retrieve('transition'));
+      return this.eliminate('transition');
+    },
+    inTheDom: function() {
+      if (this.parentNode) {
+        if (this.parentNode.tagName.toLowerCase() === "html") {
+          return true;
+        } else {
+          return $(this.parentNode).inTheDom;
+        }
+      } else {
+        return false;
+      }
+    },
+    grab: function(el, where) {
+      this.oldGrab.attempt(arguments, this);
+      document.id(el).fireEvent('addedToDom');
+      return this;
+    },
+    inject: function(el, where) {
+      this.oldInject.attempt(arguments, this);
+      this.fireEvent('addedToDom');
+      return this;
+    },
+    adopt: function() {
+      var elements;
+      this.oldAdopt.attempt(arguments, this);
+      elements = Array.flatten(arguments);
+      elements.each(function(el) {
+        return document.id(el).fireEvent('addedToDom');
+      });
+      return this;
+    }
+  });
+})();
 /*
 ---
-description: Class Mutator. Exposes methods as its own by delegating specified method calls directly to specified elements within the Class.
+name: Class.Extras
+description: Extra suff for Classes.
 
 license: MIT-style
 
 authors:
-- Kevin Valdek
-- Perrin Westrich
-
-requires:
-  core/1.2.4:   '*'
-
+  - Kevin Valdek
+  - Perrin Westrich
+  - Maksim Horbachevsky
 provides:
   - Class.Delegates
-
+  - Class.Attributes
 ...
-*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, UnitList, UnitTable, checkForKey, getCSS;
+*/
 Class.Mutators.Delegates = function(delegations) {
   var self;
   self = this;
@@ -46,6 +89,97 @@ Class.Mutators.Delegates = function(delegations) {
     });
   });
 };
+Class.Mutators.Attributes = function(attributes) {
+  var $getter, $setter;
+  $setter = attributes.$setter;
+  $getter = attributes.$getter;
+  delete attributes.$setter;
+  delete attributes.$getter;
+  this.implement(new Events);
+  return this.implement({
+    $attributes: attributes,
+    get: function(name) {
+      var attr;
+      attr = this.$attributes[name];
+      if (attr) {
+        if (attr.valueFn && !attr.initialized) {
+          attr.initialized = true;
+          attr.value = attr.valueFn.call(this);
+        }
+        if (attr.getter) {
+          return attr.getter.call(this, attr.value);
+        } else {
+          return attr.value;
+        }
+      } else {
+        if ($getter) {
+          return $getter.call(this, name);
+        } else {
+          return;
+        }
+      }
+    },
+    set: function(name, value) {
+      var attr, newVal, oldVal;
+      attr = this.$attributes[name];
+      if (attr) {
+        if (!attr.readOnly) {
+          oldVal = attr.value;
+          if (!attr.validator || attr.validator.call(this, value)) {
+            if (attr.setter) {
+              newVal = attr.setter.call(this, value);
+            } else {
+              newVal = value;
+            }
+            attr.value = newVal;
+            return this.fireEvent(name + 'Change', {
+              newVal: newVal,
+              oldVal: oldVal
+            });
+          }
+        }
+      } else if ($setter) {
+        return $setter.call(this, name, value);
+      }
+    },
+    setAttributes: function(attributes) {
+      return $each(attributes, function(value, name) {
+        return this.set(name, value);
+      }, this);
+    },
+    getAttributes: function() {
+      attributes = {};
+      $each(this.$attributes, function(value, name) {
+        return attributes[name] = this.get(name);
+      }, this);
+      return attributes;
+    },
+    addAttributes: function(attributes) {
+      return $each(attributes, function(value, name) {
+        return this.addAttribute(name, value);
+      }, this);
+    },
+    addAttribute: function(name, value) {
+      this.$attributes[name] = value;
+      return this;
+    }
+  });
+};
+/*
+---
+
+name: GDotUI
+
+description: G.UI
+
+license: MIT-style license.
+
+provides: GDotUI
+
+requires: [Class.Delegates, Element.Extras]
+
+...
+*/
 Interfaces = {};
 Core = {};
 Data = {};
@@ -87,87 +221,18 @@ Interfaces.Mux = new Class({
 /*
 ---
 
-name: Interfaces.Reflow
-
-description: Some control functions.
-
-license: MIT-style license.
-
-provides: Interfaces.Reflow
-
-requires: [GDotUI]
-
-...
-*/
-Interfaces.Reflow = new Class({
-  Implements: Events,
-  createTemp: function() {
-    this.sensor = new Element('p');
-    return this.sensor.setStyles({
-      margin: 0,
-      padding: 0,
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      "z-index": -9999
-    });
-  },
-  pollReflow: function() {
-    var counter, interval;
-    this.base.grab(this.sensor);
-    counter = 0;
-    return interval = setInterval((function() {
-      if (this.sensor.offsetWidth > 2 || ++counter > 99) {
-        console.log(interval);
-        clearInterval(interval);
-        this.sensor.dispose();
-        return this.ready();
-      }
-    }).bind(this), 20);
-  }
-});
-/*
----
-
 name: Core.Abstract
 
 description: Abstract base class for Core U.I. elements.
 
 license: MIT-style license.
 
-requires: [Interfaces.Mux, GDotUI, Interfaces.Reflow]
+requires: [Interfaces.Mux, GDotUI, Element.Extras, Class.Extras]
 
 provides: Core.Abstract
 
 ...
 */
-Class.Mutators.Refactors = function(refactors) {
-  return Object.each(refactors, function(item, name) {
-    var origin;
-    origin = this.prototype[name];
-    if (origin && origin.$origin) {
-      origin = origin.$origin;
-    }
-    return origin.implement(name, typeof item === 'function' ? function() {
-      var old, value;
-      old = this.previous;
-      this.previous = origin || function() {};
-      value = item.apply(this, arguments);
-      this.previous = old;
-      return value;
-    } : item);
-  }, this);
-};
-Element.implement({
-  removeTransition: function() {
-    this.store('transition', this.getStyle('-webkit-transition-duration'));
-    return this.setStyle('-webkit-transition-duration', '0');
-  },
-  addTransition: function() {
-    this.setStyle('-webkit-transition-duration', this.retrieve('transition'));
-    return this.eliminate('transition');
-  }
-});
 getCSS = function(selector, property) {
   var checkStyleSheet, ret;
   ret = null;
@@ -190,50 +255,13 @@ getCSS = function(selector, property) {
   });
   return ret;
 };
-(function() {
-  return Element.implement({
-    oldGrab: Element.prototype.grab,
-    oldInject: Element.prototype.inject,
-    oldAdopt: Element.prototype.adopt,
-    inTheDom: function() {
-      if (this.parentNode) {
-        if (this.parentNode.tagName.toLowerCase() === "html") {
-          return true;
-        } else {
-          return $(this.parentNode).inTheDom;
-        }
-      } else {
-        return false;
-      }
-    },
-    grab: function(el, where) {
-      this.oldGrab.attempt(arguments, this);
-      document.id(el).fireEvent('addedToDom');
-      return this;
-    },
-    inject: function(el, where) {
-      this.oldInject.attempt(arguments, this);
-      this.fireEvent('addedToDom');
-      return this;
-    },
-    adopt: function() {
-      var elements;
-      this.oldAdopt.attempt(arguments, this);
-      elements = Array.flatten(arguments);
-      elements.each(function(el) {
-        return document.id(el).fireEvent('addedToDom');
-      });
-      return this;
-    }
-  });
-})();
 Core.Abstract = new Class({
-  Implements: [Events, Options, Interfaces.Mux, Interfaces.Reflow],
+  Implements: [Events, Options, Interfaces.Mux],
   initialize: function(options) {
     this.setOptions(options);
     this.base = new Element('div');
-    this.create();
     this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
+    this.create();
     this.mux();
     return this;
   },
@@ -356,6 +384,14 @@ provides: Core.Icon
 Core.Icon = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Controls],
+  Attributes: {
+    image: {
+      setter: function(value) {
+        this.options.image = value;
+        return this.update();
+      }
+    }
+  },
   options: {
     image: null,
     "class": GDotUI.Theme.Icon["class"]
@@ -363,16 +399,49 @@ Core.Icon = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
+  update: function() {
+    if (this.options.image != null) {
+      return this.base.setStyle('background-image', 'url(' + this.options.image + ')');
+    }
+  },
   create: function() {
     this.base.addClass(this.options["class"]);
-    if (this.options.image != null) {
-      this.base.setStyle('background-image', 'url(' + this.options.image + ')');
-    }
-    return this.base.addEvent('click', (function(e) {
+    this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
       }
     }).bindWithEvent(this));
+    return this.update();
+  }
+});
+/*
+---
+
+name: Interfaces.Children
+
+description:
+
+license: MIT-style license.
+
+requires: [GDotUI]
+
+provides: Interfaces.Children
+
+...
+*/
+Interfaces.Children = new Class({
+  _$Children: function() {
+    return this.children = [];
+  },
+  adoptChildren: function() {
+    var children;
+    children = Array.from(arguments);
+    this.children.append(children);
+    return this.base.adopt(arguments);
+  },
+  addChild: function(el) {
+    this.children.push(el);
+    return this.base.grab(el);
   }
 });
 /*
@@ -380,11 +449,11 @@ Core.Icon = new Class({
 
 name: Core.IconGroup
 
-description: Icon group with 4 types of layout.
+description: Icon group with 5 types of layout.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children]
 
 provides: Core.IconGroup
 
@@ -392,8 +461,126 @@ provides: Core.IconGroup
 */
 Core.IconGroup = new Class({
   Extends: Core.Abstract,
-  Implements: Interfaces.Controls,
+  Implements: [Interfaces.Controls, Interfaces.Enabled, Interfaces.Children],
   Binds: ['delegate'],
+  Attributes: {
+    mode: {
+      setter: function(value) {
+        this.options.mode = value;
+        return this.update();
+      },
+      validator: function(value) {
+        if (['horizontal', 'vertical', 'circular', 'grid', 'linear'].indexOf(value) > -1) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    },
+    spacing: {
+      setter: function(value) {
+        this.options.spacing = value;
+        return this.update();
+      },
+      validator: function(value) {
+        if (typeOf(value) === 'object') {
+          if ((value.x != null) && (value.y != null)) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+    },
+    startAngle: {
+      setter: function(value) {
+        this.options.startAngle = Number.from(value);
+        return this.update();
+      },
+      validator: function(value) {
+        var a;
+        if ((a = Number.from(value)) != null) {
+          if (a >= 0 && a <= 360) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+    },
+    radius: {
+      setter: function(value) {
+        this.options.radius = Number.from(value);
+        return this.update();
+      },
+      validator: function(value) {
+        var a;
+        if ((a = Number.from(value)) != null) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    },
+    degree: {
+      setter: function(value) {
+        this.options.degree = Number.from(value);
+        return this.update();
+      },
+      validator: function(value) {
+        var a;
+        if ((a = Number.from(value)) != null) {
+          if (a >= 0 && a <= 360) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+    },
+    rows: {
+      setter: function(value) {
+        this.options.rows = Number.from(value);
+        return this.update();
+      },
+      validator: function(value) {
+        var a;
+        if ((a = Number.from(value)) != null) {
+          if (a > 0) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+    },
+    columns: {
+      setter: function(value) {
+        this.options.columns = Number.from(value);
+        return this.update();
+      },
+      validator: function(value) {
+        var a;
+        if ((a = Number.from(value)) != null) {
+          if (a > 0) {
+            return true;
+          } else {
+            return false;
+          }
+        } else {
+          return false;
+        }
+      }
+    }
+  },
   options: {
     mode: "horizontal",
     spacing: {
@@ -419,7 +606,7 @@ Core.IconGroup = new Class({
   addIcon: function(icon) {
     if (this.icons.indexOf(icon === -1)) {
       icon.addEvent('invoked', this.delegate);
-      this.base.grab(icon);
+      this.addChild(icon);
       this.icons.push(icon);
       return true;
     } else {
@@ -439,9 +626,9 @@ Core.IconGroup = new Class({
     }
   },
   ready: function() {
-    return this.positionIcons();
+    return this.update();
   },
-  positionIcons: function() {
+  update: function() {
     var columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
     x = 0;
     y = 0;
@@ -452,6 +639,13 @@ Core.IconGroup = new Class({
     spacing = this.options.spacing;
     switch (this.options.mode) {
       case 'grid':
+        if ((this.options.rows != null) && (this.options.columns != null)) {
+          if (Number.from(this.options.rows) < Number.from(this.options.columns)) {
+            this.options.rows = null;
+          } else {
+            this.options.columns = null;
+          }
+        }
         if (this.options.columns != null) {
           columns = this.options.columns;
           rows = this.icons.length / columns;
@@ -460,7 +654,7 @@ Core.IconGroup = new Class({
           rows = this.options.rows;
           columns = Math.round(this.icons.length / rows);
         }
-        icpos = this.icons.map(function(item, i) {
+        icpos = this.icons.map((function(item, i) {
           if (i % columns === 0) {
             x = 0;
             y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
@@ -473,12 +667,12 @@ Core.IconGroup = new Class({
             x: x,
             y: y
           };
-        });
+        }).bind(this));
         break;
       case 'linear':
         icpos = this.icons.map((function(item, i) {
-          x = i === 0 ? x + x : x + spacing.x;
-          y = i === 0 ? y + y : y + spacing.y;
+          x = i === 0 ? x + x : x + spacing.x + item.base.getSize().x;
+          y = i === 0 ? y + y : y + spacing.y + item.base.getSize().y;
           this.size.x = x + item.base.getSize().x;
           this.size.y = y + item.base.getSize().y;
           return {
@@ -490,7 +684,7 @@ Core.IconGroup = new Class({
       case 'horizontal':
         icpos = this.icons.map((function(item, i) {
           x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
-          y = i === 0 ? y : y + spacing.y;
+          y = i === 0 ? y : y;
           this.size.x = x + item.base.getSize().x;
           this.size.y = item.base.getSize().y;
           return {
@@ -501,7 +695,7 @@ Core.IconGroup = new Class({
         break;
       case 'vertical':
         icpos = this.icons.map((function(item, i) {
-          x = i === 0 ? x : x + spacing.x;
+          x = i === 0 ? x : x;
           y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
           this.size.x = item.base.getSize().x;
           this.size.y = y + item.base.getSize().y;
@@ -521,11 +715,11 @@ Core.IconGroup = new Class({
           var foks;
           if (i === 0) {
             foks = startAngle * (Math.PI / 180);
-            x = Math.round(radius * Math.sin(foks));
-            y = -Math.round(radius * Math.cos(foks));
+            x = Math.round(radius * Math.sin(foks)) + radius / 2 + item.base.getSize().x;
+            y = -Math.round(radius * Math.cos(foks)) + radius / 2 + item.base.getSize().y;
           } else {
-            x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180)));
-            y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180)));
+            x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180))) + radius / 2 + item.base.getSize().x;
+            y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180))) + radius / 2 + item.base.getSize().y;
           }
           return {
             x: x,
@@ -533,6 +727,10 @@ Core.IconGroup = new Class({
           };
         });
     }
+    this.base.setStyles({
+      width: this.size.x,
+      height: this.size.y
+    });
     return this.icons.each(function(item, i) {
       item.base.setStyle('top', icpos[i].y);
       item.base.setStyle('left', icpos[i].x);
@@ -702,14 +900,24 @@ Core.Slider = new Class({
         x: 'width',
         y: ''
       };
-      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".horizontal$/", 'width'));
+      if (this.options.size != null) {
+        this.size = this.options.size;
+        this.base.setStyle('width', this.size);
+      } else {
+        this.size = Number.from(getCSS("/\\." + this.options["class"] + ".horizontal$/", 'width'));
+      }
       this.progress.setStyles({
         top: 0,
         width: this.options.reset ? this.size / 2 : 0
       });
     }
     if (this.options.mode === 'vertical') {
-      this.size = this.options.size || Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height'));
+      if (this.options.size) {
+        this.size = Number.from(this.options.size);
+        this.base.setStyle('height', this.size);
+      } else {
+        Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height'));
+      }
       modifiers = {
         x: '',
         y: 'height'
@@ -732,13 +940,14 @@ Core.Slider = new Class({
         return this.disabledTop = el.getStyle(this.modifier);
       }
     }).bind(this));
-    if (this.options.reset) {
-      this.drag.addEvent('complete', (function(el, e) {
+    this.drag.addEvent('complete', (function(el, e) {
+      if (this.options.reset) {
         if (this.enabled) {
-          return el.setStyle(this.modifier, this.size / 2 + "px");
+          el.setStyle(this.modifier, this.size / 2 + "px");
         }
-      }).bind(this));
-    }
+      }
+      return this.fireEvent('complete');
+    }).bind(this));
     this.drag.addEvent('drag', (function(el, e) {
       var offset, pos;
       if (this.enabled) {
@@ -875,7 +1084,8 @@ Interfaces.Draggable = new Class({
           handle: this.handle,
           remove: this.options.removeClasses,
           droppables: this.options.droppables,
-          precalculate: true
+          precalculate: true,
+          pos: true
         });
       } else {
         this.drag = new Drag.Float(this.base, {
@@ -1017,6 +1227,7 @@ Core.Float = new Class({
     return this.readyr = true;
   },
   create: function() {
+    var sliderSize;
     this.base.addClass(this.options.classes["class"]);
     this.base.setStyle('position', 'fixed');
     this.base.setPosition({
@@ -1037,17 +1248,23 @@ Core.Float = new Class({
       'class': this.options.classes.bottom
     });
     this.base.adopt(this.handle, this.content);
+    sliderSize = getCSS("/\\." + this.options.classes["class"] + " ." + GDotUI.Theme.Slider.classes.base + "$/", 'height') || 100;
+    console.log(sliderSize);
     this.slider = new Core.Slider({
       scrollBase: this.content,
       range: [0, 100],
-      steps: 100
+      steps: 100,
+      mode: 'vertical',
+      size: sliderSize
     });
     this.slider.addEvent('complete', (function() {
+      console.log('complete');
       return this.scrolling = false;
-    }).bindWithEvent(this));
-    this.slider.addEvent('change', (function() {
+    }).bind(this));
+    this.slider.addEvent('step', (function(e) {
+      this.scrollBase.scrollTop = ((this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100) * e;
       return this.scrolling = true;
-    }).bindWithEvent(this));
+    }).bind(this));
     this.slider.hide();
     this.icons = new Core.IconGroup(this.options.iconOptions);
     this.controls.adopt(this.icons, this.slider);
@@ -1106,7 +1323,7 @@ Core.Float = new Class({
         }
       }).bindWithEvent(this), this.scrollBase.addEvent('mousewheel', (function(e) {
         this.scrollBase.scrollTop = this.scrollBase.scrollTop + e.wheel * 12;
-        return this.slider.knob.setStyle('top', (this.scrollBase.scrollTop / this.scrollBase.getScrollSize().y) * this.slider.base.getSize().y);
+        return this.slider.set(this.scrollBase.scrollTop / (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) * 100);
       }).bindWithEvent(this)));
     }
     this.base.addEvent('mouseenter', (function() {
@@ -1120,7 +1337,7 @@ Core.Float = new Class({
       this.icons.show();
       return this.mouseisover = true;
     }).bindWithEvent(this));
-    return this.base.addEvent('mouseleave', (function() {
+    this.base.addEvent('mouseleave', (function() {
       this.base.toggleClass(this.options.classes.active);
       this.base.toggleClass(this.options.classes.inactive);
       if (!this.scrolling) {
@@ -1130,7 +1347,10 @@ Core.Float = new Class({
       }
       this.iconsTimout = this.icons.hide.delay(200, this.icons);
       return this.mouseisover = false;
-    }).bindWithEvent(this), this.options.overlay ? this.overlay = new Core.Overlay() : void 0);
+    }).bindWithEvent(this));
+    if (this.options.overlay) {
+      return this.overlay = new Core.Overlay();
+    }
   },
   show: function() {
     if (this.options.overlay) {
@@ -1192,57 +1412,36 @@ provides: Core.Button
 Core.Button = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Controls],
+  Attributes: {
+    label: {
+      setter: function(value) {
+        this.options.label = value;
+        return this.update();
+      }
+    }
+  },
   options: {
-    image: GDotUI.Theme.Button.defaultIcon,
-    text: GDotUI.Theme.Button.defaultText,
+    label: GDotUI.Theme.Button.label,
     "class": GDotUI.Theme.Button["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
+  update: function() {
+    return this.base.set('value', this.options.label);
+  },
   create: function() {
     delete this.base;
-    this.base = new Element('button');
-    this.base.addClass(this.options["class"]).set('text', this.options.text);
-    this.icon = new Core.Icon({
-      image: this.options.image
+    this.base = new Element('input', {
+      type: 'button'
     });
+    this.base.addClass(this.options["class"]);
     this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
       }
-    }).bindWithEvent(this));
-    return this.base.grab(this.icon);
-  }
-});
-/*
----
-
-name: Interfaces.Children
-
-description:
-
-license: MIT-style license.
-
-requires: [GDotUI]
-
-provides: Interfaces.Children
-
-...
-*/
-Interfaces.Children = new Class({
-  _$Children: function() {
-    return this.children = [];
-  },
-  adoptChildren: function() {
-    var children;
-    children = Array.from(arguments);
-    this.children.append(children);
-    return this.base.adopt(arguments);
-  },
-  addChild: function(el) {
-    this.children.push(el);
-    return this.base.grab(el);
+    }).bind(this));
+    return this.update();
   }
 });
 /*
@@ -2076,7 +2275,12 @@ Core.Push = new Class({
     }
   },
   create: function() {
-    this.width = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
+    if (this.options.size != null) {
+      this.width = this.options.size;
+      this.base.setStyle('width', this.width);
+    } else {
+      this.width = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
+    }
     this.base.addClass(this.options["class"]).set('text', this.options.text);
     this.base.addEvent('click', (function() {
       if (this.enabled) {
@@ -2116,11 +2320,16 @@ Core.PushGroup = new Class({
     return this.parent(options);
   },
   setActive: function(item) {
-    return this.buttons.each(function(btn) {
+    this.buttons.each(function(btn) {
       if (btn !== item) {
-        return btn.off();
+        btn.off();
+        return btn.unsupress();
+      } else {
+        btn.on();
+        return btn.supress();
       }
     });
+    return this.fireEvent('change', item);
   },
   create: function() {
     return this.base.addClass(this.options["class"]);
@@ -2131,7 +2340,7 @@ Core.PushGroup = new Class({
       this.addChild(item);
       item.addEvent('invoked', (function(it) {
         this.setActive(item);
-        return this.fireEvent('changed', it);
+        return this.fireEvent('change', it);
       }).bind(this));
       return this.base.setStyle('width', Number.from(this.base.getStyle('width')) + item.width);
     }
@@ -2146,7 +2355,7 @@ description: Abstract base class for data elements.
 
 license: MIT-style license.
 
-requires: [GDotUI,Interfaces.Mux]
+requires: [GDotUI, Interfaces.Mux]
 
 provides: Data.Abstract
 
@@ -3718,6 +3927,48 @@ Data.List = new Class({
     return value.each(function(item) {
       return self.add(item);
     });
+  }
+});
+/*
+---
+
+name: Interfaces.Reflow
+
+description: Some control functions.
+
+license: MIT-style license.
+
+provides: Interfaces.Reflow
+
+requires: [GDotUI]
+
+...
+*/
+Interfaces.Reflow = new Class({
+  Implements: Events,
+  createTemp: function() {
+    this.sensor = new Element('p');
+    return this.sensor.setStyles({
+      margin: 0,
+      padding: 0,
+      position: 'absolute',
+      bottom: 0,
+      right: 0,
+      "z-index": -9999
+    });
+  },
+  pollReflow: function() {
+    var counter, interval;
+    this.base.grab(this.sensor);
+    counter = 0;
+    return interval = setInterval((function() {
+      if (this.sensor.offsetWidth > 2 || ++counter > 99) {
+        console.log(interval);
+        clearInterval(interval);
+        this.sensor.dispose();
+        return this.ready();
+      }
+    }).bind(this), 20);
   }
 });
 /*

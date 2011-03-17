@@ -31,7 +31,11 @@ Core.Push = new Class {
   getState: ->
     if @base.hasClass 'pushed' then true else false
   create: ->
-    @width = Number.from getCSS("/\\.#{@options.class}$/",'width')
+    if @options.size?
+      @width = @options.size
+      @base.setStyle 'width', @width
+    else
+      @width = Number.from getCSS("/\\.#{@options.class}$/",'width')
     @base.addClass(@options.class).set 'text', @options.text
     @base.addEvent 'click', ( ->
       if @enabled

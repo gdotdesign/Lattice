@@ -7,7 +7,7 @@ description: Abstract base class for data elements.
 
 license: MIT-style license.
 
-requires: [GDotUI,Interfaces.Mux]
+requires: [GDotUI, Interfaces.Mux]
 
 provides: Data.Abstract
 

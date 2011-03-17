@@ -15,8 +15,7 @@ GDotUI.Theme={
     },
     Button:{
         'class':'button',
-        defaultText: 'Button',
-        defaultIcon: '../Themes/Chrome/images/pencil.png'
+        label: 'Button',
     },
     Push:{
         'class':'push',

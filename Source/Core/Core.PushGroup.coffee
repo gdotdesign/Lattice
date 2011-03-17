@@ -29,6 +29,11 @@ Core.PushGroup = new Class {
     @buttons.each (btn) ->
       if btn isnt item
         btn.off()
+        btn.unsupress()
+      else
+        btn.on()
+        btn.supress()
+    @fireEvent 'change', item
   create: ->
     @base.addClass @options.class
   addItem: (item) ->
@@ -37,7 +42,7 @@ Core.PushGroup = new Class {
       @addChild item
       item.addEvent 'invoked', ( (it) ->
         @setActive item
-        @fireEvent 'changed', it
+        @fireEvent 'change', it
       ).bind @
       @base.setStyle 'width', Number.from(@base.getStyle('width'))+item.width
 }

@@ -19,21 +19,28 @@ Core.Button = new Class {
     Interfaces.Enabled
     Interfaces.Controls
   ]
+  Attributes: {
+    label: {
+      setter: (value) ->
+        @options.label = value
+        @update()
+    }
+  }
   options:{
-    image: GDotUI.Theme.Button.defaultIcon
-    text: GDotUI.Theme.Button.defaultText
+    label: GDotUI.Theme.Button.label
     class: GDotUI.Theme.Button.class
   }
   initialize: (options) ->
     @parent options 
+  update: ->
+    @base.set 'value', @options.label
   create: ->
     delete @base
-    @base = new Element 'button'
-    @base.addClass(@options.class).set 'text', @options.text
-    @icon = new Core.Icon {image: @options.image}
+    @base = new Element 'input', {type:'button'}
+    @base.addClass @options.class
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]
-      ).bindWithEvent @
-    @base.grab @icon
+      ).bind @
+    @update()
 }

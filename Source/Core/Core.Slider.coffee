@@ -61,13 +61,21 @@ Core.Slider = new Class {
     if @options.mode is 'horizontal'
       @modifier = 'width'
       modifiers = {x: 'width',y:''}
-      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width')
+      if @options.size?
+        @size = @options.size
+        @base.setStyle 'width', @size
+      else
+        @size = Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width')
       @progress.setStyles {
         top: 0
         width: if @options.reset then @size/2 else 0
       }
     if @options.mode is 'vertical'
-      @size = @options.size or Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
+      if @options.size
+        @size = Number.from @options.size
+        @base.setStyle 'height', @size
+      else
+        Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
       modifiers = {x: '',y: 'height'}
       @modifier = 'height'
       @progress.setStyles {
@@ -85,11 +93,12 @@ Core.Slider = new Class {
         @disabledTop = el.getStyle @modifier
     ).bind @
     
-    if @options.reset
-      @drag.addEvent 'complete', ( (el,e) ->
+    @drag.addEvent 'complete', ( (el,e) ->
+      if @options.reset
         if @enabled
           el.setStyle @modifier, @size/2+"px"
-      ).bind @
+      @fireEvent 'complete'
+    ).bind @
       
     @drag.addEvent 'drag', ( (el,e) ->
       if @enabled

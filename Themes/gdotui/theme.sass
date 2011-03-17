@@ -9,6 +9,42 @@
   :padding 5px
   :text-align center
 
+.icon
+  +round_full(15px)
+  +box_shadow(0,0,10px,rgba(0,0,0,0.2))
+  :background-repeat no-repeat
+  :background-position center center
+  :background-color #333
+  :width 30px
+  :height 30px
+  :cursor pointer
+  &:hover
+    :background-color #555
+  &:active
+    :background-color #111
+
+.float
+  +basic_style(5px,0)
+  .handle, .bottom
+    :height 15px
+  .bottom
+    +linear_gradient(#212121,#444)
+  .handle
+    +linear_gradient(#444,#212121)
+  .controls
+    :position absolute
+    :top 0
+    :right -25px
+  .icon
+    :background-color transparent
+    +box_shadow(0,0,0,transparent)
+    :position relative
+    :width 20px
+    :height 20px
+    :left -3px
+  .slider
+    :height 100px
+
 .disabled
   :opacity 0.5
 
@@ -55,8 +91,15 @@
     +linear_gradient(#eee,#ddd)
   
 .button
+  .icon
+    :float left
+    :width 20px
+    :height 20px
+    :background-color transparent
+    +box_shadow(0,0,0,transparent)
   +basic_style(5px, 0.1s)
   :cursor pointer
+  :line-height 20px
   +linear_gradient(#444,#212121)
   &:hover
     +linear_gradient(#555,#313131)

@@ -14,7 +14,7 @@ provides: [Core.Picker, outerClick]
 ...
 ###
 ( ->
-  oldPrototypeStart = Drag.prototype.start
+  oldPrototypeStart = Drag::start
   Drag.prototype.start = ->
     window.fireEvent 'outer'
     oldPrototypeStart.run arguments, @

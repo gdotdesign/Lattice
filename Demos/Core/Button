@@ -31,10 +31,9 @@ invoked:Dispatches when clicked
 }
 ---JS
 window.addEvent('domready', function(){
-  defaultBtn = new Core.Button({text:"Default Button! Depends on the Theme."});
+  defaultBtn = new Core.Button({label:"Default Button! Depends on the Theme."});
   redBtn = new Core.Button({
-    text: "I'm red, with custom Style!",
-    image: "../Themes/Chrome/images/delete.png",
+    label: "I'm red, with custom Style!",
     'class': "redButton"})
   $$(".demo").adopt(defaultBtn,redBtn);
 });

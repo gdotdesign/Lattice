@@ -13,6 +13,8 @@ copyright: ""
 authors: ""
 
 sources:
+  - "Source/Extras/Element.Extras.coffee"
+  - "Source/Extras/Class.Extras.coffee"
   - "Source/GDotUI.coffee"
   - "Source/Core/Core.Abstract.coffee"
   - "Source/Core/Core.Icon.coffee"

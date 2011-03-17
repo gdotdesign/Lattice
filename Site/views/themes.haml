@@ -3,6 +3,10 @@
   .clear
 :javascript
   window.addEvent('domready', function(){
+    icon = new Core.Icon({image:'/home.png'});
+    icon1 = new Core.Icon({image:'/idea-inv.png'});
+    icon2 = new Core.Icon({image:'/layers-inv.png'});    
+    
     button = new Core.Button({text:"Default Button!"});
     disabledButton = new Core.Button({text:"Default Button!"}).disable();
     
@@ -23,5 +27,5 @@
     dDate = new Data.Date();
     dDateTime = new Data.DateTime();
     
-    $("box").adopt( button, disabledButton, horizontalSlider, disabledSlider, toggler,disabledToggler, number, disabledNumber,dTime,dDate,dDateTime, color, disabledColor);
+    $("box").adopt( icon,icon1,icon2, button, disabledButton, horizontalSlider, disabledSlider, toggler,disabledToggler, number, disabledNumber,dTime,dDate,dDateTime, color, disabledColor);
   });
