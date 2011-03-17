@@ -1,0 +1,38 @@
+$slotWidthTime = 35px
+$slotwidthDate = 45px
+$height = 100px
+
+.time, .date, .date-time
+  +basic_style
+  :height $height
+  :margin-bottom 10px
+  :cursor pointer
+  .list
+    .list-item
+      :color #555
+    :-webkit-transition-duration 0.3s
+  .selected
+    +linear_gradient(#535353,#373737)
+    :border
+      :top 1px solid #212121
+      :bottom 1px solid #212121
+    :color #f5f5f5 !important
+    :background-color #333
+  .slot
+    :float left
+.date
+  :width $slotwidthDate*3
+  .slot
+    :width $slotwidthDate
+.time
+  :width $slotWidthTime*2
+  .slot
+    :width $slotWidthTime
+.date-time
+  .slot
+    :width $slotWidthTime
+  .slot:nth-child(3)
+    :border-right 1px solid #212121
+  .slot:first-child
+    :width $slotwidthDate
+  :width $slotwidthDate+$slotWidthTime*4+1

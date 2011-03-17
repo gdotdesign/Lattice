@@ -42,6 +42,10 @@ class Gdotui < Sinatra::Application
     content_type 'text/css'
     sass :style
   end
+  get /blender\.css$/ do
+    content_type 'text/css'
+    sass :blender
+  end
 
   get "/home" do
     haml :home

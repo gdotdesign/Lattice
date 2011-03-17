@@ -219,13 +219,16 @@ getCSS = (selector, property) ->
   #selector = "/\\.#{@get('class')}$/"
   ret = null
   checkStyleSheet = (stylesheet) ->
-    if stylesheet.cssRules?
-      $A(stylesheet.cssRules).each (rule) ->
-        if rule.styleSheet?
-          checkStyleSheet(rule.styleSheet)
-        if rule.selectorText?
-          if rule.selectorText.test(eval(selector))
-            ret = rule.style.getPropertyValue(property)
+    try
+      if stylesheet.cssRules?
+        $A(stylesheet.cssRules).each (rule) ->
+          if rule.styleSheet?
+            checkStyleSheet(rule.styleSheet)
+          if rule.selectorText?
+            if rule.selectorText.test(eval(selector))
+              ret = rule.style.getPropertyValue(property)
+    catch error
+      console.log error
   $A(document.styleSheets).each (stylesheet) ->
     checkStyleSheet(stylesheet)
   ret

@@ -237,17 +237,21 @@ getCSS = function(selector, property) {
   var checkStyleSheet, ret;
   ret = null;
   checkStyleSheet = function(stylesheet) {
-    if (stylesheet.cssRules != null) {
-      return $A(stylesheet.cssRules).each(function(rule) {
-        if (rule.styleSheet != null) {
-          checkStyleSheet(rule.styleSheet);
-        }
-        if (rule.selectorText != null) {
-          if (rule.selectorText.test(eval(selector))) {
-            return ret = rule.style.getPropertyValue(property);
+    try {
+      if (stylesheet.cssRules != null) {
+        return $A(stylesheet.cssRules).each(function(rule) {
+          if (rule.styleSheet != null) {
+            checkStyleSheet(rule.styleSheet);
           }
-        }
-      });
+          if (rule.selectorText != null) {
+            if (rule.selectorText.test(eval(selector))) {
+              return ret = rule.style.getPropertyValue(property);
+            }
+          }
+        });
+      }
+    } catch (error) {
+      return console.log(error);
     }
   };
   $A(document.styleSheets).each(function(stylesheet) {

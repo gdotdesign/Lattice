@@ -10,6 +10,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0.1s;
   width: 210px;
@@ -47,6 +48,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0.5s;
   height: 100px;
@@ -121,6 +123,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0; }
   .float .handle, .float .bottom {
@@ -162,6 +165,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0.5s;
   height: 22px; }
@@ -197,6 +201,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0.5s;
   width: 100px;
@@ -231,6 +236,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0.1s;
   cursor: pointer;
@@ -269,6 +275,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0.5s; }
   .number.horizontal {
@@ -290,6 +297,7 @@
   -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
   background-clip: padding-box;
+  -moz-background-clip: padding;
   background-color: white;
   -webkit-transition-duration: 0s; }
   .slider.horizontal {

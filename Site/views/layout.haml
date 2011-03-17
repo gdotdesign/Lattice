@@ -9,9 +9,9 @@
       %script{:src=>"/Packager.js", :type=>"text/javascript"}
     - if request.path_info =~ /^\/demos/ or request.path_info =~ /^\/themes/
       %script{:src=>"../Themes/Chrome/theme.js", :type=>"text/javascript"}
-      %link{:href => "../Themes/gdotui/theme.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
+      %link{:href => "../Themes/Blender/theme.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
       %script{:src=>"../builds/gdotui-latest.js", :type=>"text/javascript"}
-    %link{:href => "style.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
+    %link{:href => "blender.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
     %title
       - if request.path_info =~ /^\/home/
         - title = "G.UI"

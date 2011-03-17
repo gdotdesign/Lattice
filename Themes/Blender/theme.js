@@ -5,7 +5,6 @@ GDotUI.Theme={
         inactive: 'inactive'
     },
     IconGroup: {
-      class: 'icongroup'
     },
     Icons:{
       add:'../Themes/Chrome/images/add.png',  
@@ -16,14 +15,8 @@ GDotUI.Theme={
     },
     Button:{
         'class':'button',
-        label: 'Button',
-    },
-    Push:{
-        'class':'push',
-        defaultText: 'Push!',
-    },
-    PushGroup:{
-        'class':'pushgroup',
+        defaultText: 'Button',
+        defaultIcon: '../Themes/Chrome/images/pencil.png'
     },
     Toggler:{
       'class': 'toggler',
@@ -75,10 +68,8 @@ GDotUI.Theme={
         'class':'data-list'
     },
     Slider:{
-      classes: {
-        base: 'slider',
-        bar: 'progress',
-      }
+        barClass:'bar',
+        knobClass:'knob'
     },
     Slot:{
         'class':'slot'  
@@ -109,15 +100,10 @@ GDotUI.Theme={
       }
     },
     Number:{
+        'class':'number',
         range:[-100,100],
         steps:200,
-        reset: true,
-        mode: 'vertical',
-        classes: {
-          base: 'number',
-          bar: 'progress',
-          text: 'text'
-        }
+        reset: true
     },
     List:{
       'class':'list',
