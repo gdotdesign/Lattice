@@ -4,16 +4,16 @@
   :float left
 hr
   :border none
-  :border-bottom 1px dashed #ccc
+  :border-bottom 1px solid #666
   :margin 10px 0
 .required
-  :background-color rgba(255,255,255,0.4)
+  :background-color rgba(0,0,0,0.1)
   .checkbox
-    :background-color #bacfd6
+    :background-color #777
 .selected
-  :background-color rgba(255,255,255,0.7)
+  :background-color rgba(0,0,0,0.2)
   .checkbox
-    :background-color #4E9FBF
+    :background-color #333
 
 .demotabs
   :margin 0 auto
@@ -46,36 +46,30 @@ hr
     :width 160px
     :position relative
     :height 40px
-  .border
-    :width 160px
-    :height 40px
-    :position absolute
-    +round_full(20px)
-    :background-color rgba(255,255,255,1)
-    :z-index 0
   input[type=submit]
     +transition_duration(250ms)
     &:hover
-      +linear_gradient(#444,#212121)
+      +linear_gradient(#373737,#535353)
     &:active
-      +linear_gradient(#212121,#444)
+      +linear_gradient(#4771b3,#638dcf)
+      :color #1c1c1c
     :cursor pointer
     :position absolute
     :border none
     :width 150px
-    :height 30px
+    :height 33px
     :top 5px
     :left 5px
-    +linear_gradient(#4e9fbf,#2d7a96)
-    +round_full(15px)
+    :border 1px solid #272727
+    +linear_gradient(#535353,#373737)
+    +round_full(5px)
     :text-align center
     :line-height 30px
-    :font-size 18px
+    :font-size 16px
     :color #eee
     :text-shadow 0 0 4px rgba(0,0,0,0.2)
     :letter-spacing 1px
     :z-index 2
-    +box_shadow(0,0,20px,rgba(0,0,0,0.3))
 .package
   :font-size 12px
   .check
@@ -86,11 +80,11 @@ hr
     :padding-bottom 10px
   tr
     +round_full(5px)
-    :border-bottom 1px dotted #ddd
+    :border-bottom 1px solid #666
   td.provides
     :width 300px
     :line-height 18px
-    :color #777
+    :color #333
     :vertical-align middle
   td.name
     :margin 0
@@ -106,10 +100,9 @@ hr
 .checkbox
   :width 15px
   :height 15px
-  +box_shadow(0,0,5px,rgba(0,0,0,0.2))
-  +transition_duration(250ms)
-  +round_full(4px)
-  :background-color #eee
+  +round_full(5px)
+  :border 1px solid #272727
+  :background-color #999
 @-webkit-keyframes travel
   from 
   to
@@ -119,7 +112,7 @@ body
 h1
   :font-size 20px
   :font-weight normal
-  :border-bottom 1px dashed #ccc
+  :border-bottom 1px solid #666
   :padding-bottom 5px
   :margin-bottom 15px
 .dir
@@ -136,8 +129,9 @@ h1
     :margin-bottom 5px
     :margin-top 5px
 .header
-  +round_full(5px)
+  +round(0,0,5px,5px)
   :border 1px solid #272727
+  :border-top none
   +box_shadow(0,1px,1px,#878787)
   +linear_gradient(#898989,#6a6a6a)
   :margin 0 auto
@@ -209,18 +203,6 @@ h1
   
 .startup
   :height 130px
-  .border
-    :width 210px
-    :height 50px
-    :position absolute
-    +round_full(25px)
-    :background-color rgba(255,255,255,1)
-  .down
-    :top 25px
-    :right 25px
-  .git
-    :top 95px
-    :right 25px
   .title
     :margin-top 5px
     :margin-left 10px
@@ -246,30 +228,28 @@ h1
     :position absolute
     :top 30px
     :right 30px
-    +linear_gradient(#4e9fbf,#2d7a96)
-    +round_full(20px)
+    :border 1px solid #272727
+    +linear_gradient(#535353,#373737)
+    +round_full(5px)
     :text-align center
     :line-height 40px
     :font-size 18px
     :color #eee
-    :text-shadow 0 0 4px rgba(0,0,0,0.2)
     :letter-spacing 1px
     :z-index 2
-    +box_shadow(0,0,20px,rgba(0,0,0,0.3))
   .github
-    +box_shadow(0,0,20px,rgba(0,0,0,0.3))
     :width 200px
     :height 40px
     :position absolute
     :top 100px
     :right 30px
-    +linear_gradient(#444,#212121)
-    +round_full(20px)
+    :border 1px solid #272727
+    +linear_gradient(#535353,#373737)
+    +round_full(5px)
     :text-align center
     :line-height 40px
     :font-size 18px
     :color #eee
-    :text-shadow 0 0 4px rgba(0,0,0,0.2)
     :letter-spacing 1px
     :z-index 2
 .doc

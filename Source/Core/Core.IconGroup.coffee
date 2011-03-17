@@ -128,10 +128,11 @@ Core.IconGroup = new Class {
             @options.columns = null
         if @options.columns?
           columns = @options.columns
-          rows = @icons.length / columns
+          rows = Math.round @icons.length/columns
         if @options.rows?
           rows = @options.rows
           columns = Math.round @icons.length/rows
+        console.log rows, columns
         icpos = @icons.map ((item,i) ->
           if i % columns == 0
             x = 0

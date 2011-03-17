@@ -70,8 +70,11 @@ Data.Unit = new Class {
   create: ->
     @value = 0
     @base.addClass @options.class
-    @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
-    @sel = new Data.Select {list:UnitList}
+    @number = new Data.Number {range:[-50,50],reset: on, steps: [100], size:120}
+    @sel = new Core.Select({width: 80})
+    Object.each UnitList,((item) ->
+      @sel.addItem new Iterable.ListItem({title:item,removeable:false,draggable:false})
+    ).bind @
     @number.addEvent 'change', ((value) ->
       @value = value
       @fireEvent 'change', String(@value)+@sel.getValue()
@@ -87,7 +90,7 @@ Data.Unit = new Class {
       value = match[1]
       unit = match[2]
       @sel.setValue unit
-      @number.setValue value
+      @number.set value
   getValue: ->
     String(@value)+@sel.value
 }

@@ -58,8 +58,8 @@ Iterable.ListItem = new Class {
       @base.grab @remove
     if @options.sortable
       @base.grab @handle
-    @base.addEvent @options.selectEvent, ( ->
-      @fireEvent 'select', @
+    @base.addEvent @options.selectEvent, ( (e)->
+      @fireEvent 'select', [@,e]
       ).bindWithEvent @
     @base.addEvent @options.invokeEvent, ( ->
       if @enabled and not @options.draggable and not @editing

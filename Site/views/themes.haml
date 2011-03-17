@@ -21,11 +21,18 @@
     
     color = new Data.Color();
     disabledColor = new Data.Color().disable();
-    $$(color.base,disabledColor.base).setStyle('float', 'left');
     
     dTime = new Data.Time();
     dDate = new Data.Date();
     dDateTime = new Data.DateTime();
     
-    $("box").adopt( icon,icon1,icon2, button, disabledButton, horizontalSlider, disabledSlider, toggler,disabledToggler, number, disabledNumber,dTime,dDate,dDateTime, color, disabledColor);
+    unit = new Data.Unit();
+    
+    select = new Core.Select({default:'background-break'});
+    list = [' bounding-box','each-box','continuous','border-box','padding-box','content-box','no-clip']
+    list.each(function(item){
+      select.addItem(new Iterable.ListItem({title:item,removeable:false,draggable:false}))
+    });
+    
+    $("box").adopt( icon,icon1,icon2, button, disabledButton, horizontalSlider, disabledSlider, toggler,disabledToggler, number, select, unit,disabledNumber,dTime,dDate,dDateTime, color );
   });

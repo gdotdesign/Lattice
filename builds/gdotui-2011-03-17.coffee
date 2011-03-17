@@ -36,7 +36,9 @@ provides: Element.Extras
         
     grab: (el, where) ->
       @oldGrab.attempt arguments, @
-      document.id(el).fireEvent 'addedToDom'
+      e = document.id(el)
+      if e.fireEvent?
+        e.fireEvent 'addedToDom'
       @
       
     inject: (el, where) ->
@@ -48,7 +50,9 @@ provides: Element.Extras
       @oldAdopt.attempt arguments, @
       elements = Array.flatten(arguments)
       elements.each (el) ->
-        document.id(el).fireEvent 'addedToDom'
+        e = document.id(el)
+        if e.fireEvent?
+          document.id(el).fireEvent 'addedToDom'
       @
   }
 )()
@@ -533,10 +537,11 @@ Core.IconGroup = new Class {
             @options.columns = null
         if @options.columns?
           columns = @options.columns
-          rows = @icons.length / columns
+          rows = Math.round @icons.length/columns
         if @options.rows?
           rows = @options.rows
           columns = Math.round @icons.length/rows
+        console.log rows, columns
         icpos = @icons.map ((item,i) ->
           if i % columns == 0
             x = 0
@@ -1300,6 +1305,10 @@ Core.Picker = new Class {
       @contentElement.fireEvent 'show'
     @base.addEvent 'outerClick', @hide.bindWithEvent @
     @onReady()
+  forceHide: ->
+    if @attachedTo?
+      @attachedTo.removeClass @options.picking
+    @base.dispose()
   hide: (e) ->
     if e?
       if @base.isVisible() and not @base.hasChild(e.target)
@@ -1334,6 +1343,14 @@ Iterable.List = new Class {
     class: GDotUI.Theme.List.class
     selected: GDotUI.Theme.List.selected
     search: off
+  }
+  Attributes: {
+    selected: {
+      getter: ->
+        @items.filter(((item) ->
+          if item.base.hasClass @options.selected then true else false
+        ).bind(@))[0]
+    }
   }
   initialize: (options) ->
     @parent options
@@ -1389,18 +1406,21 @@ Iterable.List = new Class {
         yes
       else no
     filtered[0]
-  select: (item) ->
-    if @selected != item
-      if @selected?
-        @selected.base.removeClass @options.selected
-      @selected = item
-      @selected.base.addClass @options.selected
-      @fireEvent 'select', item
+  select: (item,e) ->
+    if item?
+      if @selected != item
+        if @selected?
+          @selected.base.removeClass @options.selected
+        @selected = item
+        @selected.base.addClass @options.selected
+        @fireEvent 'select', [item,e]
+    else
+      @fireEvent 'empty'
   addItem: (li) -> 
     @items.push li
     @base.grab li
-    li.addEvent 'select', ( (item)->
-      @select item
+    li.addEvent 'select', ( (item,e)->
+      @select item,e
       ).bindWithEvent @
     li.addEvent 'invoked', ( (item) ->
       @fireEvent 'invoked', arguments
@@ -1948,6 +1968,94 @@ Core.PushGroup = new Class {
         @fireEvent 'change', it
       ).bind @
       @base.setStyle 'width', Number.from(@base.getStyle('width'))+item.width
+}
+
+
+###
+---
+
+name: Core.Select
+
+description: Color data element. ( color picker )
+
+license: MIT-style license.
+
+requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List]
+
+provides: Core.Select
+
+...
+###
+Core.Select = new Class {
+  Extends:Core.Abstract
+  Implements:[ Interfaces.Controls, Interfaces.Enabled]
+  options: {
+    width: 200
+    class: 'select'
+  }
+  initialize: (options) ->
+    @parent options
+  getValue: ->
+    @list.get('selected').options.title
+  setValue: (value) ->
+    @list.select @list.getItemFromTitle(value)
+  create: ->
+    @base.addClass @options.class
+    @base.setStyle 'position', 'relative'
+    @text = new Element('div', {text: @options.default or ''})
+    @text.setStyles {
+      position: 'absolute'
+      top: 0
+      left: 0
+      right: 0
+      bottom: 0
+      'z-index': 0
+      overflow: 'hidden'
+    }
+    if @options.width?
+      @size = @options.width
+      @base.setStyle 'width', @size
+    else
+      @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
+    @addIcon = new Core.Icon()
+    @addIcon.base.addClass 'add'
+    @addIcon.base.set 'text', '+'
+    @removeIcon = new Core.Icon()
+    @removeIcon.base.set 'text', '-'
+    @removeIcon.base.addClass 'remove'
+    $$(@addIcon.base,@removeIcon.base).setStyles {
+      'z-index': '1'
+      'position': 'relative'
+    }
+    @picker = new Core.Picker()
+    @picker.attach @base
+    @list = new Iterable.List({class:'select-list'})
+    @picker.setContent @list.base
+    #@list.base.setStyle 'width', @size
+    @base.adopt @text, @removeIcon, @addIcon
+    @list.addEvent 'select', ( (item,e)->
+      if e?
+        e.stop()
+      @text.set 'text', item.options.title
+      @fireEvent 'change', item.options.title
+      @picker.forceHide()
+    ).bind @
+    @removeIcon.addEvent 'invoked',( (el,e)->
+      e.stop()
+      @removeItem @list.get('selected')
+      @text.set 'text', @options.default or ''
+    ).bind @
+    @addIcon.addEvent 'invoked',( (el,e)->
+      e.stop()
+      a = window.prompt('something')
+      item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
+      @addItem item
+    ).bind @
+  addItem: (item) ->
+    item.base.set 'class', 'select-item'
+    @list.addItem item
+  removeItem: (item) ->
+    @list.removeItem item
 }
 
 
@@ -2586,8 +2694,8 @@ Iterable.ListItem = new Class {
       @base.grab @remove
     if @options.sortable
       @base.grab @handle
-    @base.addEvent @options.selectEvent, ( ->
-      @fireEvent 'select', @
+    @base.addEvent @options.selectEvent, ( (e)->
+      @fireEvent 'select', [@,e]
       ).bindWithEvent @
     @base.addEvent @options.invokeEvent, ( ->
       if @enabled and not @options.draggable and not @editing
@@ -3153,8 +3261,11 @@ Data.Unit = new Class {
   create: ->
     @value = 0
     @base.addClass @options.class
-    @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
-    @sel = new Data.Select {list:UnitList}
+    @number = new Data.Number {range:[-50,50],reset: on, steps: [100], size:120}
+    @sel = new Core.Select({width: 80})
+    Object.each UnitList,((item) ->
+      @sel.addItem new Iterable.ListItem({title:item,removeable:false,draggable:false})
+    ).bind @
     @number.addEvent 'change', ((value) ->
       @value = value
       @fireEvent 'change', String(@value)+@sel.getValue()
@@ -3170,7 +3281,7 @@ Data.Unit = new Class {
       value = match[1]
       unit = match[2]
       @sel.setValue unit
-      @number.setValue value
+      @number.set value
   getValue: ->
     String(@value)+@sel.value
 }

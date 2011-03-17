@@ -21,6 +21,14 @@ Iterable.List = new Class {
     selected: GDotUI.Theme.List.selected
     search: off
   }
+  Attributes: {
+    selected: {
+      getter: ->
+        @items.filter(((item) ->
+          if item.base.hasClass @options.selected then true else false
+        ).bind(@))[0]
+    }
+  }
   initialize: (options) ->
     @parent options
   create: ->
@@ -75,18 +83,21 @@ Iterable.List = new Class {
         yes
       else no
     filtered[0]
-  select: (item) ->
-    if @selected != item
-      if @selected?
-        @selected.base.removeClass @options.selected
-      @selected = item
-      @selected.base.addClass @options.selected
-      @fireEvent 'select', item
+  select: (item,e) ->
+    if item?
+      if @selected != item
+        if @selected?
+          @selected.base.removeClass @options.selected
+        @selected = item
+        @selected.base.addClass @options.selected
+        @fireEvent 'select', [item,e]
+    else
+      @fireEvent 'empty'
   addItem: (li) -> 
     @items.push li
     @base.grab li
-    li.addEvent 'select', ( (item)->
-      @select item
+    li.addEvent 'select', ( (item,e)->
+      @select item,e
       ).bindWithEvent @
     li.addEvent 'invoked', ( (item) ->
       @fireEvent 'invoked', arguments

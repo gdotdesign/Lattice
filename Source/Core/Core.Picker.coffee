@@ -112,6 +112,10 @@ Core.Picker = new Class {
       @contentElement.fireEvent 'show'
     @base.addEvent 'outerClick', @hide.bindWithEvent @
     @onReady()
+  forceHide: ->
+    if @attachedTo?
+      @attachedTo.removeClass @options.picking
+    @base.dispose()
   hide: (e) ->
     if e?
       if @base.isVisible() and not @base.hasChild(e.target)

@@ -36,7 +36,9 @@ provides: Element.Extras
         
     grab: (el, where) ->
       @oldGrab.attempt arguments, @
-      document.id(el).fireEvent 'addedToDom'
+      e = document.id(el)
+      if e.fireEvent?
+        e.fireEvent 'addedToDom'
       @
       
     inject: (el, where) ->
@@ -48,7 +50,9 @@ provides: Element.Extras
       @oldAdopt.attempt arguments, @
       elements = Array.flatten(arguments)
       elements.each (el) ->
-        document.id(el).fireEvent 'addedToDom'
+        e = document.id(el)
+        if e.fireEvent?
+          document.id(el).fireEvent 'addedToDom'
       @
   }
 )()

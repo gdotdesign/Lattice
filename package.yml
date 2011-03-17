@@ -33,6 +33,7 @@ sources:
   - "Source/Core/Core.Tabs.coffee"
   - "Source/Core/Core.Push.coffee"
   - "Source/Core/Core.PushGroup.coffee"
+  - "Source/Core/Core.Select.coffee"
   - "Source/Data/Data.Abstract.coffee"
   - "Source/Data/Data.Text.coffee"
   - "Source/Data/Data.Number.coffee"

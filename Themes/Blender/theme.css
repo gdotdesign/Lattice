@@ -35,6 +35,12 @@
     -moz-box-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
     -webkit-box-shadow: 0 0 4px rgba(0, 0, 0, 0.4); }
 
+.picker > div:first-child {
+  box-shadow: 0 0 0 transparent;
+  -moz-box-shadow: 0 0 0 transparent;
+  -webkit-box-shadow: 0 0 0 transparent;
+  margin-bottom: 5px; }
+
 .time, .date, .date-time {
   border: 1px solid #272727;
   font-size: 12px;
@@ -95,6 +101,115 @@
 .list-item {
   padding: 5px;
   text-align: center; }
+
+.unit-pick {
+  margin: 5px;
+  width: 200px;
+  border: 1px solid #272727;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px #878787;
+  -moz-box-shadow: 0 1px 2px #878787;
+  -webkit-box-shadow: 0 1px 2px #878787;
+  height: 20px; }
+  .unit-pick .number, .unit-pick .select {
+    float: left; }
+  .unit-pick .number {
+    margin: 0;
+    -moz-border-radius: 5px 0 0 5px;
+    -webkit-border-radius: 5px 0 0 5px;
+    -khtml-border-radius: 5px 0 0 5px;
+    border-radius: 5px 0 0 5px;
+    box-shadow: 0 0 0 transparent;
+    -moz-box-shadow: 0 0 0 transparent;
+    -webkit-box-shadow: 0 0 0 transparent; }
+    .unit-pick .number .text {
+      border: none; }
+  .unit-pick .select {
+    margin: 0;
+    border: none;
+    box-shadow: 0 0 0 transparent;
+    -moz-box-shadow: 0 0 0 transparent;
+    -webkit-box-shadow: 0 0 0 transparent;
+    -moz-border-radius: 0 5px 5px 0;
+    -webkit-border-radius: 0 5px 5px 0;
+    -khtml-border-radius: 0 5px 5px 0;
+    border-radius: 0 5px 5px 0; }
+
+.picker {
+  background-color: rgba(0, 0, 0, 0.6);
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
+  -moz-box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
+  -webkit-box-shadow: 0 0 14px rgba(0, 0, 0, 0.6); }
+
+.select-list {
+  margin-top: 5px; }
+
+.select-item {
+  margin: 0 1px;
+  cursor: pointer;
+  text-align: left;
+  height: 12px;
+  padding: 4px 6px;
+  color: #f5f5f5;
+  font-size: 12px; }
+  .select-item:hover {
+    background-image: -moz-linear-gradient(100% 100% 90deg, #4771b3, #638dcf);
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#638dcf), to(#4771b3));
+    color: #1c1c1c; }
+
+.select {
+  line-height: 21px;
+  border: 1px solid #272727;
+  font-size: 12px;
+  margin: 5px;
+  color: #666666;
+  background-color: #727272;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  -khtml-border-radius: 5px;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px #878787;
+  -moz-box-shadow: 0 1px 2px #878787;
+  -webkit-box-shadow: 0 1px 2px #878787;
+  -webkit-transition-duration: 0.5s;
+  background-image: -moz-linear-gradient(100% 100% 90deg, #373737, #535353);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#535353), to(#373737));
+  color: #f5f5f5;
+  height: 20px;
+  width: 200px; }
+  .select > div:first-child {
+    padding-left: 5px; }
+  .select .icon {
+    line-height: 15px;
+    text-align: center;
+    font-size: 22px;
+    color: white;
+    box-shadow: 0 0 0 transparent;
+    -moz-box-shadow: 0 0 0 transparent;
+    -webkit-box-shadow: 0 0 0 transparent;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    -khtml-border-radius: 0;
+    border-radius: 0;
+    background-color: #a3a3a3;
+    float: right;
+    margin: 0;
+    width: 20px;
+    height: 20px;
+    border: none;
+    border-left: 1px solid #1c1c1c; }
+    .select .icon.remove {
+      -moz-border-radius: 0 5px 5px 0;
+      -webkit-border-radius: 0 5px 5px 0;
+      -khtml-border-radius: 0 5px 5px 0;
+      border-radius: 0 5px 5px 0; }
 
 .icon {
   border: 1px solid #272727;
@@ -206,8 +321,8 @@
     line-height: 22px;
     cursor: pointer; }
     .pushgroup .push.pushed {
-      background-image: -moz-linear-gradient(100% 100% 90deg, #638dcf, #4771b3);
-      background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#4771b3), to(#638dcf));
+      background-image: -moz-linear-gradient(100% 100% 90deg, #4771b3, #638dcf);
+      background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#638dcf), to(#4771b3));
       color: #1c1c1c; }
   .pushgroup .push:last-child {
     border-right: none; }

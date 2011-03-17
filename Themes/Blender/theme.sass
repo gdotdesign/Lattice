@@ -12,6 +12,69 @@
   :padding 5px
   :text-align center
 
+.unit-pick
+  :margin 5px
+  :width 200px
+  :border 1px solid #272727
+  +round_full(5px)
+  +box_shadow(0,1px,2px,#878787)
+  :height 20px
+  .number, .select
+    :float left
+  .number
+    :margin 0
+    +round(5px,0,5px,0)
+    .text
+      :border none
+    +box_shadow(0,0,0,transparent)
+  .select
+    :margin 0
+    :border none
+    +box_shadow(0,0,0,transparent)
+    +round(0,5px,0,5px)
+.picker
+  :background-color rgba(0,0,0,0.6)
+  +round_full(5px)
+  +box_shadow(0,0,14px,rgba(0,0,0,0.6))
+.select-list
+  :margin-top 5px
+.select-item
+  :margin 0 1px
+  :cursor pointer
+  :text-align left
+  :height 12px
+  :padding 4px 6px
+  :color #f5f5f5
+  :font-size 12px
+  &:hover
+    +linear_gradient(#638dcf,#4771b3)
+    :color #1c1c1c
+.select
+  > div:first-child
+    :padding-left 5px
+  :line-height 21px
+  +basic_style
+  +linear_gradient(#535353,#373737)
+  :color #f5f5f5
+  .icon
+    :line-height 15px
+    :text-align center
+    :font-size 22px
+    :color #fff
+    &.remove
+      +round(0,5px,0,5px)
+    +box_shadow(0,0,0,transparent)
+    +round_full(0)
+    :background-color #a3a3a3
+    :float right
+    :margin 0
+    :width 20px
+    :height 20px
+    :border none
+    :border-left 1px solid #1c1c1c
+  :height 20px
+  :width 200px
+
 .icon
   +basic_style(0,0)
   +linear_gradient(#898989,#6a6a6a)
@@ -73,7 +136,7 @@
     :line-height 22px
     :cursor pointer
     &.pushed
-      +linear_gradient(#4771b3,#638dcf)
+      +linear_gradient(#638dcf,#4771b3)
       :color #1c1c1c
   .push:last-child
     :border-right none

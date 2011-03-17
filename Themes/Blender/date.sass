@@ -1,7 +1,11 @@
-$slotWidthTime = 35px
-$slotwidthDate = 45px
-$height = 100px
+$slotWidthTime: 35px
+$slotwidthDate: 45px
+$height: 100px
 
+.picker
+  > div:first-child
+    +box_shadow(0,0,0,transparent)
+    :margin-bottom 5px
 .time, .date, .date-time
   +basic_style
   :height $height
