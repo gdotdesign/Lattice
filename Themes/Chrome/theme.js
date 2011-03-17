@@ -92,8 +92,8 @@ GDotUI.Theme={
     Tip:{
         'class':'tip',
         offset: 5,
-        location: { x:"left",
-                    y:"bottom" }
+        location: { x:"right",
+                    y:"center" }
     },
     Date:{
       'class':'date',

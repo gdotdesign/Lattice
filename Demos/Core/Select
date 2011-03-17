@@ -1,9 +1,11 @@
 ---JS
 window.addEvent('domready', function(){
-  select = new Core.Select({default:'background-break'});
+  select = new Core.Select({'default':'background-break'});
   list = [' bounding-box','each-box','continuous','border-box','padding-box','content-box','no-clip']
   list.each(function(item){
     select.addItem(new Iterable.ListItem({title:item,removeable:false,draggable:false}))
   });
+  tip = new Core.Tip({label:'Select something!',delay:2000,location:{x:"center",y:"bottom"}})
+  tip.attach(select)
   $$('.demo')[0].grab(select);
 })

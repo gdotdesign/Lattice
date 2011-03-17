@@ -627,6 +627,7 @@ Core.Tip = new Class {
     location: GDotUI.Theme.Tip.location
     offset: GDotUI.Theme.Tip.offset
     zindex: GDotUI.Theme.Tip.zindex
+    delay: 0
   }
   initialize: (options) ->
     @parent options
@@ -638,22 +639,30 @@ Core.Tip = new Class {
   attach: (item) ->
     if @attachedTo?
       @detach()
-    item.base.addEvent 'mouseenter', @enter
-    item.base.addEvent 'mouseleave', @leave
-    @attachedTo = item
+    document.id(item).addEvent 'mouseenter', @enter
+    document.id(item).addEvent 'mouseleave', @leave
+    @attachedTo = document.id(item)
   detach: (item) ->
-    item.base.removeEvent 'mouseenter', @enter
-    item.base.removeEvent 'mouseleave', @leave
+    document.id(item).removeEvent 'mouseenter', @enter
+    document.id(item).removeEvent 'mouseleave', @leave
     @attachedTo = null
   enter: ->
-    if @attachedTo.enabled
-      @show()
+    @over = true
+    #if @attachedTo.enabled
+    @id = ( ->
+      if @over
+        @show()
+    ).bind(@).delay @options.delay
   leave: ->
-    if @attachedTo.enabled
-      @hide()
+    if @id?
+      clearTimeout(@id)
+      @id = null
+    @over = false
+    #if @attachedTo.enabled
+    @hide()
   ready: ->
-    p = @attachedTo.base.getPosition()
-    s = @attachedTo.base.getSize()
+    p = @attachedTo.getPosition()
+    s = @attachedTo.getSize()
     s1 = @base.getSize()
     switch @options.location.x
       when "left"
@@ -753,7 +762,7 @@ Core.Slider = new Class {
         @size = Number.from @options.size
         @base.setStyle 'height', @size
       else
-        Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
+        @size = Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
       modifiers = {x: '',y: 'height'}
       @modifier = 'height'
       @progress.setStyles {

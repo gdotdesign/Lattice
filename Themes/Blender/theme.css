@@ -138,15 +138,20 @@
     -khtml-border-radius: 0 5px 5px 0;
     border-radius: 0 5px 5px 0; }
 
-.picker {
+.tip {
+  color: #f5f5f5;
+  padding: 6px;
+  font-size: 12px; }
+
+.picker, .tip {
   background-color: rgba(0, 0, 0, 0.6);
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   -khtml-border-radius: 5px;
   border-radius: 5px;
-  box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
-  -moz-box-shadow: 0 0 14px rgba(0, 0, 0, 0.6);
-  -webkit-box-shadow: 0 0 14px rgba(0, 0, 0, 0.6); }
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  -moz-box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
+  -webkit-box-shadow: 0 0 8px rgba(0, 0, 0, 0.6); }
 
 .select-list {
   margin-top: 5px; }

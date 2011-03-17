@@ -28,7 +28,7 @@
     
     unit = new Data.Unit();
     
-    select = new Core.Select({default:'background-break'});
+    select = new Core.Select({'default':'background-break'});
     list = [' bounding-box','each-box','continuous','border-box','padding-box','content-box','no-clip']
     list.each(function(item){
       select.addItem(new Iterable.ListItem({title:item,removeable:false,draggable:false}))

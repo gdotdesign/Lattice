@@ -75,7 +75,7 @@ Core.Slider = new Class {
         @size = Number.from @options.size
         @base.setStyle 'height', @size
       else
-        Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
+        @size = Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
       modifiers = {x: '',y: 'height'}
       @modifier = 'height'
       @progress.setStyles {

@@ -774,7 +774,8 @@ Core.Tip = new Class({
     label: "",
     location: GDotUI.Theme.Tip.location,
     offset: GDotUI.Theme.Tip.offset,
-    zindex: GDotUI.Theme.Tip.zindex
+    zindex: GDotUI.Theme.Tip.zindex,
+    delay: 0
   },
   initialize: function(options) {
     return this.parent(options);
@@ -789,29 +790,35 @@ Core.Tip = new Class({
     if (this.attachedTo != null) {
       this.detach();
     }
-    item.base.addEvent('mouseenter', this.enter);
-    item.base.addEvent('mouseleave', this.leave);
-    return this.attachedTo = item;
+    document.id(item).addEvent('mouseenter', this.enter);
+    document.id(item).addEvent('mouseleave', this.leave);
+    return this.attachedTo = document.id(item);
   },
   detach: function(item) {
-    item.base.removeEvent('mouseenter', this.enter);
-    item.base.removeEvent('mouseleave', this.leave);
+    document.id(item).removeEvent('mouseenter', this.enter);
+    document.id(item).removeEvent('mouseleave', this.leave);
     return this.attachedTo = null;
   },
   enter: function() {
-    if (this.attachedTo.enabled) {
-      return this.show();
-    }
+    this.over = true;
+    return this.id = (function() {
+      if (this.over) {
+        return this.show();
+      }
+    }).bind(this).delay(this.options.delay);
   },
   leave: function() {
-    if (this.attachedTo.enabled) {
-      return this.hide();
+    if (this.id != null) {
+      clearTimeout(this.id);
+      this.id = null;
     }
+    this.over = false;
+    return this.hide();
   },
   ready: function() {
     var p, s, s1;
-    p = this.attachedTo.base.getPosition();
-    s = this.attachedTo.base.getSize();
+    p = this.attachedTo.getPosition();
+    s = this.attachedTo.getSize();
     s1 = this.base.getSize();
     switch (this.options.location.x) {
       case "left":
@@ -929,7 +936,7 @@ Core.Slider = new Class({
         this.size = Number.from(this.options.size);
         this.base.setStyle('height', this.size);
       } else {
-        Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height'));
+        this.size = Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height'));
       }
       modifiers = {
         x: '',
