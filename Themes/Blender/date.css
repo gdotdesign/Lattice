@@ -1,34 +1,24 @@
 /*
-Syntax error: Undefined mixin 'box_shadow'.
-        on line 7 of date.sass, in `box_shadow'
-        from line 7 of date.sass
+Syntax error: Undefined mixin 'basic_style'.
+        on line 6 of date.sass, in `basic_style'
+        from line 6 of date.sass
 
+1: $slotWidthTime: 35px
 2: $slotwidthDate: 45px
 3: $height: 100px
 4: 
-5: .picker
-6:   > div:first-child
-7:     +box_shadow(0,0,0,transparent)
-8:     :margin-bottom 5px
-9: .time, .date, .date-time
-10:   +basic_style
-11:   :height $height
-12:   :margin-bottom 10px
+5: .time, .date, .date-time
+6:   +basic_style
+7:   :height $height
+8:   :margin-bottom 10px
+9:   :cursor pointer
+10:   .slot
+11:     +box_shadow(0,0,0,transparent)
 
 Backtrace:
-date.sass:7:in `box_shadow'
-date.sass:7
+date.sass:6:in `basic_style'
+date.sass:6
 /home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/perform.rb:162:in `visit_mixin'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/base.rb:37:in `visit'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/perform.rb:18:in `visit'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/base.rb:53:in `block in visit_children'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/base.rb:53:in `map'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/base.rb:53:in `visit_children'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/perform.rb:27:in `block in visit_children'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/perform.rb:39:in `with_environment'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/perform.rb:26:in `visit_children'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/base.rb:37:in `block in visit'
-/home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/perform.rb:232:in `visit_rule'
 /home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/base.rb:37:in `visit'
 /home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/perform.rb:18:in `visit'
 /home/gdotdesign/.rvm/gems/ruby-1.9.2-p0/gems/sass-3.1.0.alpha.221/lib/sass/tree/visitors/base.rb:53:in `block in visit_children'
@@ -85,4 +75,4 @@ date.sass:7
 body:before {
   white-space: pre;
   font-family: monospace;
-  content: "Syntax error: Undefined mixin 'box_shadow'.\A         on line 7 of date.sass, in `box_shadow'\A         from line 7 of date.sass\A \A 2: $slotwidthDate: 45px\A 3: $height: 100px\A 4: \A 5: .picker\A 6:   > div:first-child\A 7:     +box_shadow(0,0,0,transparent)\A 8:     :margin-bottom 5px\A 9: .time, .date, .date-time\A 10:   +basic_style\A 11:   :height $height\A 12:   :margin-bottom 10px"; }
+  content: "Syntax error: Undefined mixin 'basic_style'.\A         on line 6 of date.sass, in `basic_style'\A         from line 6 of date.sass\A \A 1: $slotWidthTime: 35px\A 2: $slotwidthDate: 45px\A 3: $height: 100px\A 4: \A 5: .time, .date, .date-time\A 6:   +basic_style\A 7:   :height $height\A 8:   :margin-bottom 10px\A 9:   :cursor pointer\A 10:   .slot\A 11:     +box_shadow(0,0,0,transparent)"; }

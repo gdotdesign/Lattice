@@ -1335,8 +1335,9 @@ Core.Picker = new Class {
     document.getElement('body').grab @base
     if @attachedTo?
       @attachedTo.addClass @options.picking
-    if e.stop?
-      e.stop()
+    if e?
+      if e.stop?
+        e.stop()
     if @contentElement?
       @contentElement.fireEvent 'show'
     @base.addEvent 'outerClick', @hide.bindWithEvent @

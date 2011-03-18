@@ -1628,8 +1628,10 @@ Core.Picker = new Class({
     if (this.attachedTo != null) {
       this.attachedTo.addClass(this.options.picking);
     }
-    if (e.stop != null) {
-      e.stop();
+    if (e != null) {
+      if (e.stop != null) {
+        e.stop();
+      }
     }
     if (this.contentElement != null) {
       this.contentElement.fireEvent('show');
