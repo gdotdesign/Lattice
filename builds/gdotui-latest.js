@@ -10,7 +10,7 @@ license: MIT-style license.
 provides: Element.Extras
 
 ...
-*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, UnitList, UnitTable, checkForKey, getCSS;
+*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, Prompt, UnitList, UnitTable, checkForKey, getCSS;
 (function() {
   return Element.implement({
     oldGrab: Element.prototype.grab,
@@ -769,6 +769,26 @@ provides: Core.Tip
 Core.Tip = new Class({
   Extends: Core.Abstract,
   Binds: ['enter', 'leave'],
+  Attributes: {
+    label: {
+      setter: function(value) {
+        this.options.label = value;
+        return this.update();
+      }
+    },
+    zindex: {
+      setter: function(value) {
+        this.options.zindex = value;
+        return this.update();
+      }
+    },
+    delay: {
+      setter: function(value) {
+        this.options.delay = value;
+        return this.update();
+      }
+    }
+  },
   options: {
     "class": GDotUI.Theme.Tip["class"],
     label: "",
@@ -780,11 +800,14 @@ Core.Tip = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
+  update: function() {
+    this.base.setStyle('z-index', this.options.zindex);
+    return this.base.set('html', this.options.label);
+  },
   create: function() {
     this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'absolute');
-    this.base.setStyle('z-index', this.options.tipZindex);
-    return this.base.set('html', this.options.label);
+    return this.update();
   },
   attach: function(item) {
     if (this.attachedTo != null) {
@@ -1570,6 +1593,17 @@ Core.Picker = new Class({
       this.attachedTo = null;
       return this.fireEvent('detached');
     }
+  },
+  justAttach: function(input) {
+    if (this.attachedTo != null) {
+      this.detach();
+    }
+    return this.attachedTo = input;
+  },
+  justShow: function() {
+    document.getElement('body').grab(this.base);
+    this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
+    return this.onReady();
   },
   attach: function(input) {
     if (this.attachedTo != null) {
@@ -2404,12 +2438,44 @@ provides: Core.Select
 
 ...
 */
+Prompt = new Class({
+  Extends: Core.Abstract,
+  Delegates: {
+    picker: ['justShow', 'hide', 'justAttach']
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.label = new Element('div', {
+      text: 'addStuff'
+    });
+    this.input = new Element('input', {
+      type: 'text'
+    });
+    this.button = new Element('input', {
+      type: 'button'
+    });
+    this.base.adopt(this.label, this.input, this.button);
+    this.picker = new Core.Picker();
+    return this.picker.setContent(this.base);
+  }
+});
 Core.Select = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Controls, Interfaces.Enabled],
+  Attributes: {
+    size: {
+      setter: function(value) {
+        this.options.size = value;
+        return this.update();
+      }
+    }
+  },
   options: {
     width: 200,
-    "class": 'select'
+    "class": 'select',
+    "default": ''
   },
   initialize: function(options) {
     return this.parent(options);
@@ -2420,10 +2486,18 @@ Core.Select = new Class({
   setValue: function(value) {
     return this.list.select(this.list.getItemFromTitle(value));
   },
+  update: function() {
+    if (this.options.size != null) {
+      this.size = this.options.size;
+      return this.base.setStyle('width', this.size);
+    } else {
+      return this.size = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
+    }
+  },
   create: function() {
     this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'relative');
-    this.text = new Element('div', {
+    this.text = new Element('div.text', {
       text: this.options["default"] || ''
     });
     this.text.setStyles({
@@ -2435,12 +2509,7 @@ Core.Select = new Class({
       'z-index': 0,
       overflow: 'hidden'
     });
-    if (this.options.width != null) {
-      this.size = this.options.width;
-      this.base.setStyle('width', this.size);
-    } else {
-      this.size = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
-    }
+    this.update();
     this.addIcon = new Core.Icon();
     this.addIcon.base.addClass('add');
     this.addIcon.base.set('text', '+');
@@ -2458,6 +2527,8 @@ Core.Select = new Class({
     });
     this.picker.setContent(this.list.base);
     this.base.adopt(this.text, this.removeIcon, this.addIcon);
+    this.prompt = new Prompt();
+    this.prompt.justAttach(this.base);
     this.list.addEvent('select', (function(item, e) {
       if (e != null) {
         e.stop();
@@ -2472,15 +2543,8 @@ Core.Select = new Class({
       return this.text.set('text', this.options["default"] || '');
     }).bind(this));
     return this.addIcon.addEvent('invoked', (function(el, e) {
-      var a, item;
       e.stop();
-      a = window.prompt('something');
-      item = new Iterable.ListItem({
-        title: a,
-        removeable: false,
-        draggable: false
-      });
-      return this.addItem(item);
+      return this.prompt.justShow();
     }).bind(this));
   },
   addItem: function(item) {
@@ -3955,7 +4019,7 @@ Data.Unit = new Class({
       size: 120
     });
     this.sel = new Core.Select({
-      width: 80
+      size: 80
     });
     Object.each(UnitList, (function(item) {
       return this.sel.addItem(new Iterable.ListItem({

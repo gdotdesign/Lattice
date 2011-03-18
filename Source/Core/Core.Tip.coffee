@@ -17,6 +17,23 @@ Core.Tip = new Class {
   Extends:Core.Abstract
   Binds:['enter'
          'leave']
+  Attributes: {
+    label: {
+      setter: (value) ->
+        @options.label = value
+        @update()
+    }
+    zindex: {
+      setter: (value) ->
+        @options.zindex = value
+        @update()
+    }
+    delay: {
+      setter: (value) ->
+        @options.delay = value
+        @update()
+    }
+  }
   options:{
     class: GDotUI.Theme.Tip.class
     label: ""
@@ -27,11 +44,13 @@ Core.Tip = new Class {
   }
   initialize: (options) ->
     @parent options
+  update: ->
+    @base.setStyle 'z-index', @options.zindex
+    @base.set 'html', @options.label
   create: ->
     @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
-    @base.setStyle 'z-index', @options.tipZindex
-    @base.set 'html', @options.label
+    @update();
   attach: (item) ->
     if @attachedTo?
       @detach()

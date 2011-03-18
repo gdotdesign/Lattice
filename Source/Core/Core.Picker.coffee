@@ -88,6 +88,14 @@ Core.Picker = new Class {
       @attachedTo.removeEvent @options.event, @show
       @attachedTo = null
       @fireEvent 'detached'
+  justAttach: (input)->
+    if @attachedTo?
+      @detach()
+    @attachedTo = input
+  justShow: ->
+    document.getElement('body').grab @base
+    @base.addEvent 'outerClick', @hide.bindWithEvent @
+    @onReady()
   attach: (input) ->
     if @attachedTo?
       @detach()

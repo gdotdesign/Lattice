@@ -13,12 +13,35 @@ provides: Core.Select
 
 ...
 ###
+Prompt = new Class {
+  Extends:Core.Abstract
+  Delegates: {
+    picker: ['justShow','hide','justAttach']
+  }
+  initialize: (options) ->
+    @parent options
+  create: ->
+    @label = new Element 'div', {text:'addStuff'}
+    @input = new Element 'input',{type:'text'}
+    @button = new Element 'input', {type:'button'}
+    @base.adopt @label,@input,@button;
+    @picker = new Core.Picker();
+    @picker.setContent @base
+}
 Core.Select = new Class {
   Extends:Core.Abstract
   Implements:[ Interfaces.Controls, Interfaces.Enabled]
+  Attributes: {
+    size: {
+      setter: (value) ->
+        @options.size = value
+        @update()
+    }
+  }
   options: {
     width: 200
     class: 'select'
+    default: ''
   }
   initialize: (options) ->
     @parent options
@@ -26,10 +49,16 @@ Core.Select = new Class {
     @list.get('selected').options.title
   setValue: (value) ->
     @list.select @list.getItemFromTitle(value)
+  update: ->
+    if @options.size?
+      @size = @options.size
+      @base.setStyle 'width', @size
+    else
+      @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
   create: ->
     @base.addClass @options.class
     @base.setStyle 'position', 'relative'
-    @text = new Element('div', {text: @options.default or ''})
+    @text = new Element('div.text', {text: @options.default or ''})
     @text.setStyles {
       position: 'absolute'
       top: 0
@@ -39,11 +68,7 @@ Core.Select = new Class {
       'z-index': 0
       overflow: 'hidden'
     }
-    if @options.width?
-      @size = @options.width
-      @base.setStyle 'width', @size
-    else
-      @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
+    @update();
     @addIcon = new Core.Icon()
     @addIcon.base.addClass 'add'
     @addIcon.base.set 'text', '+'
@@ -58,8 +83,11 @@ Core.Select = new Class {
     @picker.attach @base
     @list = new Iterable.List({class:'select-list'})
     @picker.setContent @list.base
-    #@list.base.setStyle 'width', @size
     @base.adopt @text, @removeIcon, @addIcon
+    
+    @prompt = new Prompt();
+    @prompt.justAttach @base
+    
     @list.addEvent 'select', ( (item,e)->
       if e?
         e.stop()
@@ -74,9 +102,11 @@ Core.Select = new Class {
     ).bind @
     @addIcon.addEvent 'invoked',( (el,e)->
       e.stop()
-      a = window.prompt('something')
-      item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
-      @addItem item
+      @prompt.justShow()
+      #a = window.prompt('something')
+      #if a
+      #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
+      #  @addItem item
     ).bind @
   addItem: (item) ->
     item.base.set 'class', 'select-item'

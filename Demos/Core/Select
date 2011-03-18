@@ -7,5 +7,12 @@ window.addEvent('domready', function(){
   });
   tip = new Core.Tip({label:'Select something!',delay:2000,location:{x:"center",y:"bottom"}})
   tip.attach(select)
+  
+  slider = new Data.Number({label:'Size'})
+  slider.addEvent('change',function(value){
+    select.set('size', value)
+  });
+  slider.setValue(200)
+  $("options").adopt(slider);
   $$('.demo')[0].grab(select);
 })

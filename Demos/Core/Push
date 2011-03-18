@@ -1,0 +1,5 @@
+---JS
+window.addEvent('domready', function(){
+  button = new Core.Push({text:'Push Button',size:120});
+  $$(".demo").grab(button);
+});

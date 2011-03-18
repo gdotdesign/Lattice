@@ -71,7 +71,7 @@ Data.Unit = new Class {
     @value = 0
     @base.addClass @options.class
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100], size:120}
-    @sel = new Core.Select({width: 80})
+    @sel = new Core.Select({size: 80})
     Object.each UnitList,((item) ->
       @sel.addItem new Iterable.ListItem({title:item,removeable:false,draggable:false})
     ).bind @

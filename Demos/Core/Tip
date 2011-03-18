@@ -17,5 +17,22 @@
 window.addEvent('domready', function(){
   tip = new Core.Tip({label:'Some tip here!',delay:500})
   tip.attach($("cpick"))
+  
+  text = new Data.Text();
+  text.addEvent('change',function(value){
+    tip.set('label', value)
+  });
+  slider1 = new Data.Number({label:'Delay',reset:false,steps:3000})
+  slider1.addEvent('change',function(value){
+    tip.set('delay', value)
+  });
+  slider1.setValue(0)
+  slider2 = new Data.Number({label:'z-index',reset:false,steps:15})
+  slider2.addEvent('change',function(value){
+    tip.set('zindex', value)
+  });
+  slider2.setValue(1)
+  
+  $("options").adopt(text,slider1, slider2);
 });
 

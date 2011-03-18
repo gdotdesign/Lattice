@@ -7,10 +7,41 @@
   :background-image none !important
 .slot
   :height 100px
+  :width 40px
+  +basic_style
+  .list
+    .list-item
+      :color #555
+    :-webkit-transition-duration 0.3s
+  .selected
+    +linear_gradient(#535353,#373737)
+    :border
+      :top 1px solid #212121
+      :bottom 1px solid #212121
+    :color #f5f5f5 !important
+    :background-color #333
   .over
 .list-item
   :padding 5px
   :text-align center
+
+
+textarea
+  :width 200px
+  +basic_style
+  :background-color #A3A3A3
+  :font-family Sans
+  :font-size 12px
+  :padding 6px
+  :color #1c1c1c
+  :margin-bottom 0
+  :resize none
+  -webkit-box-sizing: border-box 
+  -moz-box-sizing: border-box  
+  box-sizing: border-box
+
+.overlay
+  :background-color rgba(0,0,0,0.6)
 
 .unit-pick
   :margin 5px
@@ -27,6 +58,8 @@
     .text
       :border none
     +box_shadow(0,0,0,transparent)
+    .progress
+      +round(5px,0,5px,0)
   .select
     :margin 0
     :border none
@@ -36,6 +69,8 @@
   :color #f5f5f5
   :padding 6px
   :font-size 12px
+
+
 .picker, .tip
   :background-color rgba(0,0,0,0.6)
   +round_full(5px)
@@ -54,11 +89,17 @@
     +linear_gradient(#638dcf,#4771b3)
     :color #1c1c1c
 .select
+  :cursor pointer
   > div:first-child
     :padding-left 5px
   :line-height 21px
   +basic_style
-  +linear_gradient(#535353,#373737)
+  .text
+    &:hover
+      +linear_gradient(#696969,#454545)
+    &:active
+      +linear_gradient(#373737,#535353)
+    +linear_gradient(#535353,#373737)
   :color #f5f5f5
   .icon
     :line-height 15px
@@ -69,7 +110,6 @@
       +round(0,5px,0,5px)
     +box_shadow(0,0,0,transparent)
     +round_full(0)
-    :background-color #a3a3a3
     :float right
     :margin 0
     :width 20px
@@ -82,18 +122,22 @@
 .icon
   +basic_style(0,0)
   +linear_gradient(#898989,#6a6a6a)
+  :background-color #898989
   :background-repeat no-repeat
   :background-position center center
   :width 30px
   :height 30px
   :cursor pointer
   &:hover
-    :background-color #555
+    :background-color #9E9E9E
+    +linear_gradient(#9E9E9E,#7A7A7A)
   &:active
-    :background-color #111
+    :background-color #696969
+    +linear_gradient(#494949,#696969)
 
 .float
-  +basic_style(5px,0)
+  +round_full(5px)
+  +box_shadow(0,0,8px,rgba(0,0,0,0.6))
   .handle, .bottom
     :height 20px
   .bottom
@@ -130,20 +174,26 @@
     +round(5px,0,5px,0)
   .push:last-child
     +round(0,5px,0,5px)
-  .push
-    :width 40px
-    +linear_gradient(#535353,#373737)
-    :color #f5f5f5
-    :height 22px
-    :float left
-    :text-align center
-    :line-height 22px
-    :cursor pointer
-    &.pushed
-      +linear_gradient(#638dcf,#4771b3)
-      :color #1c1c1c
   .push:last-child
     :border-right none
+  .push
+    :float left
+    +box_shadow(0,0,0,transparent)
+    +round_full(0)
+    :border none
+    :margin 0
+.push
+  +basic_style
+  :width 40px
+  +linear_gradient(#535353,#373737)
+  :color #f5f5f5
+  :height 22px
+  :text-align center
+  :line-height 22px
+  :cursor pointer
+  &.pushed
+    +linear_gradient(#638dcf,#4771b3)
+    :color #1c1c1c
 
 .toggler
   +basic_style
@@ -199,6 +249,7 @@
     :width 10px
     :height 200px
 .slider, .number
+  :-webkit-user-select none
   :background-color #a3a3a3
   :cursor move
   :overflow hidden
