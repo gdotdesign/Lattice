@@ -3,40 +3,40 @@ window.addEvent('domready', function(){
   icons = ['/home.png', '/idea-inv.png', '/layers-inv.png','/save-inv.png','/documents-inv.png']
   positions = ['horizontal', 'vertical', 'grid', 'circular','linear']
   iconGroup = new Core.IconGroup({mode:'grid',rows:3,spacing:{y:10,x:10},radius:60});
-  slider = new Data.Number({label:'Radius',size:350})
+  slider = new Data.Number({label:'Radius'})
   slider.addEvent('change',function(value){
     iconGroup.set('radius', value)
   });
   slider.setValue(60)
-  slider1 = new Data.Number({label:'Start Angle',size:350,reset:false,steps:360})
+  slider1 = new Data.Number({label:'Start Angle',reset:false,steps:360})
   slider1.addEvent('change',function(value){
     iconGroup.set('startAngle', value)
   });
   slider1.setValue(0)
-  slider2 = new Data.Number({label:'Degree',size:350,reset:false,steps:360})
+  slider2 = new Data.Number({label:'Degree',reset:false,steps:360})
   slider2.addEvent('change',function(value){
     iconGroup.set('degree', value)
   });
   slider2.setValue(360)
-  slider3 = new Data.Number({label:'Spacing',size:350,reset:false,steps:40})
+  slider3 = new Data.Number({label:'Spacing',reset:false,steps:40})
   slider3.addEvent('change',function(value){
     iconGroup.set('spacing', {x:value,y:value})
   });
   slider3.setValue(10)
-  slider4 = new Data.Number({label:'Rows',size:350,reset:false,steps:10})
+  slider4 = new Data.Number({label:'Rows',reset:false,steps:10})
   slider4.addEvent('change',function(value){
     iconGroup.set('rows', value)
   });
   slider4.setValue(3)
-  slider5 = new Data.Number({label:'Columns',size:350,reset:false,steps:10})
+  slider5 = new Data.Number({label:'Columns',reset:false,steps:10})
   slider5.addEvent('change',function(value){
     iconGroup.set('columns', value)
   });
   slider5.setValue(0)
-  pushgroup = new Core.PushGroup();
-  pushgroup.addEvent('change', function(item){
-    iconGroup.set('mode',item.options.text)
-    if(item.options.text === 'grid'){
+  pushgroup = new Core.Select({editable:false});
+  pushgroup.addEvent('change', function(value){
+    iconGroup.set('mode',value)
+    if(value === 'grid'){
       slider.disable()
       slider1.disable()
       slider2.disable()
@@ -44,7 +44,7 @@ window.addEvent('domready', function(){
       slider4.enable()
       slider5.enable()
     }
-    if(item.options.text === 'circular'){
+    if(value === 'circular'){
       slider.enable()
       slider1.enable()
       slider2.enable()
@@ -52,7 +52,7 @@ window.addEvent('domready', function(){
       slider4.disable()
       slider5.disable()
     }
-    if(item.options.text === 'linear' || item.options.text === 'horizontal' || item.options.text === 'vertical'){
+    if(value === 'linear' || value === 'horizontal' || value === 'vertical'){
       slider.disable()
       slider1.disable()
       slider2.disable()
@@ -62,15 +62,14 @@ window.addEvent('domready', function(){
     }
   });
   positions.each(function(item){
-      p = new Core.Push({text:item,size:70})
+      p = new Iterable.ListItem({title:item})
       pushgroup.addItem(p)
-      if(item === 'grid')
-        pushgroup.setActive(p)
   })
   for(i=0;i<8;i++){
     icon = new Core.Icon({image:icons[Math.round(Math.random()*4)]});
     iconGroup.addIcon(icon)
   }
+  pushgroup.setValue('grid')
   $("demo").adopt(iconGroup)
   $("options").adopt(slider,slider1, slider2,slider3,slider4,slider5,pushgroup);
 });

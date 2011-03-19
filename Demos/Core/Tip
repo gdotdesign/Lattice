@@ -34,6 +34,25 @@ window.addEvent('domready', function(){
   });
   slider2.setValue(1)
   
-  $("options").adopt(text,slider1, slider2);
+  select = new Core.Select({size:95,editable:false})
+  select.addItem(new Iterable.ListItem({title:'top'}))
+  select.addItem(new Iterable.ListItem({title:'center'}))
+  select.addItem(new Iterable.ListItem({title:'bottom'}))
+  select.addEvent('change',function(value){
+    tip.set('location',{x:select1.getValue(),y:value})
+  });
+  select1 = new Core.Select({size:95,editable:false})
+  select1.addItem(new Iterable.ListItem({title:'left'}))
+  select1.addItem(new Iterable.ListItem({title:'center'}))
+  select1.addItem(new Iterable.ListItem({title:'right'}))
+  select1.addEvent('change',function(value){
+    tip.set('location',{x:value,y:select.getValue()})
+  });
+  
+  select.setValue('center')
+  select1.setValue('right')
+  $$(select.base,select1.base).setStyle('float','left');
+  
+  $("options").adopt(text,slider1, slider2,select,select1);
 });
 

@@ -787,6 +787,11 @@ Core.Tip = new Class({
         this.options.delay = value;
         return this.update();
       }
+    },
+    location: {
+      setter: function(value) {
+        return this.options.location = value;
+      }
     }
   },
   options: {
@@ -2477,13 +2482,18 @@ Core.Select = new Class({
   options: {
     width: 200,
     "class": 'select',
-    "default": ''
+    "default": '',
+    editable: true
   },
   initialize: function(options) {
     return this.parent(options);
   },
   getValue: function() {
-    return this.list.get('selected').options.title;
+    var li;
+    li = this.list.get('selected');
+    if (li != null) {
+      return li.options.title;
+    }
   },
   setValue: function(value) {
     return this.list.select(this.list.getItemFromTitle(value));
@@ -2491,12 +2501,13 @@ Core.Select = new Class({
   update: function() {
     if (this.options.size != null) {
       this.size = this.options.size;
-      return this.base.setStyle('width', this.size);
-    } else {
-      return this.size = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
     }
+    this.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
+    return this.list.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
   },
   create: function() {
+    this.size = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
+    this.minSize = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'min-width'));
     this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'relative');
     this.text = new Element('div.text', {
@@ -2511,24 +2522,37 @@ Core.Select = new Class({
       'z-index': 0,
       overflow: 'hidden'
     });
-    this.update();
-    this.addIcon = new Core.Icon();
-    this.addIcon.base.addClass('add');
-    this.addIcon.base.set('text', '+');
-    this.removeIcon = new Core.Icon();
-    this.removeIcon.base.set('text', '-');
-    this.removeIcon.base.addClass('remove');
-    $$(this.addIcon.base, this.removeIcon.base).setStyles({
-      'z-index': '1',
-      'position': 'relative'
+    if (this.options.editable) {
+      this.addIcon = new Core.Icon();
+      this.addIcon.base.addClass('add');
+      this.addIcon.base.set('text', '+');
+      this.removeIcon = new Core.Icon();
+      this.removeIcon.base.set('text', '-');
+      this.removeIcon.base.addClass('remove');
+      $$(this.addIcon.base, this.removeIcon.base).setStyles({
+        'z-index': '1',
+        'position': 'relative'
+      });
+      this.removeIcon.addEvent('invoked', (function(el, e) {
+        e.stop();
+        this.removeItem(this.list.get('selected'));
+        return this.text.set('text', this.options["default"] || '');
+      }).bind(this));
+      this.addIcon.addEvent('invoked', (function(el, e) {
+        e.stop();
+        return this.prompt.justShow();
+      }).bind(this));
+      this.base.adopt(this.removeIcon, this.addIcon);
+    }
+    this.picker = new Core.Picker({
+      offset: 0
     });
-    this.picker = new Core.Picker();
     this.picker.attach(this.base);
     this.list = new Iterable.List({
       "class": 'select-list'
     });
     this.picker.setContent(this.list.base);
-    this.base.adopt(this.text, this.removeIcon, this.addIcon);
+    this.base.adopt(this.text);
     this.prompt = new Prompt();
     this.prompt.justAttach(this.base);
     this.list.addEvent('select', (function(item, e) {
@@ -2539,15 +2563,7 @@ Core.Select = new Class({
       this.fireEvent('change', item.options.title);
       return this.picker.forceHide();
     }).bind(this));
-    this.removeIcon.addEvent('invoked', (function(el, e) {
-      e.stop();
-      this.removeItem(this.list.get('selected'));
-      return this.text.set('text', this.options["default"] || '');
-    }).bind(this));
-    return this.addIcon.addEvent('invoked', (function(el, e) {
-      e.stop();
-      return this.prompt.justShow();
-    }).bind(this));
+    return this.update();
   },
   addItem: function(item) {
     item.base.set('class', 'select-item');
@@ -3254,7 +3270,7 @@ Iterable.ListItem = new Class({
     offset: GDotUI.Theme.ListItem.offset,
     title: '',
     subtitle: '',
-    draggable: true,
+    draggable: false,
     dragreset: true,
     ghost: true,
     removeClasses: '.' + GDotUI.Theme.Icon["class"],
@@ -3280,12 +3296,6 @@ Iterable.ListItem = new Class({
     this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
     this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
     this.base.adopt(this.title, this.subtitle);
-    if (this.options.removeable) {
-      this.base.grab(this.remove);
-    }
-    if (this.options.sortable) {
-      this.base.grab(this.handle);
-    }
     this.base.addEvent(this.options.selectEvent, (function(e) {
       return this.fireEvent('select', [this, e]);
     }).bindWithEvent(this));

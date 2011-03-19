@@ -32,7 +32,7 @@ Iterable.ListItem = new Class {
     offset: GDotUI.Theme.ListItem.offset
     title:''
     subtitle:''
-    draggable: on
+    draggable: off
     dragreset: on
     ghost: on
     removeClasses: '.'+GDotUI.Theme.Icon.class
@@ -54,10 +54,10 @@ Iterable.ListItem = new Class {
     @title = new Element('div').addClass(@options.classes.title).set 'text', @options.title
     @subtitle = new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
     @base.adopt @title,@subtitle
-    if @options.removeable
-      @base.grab @remove
-    if @options.sortable
-      @base.grab @handle
+    #if @options.removeable
+    #  @base.grab @remove
+    #if @options.sortable
+    #  @base.grab @handle
     @base.addEvent @options.selectEvent, ( (e)->
       @fireEvent 'select', [@,e]
       ).bindWithEvent @

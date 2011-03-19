@@ -33,6 +33,10 @@ Core.Tip = new Class {
         @options.delay = value
         @update()
     }
+    location: {
+      setter: (value) ->
+        @options.location = value
+    }
   }
   options:{
     class: GDotUI.Theme.Tip.class

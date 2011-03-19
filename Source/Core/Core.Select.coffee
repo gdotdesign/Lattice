@@ -42,20 +42,24 @@ Core.Select = new Class {
     width: 200
     class: 'select'
     default: ''
+    editable: true
   }
   initialize: (options) ->
     @parent options
   getValue: ->
-    @list.get('selected').options.title
+    li = @list.get('selected')
+    if li?
+      li.options.title
   setValue: (value) ->
     @list.select @list.getItemFromTitle(value)
   update: ->
     if @options.size?
       @size = @options.size
-      @base.setStyle 'width', @size
-    else
-      @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
+    @base.setStyle 'width', if @size < @minSize then @minSize else @size
+    @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
   create: ->
+    @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
+    @minSize = Number.from getCSS("/\\.#{@options.class}$/",'min-width')
     @base.addClass @options.class
     @base.setStyle 'position', 'relative'
     @text = new Element('div.text', {text: @options.default or ''})
@@ -68,22 +72,36 @@ Core.Select = new Class {
       'z-index': 0
       overflow: 'hidden'
     }
-    @update();
-    @addIcon = new Core.Icon()
-    @addIcon.base.addClass 'add'
-    @addIcon.base.set 'text', '+'
-    @removeIcon = new Core.Icon()
-    @removeIcon.base.set 'text', '-'
-    @removeIcon.base.addClass 'remove'
-    $$(@addIcon.base,@removeIcon.base).setStyles {
-      'z-index': '1'
-      'position': 'relative'
-    }
-    @picker = new Core.Picker()
+    if @options.editable
+      @addIcon = new Core.Icon()
+      @addIcon.base.addClass 'add'
+      @addIcon.base.set 'text', '+'
+      @removeIcon = new Core.Icon()
+      @removeIcon.base.set 'text', '-'
+      @removeIcon.base.addClass 'remove'
+      $$(@addIcon.base,@removeIcon.base).setStyles {
+        'z-index': '1'
+        'position': 'relative'
+      }
+      @removeIcon.addEvent 'invoked',( (el,e)->
+        e.stop()
+        @removeItem @list.get('selected')
+        @text.set 'text', @options.default or ''
+      ).bind @
+      @addIcon.addEvent 'invoked',( (el,e)->
+        e.stop()
+        @prompt.justShow()
+        #a = window.prompt('something')
+        #if a
+        #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
+        #  @addItem item
+      ).bind @
+      @base.adopt  @removeIcon, @addIcon
+    @picker = new Core.Picker({offset:0})
     @picker.attach @base
     @list = new Iterable.List({class:'select-list'})
     @picker.setContent @list.base
-    @base.adopt @text, @removeIcon, @addIcon
+    @base.adopt @text
     
     @prompt = new Prompt();
     @prompt.justAttach @base
@@ -95,19 +113,8 @@ Core.Select = new Class {
       @fireEvent 'change', item.options.title
       @picker.forceHide()
     ).bind @
-    @removeIcon.addEvent 'invoked',( (el,e)->
-      e.stop()
-      @removeItem @list.get('selected')
-      @text.set 'text', @options.default or ''
-    ).bind @
-    @addIcon.addEvent 'invoked',( (el,e)->
-      e.stop()
-      @prompt.justShow()
-      #a = window.prompt('something')
-      #if a
-      #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
-      #  @addItem item
-    ).bind @
+    @update();
+    
   addItem: (item) ->
     item.base.set 'class', 'select-item'
     @list.addItem item
