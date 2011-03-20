@@ -13,84 +13,89 @@ provides: Core.Toggler
 
 ...
 ###
-Element.Properties.checked = {
-  get: ->
-    if @getChecked?
-      @getChecked()
-  set: (value) ->
-    @setAttribute 'checked', value
-    if @on? and @off?
-      if value
-        @on()
-      else
-        @off()
-}
+
 
 Core.Toggler = new Class {
   Extends: Core.Abstract
   Implements:[
     Interfaces.Enabled
     Interfaces.Controls
+    Interfaces.Size
   ]
-  options:{
-    class: GDotUI.Theme.Toggler.class
-    onClass: GDotUI.Theme.Toggler.onClass
-    offClass: GDotUI.Theme.Toggler.offClass
-    sepClass: GDotUI.Theme.Toggler.separatorClass
-    onText: GDotUI.Theme.Toggler.onText
-    offText: GDotUI.Theme.Toggler.offText
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Toggler.class
+    }
+    onLabel: {
+      value: GDotUI.Theme.Toggler.onText
+      setter: (value) ->
+        @onDiv.set 'text', value
+    }
+    offLabel: {
+      value: GDotUI.Theme.Toggler.offText
+      setter: (value) ->
+        @offDiv.set 'text', value
+    }
+    onClass: {
+      value: GDotUI.Theme.Toggler.onClass
+      setter: (value, old) ->
+        @onDiv.removeClass old
+        @onDiv.addClass value
+        value
+    }
+    offClass: {
+      value: GDotUI.Theme.Toggler.offClass
+      setter: (value, old) ->
+        @offDiv.removeClass old
+        @offDiv.addClass value
+        value
+    }
+    separatorClass: {
+      value: GDotUI.Theme.Toggler.separatorClass
+      setter: (value, old) ->
+        @separator.removeClass old
+        @separator.addClass value
+        value
+    }
+    checked: {
+      value: on
+      setter: (value) ->
+        @base.fireEvent 'change', value
+        value
+    }
   }
   initialize: (options) ->
-    @checked = yes
     @parent options
+  update: ->
+    if @size
+      $$(@onDiv,@offDiv,@separator).setStyles {
+        width: @size/2
+      }
+      @base.setStyle 'width', @size
+    if @checked
+      @separator.setStyle 'left', @size/2
+    else
+      @separator.setStyle 'left', 0
+    @offDiv.setStyle 'left', @size/2
   create: ->
-    @width = @options.width or Number.from getCSS("/\\.#{@options.onClass}$/",'width')
-    @base.addClass @options.class
     @base.setStyle 'position','relative'
-    @onLabel = new Element 'div', {text:@options.onText, class:@options.onClass}
-    @onLabel.removeTransition()
-    @offLabel = new Element 'div', {text:@options.offText, class:@options.offClass}
-    @offLabel.removeTransition()
-    @separator = new Element 'div', {html: '&nbsp;', class:@options.sepClass}
-    @separator.removeTransition()
-    @base.adopt @onLabel, @offLabel, @separator
-    @base.getChecked = ( ->
-      @checked
-      ).bind @
-    @base.on = @on.bind @
-    @base.off = @off.bind @
-    $$(@onLabel,@offLabel,@separator).setStyles {
+    @onDiv = new Element 'div'
+    @offDiv = new Element 'div'
+    @separator = new Element 'div', {html: '&nbsp;'}
+    @base.adopt @onDiv, @offDiv, @separator
+
+    $$(@onDiv,@offDiv,@separator).setStyles {
       'position':'absolute'
       'top': 0
       'left': 0
     }
-    if @options.width
-      $$(@onLabel,@offLabel,@separator).setStyles {
-        width: @width
-      }
-      @base.setStyle 'width', @width*2
-    @offLabel.setStyle 'left', @width
-    if @checked
-      @on()
-    else
-      @off()
+    
     @base.addEvent 'click', ( ->
        if @enabled
          if @checked
-          @off()
-          @base.fireEvent 'change'
+          @set 'checked', no
          else
-          @on()
-          @base.fireEvent 'change'
+          @set 'checked', yes
     ).bind @
-    @onLabel.addTransition()
-    @offLabel.addTransition()
-    @separator.addTransition()
-    @parent()
-  on: ->
-    @checked = yes
-    @separator.setStyle 'left', @width
-  off: ->
-    @checked = no
-    @separator.setStyle 'left', 0
+    
 }

@@ -15,8 +15,10 @@ provides: Core.Overlay
 ###
 Core.Overlay = new Class {
   Extends: Core.Abstract
-  options: {
-    class: GDotUI.Theme.Overlay.class
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Overlay.class
+    }
   }
   initialize: (options) ->
     @parent options 
@@ -29,7 +31,6 @@ Core.Overlay = new Class {
       bottom:0
       opacity:0
       }
-    @base.addClass @options.class
     @base.addEventListener 'webkitTransitionEnd', ((e) ->
       if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
         @base.setStyle 'visiblity', 'hidden'

@@ -18,6 +18,7 @@ window.addEvent('domready', function(){
   unit = new Data.Unit();
   $(unit).inject($("cpick"),'before')
   unit.addEvent('change', function(e){
+    console.log(e);
     $("cpick").setStyle('border-width', e)
   });
 });

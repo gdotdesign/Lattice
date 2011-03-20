@@ -15,28 +15,20 @@ provides: Core.Push
 ###
 Core.Push = new Class {
   Extends: Core.Abstract
+  Implements: [Interfaces.Size, Interfaces.Enabled]
   Attributes: {
     state: {
       getter: ->
         if @base.hasClass 'pushed' then true else false
     }
     label: {
+      value: GDotUI.Theme.Push.defaultText
       setter: (value) ->
-        @options.label = value
-        @update()
+        @base.set 'text', value
     }
-    size: {
-      setter: (value) ->
-        @options.size = value
-        @update()
+    class: {
+      value: GDotUI.Theme.Push.class
     }
-  }
-  Implements:[
-    Interfaces.Enabled
-  ]
-  options:{
-    label: GDotUI.Theme.Push.defaultText
-    class: GDotUI.Theme.Push.class
   }
   initialize: (options) ->
     @parent options 
@@ -44,14 +36,7 @@ Core.Push = new Class {
     @base.addClass 'pushed'
   off: ->
     @base.removeClass 'pushed'
-  update: ->
-    if @options.size?
-      @size = @options.size
-      @base.setStyle 'width', if @size < @minSize then @minSize else @size
   create: ->
-    @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
-    @minSize = Number.from(getCSS("/\\.#{@options.class}$/",'min-width')) or 0
-    @base.addClass(@options.class).set 'text', @options.label
     @base.addEvent 'click', ( ->
       if @enabled
         @base.toggleClass 'pushed'
@@ -60,5 +45,4 @@ Core.Push = new Class {
       if @enabled
         @fireEvent 'invoked', [@, e]
       ).bind @
-    @update()
 }

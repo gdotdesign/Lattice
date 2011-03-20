@@ -20,17 +20,11 @@ Core.IconGroup = new Class {
   Attributes: {
     mode: {
       value: "horizontal"
-      setter: (value) ->
-        @mode = value
-        @update()
       validator: (value) ->
         if ['horizontal','vertical','circular','grid','linear'].indexOf(value) > -1 then true else false
     }
     spacing: {
       value: {x: 0,y: 0}
-      setter: (value) ->
-        @spacing = value
-        @update()
       validator: (value) ->
         if typeOf(value) is 'object'
           if value.x? and value.y? then yes else no
@@ -39,8 +33,7 @@ Core.IconGroup = new Class {
     startAngle: {
       value: 0
       setter: (value) ->
-        @startAngle = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a >= 0 and a <= 360 then yes else no
@@ -49,16 +42,14 @@ Core.IconGroup = new Class {
     radius: {
       value: 0
       setter: (value) ->
-        @radius = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))? then yes else no
     }
     degree: {
       value: 360
       setter: (value) ->
-        @degree = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a >= 0 and a <= 360 then yes else no
@@ -66,8 +57,7 @@ Core.IconGroup = new Class {
     }
     rows: {
       setter: (value) ->
-        @rows = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a > 0 then yes else no
@@ -75,8 +65,7 @@ Core.IconGroup = new Class {
     }
     columns: {
       setter: (value) ->
-        @columns = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a > 0 then yes else no
@@ -88,7 +77,6 @@ Core.IconGroup = new Class {
   }
   initialize: (options) ->
     @icons = []
-    console.log options
     @parent options
   create: ->
     @base.setStyle 'position', 'relative'
@@ -112,79 +100,80 @@ Core.IconGroup = new Class {
   ready: ->
     @update()
   update: ->
-    x = 0
-    y = 0
-    @size = {x:0, y:0}
-    spacing = @spacing
-    switch @mode
-      when 'grid'
-        if @rows? and @columns?
-          if Number.from(@rows) < Number.from(@columns)
-            @rows = null
-          else
-            @columns = null
-        if @columns?
-          columns = @columns
-          rows = Math.round @icons.length/columns
-        if @rows?
-          rows = @rows
-          columns = Math.round @icons.length/rows
-        #console.log rows, columns
-        icpos = @icons.map ((item,i) ->
-          if i % columns == 0
-            x = 0
-            y = if i==0 then y else y+item.base.getSize().y+spacing.y
-          else
-            x = if i==0 then x else x+item.base.getSize().x+spacing.x
-          @size.x = x+item.base.getSize().x
-          @size.y = y+item.base.getSize().y
-          {x:x, y:y}
-          ).bind @
-      when 'linear'
-        icpos = @icons.map ((item,i) ->
-          x = if i==0 then x+x else x+spacing.x+item.base.getSize().x
-          y = if i==0 then y+y else y+spacing.y+item.base.getSize().y
-          @size.x = x+item.base.getSize().x
-          @size.y = y+item.base.getSize().y
-          {x:x, y:y}
-          ).bind @
-      when 'horizontal'
-        icpos = @icons.map ((item,i) ->
-          x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
-          y = if i==0 then y else y
-          @size.x = x+item.base.getSize().x
-          @size.y = item.base.getSize().y
-          {x:x, y:y}
-          ).bind @
-      when 'vertical'
-        icpos = @icons.map ((item,i) ->
-          x = if i==0 then x else x
-          y = if i==0 then y+y else y+item.base.getSize().y+spacing.y
-          @size.x = item.base.getSize().x
-          @size.y = y+item.base.getSize().y
-          {x:x,y:y}
-          ).bind @
-      when 'circular'
-        n = @icons.length
-        radius = @radius
-        startAngle = @startAngle
-        ker = 2*@radius*Math.PI
-        fok = @degree/n
-        icpos = @icons.map (item,i) ->
-          if i==0
-            foks = startAngle * (Math.PI/180)
-            x = Math.round(radius * Math.sin(foks))+radius/2+item.base.getSize().x
-            y = -Math.round(radius * Math.cos(foks))+radius/2+item.base.getSize().y
-          else
-            x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().x
-            y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().y
-          {x:x, y:y}
-    @base.setStyles {
-      width: @size.x
-      height: @size.y
-    }
-    @icons.each (item,i) ->
-      item.base.setStyle 'top', icpos[i].y
-      item.base.setStyle 'left', icpos[i].x
-      item.base.setStyle 'position', 'absolute'
+    if @icons.length > 0 and @mode? 
+      x = 0
+      y = 0
+      @size = {x:0, y:0}
+      spacing = @spacing
+      switch @mode
+        when 'grid'
+          if @rows? and @columns?
+            if Number.from(@rows) < Number.from(@columns)
+              @rows = null
+            else
+              @columns = null
+          if @columns?
+            columns = @columns
+            rows = Math.round @icons.length/columns
+          if @rows?
+            rows = @rows
+            columns = Math.round @icons.length/rows
+          #console.log rows, columns
+          icpos = @icons.map ((item,i) ->
+            if i % columns == 0
+              x = 0
+              y = if i==0 then y else y+item.base.getSize().y+spacing.y
+            else
+              x = if i==0 then x else x+item.base.getSize().x+spacing.x
+            @size.x = x+item.base.getSize().x
+            @size.y = y+item.base.getSize().y
+            {x:x, y:y}
+            ).bind @
+        when 'linear'
+          icpos = @icons.map ((item,i) ->
+            x = if i==0 then x+x else x+spacing.x+item.base.getSize().x
+            y = if i==0 then y+y else y+spacing.y+item.base.getSize().y
+            @size.x = x+item.base.getSize().x
+            @size.y = y+item.base.getSize().y
+            {x:x, y:y}
+            ).bind @
+        when 'horizontal'
+          icpos = @icons.map ((item,i) ->
+            x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
+            y = if i==0 then y else y
+            @size.x = x+item.base.getSize().x
+            @size.y = item.base.getSize().y
+            {x:x, y:y}
+            ).bind @
+        when 'vertical'
+          icpos = @icons.map ((item,i) ->
+            x = if i==0 then x else x
+            y = if i==0 then y+y else y+item.base.getSize().y+spacing.y
+            @size.x = item.base.getSize().x
+            @size.y = y+item.base.getSize().y
+            {x:x,y:y}
+            ).bind @
+        when 'circular'
+          n = @icons.length
+          radius = @radius
+          startAngle = @startAngle
+          ker = 2*@radius*Math.PI
+          fok = @degree/n
+          icpos = @icons.map (item,i) ->
+            if i==0
+              foks = startAngle * (Math.PI/180)
+              x = Math.round(radius * Math.sin(foks))+radius/2+item.base.getSize().x
+              y = -Math.round(radius * Math.cos(foks))+radius/2+item.base.getSize().y
+            else
+              x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().x
+              y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().y
+            {x:x, y:y}
+      @base.setStyles {
+        width: @size.x
+        height: @size.y
+      }
+      @icons.each (item,i) ->
+        item.base.setStyle 'top', icpos[i].y
+        item.base.setStyle 'left', icpos[i].x
+        item.base.setStyle 'position', 'absolute'
 }

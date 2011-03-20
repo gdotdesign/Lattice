@@ -11,7 +11,39 @@ provides: Element.Extras
 
 ...
 */var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, Prompt, UnitList, UnitTable, checkForKey, getCSS;
+Element.Properties.checked = {
+  get: function() {
+    if (this.getChecked != null) {
+      return this.getChecked();
+    }
+  },
+  set: function(value) {
+    this.setAttribute('checked', value);
+    if ((this.on != null) && (this.off != null)) {
+      if (value) {
+        return this.on();
+      } else {
+        return this.off();
+      }
+    }
+  }
+};
 (function() {
+  Element.Events.outerClick = {
+    base: 'mousedown',
+    condition: function(event) {
+      event.stopPropagation();
+      return false;
+    },
+    onAdd: function(fn) {
+      window.addEvent('click', fn);
+      return window.addEvent('outer', fn);
+    },
+    onRemove: function(fn) {
+      window.removeEvent('click', fn);
+      return window.removeEvent('outer', fn);
+    }
+  };
   return Element.implement({
     oldGrab: Element.prototype.grab,
     oldInject: Element.prototype.inject,
@@ -419,7 +451,8 @@ Core.Icon = new Class({
   Attributes: {
     image: {
       setter: function(value) {
-        return this.image = value;
+        this.base.setStyle('background-image', 'url(' + value + ')');
+        return value;
       }
     },
     "class": {
@@ -429,17 +462,12 @@ Core.Icon = new Class({
   initialize: function(options) {
     return this.parent(options);
   },
-  update: function() {
-    if (this.image != null) {
-      return this.base.setStyle('background-image', 'url(' + this.image + ')');
-    }
-  },
   create: function() {
     return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
       }
-    }).bindWithEvent(this));
+    }).bind(this));
   }
 });
 /*
@@ -494,10 +522,6 @@ Core.IconGroup = new Class({
   Attributes: {
     mode: {
       value: "horizontal",
-      setter: function(value) {
-        this.mode = value;
-        return this.update();
-      },
       validator: function(value) {
         if (['horizontal', 'vertical', 'circular', 'grid', 'linear'].indexOf(value) > -1) {
           return true;
@@ -510,10 +534,6 @@ Core.IconGroup = new Class({
       value: {
         x: 0,
         y: 0
-      },
-      setter: function(value) {
-        this.spacing = value;
-        return this.update();
       },
       validator: function(value) {
         if (typeOf(value) === 'object') {
@@ -530,8 +550,7 @@ Core.IconGroup = new Class({
     startAngle: {
       value: 0,
       setter: function(value) {
-        this.startAngle = Number.from(value);
-        return this.update();
+        return Number.from(value);
       },
       validator: function(value) {
         var a;
@@ -549,8 +568,7 @@ Core.IconGroup = new Class({
     radius: {
       value: 0,
       setter: function(value) {
-        this.radius = Number.from(value);
-        return this.update();
+        return Number.from(value);
       },
       validator: function(value) {
         var a;
@@ -564,8 +582,7 @@ Core.IconGroup = new Class({
     degree: {
       value: 360,
       setter: function(value) {
-        this.degree = Number.from(value);
-        return this.update();
+        return Number.from(value);
       },
       validator: function(value) {
         var a;
@@ -582,8 +599,7 @@ Core.IconGroup = new Class({
     },
     rows: {
       setter: function(value) {
-        this.rows = Number.from(value);
-        return this.update();
+        return Number.from(value);
       },
       validator: function(value) {
         var a;
@@ -600,8 +616,7 @@ Core.IconGroup = new Class({
     },
     columns: {
       setter: function(value) {
-        this.columns = Number.from(value);
-        return this.update();
+        return Number.from(value);
       },
       validator: function(value) {
         var a;
@@ -622,7 +637,6 @@ Core.IconGroup = new Class({
   },
   initialize: function(options) {
     this.icons = [];
-    console.log(options);
     return this.parent(options);
   },
   create: function() {
@@ -658,112 +672,114 @@ Core.IconGroup = new Class({
   },
   update: function() {
     var columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
-    x = 0;
-    y = 0;
-    this.size = {
-      x: 0,
-      y: 0
-    };
-    spacing = this.spacing;
-    switch (this.mode) {
-      case 'grid':
-        if ((this.rows != null) && (this.columns != null)) {
-          if (Number.from(this.rows) < Number.from(this.columns)) {
-            this.rows = null;
-          } else {
-            this.columns = null;
+    if (this.icons.length > 0 && (this.mode != null)) {
+      x = 0;
+      y = 0;
+      this.size = {
+        x: 0,
+        y: 0
+      };
+      spacing = this.spacing;
+      switch (this.mode) {
+        case 'grid':
+          if ((this.rows != null) && (this.columns != null)) {
+            if (Number.from(this.rows) < Number.from(this.columns)) {
+              this.rows = null;
+            } else {
+              this.columns = null;
+            }
           }
-        }
-        if (this.columns != null) {
-          columns = this.columns;
-          rows = Math.round(this.icons.length / columns);
-        }
-        if (this.rows != null) {
-          rows = this.rows;
-          columns = Math.round(this.icons.length / rows);
-        }
-        icpos = this.icons.map((function(item, i) {
-          if (i % columns === 0) {
-            x = 0;
-            y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
-          } else {
-            x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
+          if (this.columns != null) {
+            columns = this.columns;
+            rows = Math.round(this.icons.length / columns);
           }
-          this.size.x = x + item.base.getSize().x;
-          this.size.y = y + item.base.getSize().y;
-          return {
-            x: x,
-            y: y
-          };
-        }).bind(this));
-        break;
-      case 'linear':
-        icpos = this.icons.map((function(item, i) {
-          x = i === 0 ? x + x : x + spacing.x + item.base.getSize().x;
-          y = i === 0 ? y + y : y + spacing.y + item.base.getSize().y;
-          this.size.x = x + item.base.getSize().x;
-          this.size.y = y + item.base.getSize().y;
-          return {
-            x: x,
-            y: y
-          };
-        }).bind(this));
-        break;
-      case 'horizontal':
-        icpos = this.icons.map((function(item, i) {
-          x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
-          y = i === 0 ? y : y;
-          this.size.x = x + item.base.getSize().x;
-          this.size.y = item.base.getSize().y;
-          return {
-            x: x,
-            y: y
-          };
-        }).bind(this));
-        break;
-      case 'vertical':
-        icpos = this.icons.map((function(item, i) {
-          x = i === 0 ? x : x;
-          y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
-          this.size.x = item.base.getSize().x;
-          this.size.y = y + item.base.getSize().y;
-          return {
-            x: x,
-            y: y
-          };
-        }).bind(this));
-        break;
-      case 'circular':
-        n = this.icons.length;
-        radius = this.radius;
-        startAngle = this.startAngle;
-        ker = 2 * this.radius * Math.PI;
-        fok = this.degree / n;
-        icpos = this.icons.map(function(item, i) {
-          var foks;
-          if (i === 0) {
-            foks = startAngle * (Math.PI / 180);
-            x = Math.round(radius * Math.sin(foks)) + radius / 2 + item.base.getSize().x;
-            y = -Math.round(radius * Math.cos(foks)) + radius / 2 + item.base.getSize().y;
-          } else {
-            x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180))) + radius / 2 + item.base.getSize().x;
-            y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180))) + radius / 2 + item.base.getSize().y;
+          if (this.rows != null) {
+            rows = this.rows;
+            columns = Math.round(this.icons.length / rows);
           }
-          return {
-            x: x,
-            y: y
-          };
-        });
+          icpos = this.icons.map((function(item, i) {
+            if (i % columns === 0) {
+              x = 0;
+              y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
+            } else {
+              x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
+            }
+            this.size.x = x + item.base.getSize().x;
+            this.size.y = y + item.base.getSize().y;
+            return {
+              x: x,
+              y: y
+            };
+          }).bind(this));
+          break;
+        case 'linear':
+          icpos = this.icons.map((function(item, i) {
+            x = i === 0 ? x + x : x + spacing.x + item.base.getSize().x;
+            y = i === 0 ? y + y : y + spacing.y + item.base.getSize().y;
+            this.size.x = x + item.base.getSize().x;
+            this.size.y = y + item.base.getSize().y;
+            return {
+              x: x,
+              y: y
+            };
+          }).bind(this));
+          break;
+        case 'horizontal':
+          icpos = this.icons.map((function(item, i) {
+            x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
+            y = i === 0 ? y : y;
+            this.size.x = x + item.base.getSize().x;
+            this.size.y = item.base.getSize().y;
+            return {
+              x: x,
+              y: y
+            };
+          }).bind(this));
+          break;
+        case 'vertical':
+          icpos = this.icons.map((function(item, i) {
+            x = i === 0 ? x : x;
+            y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
+            this.size.x = item.base.getSize().x;
+            this.size.y = y + item.base.getSize().y;
+            return {
+              x: x,
+              y: y
+            };
+          }).bind(this));
+          break;
+        case 'circular':
+          n = this.icons.length;
+          radius = this.radius;
+          startAngle = this.startAngle;
+          ker = 2 * this.radius * Math.PI;
+          fok = this.degree / n;
+          icpos = this.icons.map(function(item, i) {
+            var foks;
+            if (i === 0) {
+              foks = startAngle * (Math.PI / 180);
+              x = Math.round(radius * Math.sin(foks)) + radius / 2 + item.base.getSize().x;
+              y = -Math.round(radius * Math.cos(foks)) + radius / 2 + item.base.getSize().y;
+            } else {
+              x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI / 180))) + radius / 2 + item.base.getSize().x;
+              y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI / 180))) + radius / 2 + item.base.getSize().y;
+            }
+            return {
+              x: x,
+              y: y
+            };
+          });
+      }
+      this.base.setStyles({
+        width: this.size.x,
+        height: this.size.y
+      });
+      return this.icons.each(function(item, i) {
+        item.base.setStyle('top', icpos[i].y);
+        item.base.setStyle('left', icpos[i].x);
+        return item.base.setStyle('position', 'absolute');
+      });
     }
-    this.base.setStyles({
-      width: this.size.x,
-      height: this.size.y
-    });
-    return this.icons.each(function(item, i) {
-      item.base.setStyle('top', icpos[i].y);
-      item.base.setStyle('left', icpos[i].x);
-      return item.base.setStyle('position', 'absolute');
-    });
   }
 });
 /*
@@ -937,7 +953,7 @@ Core.Slider = new Class({
             this.base.setStyle('height', Number.from(getCSS("/\\." + (this.get('class')) + ".horizontal$/", 'height')));
             this.progress.setStyles({
               top: 0,
-              width: this.reset ? this.size / 2 : 0
+              right: 'auto'
             });
             break;
           case 'vertical':
@@ -953,8 +969,8 @@ Core.Slider = new Class({
             this.set('size', size);
             this.base.setStyle('width', Number.from(getCSS("/\\." + this["class"] + ".vertical$/", 'width')));
             this.progress.setStyles({
-              height: this.reset ? this.size / 2 : 0,
-              right: 0
+              right: 0,
+              top: 'auto'
             });
         }
         return value;
@@ -978,8 +994,14 @@ Core.Slider = new Class({
       value: [0, 0]
     },
     size: {
-      setter: function(value) {
+      setter: function(value, old) {
+        if (!(value != null)) {
+          value = old;
+        }
         this.base.setStyle(this.modifier, value);
+        if (this.reset) {
+          this.progress.setStyle(this.modifier, this.reset ? value / 2 : 0);
+        }
         return value;
       }
     }
@@ -990,7 +1012,7 @@ Core.Slider = new Class({
   },
   setValue: function(position) {
     var percent;
-    if (this.get('reset')) {
+    if (this.reset) {
       this.value = Number.from(position);
     } else {
       position = Math.round((position / this.get('steps')) * this.size);
@@ -1005,7 +1027,6 @@ Core.Slider = new Class({
         this.progress.setStyle(this.modifier, (percent / this.get('steps')) * this.size + "px");
       }
     }
-    console.log(position, this.size, this.get('steps'));
     if (this.get('reset')) {
       return this.value;
     } else {
@@ -1031,7 +1052,7 @@ Core.Slider = new Class({
       }
     }).bind(this));
     this.drag.addEvent('complete', (function(el, e) {
-      if (this.get('reset')) {
+      if (this.reset) {
         if (this.enabled) {
           el.setStyle(this.modifier, this.size / 2 + "px");
         }
@@ -1061,7 +1082,7 @@ Core.Slider = new Class({
       var offset, pos;
       e.stop();
       offset = Number.from(e.wheel);
-      if (this.get('reset')) {
+      if (this.reset) {
         this.value += offset;
       } else {
         pos = Number.from(this.progress.getStyle(this.modifier));
@@ -1074,11 +1095,11 @@ Core.Slider = new Class({
           pos = pos + offset;
         }
         if (!(pos + offset < 0) && !(pos + offset > this.size)) {
-          this.progress.setStyle(this.modifier, (pos + offset / this.get('steps') * this.size) + "px");
+          this.progress.setStyle(this.modifier, (pos + offset / this.steps * this.size) + "px");
           pos = pos + offset;
         }
       }
-      return this.fireEvent('step', this.get('reset') ? this.value : Math.round((pos / this.size) * this.get('steps')));
+      return this.fireEvent('step', this.reset ? this.value : Math.round((pos / this.size) * this.steps));
     }).bind(this));
   }
 });
@@ -1582,37 +1603,35 @@ provides: [Core.Picker, outerClick]
     return oldPrototypeStart.run(arguments, this);
   };
 })();
-Element.Events.outerClick = {
-  base: 'mousedown',
-  condition: function(event) {
-    event.stopPropagation();
-    return false;
-  },
-  onAdd: function(fn) {
-    window.addEvent('click', fn);
-    return window.addEvent('outer', fn);
-  },
-  onRemove: function(fn) {
-    window.removeEvent('click', fn);
-    return window.removeEvent('outer', fn);
-  }
-};
 Core.Picker = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Children],
   Binds: ['show', 'hide'],
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Picker["class"]
+    },
+    offset: {
+      value: GDotUI.Theme.Picker.offset,
+      setter: function(value) {
+        return value;
+      }
+    },
+    position: {
+      value: {
+        x: 'auto',
+        y: 'auto'
+      }
+    }
+  },
   options: {
-    "class": GDotUI.Theme.Picker["class"],
-    offset: GDotUI.Theme.Picker.offset,
     event: GDotUI.Theme.Picker.event,
     picking: GDotUI.Theme.Picker.picking
   },
   initialize: function(options) {
-    this.parent(options);
-    return this;
+    return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options["class"]);
     return this.base.setStyle('position', 'absolute');
   },
   onReady: function() {
@@ -1625,30 +1644,58 @@ Core.Picker = new Class({
     asize = this.attachedTo.getSize();
     position = this.attachedTo.getPosition();
     size = this.base.getSize();
-    offset = this.options.offset;
+    offset = this.offset;
+    console.log(offset);
     x = '';
     y = '';
-    if ((position.x - size.x - winscroll.x) < 0) {
-      x = 'right';
-      xpos = position.x + asize.x + offset;
-    }
-    if ((position.x + size.x + asize.x) > winsize.x) {
-      x = 'left';
-      xpos = position.x - size.x - offset;
-    }
-    if (!((position.x + size.x + asize.x) > winsize.x) && !((position.x - size.x) < 0)) {
-      x = 'center';
-      xpos = (position.x + asize.x / 2) - (size.x / 2);
-    }
-    if (position.y + size.y - winscroll.y > winsize.y) {
-      y = 'up';
-      ypos = position.y - size.y - offset;
-    } else {
-      y = 'down';
-      if (x === 'center') {
-        ypos = position.y + asize.y + offset;
+    if (this.position.x === 'auto' && this.position.y === 'auto') {
+      if ((position.x - size.x - winscroll.x) < 0) {
+        x = 'right';
+        xpos = position.x + asize.x + offset;
+      }
+      if ((position.x + size.x + asize.x) > winsize.x) {
+        x = 'left';
+        xpos = position.x - size.x - offset;
+      }
+      if (!((position.x + size.x + asize.x) > winsize.x) && !((position.x - size.x) < 0)) {
+        x = 'center';
+        xpos = (position.x + asize.x / 2) - (size.x / 2);
+      }
+      if (position.y + size.y - winscroll.y > winsize.y) {
+        y = 'up';
+        ypos = position.y - size.y - offset;
       } else {
-        ypos = position.y;
+        y = 'down';
+        if (x === 'center') {
+          ypos = position.y + asize.y + offset;
+        } else {
+          ypos = position.y;
+        }
+      }
+    }
+    if (this.position.x !== 'auto') {
+      switch (this.position.x) {
+        case 'left':
+          xpos = position.x - size.x - offset;
+          break;
+        case 'right':
+          xpos = position.x + asize.x + offset;
+          break;
+        case 'center':
+          xpos = (position.x + asize.x / 2) - (size.x / 2);
+          console.log(xpos);
+      }
+    }
+    if (this.position.y !== 'auto') {
+      switch (this.position.y) {
+        case 'top':
+          ypos = position.y - size.y - offset;
+          break;
+        case 'bottom':
+          ypos = position.y + asize.y + offset;
+          break;
+        case 'center':
+          ypos = position.y;
       }
     }
     return this.base.setStyles({
@@ -2215,103 +2262,96 @@ provides: Core.Toggler
 
 ...
 */
-Element.Properties.checked = {
-  get: function() {
-    if (this.getChecked != null) {
-      return this.getChecked();
-    }
-  },
-  set: function(value) {
-    this.setAttribute('checked', value);
-    if ((this.on != null) && (this.off != null)) {
-      if (value) {
-        return this.on();
-      } else {
-        return this.off();
-      }
-    }
-  }
-};
 Core.Toggler = new Class({
   Extends: Core.Abstract,
-  Implements: [Interfaces.Enabled, Interfaces.Controls],
-  options: {
-    "class": GDotUI.Theme.Toggler["class"],
-    onClass: GDotUI.Theme.Toggler.onClass,
-    offClass: GDotUI.Theme.Toggler.offClass,
-    sepClass: GDotUI.Theme.Toggler.separatorClass,
-    onText: GDotUI.Theme.Toggler.onText,
-    offText: GDotUI.Theme.Toggler.offText
+  Implements: [Interfaces.Enabled, Interfaces.Controls, Interfaces.Size],
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Toggler["class"]
+    },
+    onLabel: {
+      value: GDotUI.Theme.Toggler.onText,
+      setter: function(value) {
+        return this.onDiv.set('text', value);
+      }
+    },
+    offLabel: {
+      value: GDotUI.Theme.Toggler.offText,
+      setter: function(value) {
+        return this.offDiv.set('text', value);
+      }
+    },
+    onClass: {
+      value: GDotUI.Theme.Toggler.onClass,
+      setter: function(value, old) {
+        this.onDiv.removeClass(old);
+        this.onDiv.addClass(value);
+        return value;
+      }
+    },
+    offClass: {
+      value: GDotUI.Theme.Toggler.offClass,
+      setter: function(value, old) {
+        this.offDiv.removeClass(old);
+        this.offDiv.addClass(value);
+        return value;
+      }
+    },
+    separatorClass: {
+      value: GDotUI.Theme.Toggler.separatorClass,
+      setter: function(value, old) {
+        this.separator.removeClass(old);
+        this.separator.addClass(value);
+        return value;
+      }
+    },
+    checked: {
+      value: true,
+      setter: function(value) {
+        this.base.fireEvent('change', value);
+        return value;
+      }
+    }
   },
   initialize: function(options) {
-    this.checked = true;
     return this.parent(options);
   },
+  update: function() {
+    if (this.size) {
+      $$(this.onDiv, this.offDiv, this.separator).setStyles({
+        width: this.size / 2
+      });
+      this.base.setStyle('width', this.size);
+    }
+    if (this.checked) {
+      this.separator.setStyle('left', this.size / 2);
+    } else {
+      this.separator.setStyle('left', 0);
+    }
+    return this.offDiv.setStyle('left', this.size / 2);
+  },
   create: function() {
-    this.width = this.options.width || Number.from(getCSS("/\\." + this.options.onClass + "$/", 'width'));
-    this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'relative');
-    this.onLabel = new Element('div', {
-      text: this.options.onText,
-      "class": this.options.onClass
-    });
-    this.onLabel.removeTransition();
-    this.offLabel = new Element('div', {
-      text: this.options.offText,
-      "class": this.options.offClass
-    });
-    this.offLabel.removeTransition();
+    this.onDiv = new Element('div');
+    this.offDiv = new Element('div');
     this.separator = new Element('div', {
-      html: '&nbsp;',
-      "class": this.options.sepClass
+      html: '&nbsp;'
     });
-    this.separator.removeTransition();
-    this.base.adopt(this.onLabel, this.offLabel, this.separator);
-    this.base.getChecked = (function() {
-      return this.checked;
-    }).bind(this);
-    this.base.on = this.on.bind(this);
-    this.base.off = this.off.bind(this);
-    $$(this.onLabel, this.offLabel, this.separator).setStyles({
+    this.base.adopt(this.onDiv, this.offDiv, this.separator);
+    $$(this.onDiv, this.offDiv, this.separator).setStyles({
       'position': 'absolute',
       'top': 0,
       'left': 0
     });
-    if (this.options.width) {
-      $$(this.onLabel, this.offLabel, this.separator).setStyles({
-        width: this.width
-      });
-      this.base.setStyle('width', this.width * 2);
-    }
-    this.offLabel.setStyle('left', this.width);
-    if (this.checked) {
-      this.on();
-    } else {
-      this.off();
-    }
-    this.base.addEvent('click', (function() {
+    return this.base.addEvent('click', (function() {
       if (this.enabled) {
         if (this.checked) {
-          this.off();
-          return this.base.fireEvent('change');
+          return this.set('checked', false);
         } else {
-          this.on();
-          return this.base.fireEvent('change');
+          return this.set('checked', true);
         }
       }
     }).bind(this));
-    this.onLabel.addTransition();
-    this.offLabel.addTransition();
-    this.separator.addTransition();
-    return this.parent();
-  },
-  on: function() {
-    this.checked = true;
-    return this.separator.setStyle('left', this.width);
-  },
-  off: function() {
-    this.checked = false;
-    return this.separator.setStyle('left', 0);
   }
 });
 /*
@@ -2355,8 +2395,10 @@ provides: Core.Overlay
 */
 Core.Overlay = new Class({
   Extends: Core.Abstract,
-  options: {
-    "class": GDotUI.Theme.Overlay["class"]
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Overlay["class"]
+    }
   },
   initialize: function(options) {
     return this.parent(options);
@@ -2370,7 +2412,6 @@ Core.Overlay = new Class({
       bottom: 0,
       opacity: 0
     });
-    this.base.addClass(this.options["class"]);
     return this.base.addEventListener('webkitTransitionEnd', (function(e) {
       if (e.propertyName === "opacity" && this.base.getStyle('opacity') === 0) {
         return this.base.setStyle('visiblity', 'hidden');
@@ -2404,6 +2445,7 @@ provides: Core.Push
 */
 Core.Push = new Class({
   Extends: Core.Abstract,
+  Implements: [Interfaces.Size, Interfaces.Enabled],
   Attributes: {
     state: {
       getter: function() {
@@ -2415,22 +2457,14 @@ Core.Push = new Class({
       }
     },
     label: {
+      value: GDotUI.Theme.Push.defaultText,
       setter: function(value) {
-        this.options.label = value;
-        return this.update();
+        return this.base.set('text', value);
       }
     },
-    size: {
-      setter: function(value) {
-        this.options.size = value;
-        return this.update();
-      }
+    "class": {
+      value: GDotUI.Theme.Push["class"]
     }
-  },
-  Implements: [Interfaces.Enabled],
-  options: {
-    label: GDotUI.Theme.Push.defaultText,
-    "class": GDotUI.Theme.Push["class"]
   },
   initialize: function(options) {
     return this.parent(options);
@@ -2441,27 +2475,17 @@ Core.Push = new Class({
   off: function() {
     return this.base.removeClass('pushed');
   },
-  update: function() {
-    if (this.options.size != null) {
-      this.size = this.options.size;
-      return this.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
-    }
-  },
   create: function() {
-    this.size = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
-    this.minSize = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'min-width')) || 0;
-    this.base.addClass(this.options["class"]).set('text', this.options.label);
     this.base.addEvent('click', (function() {
       if (this.enabled) {
         return this.base.toggleClass('pushed');
       }
     }).bind(this));
-    this.base.addEvent('click', (function(e) {
+    return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
       }
     }).bind(this));
-    return this.update();
   }
 });
 /*
@@ -2482,8 +2506,10 @@ provides: Core.PushGroup
 Core.PushGroup = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Children],
-  options: {
-    "class": GDotUI.Theme.PushGroup["class"]
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.PushGroup["class"]
+    }
   },
   initialize: function(options) {
     this.buttons = [];
@@ -2500,9 +2526,6 @@ Core.PushGroup = new Class({
       }
     });
     return this.fireEvent('change', item);
-  },
-  create: function() {
-    return this.base.addClass(this.options["class"]);
   },
   addItem: function(item) {
     if (this.buttons.indexOf(item) === -1) {
@@ -2556,20 +2579,37 @@ Prompt = new Class({
 });
 Core.Select = new Class({
   Extends: Core.Abstract,
-  Implements: [Interfaces.Controls, Interfaces.Enabled],
+  Implements: [Interfaces.Controls, Interfaces.Enabled, Interfaces.Size],
   Attributes: {
-    size: {
+    "class": {
+      value: 'select'
+    },
+    "default": {
+      value: '',
+      setter: function(value, old) {
+        if (this.text.get('text') === (old || '')) {
+          this.text.set('text', value);
+        }
+        return value;
+      }
+    },
+    selected: {
+      getter: function() {
+        return this.list.get('selected');
+      }
+    },
+    editable: {
+      value: true,
       setter: function(value) {
-        this.options.size = value;
-        return this.update();
+        if (value) {
+          this.base.adopt(this.removeIcon, this.addIcon);
+        } else {
+          document.id(this.removeIcon).dispose();
+          document.id(this.addIcon).dispose();
+        }
+        return value;
       }
     }
-  },
-  options: {
-    width: 200,
-    "class": 'select',
-    "default": '',
-    editable: true
   },
   initialize: function(options) {
     return this.parent(options);
@@ -2578,27 +2618,18 @@ Core.Select = new Class({
     var li;
     li = this.list.get('selected');
     if (li != null) {
-      return li.options.title;
+      return li.label;
     }
   },
   setValue: function(value) {
     return this.list.select(this.list.getItemFromTitle(value));
   },
   update: function() {
-    if (this.options.size != null) {
-      this.size = this.options.size;
-    }
-    this.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
     return this.list.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
   },
   create: function() {
-    this.size = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
-    this.minSize = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'min-width'));
-    this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'relative');
-    this.text = new Element('div.text', {
-      text: this.options["default"] || ''
-    });
+    this.text = new Element('div.text');
     this.text.setStyles({
       position: 'absolute',
       top: 0,
@@ -2608,34 +2639,35 @@ Core.Select = new Class({
       'z-index': 0,
       overflow: 'hidden'
     });
-    if (this.options.editable) {
-      this.addIcon = new Core.Icon();
-      this.addIcon.base.addClass('add');
-      this.addIcon.base.set('text', '+');
-      this.removeIcon = new Core.Icon();
-      this.removeIcon.base.set('text', '-');
-      this.removeIcon.base.addClass('remove');
-      $$(this.addIcon.base, this.removeIcon.base).setStyles({
-        'z-index': '1',
-        'position': 'relative'
-      });
-      this.removeIcon.addEvent('invoked', (function(el, e) {
-        e.stop();
-        if (this.enabled) {
-          this.removeItem(this.list.get('selected'));
-          return this.text.set('text', this.options["default"] || '');
-        }
-      }).bind(this));
-      this.addIcon.addEvent('invoked', (function(el, e) {
-        e.stop();
-        if (this.enabled) {
-          return this.prompt.justShow();
-        }
-      }).bind(this));
-      this.base.adopt(this.removeIcon, this.addIcon);
-    }
+    this.addIcon = new Core.Icon();
+    this.addIcon.base.addClass('add');
+    this.addIcon.base.set('text', '+');
+    this.removeIcon = new Core.Icon();
+    this.removeIcon.base.set('text', '-');
+    this.removeIcon.base.addClass('remove');
+    $$(this.addIcon.base, this.removeIcon.base).setStyles({
+      'z-index': '1',
+      'position': 'relative'
+    });
+    this.removeIcon.addEvent('invoked', (function(el, e) {
+      e.stop();
+      if (this.enabled) {
+        this.removeItem(this.list.get('selected'));
+        return this.text.set('text', this["default"] || '');
+      }
+    }).bind(this));
+    this.addIcon.addEvent('invoked', (function(el, e) {
+      e.stop();
+      if (this.enabled) {
+        return this.prompt.justShow();
+      }
+    }).bind(this));
     this.picker = new Core.Picker({
-      offset: 0
+      offset: 0,
+      position: {
+        x: 'center',
+        y: 'bottom'
+      }
     });
     this.picker.attachedTo = this.base;
     this.base.addEvent('click', (function(e) {
@@ -2654,8 +2686,8 @@ Core.Select = new Class({
       if (e != null) {
         e.stop();
       }
-      this.text.set('text', item.options.title);
-      this.fireEvent('change', item.options.title);
+      this.text.set('text', item.label);
+      this.fireEvent('change', item.label);
       return this.picker.forceHide();
     }).bind(this));
     return this.update();
@@ -2813,7 +2845,7 @@ Data.Number = new Class({
     if (this.reset) {
       return this.value;
     } else {
-      return Math.round((Number.from(this.progress.getStyle(this.modifier)) / this.size) * this.options.steps);
+      return Math.round((Number.from(this.progress.getStyle(this.modifier)) / this.size) * this.steps);
     }
   },
   setValue: function(step) {
@@ -3203,7 +3235,7 @@ Data.Date = new Class({
     i = 0;
     while (i < 30) {
       item = new Iterable.ListItem({
-        title: i + 1,
+        label: i + 1,
         removeable: false
       });
       item.value = i + 1;
@@ -3213,7 +3245,7 @@ Data.Date = new Class({
     i = 0;
     while (i < 12) {
       item = new Iterable.ListItem({
-        title: i + 1,
+        label: i + 1,
         removeable: false
       });
       item.value = i;
@@ -3223,7 +3255,7 @@ Data.Date = new Class({
     i = this.options.yearFrom;
     while (i <= new Date().getFullYear()) {
       item = new Iterable.ListItem({
-        title: i,
+        label: i,
         removeable: false
       });
       item.value = i;
@@ -3315,7 +3347,7 @@ Data.Time = new Class({
     i = 0;
     while (i < 24) {
       item = new Iterable.ListItem({
-        title: (i < 10 ? '0' + i : i),
+        label: (i < 10 ? '0' + i : i),
         removeable: false
       });
       item.value = i;
@@ -3326,7 +3358,7 @@ Data.Time = new Class({
     _results = [];
     while (i < 60) {
       item = new Iterable.ListItem({
-        title: (i < 10 ? '0' + i : i),
+        label: (i < 10 ? '0' + i : i),
         removeable: false
       });
       item.value = i;
@@ -3370,18 +3402,23 @@ requires: [GDotUI]
 Iterable.ListItem = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Draggable, Interfaces.Enabled],
+  Attributes: {
+    label: {
+      value: '',
+      setter: function(value) {
+        this.title.set('text', value);
+        return value;
+      }
+    },
+    "class": {
+      value: GDotUI.Theme.ListItem["class"]
+    }
+  },
   options: {
     classes: {
-      "class": GDotUI.Theme.ListItem["class"],
       title: GDotUI.Theme.ListItem.title,
-      subtitle: GDotUI.Theme.ListItem.subTitle,
-      handle: GDotUI.Theme.ListItem.handle
+      subtitle: GDotUI.Theme.ListItem.subTitle
     },
-    icons: {
-      remove: GDotUI.Theme.Icons.remove,
-      handle: GDotUI.Theme.Icons.handleVertical
-    },
-    offset: GDotUI.Theme.ListItem.offset,
     title: '',
     subtitle: '',
     draggable: false,
@@ -3398,9 +3435,9 @@ Iterable.ListItem = new Class({
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options.classes["class"]).setStyle('position', 'relative');
-    this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
-    this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
+    this.base.setStyle('position', 'relative');
+    this.title = new Element('div');
+    this.subtitle = new Element('div');
     this.base.adopt(this.title, this.subtitle);
     this.base.addEvent(this.options.selectEvent, (function(e) {
       return this.fireEvent('select', [this, e]);
@@ -3502,7 +3539,7 @@ Data.DateTime = new Class({
     i = 0;
     while (i < 24) {
       item = new Iterable.ListItem({
-        title: (i < 10 ? '0' + i : i),
+        label: (i < 10 ? '0' + i : i),
         removeable: false
       });
       item.value = i;
@@ -3512,7 +3549,7 @@ Data.DateTime = new Class({
     i = 0;
     while (i < 60) {
       item = new Iterable.ListItem({
-        title: (i < 10 ? '0' + i : i),
+        label: (i < 10 ? '0' + i : i),
         removeable: false
       });
       item.value = i;
@@ -3522,7 +3559,7 @@ Data.DateTime = new Class({
     i = 0;
     while (i < 30) {
       item = new Iterable.ListItem({
-        title: i + 1,
+        label: i + 1,
         removeable: false
       });
       item.value = i + 1;
@@ -3532,7 +3569,7 @@ Data.DateTime = new Class({
     i = 0;
     while (i < 12) {
       item = new Iterable.ListItem({
-        title: i + 1,
+        label: i + 1,
         removeable: false
       });
       item.value = i;
@@ -3543,7 +3580,7 @@ Data.DateTime = new Class({
     _results = [];
     while (i <= new Date().getFullYear()) {
       item = new Iterable.ListItem({
-        title: i,
+        label: i,
         removeable: false
       });
       item.value = i;
@@ -4128,7 +4165,7 @@ Data.Unit = new Class({
     });
     Object.each(UnitList, (function(item) {
       return this.sel.addItem(new Iterable.ListItem({
-        title: item,
+        label: item,
         removeable: false,
         draggable: false
       }));

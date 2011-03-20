@@ -38,31 +38,31 @@ Data.DateTime = new Class {
   populate: ->
     i = 0
     while i < 24
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @hourList.addItem item
       i++
     i = 0
     while i < 60
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @minuteList.addItem item
       i++
     i = 0
     while i < 30
-      item = new Iterable.ListItem {title:i+1,removeable:false}
+      item = new Iterable.ListItem {label:i+1,removeable:false}
       item.value = i+1
       @days.addItem item
       i++
     i = 0
     while i < 12
-      item = new Iterable.ListItem {title:i+1,removeable:false}
+      item = new Iterable.ListItem {label:i+1,removeable:false}
       item.value = i
       @month.addItem item
       i++
     i = @options.yearFrom
     while i <= new Date().getFullYear()
-      item = new Iterable.ListItem {title:i,removeable:false}
+      item = new Iterable.ListItem {label:i,removeable:false}
       item.value = i
       @years.addItem item
       i++

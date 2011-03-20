@@ -34,7 +34,6 @@ window.addEvent('domready', function(){
     iconGroup.set('columns', value)
   });
   slider5.setValue(0)
-  /*
   pushgroup = new Core.Select({editable:false});
   pushgroup.addEvent('change', function(value){
     iconGroup.set('mode',value)
@@ -64,15 +63,14 @@ window.addEvent('domready', function(){
     }
   });
   positions.each(function(item){
-      p = new Iterable.ListItem({title:item})
+      p = new Iterable.ListItem({label:item})
       pushgroup.addItem(p)
   })
-  */
   for(i=0;i<8;i++){
     icon = new Core.Icon({image:icons[Math.round(Math.random()*4)]});
     iconGroup.addIcon(icon)
   }
-  //pushgroup.setValue('grid')
+  pushgroup.setValue('grid')
   $("demo").adopt(iconGroup)
-  $("options").adopt(slider,slider1, slider2,slider3,slider4,slider5);
+  $("options").adopt(slider,slider1, slider2,slider3,slider4,slider5,pushgroup);
 });

@@ -114,6 +114,10 @@
   -moz-box-shadow: 0 0 0 transparent;
   -webkit-box-shadow: 0 0 0 transparent; }
 
+.button {
+  display: block;
+  width: 200px; }
+
 .slot {
   height: 100px;
   width: 40px; }
@@ -335,7 +339,7 @@ textarea {
     color: #1c1c1c; }
 
 .toggler {
-  width: 100px;
+  width: 200px;
   height: 20px;
   overflow: hidden;
   cursor: pointer; }
@@ -349,7 +353,6 @@ textarea {
     width: 50px;
     color: #eeeeee; }
   .toggler .sep {
-    -webkit-transition-duration: 0.3s;
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     -khtml-border-radius: 5px;

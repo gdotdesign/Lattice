@@ -63,7 +63,7 @@ Data.Number = new Class {
     if @reset
       @value
     else
-      Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@options.steps)
+      Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@steps)
   setValue: (step) ->
     real = @parent step
     @textLabel.set 'text', if @label? then @label + " : " + real else real

@@ -36,7 +36,7 @@ Core.Slider = new Class {
             @base.setStyle 'height', Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'height')
             @progress.setStyles {
               top: 0
-              width: if @reset then @size/2 else 0
+              right: 'auto'
             }
           when 'vertical'
             @modifier = 'height'
@@ -47,8 +47,8 @@ Core.Slider = new Class {
             @set 'size', size
             @base.setStyle 'width', Number.from getCSS("/\\.#{@class}.vertical$/",'width')
             @progress.setStyles {
-              height: if @reset then @size/2 else 0
               right: 0
+              top: 'auto'
             }
         value
     }
@@ -69,8 +69,12 @@ Core.Slider = new Class {
       value: [0,0]
     }
     size: {
-      setter: (value) ->
+      setter: (value, old) ->
+        if !value?
+          value = old
         @base.setStyle @modifier, value
+        if @reset
+          @progress.setStyle @modifier, if @reset then value/2 else 0
         value
     }
   }
@@ -79,7 +83,7 @@ Core.Slider = new Class {
     
     @parent options
   setValue: (position) ->
-    if @get('reset')
+    if @reset
       @value = Number.from position
     else
       position = Math.round((position/@get('steps'))*@size)
@@ -90,7 +94,6 @@ Core.Slider = new Class {
         @progress.setStyle @modifier, @size+"px"
       if not(position < 0) and not(position > @size)
         @progress.setStyle @modifier, (percent/@get('steps'))*@size+"px"
-    console.log position, @size, @get('steps')
     if @get('reset') then @value else Math.round((position/@size)*@get('steps'))
   create: ->
 
@@ -113,7 +116,7 @@ Core.Slider = new Class {
     ).bind @
     
     @drag.addEvent 'complete', ( (el,e) ->
-      if @get('reset')
+      if @reset
         if @enabled
           el.setStyle @modifier, @size/2+"px"
       @fireEvent 'complete'
@@ -138,7 +141,7 @@ Core.Slider = new Class {
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
       offset = Number.from e.wheel
-      if @get('reset')
+      if @reset
         @value += offset
       else
         pos = Number.from @progress.getStyle(@modifier)
@@ -149,9 +152,9 @@ Core.Slider = new Class {
           @progress.setStyle @modifier, @size+"px"
           pos = pos+offset
         if not(pos+offset < 0) and not(pos+offset > @size)
-          @progress.setStyle @modifier, (pos+offset/@get('steps')*@size)+"px"
+          @progress.setStyle @modifier, (pos+offset/@steps*@size)+"px"
           pos = pos+offset
-      @fireEvent 'step', if @get('reset') then @value else Math.round((pos/@size)*@get('steps'))
+      @fireEvent 'step', if @reset then @value else Math.round((pos/@size)*@steps)
     ).bind @
 
 }

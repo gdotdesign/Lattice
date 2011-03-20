@@ -30,39 +30,47 @@ Prompt = new Class {
 }
 Core.Select = new Class {
   Extends:Core.Abstract
-  Implements:[ Interfaces.Controls, Interfaces.Enabled]
+  Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size]
   Attributes: {
-    size: {
-      setter: (value) ->
-        @options.size = value
-        @update()
+    class: {
+      value: 'select'
     }
-  }
-  options: {
-    width: 200
-    class: 'select'
-    default: ''
-    editable: true
+    default: {
+      value: ''
+      setter: (value, old) ->
+        if @text.get('text') is (old or '')
+          @text.set 'text', value
+        value
+    }
+    selected: {
+      getter: ->
+        @list.get('selected')
+    }
+    editable: {
+      value: yes
+      setter: (value) ->
+        if value
+          @base.adopt  @removeIcon, @addIcon
+        else
+          document.id(@removeIcon).dispose()
+          document.id(@addIcon).dispose()
+        value
+          
+    }
   }
   initialize: (options) ->
     @parent options
   getValue: ->
     li = @list.get('selected')
     if li?
-      li.options.title
+      li.label
   setValue: (value) ->
     @list.select @list.getItemFromTitle(value)
   update: ->
-    if @options.size?
-      @size = @options.size
-    @base.setStyle 'width', if @size < @minSize then @minSize else @size
     @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
   create: ->
-    @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
-    @minSize = Number.from getCSS("/\\.#{@options.class}$/",'min-width')
-    @base.addClass @options.class
     @base.setStyle 'position', 'relative'
-    @text = new Element('div.text', {text: @options.default or ''})
+    @text = new Element('div.text')
     @text.setStyles {
       position: 'absolute'
       top: 0
@@ -72,34 +80,33 @@ Core.Select = new Class {
       'z-index': 0
       overflow: 'hidden'
     }
-    if @options.editable
-      @addIcon = new Core.Icon()
-      @addIcon.base.addClass 'add'
-      @addIcon.base.set 'text', '+'
-      @removeIcon = new Core.Icon()
-      @removeIcon.base.set 'text', '-'
-      @removeIcon.base.addClass 'remove'
-      $$(@addIcon.base,@removeIcon.base).setStyles {
-        'z-index': '1'
-        'position': 'relative'
-      }
-      @removeIcon.addEvent 'invoked',( (el,e)->
-        e.stop()
-        if @enabled
-          @removeItem @list.get('selected')
-          @text.set 'text', @options.default or ''
-      ).bind @
-      @addIcon.addEvent 'invoked',( (el,e)->
-        e.stop()
-        if @enabled
-          @prompt.justShow()
-        #a = window.prompt('something')
-        #if a
-        #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
-        #  @addItem item
-      ).bind @
-      @base.adopt  @removeIcon, @addIcon
-    @picker = new Core.Picker({offset:0})
+    @addIcon = new Core.Icon()
+    @addIcon.base.addClass 'add'
+    @addIcon.base.set 'text', '+'
+    @removeIcon = new Core.Icon()
+    @removeIcon.base.set 'text', '-'
+    @removeIcon.base.addClass 'remove'
+    $$(@addIcon.base,@removeIcon.base).setStyles {
+      'z-index': '1'
+      'position': 'relative'
+    }
+    @removeIcon.addEvent 'invoked',( (el,e)->
+      e.stop()
+      if @enabled
+        @removeItem @list.get('selected')
+        @text.set 'text', @default or ''
+    ).bind @
+    @addIcon.addEvent 'invoked',( (el,e)->
+      e.stop()
+      if @enabled
+        @prompt.justShow()
+      #a = window.prompt('something')
+      #if a
+      #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
+      #  @addItem item
+    ).bind @
+    
+    @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
     @picker.attachedTo = @base
     @base.addEvent 'click', ( (e) ->
       if @enabled
@@ -114,8 +121,8 @@ Core.Select = new Class {
     @list.addEvent 'select', ( (item,e)->
       if e?
         e.stop()
-      @text.set 'text', item.options.title
-      @fireEvent 'change', item.options.title
+      @text.set 'text', item.label
+      @fireEvent 'change', item.label
       @picker.forceHide()
     ).bind @
     @update();

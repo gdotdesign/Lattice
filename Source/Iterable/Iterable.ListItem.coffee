@@ -18,18 +18,22 @@ Iterable.ListItem = new Class {
   Extends:Core.Abstract
   Implements: [ Interfaces.Draggable
                Interfaces.Enabled ]
+  Attributes: {
+    label: {
+      value: ''
+      setter: (value) ->
+        @title.set 'text', value
+        value
+    }
+    class: {
+      value: GDotUI.Theme.ListItem.class
+    }
+  }
   options:{
     classes:{
-      class: GDotUI.Theme.ListItem.class
       title: GDotUI.Theme.ListItem.title
       subtitle: GDotUI.Theme.ListItem.subTitle
-      handle: GDotUI.Theme.ListItem.handle
     }
-    icons:{
-      remove: GDotUI.Theme.Icons.remove
-      handle: GDotUI.Theme.Icons.handleVertical
-    }
-    offset: GDotUI.Theme.ListItem.offset
     title:''
     subtitle:''
     draggable: off
@@ -45,14 +49,14 @@ Iterable.ListItem = new Class {
   initialize: (options) ->
     @parent options
   create: ->
-    @base.addClass(@options.classes.class).setStyle  'position','relative'
+    @base.setStyle 'position','relative'
     #@remove = new Core.Icon {image: @options.icons.remove}
     #@handles = new Core.Icon {image: @options.icons.handle}
     #@handles.base.addClass  @options.classes.handle
     
     #$$(@remove.base,@handles.base).setStyle 'position','absolute'
-    @title = new Element('div').addClass(@options.classes.title).set 'text', @options.title
-    @subtitle = new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
+    @title = new Element 'div'
+    @subtitle = new Element 'div'
     @base.adopt @title,@subtitle
     #if @options.removeable
     #  @base.grab @remove

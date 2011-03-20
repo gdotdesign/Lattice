@@ -37,13 +37,13 @@ Data.Time = new Class {
     ).bindWithEvent @
     i = 0
     while i < 24
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @hourList.addItem item
       i++
     i = 0
     while i < 60
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @minuteList.addItem item
       i++

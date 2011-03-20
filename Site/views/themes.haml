@@ -7,8 +7,8 @@
     icon1 = new Core.Icon({image:'/idea-inv.png'});
     icon2 = new Core.Icon({image:'/layers-inv.png'});    
     
-    button = new Core.Button({text:"Default Button!"});
-    disabledButton = new Core.Button({text:"Default Button!"}).disable();
+    button = new Core.Button({label:"Default Button!"});
+    disabledButton = new Core.Button({label:"Default Button!"}).disable();
     
     horizontalSlider = new Core.Slider();
     disabledSlider = new Core.Slider().disable();
@@ -31,7 +31,7 @@
     select = new Core.Select({'default':'background-break'});
     list = [' bounding-box','each-box','continuous','border-box','padding-box','content-box','no-clip']
     list.each(function(item){
-      select.addItem(new Iterable.ListItem({title:item,removeable:false,draggable:false}))
+      select.addItem(new Iterable.ListItem({label:item,removeable:false,draggable:false}))
     });
     
     $("box").adopt( icon,icon1,icon2, button, disabledButton, horizontalSlider, disabledSlider, toggler,disabledToggler, number, select, unit,disabledNumber,dTime,dDate,dDateTime, color );

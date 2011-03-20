@@ -11,7 +11,31 @@ provides: Element.Extras
 
 ...
 ###
+Element.Properties.checked = {
+  get: ->
+    if @getChecked?
+      @getChecked()
+  set: (value) ->
+    @setAttribute 'checked', value
+    if @on? and @off?
+      if value
+        @on()
+      else
+        @off()
+}
 (->
+  Element.Events.outerClick = {
+    base: 'mousedown'
+    condition: (event) ->
+      event.stopPropagation()
+      off
+    onAdd: (fn) ->
+      window.addEvent 'click', fn
+      window.addEvent 'outer', fn
+    onRemove: (fn) ->
+      window.removeEvent 'click', fn
+      window.removeEvent 'outer', fn
+  }
   Element.implement {
     oldGrab: Element::grab
     oldInject: Element::inject
@@ -372,7 +396,8 @@ Core.Icon = new Class {
   Attributes: {
     image: {
       setter: (value) ->
-        @image = value
+        @base.setStyle 'background-image', 'url(' + value + ')'
+        value
     }
     class: {
       value: GDotUI.Theme.Icon.class
@@ -380,14 +405,11 @@ Core.Icon = new Class {
   }
   initialize: (options) ->
     @parent options
-  update: ->
-    if @image?
-      @base.setStyle 'background-image', 'url(' + @image + ')'
   create: ->
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]
-    ).bindWithEvent @
+    ).bind @
 }
 
 
@@ -441,17 +463,11 @@ Core.IconGroup = new Class {
   Attributes: {
     mode: {
       value: "horizontal"
-      setter: (value) ->
-        @mode = value
-        @update()
       validator: (value) ->
         if ['horizontal','vertical','circular','grid','linear'].indexOf(value) > -1 then true else false
     }
     spacing: {
       value: {x: 0,y: 0}
-      setter: (value) ->
-        @spacing = value
-        @update()
       validator: (value) ->
         if typeOf(value) is 'object'
           if value.x? and value.y? then yes else no
@@ -460,8 +476,7 @@ Core.IconGroup = new Class {
     startAngle: {
       value: 0
       setter: (value) ->
-        @startAngle = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a >= 0 and a <= 360 then yes else no
@@ -470,16 +485,14 @@ Core.IconGroup = new Class {
     radius: {
       value: 0
       setter: (value) ->
-        @radius = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))? then yes else no
     }
     degree: {
       value: 360
       setter: (value) ->
-        @degree = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a >= 0 and a <= 360 then yes else no
@@ -487,8 +500,7 @@ Core.IconGroup = new Class {
     }
     rows: {
       setter: (value) ->
-        @rows = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a > 0 then yes else no
@@ -496,8 +508,7 @@ Core.IconGroup = new Class {
     }
     columns: {
       setter: (value) ->
-        @columns = Number.from(value)
-        @update()
+        Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
           if a > 0 then yes else no
@@ -509,7 +520,6 @@ Core.IconGroup = new Class {
   }
   initialize: (options) ->
     @icons = []
-    console.log options
     @parent options
   create: ->
     @base.setStyle 'position', 'relative'
@@ -533,81 +543,82 @@ Core.IconGroup = new Class {
   ready: ->
     @update()
   update: ->
-    x = 0
-    y = 0
-    @size = {x:0, y:0}
-    spacing = @spacing
-    switch @mode
-      when 'grid'
-        if @rows? and @columns?
-          if Number.from(@rows) < Number.from(@columns)
-            @rows = null
-          else
-            @columns = null
-        if @columns?
-          columns = @columns
-          rows = Math.round @icons.length/columns
-        if @rows?
-          rows = @rows
-          columns = Math.round @icons.length/rows
-        #console.log rows, columns
-        icpos = @icons.map ((item,i) ->
-          if i % columns == 0
-            x = 0
-            y = if i==0 then y else y+item.base.getSize().y+spacing.y
-          else
-            x = if i==0 then x else x+item.base.getSize().x+spacing.x
-          @size.x = x+item.base.getSize().x
-          @size.y = y+item.base.getSize().y
-          {x:x, y:y}
-          ).bind @
-      when 'linear'
-        icpos = @icons.map ((item,i) ->
-          x = if i==0 then x+x else x+spacing.x+item.base.getSize().x
-          y = if i==0 then y+y else y+spacing.y+item.base.getSize().y
-          @size.x = x+item.base.getSize().x
-          @size.y = y+item.base.getSize().y
-          {x:x, y:y}
-          ).bind @
-      when 'horizontal'
-        icpos = @icons.map ((item,i) ->
-          x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
-          y = if i==0 then y else y
-          @size.x = x+item.base.getSize().x
-          @size.y = item.base.getSize().y
-          {x:x, y:y}
-          ).bind @
-      when 'vertical'
-        icpos = @icons.map ((item,i) ->
-          x = if i==0 then x else x
-          y = if i==0 then y+y else y+item.base.getSize().y+spacing.y
-          @size.x = item.base.getSize().x
-          @size.y = y+item.base.getSize().y
-          {x:x,y:y}
-          ).bind @
-      when 'circular'
-        n = @icons.length
-        radius = @radius
-        startAngle = @startAngle
-        ker = 2*@radius*Math.PI
-        fok = @degree/n
-        icpos = @icons.map (item,i) ->
-          if i==0
-            foks = startAngle * (Math.PI/180)
-            x = Math.round(radius * Math.sin(foks))+radius/2+item.base.getSize().x
-            y = -Math.round(radius * Math.cos(foks))+radius/2+item.base.getSize().y
-          else
-            x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().x
-            y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().y
-          {x:x, y:y}
-    @base.setStyles {
-      width: @size.x
-      height: @size.y
-    }
-    @icons.each (item,i) ->
-      item.base.setStyle 'top', icpos[i].y
-      item.base.setStyle 'left', icpos[i].x
-      item.base.setStyle 'position', 'absolute'
+    if @icons.length > 0 and @mode? 
+      x = 0
+      y = 0
+      @size = {x:0, y:0}
+      spacing = @spacing
+      switch @mode
+        when 'grid'
+          if @rows? and @columns?
+            if Number.from(@rows) < Number.from(@columns)
+              @rows = null
+            else
+              @columns = null
+          if @columns?
+            columns = @columns
+            rows = Math.round @icons.length/columns
+          if @rows?
+            rows = @rows
+            columns = Math.round @icons.length/rows
+          #console.log rows, columns
+          icpos = @icons.map ((item,i) ->
+            if i % columns == 0
+              x = 0
+              y = if i==0 then y else y+item.base.getSize().y+spacing.y
+            else
+              x = if i==0 then x else x+item.base.getSize().x+spacing.x
+            @size.x = x+item.base.getSize().x
+            @size.y = y+item.base.getSize().y
+            {x:x, y:y}
+            ).bind @
+        when 'linear'
+          icpos = @icons.map ((item,i) ->
+            x = if i==0 then x+x else x+spacing.x+item.base.getSize().x
+            y = if i==0 then y+y else y+spacing.y+item.base.getSize().y
+            @size.x = x+item.base.getSize().x
+            @size.y = y+item.base.getSize().y
+            {x:x, y:y}
+            ).bind @
+        when 'horizontal'
+          icpos = @icons.map ((item,i) ->
+            x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
+            y = if i==0 then y else y
+            @size.x = x+item.base.getSize().x
+            @size.y = item.base.getSize().y
+            {x:x, y:y}
+            ).bind @
+        when 'vertical'
+          icpos = @icons.map ((item,i) ->
+            x = if i==0 then x else x
+            y = if i==0 then y+y else y+item.base.getSize().y+spacing.y
+            @size.x = item.base.getSize().x
+            @size.y = y+item.base.getSize().y
+            {x:x,y:y}
+            ).bind @
+        when 'circular'
+          n = @icons.length
+          radius = @radius
+          startAngle = @startAngle
+          ker = 2*@radius*Math.PI
+          fok = @degree/n
+          icpos = @icons.map (item,i) ->
+            if i==0
+              foks = startAngle * (Math.PI/180)
+              x = Math.round(radius * Math.sin(foks))+radius/2+item.base.getSize().x
+              y = -Math.round(radius * Math.cos(foks))+radius/2+item.base.getSize().y
+            else
+              x = Math.round(radius * Math.sin(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().x
+              y = -Math.round(radius * Math.cos(((fok * i) + startAngle) * (Math.PI/180)))+radius/2+item.base.getSize().y
+            {x:x, y:y}
+      @base.setStyles {
+        width: @size.x
+        height: @size.y
+      }
+      @icons.each (item,i) ->
+        item.base.setStyle 'top', icpos[i].y
+        item.base.setStyle 'left', icpos[i].x
+        item.base.setStyle 'position', 'absolute'
 }
 
 
@@ -756,7 +767,7 @@ Core.Slider = new Class {
             @base.setStyle 'height', Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'height')
             @progress.setStyles {
               top: 0
-              width: if @reset then @size/2 else 0
+              right: 'auto'
             }
           when 'vertical'
             @modifier = 'height'
@@ -767,8 +778,8 @@ Core.Slider = new Class {
             @set 'size', size
             @base.setStyle 'width', Number.from getCSS("/\\.#{@class}.vertical$/",'width')
             @progress.setStyles {
-              height: if @reset then @size/2 else 0
               right: 0
+              top: 'auto'
             }
         value
     }
@@ -789,8 +800,12 @@ Core.Slider = new Class {
       value: [0,0]
     }
     size: {
-      setter: (value) ->
+      setter: (value, old) ->
+        if !value?
+          value = old
         @base.setStyle @modifier, value
+        if @reset
+          @progress.setStyle @modifier, if @reset then value/2 else 0
         value
     }
   }
@@ -799,7 +814,7 @@ Core.Slider = new Class {
     
     @parent options
   setValue: (position) ->
-    if @get('reset')
+    if @reset
       @value = Number.from position
     else
       position = Math.round((position/@get('steps'))*@size)
@@ -810,7 +825,6 @@ Core.Slider = new Class {
         @progress.setStyle @modifier, @size+"px"
       if not(position < 0) and not(position > @size)
         @progress.setStyle @modifier, (percent/@get('steps'))*@size+"px"
-    console.log position, @size, @get('steps')
     if @get('reset') then @value else Math.round((position/@size)*@get('steps'))
   create: ->
 
@@ -833,7 +847,7 @@ Core.Slider = new Class {
     ).bind @
     
     @drag.addEvent 'complete', ( (el,e) ->
-      if @get('reset')
+      if @reset
         if @enabled
           el.setStyle @modifier, @size/2+"px"
       @fireEvent 'complete'
@@ -858,7 +872,7 @@ Core.Slider = new Class {
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
       offset = Number.from e.wheel
-      if @get('reset')
+      if @reset
         @value += offset
       else
         pos = Number.from @progress.getStyle(@modifier)
@@ -869,9 +883,9 @@ Core.Slider = new Class {
           @progress.setStyle @modifier, @size+"px"
           pos = pos+offset
         if not(pos+offset < 0) and not(pos+offset > @size)
-          @progress.setStyle @modifier, (pos+offset/@get('steps')*@size)+"px"
+          @progress.setStyle @modifier, (pos+offset/@steps*@size)+"px"
           pos = pos+offset
-      @fireEvent 'step', if @get('reset') then @value else Math.round((pos/@size)*@get('steps'))
+      @fireEvent 'step', if @reset then @value else Math.round((pos/@size)*@steps)
     ).bind @
 
 }
@@ -1300,34 +1314,32 @@ provides: [Core.Picker, outerClick]
     window.fireEvent 'outer'
     oldPrototypeStart.run arguments, @
 )()
-Element.Events.outerClick = {
-    base: 'mousedown'
-    condition: (event) ->
-      event.stopPropagation()
-      off
-    onAdd: (fn) ->
-      window.addEvent 'click', fn
-      window.addEvent 'outer', fn
-    onRemove: (fn) ->
-      window.removeEvent 'click', fn
-      window.removeEvent 'outer', fn
-}
+
 Core.Picker = new Class {
   Extends: Core.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
   Binds: ['show'
           'hide']
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Picker.class
+    }
+    offset: {
+      value: GDotUI.Theme.Picker.offset
+      setter: (value) ->
+        value
+    }
+    position: {
+      value: {x:'auto',y:'auto'}
+    }
+  }
   options:{
-    class: GDotUI.Theme.Picker.class
-    offset: GDotUI.Theme.Picker.offset
     event: GDotUI.Theme.Picker.event
     picking: GDotUI.Theme.Picker.picking
   }
   initialize: (options) ->
     @parent options
-    @
   create: ->
-    @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
   onReady: ->
     if not @base.hasChild @contentElement
@@ -1337,27 +1349,46 @@ Core.Picker = new Class {
     asize = @attachedTo.getSize()
     position = @attachedTo.getPosition()
     size = @base.getSize()
-    offset = @options.offset
+    offset = @offset
+    console.log offset
     x = ''
     y = ''
-    if (position.x-size.x-winscroll.x) < 0
-      x = 'right'
-      xpos = position.x+asize.x+offset
-    if (position.x+size.x+asize.x) > winsize.x
-      x = 'left'
-      xpos = position.x-size.x-offset
-    if not ((position.x+size.x+asize.x)>winsize.x) and not ((position.x-size.x) < 0) 
-      x = 'center'
-      xpos = (position.x+asize.x/2)-(size.x/2)
-    if position.y+size.y-winscroll.y > winsize.y
-      y = 'up'
-      ypos = position.y-size.y-offset
-    else
-      y = 'down'
-      if x=='center'
-        ypos = position.y+asize.y+offset
+    if @position.x is 'auto' and @position.y is 'auto'
+      if (position.x-size.x-winscroll.x) < 0
+        x = 'right'
+        xpos = position.x+asize.x+offset
+      if (position.x+size.x+asize.x) > winsize.x
+        x = 'left'
+        xpos = position.x-size.x-offset
+      if not ((position.x+size.x+asize.x)>winsize.x) and not ((position.x-size.x) < 0) 
+        x = 'center'
+        xpos = (position.x+asize.x/2)-(size.x/2)
+      if position.y+size.y-winscroll.y > winsize.y
+        y = 'up'
+        ypos = position.y-size.y-offset
       else
-        ypos = position.y
+        y = 'down'
+        if x=='center'
+          ypos = position.y+asize.y+offset
+        else
+          ypos = position.y
+    if @position.x isnt 'auto'
+      switch @position.x
+        when 'left'
+          xpos = position.x-size.x-offset
+        when 'right'
+          xpos = position.x+asize.x+offset
+        when 'center'
+          xpos = (position.x+asize.x/2)-(size.x/2)
+          console.log xpos
+    if @position.y isnt 'auto'
+      switch @position.y
+        when 'top'
+          ypos = position.y-size.y-offset
+        when 'bottom'
+          ypos = position.y+asize.y+offset
+        when 'center'
+          ypos = position.y
     @base.setStyles {
       left : xpos
       top : ypos
@@ -1815,86 +1846,91 @@ provides: Core.Toggler
 
 ...
 ###
-Element.Properties.checked = {
-  get: ->
-    if @getChecked?
-      @getChecked()
-  set: (value) ->
-    @setAttribute 'checked', value
-    if @on? and @off?
-      if value
-        @on()
-      else
-        @off()
-}
+
 
 Core.Toggler = new Class {
   Extends: Core.Abstract
   Implements:[
     Interfaces.Enabled
     Interfaces.Controls
+    Interfaces.Size
   ]
-  options:{
-    class: GDotUI.Theme.Toggler.class
-    onClass: GDotUI.Theme.Toggler.onClass
-    offClass: GDotUI.Theme.Toggler.offClass
-    sepClass: GDotUI.Theme.Toggler.separatorClass
-    onText: GDotUI.Theme.Toggler.onText
-    offText: GDotUI.Theme.Toggler.offText
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Toggler.class
+    }
+    onLabel: {
+      value: GDotUI.Theme.Toggler.onText
+      setter: (value) ->
+        @onDiv.set 'text', value
+    }
+    offLabel: {
+      value: GDotUI.Theme.Toggler.offText
+      setter: (value) ->
+        @offDiv.set 'text', value
+    }
+    onClass: {
+      value: GDotUI.Theme.Toggler.onClass
+      setter: (value, old) ->
+        @onDiv.removeClass old
+        @onDiv.addClass value
+        value
+    }
+    offClass: {
+      value: GDotUI.Theme.Toggler.offClass
+      setter: (value, old) ->
+        @offDiv.removeClass old
+        @offDiv.addClass value
+        value
+    }
+    separatorClass: {
+      value: GDotUI.Theme.Toggler.separatorClass
+      setter: (value, old) ->
+        @separator.removeClass old
+        @separator.addClass value
+        value
+    }
+    checked: {
+      value: on
+      setter: (value) ->
+        @base.fireEvent 'change', value
+        value
+    }
   }
   initialize: (options) ->
-    @checked = yes
     @parent options
+  update: ->
+    if @size
+      $$(@onDiv,@offDiv,@separator).setStyles {
+        width: @size/2
+      }
+      @base.setStyle 'width', @size
+    if @checked
+      @separator.setStyle 'left', @size/2
+    else
+      @separator.setStyle 'left', 0
+    @offDiv.setStyle 'left', @size/2
   create: ->
-    @width = @options.width or Number.from getCSS("/\\.#{@options.onClass}$/",'width')
-    @base.addClass @options.class
     @base.setStyle 'position','relative'
-    @onLabel = new Element 'div', {text:@options.onText, class:@options.onClass}
-    @onLabel.removeTransition()
-    @offLabel = new Element 'div', {text:@options.offText, class:@options.offClass}
-    @offLabel.removeTransition()
-    @separator = new Element 'div', {html: '&nbsp;', class:@options.sepClass}
-    @separator.removeTransition()
-    @base.adopt @onLabel, @offLabel, @separator
-    @base.getChecked = ( ->
-      @checked
-      ).bind @
-    @base.on = @on.bind @
-    @base.off = @off.bind @
-    $$(@onLabel,@offLabel,@separator).setStyles {
+    @onDiv = new Element 'div'
+    @offDiv = new Element 'div'
+    @separator = new Element 'div', {html: '&nbsp;'}
+    @base.adopt @onDiv, @offDiv, @separator
+
+    $$(@onDiv,@offDiv,@separator).setStyles {
       'position':'absolute'
       'top': 0
       'left': 0
     }
-    if @options.width
-      $$(@onLabel,@offLabel,@separator).setStyles {
-        width: @width
-      }
-      @base.setStyle 'width', @width*2
-    @offLabel.setStyle 'left', @width
-    if @checked
-      @on()
-    else
-      @off()
+    
     @base.addEvent 'click', ( ->
        if @enabled
          if @checked
-          @off()
-          @base.fireEvent 'change'
+          @set 'checked', no
          else
-          @on()
-          @base.fireEvent 'change'
+          @set 'checked', yes
     ).bind @
-    @onLabel.addTransition()
-    @offLabel.addTransition()
-    @separator.addTransition()
-    @parent()
-  on: ->
-    @checked = yes
-    @separator.setStyle 'left', @width
-  off: ->
-    @checked = no
-    @separator.setStyle 'left', 0
+    
 }
 
 
@@ -1939,8 +1975,10 @@ provides: Core.Overlay
 ###
 Core.Overlay = new Class {
   Extends: Core.Abstract
-  options: {
-    class: GDotUI.Theme.Overlay.class
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Overlay.class
+    }
   }
   initialize: (options) ->
     @parent options 
@@ -1953,7 +1991,6 @@ Core.Overlay = new Class {
       bottom:0
       opacity:0
       }
-    @base.addClass @options.class
     @base.addEventListener 'webkitTransitionEnd', ((e) ->
       if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
         @base.setStyle 'visiblity', 'hidden'
@@ -1985,28 +2022,20 @@ provides: Core.Push
 ###
 Core.Push = new Class {
   Extends: Core.Abstract
+  Implements: [Interfaces.Size, Interfaces.Enabled]
   Attributes: {
     state: {
       getter: ->
         if @base.hasClass 'pushed' then true else false
     }
     label: {
+      value: GDotUI.Theme.Push.defaultText
       setter: (value) ->
-        @options.label = value
-        @update()
+        @base.set 'text', value
     }
-    size: {
-      setter: (value) ->
-        @options.size = value
-        @update()
+    class: {
+      value: GDotUI.Theme.Push.class
     }
-  }
-  Implements:[
-    Interfaces.Enabled
-  ]
-  options:{
-    label: GDotUI.Theme.Push.defaultText
-    class: GDotUI.Theme.Push.class
   }
   initialize: (options) ->
     @parent options 
@@ -2014,14 +2043,7 @@ Core.Push = new Class {
     @base.addClass 'pushed'
   off: ->
     @base.removeClass 'pushed'
-  update: ->
-    if @options.size?
-      @size = @options.size
-      @base.setStyle 'width', if @size < @minSize then @minSize else @size
   create: ->
-    @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
-    @minSize = Number.from(getCSS("/\\.#{@options.class}$/",'min-width')) or 0
-    @base.addClass(@options.class).set 'text', @options.label
     @base.addEvent 'click', ( ->
       if @enabled
         @base.toggleClass 'pushed'
@@ -2030,7 +2052,6 @@ Core.Push = new Class {
       if @enabled
         @fireEvent 'invoked', [@, e]
       ).bind @
-    @update()
 }
 
 
@@ -2055,8 +2076,10 @@ Core.PushGroup = new Class {
     Interfaces.Enabled
     Interfaces.Children
   ]
-  options:{
-    class: GDotUI.Theme.PushGroup.class
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.PushGroup.class
+    }
   }
   initialize: (options) ->
     @buttons = []
@@ -2070,8 +2093,6 @@ Core.PushGroup = new Class {
         btn.on()
         btn.supress()
     @fireEvent 'change', item
-  create: ->
-    @base.addClass @options.class
   addItem: (item) ->
     if @buttons.indexOf(item) is -1
       @buttons.push item  
@@ -2116,39 +2137,47 @@ Prompt = new Class {
 }
 Core.Select = new Class {
   Extends:Core.Abstract
-  Implements:[ Interfaces.Controls, Interfaces.Enabled]
+  Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size]
   Attributes: {
-    size: {
-      setter: (value) ->
-        @options.size = value
-        @update()
+    class: {
+      value: 'select'
     }
-  }
-  options: {
-    width: 200
-    class: 'select'
-    default: ''
-    editable: true
+    default: {
+      value: ''
+      setter: (value, old) ->
+        if @text.get('text') is (old or '')
+          @text.set 'text', value
+        value
+    }
+    selected: {
+      getter: ->
+        @list.get('selected')
+    }
+    editable: {
+      value: yes
+      setter: (value) ->
+        if value
+          @base.adopt  @removeIcon, @addIcon
+        else
+          document.id(@removeIcon).dispose()
+          document.id(@addIcon).dispose()
+        value
+          
+    }
   }
   initialize: (options) ->
     @parent options
   getValue: ->
     li = @list.get('selected')
     if li?
-      li.options.title
+      li.label
   setValue: (value) ->
     @list.select @list.getItemFromTitle(value)
   update: ->
-    if @options.size?
-      @size = @options.size
-    @base.setStyle 'width', if @size < @minSize then @minSize else @size
     @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
   create: ->
-    @size = Number.from getCSS("/\\.#{@options.class}$/",'width')
-    @minSize = Number.from getCSS("/\\.#{@options.class}$/",'min-width')
-    @base.addClass @options.class
     @base.setStyle 'position', 'relative'
-    @text = new Element('div.text', {text: @options.default or ''})
+    @text = new Element('div.text')
     @text.setStyles {
       position: 'absolute'
       top: 0
@@ -2158,34 +2187,33 @@ Core.Select = new Class {
       'z-index': 0
       overflow: 'hidden'
     }
-    if @options.editable
-      @addIcon = new Core.Icon()
-      @addIcon.base.addClass 'add'
-      @addIcon.base.set 'text', '+'
-      @removeIcon = new Core.Icon()
-      @removeIcon.base.set 'text', '-'
-      @removeIcon.base.addClass 'remove'
-      $$(@addIcon.base,@removeIcon.base).setStyles {
-        'z-index': '1'
-        'position': 'relative'
-      }
-      @removeIcon.addEvent 'invoked',( (el,e)->
-        e.stop()
-        if @enabled
-          @removeItem @list.get('selected')
-          @text.set 'text', @options.default or ''
-      ).bind @
-      @addIcon.addEvent 'invoked',( (el,e)->
-        e.stop()
-        if @enabled
-          @prompt.justShow()
-        #a = window.prompt('something')
-        #if a
-        #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
-        #  @addItem item
-      ).bind @
-      @base.adopt  @removeIcon, @addIcon
-    @picker = new Core.Picker({offset:0})
+    @addIcon = new Core.Icon()
+    @addIcon.base.addClass 'add'
+    @addIcon.base.set 'text', '+'
+    @removeIcon = new Core.Icon()
+    @removeIcon.base.set 'text', '-'
+    @removeIcon.base.addClass 'remove'
+    $$(@addIcon.base,@removeIcon.base).setStyles {
+      'z-index': '1'
+      'position': 'relative'
+    }
+    @removeIcon.addEvent 'invoked',( (el,e)->
+      e.stop()
+      if @enabled
+        @removeItem @list.get('selected')
+        @text.set 'text', @default or ''
+    ).bind @
+    @addIcon.addEvent 'invoked',( (el,e)->
+      e.stop()
+      if @enabled
+        @prompt.justShow()
+      #a = window.prompt('something')
+      #if a
+      #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
+      #  @addItem item
+    ).bind @
+    
+    @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
     @picker.attachedTo = @base
     @base.addEvent 'click', ( (e) ->
       if @enabled
@@ -2200,8 +2228,8 @@ Core.Select = new Class {
     @list.addEvent 'select', ( (item,e)->
       if e?
         e.stop()
-      @text.set 'text', item.options.title
-      @fireEvent 'change', item.options.title
+      @text.set 'text', item.label
+      @fireEvent 'change', item.label
       @picker.forceHide()
     ).bind @
     @update();
@@ -2355,7 +2383,7 @@ Data.Number = new Class {
     if @reset
       @value
     else
-      Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@options.steps)
+      Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@steps)
   setValue: (step) ->
     real = @parent step
     @textLabel.set 'text', if @label? then @label + " : " + real else real
@@ -2696,19 +2724,19 @@ Data.Date = new Class {
     ).bindWithEvent @
     i = 0
     while i < 30
-      item = new Iterable.ListItem {title:i+1,removeable:false}
+      item = new Iterable.ListItem {label:i+1,removeable:false}
       item.value = i+1
       @days.addItem item
       i++
     i = 0
     while i < 12
-      item = new Iterable.ListItem {title:i+1,removeable:false}
+      item = new Iterable.ListItem {label:i+1,removeable:false}
       item.value = i
       @month.addItem item
       i++
     i = @options.yearFrom
     while i <= new Date().getFullYear()
-      item = new Iterable.ListItem {title:i,removeable:false}
+      item = new Iterable.ListItem {label:i,removeable:false}
       item.value = i
       @years.addItem item
       i++
@@ -2783,13 +2811,13 @@ Data.Time = new Class {
     ).bindWithEvent @
     i = 0
     while i < 24
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @hourList.addItem item
       i++
     i = 0
     while i < 60
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @minuteList.addItem item
       i++
@@ -2827,18 +2855,22 @@ Iterable.ListItem = new Class {
   Extends:Core.Abstract
   Implements: [ Interfaces.Draggable
                Interfaces.Enabled ]
+  Attributes: {
+    label: {
+      value: ''
+      setter: (value) ->
+        @title.set 'text', value
+        value
+    }
+    class: {
+      value: GDotUI.Theme.ListItem.class
+    }
+  }
   options:{
     classes:{
-      class: GDotUI.Theme.ListItem.class
       title: GDotUI.Theme.ListItem.title
       subtitle: GDotUI.Theme.ListItem.subTitle
-      handle: GDotUI.Theme.ListItem.handle
     }
-    icons:{
-      remove: GDotUI.Theme.Icons.remove
-      handle: GDotUI.Theme.Icons.handleVertical
-    }
-    offset: GDotUI.Theme.ListItem.offset
     title:''
     subtitle:''
     draggable: off
@@ -2854,14 +2886,14 @@ Iterable.ListItem = new Class {
   initialize: (options) ->
     @parent options
   create: ->
-    @base.addClass(@options.classes.class).setStyle  'position','relative'
+    @base.setStyle 'position','relative'
     #@remove = new Core.Icon {image: @options.icons.remove}
     #@handles = new Core.Icon {image: @options.icons.handle}
     #@handles.base.addClass  @options.classes.handle
     
     #$$(@remove.base,@handles.base).setStyle 'position','absolute'
-    @title = new Element('div').addClass(@options.classes.title).set 'text', @options.title
-    @subtitle = new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
+    @title = new Element 'div'
+    @subtitle = new Element 'div'
     @base.adopt @title,@subtitle
     #if @options.removeable
     #  @base.grab @remove
@@ -2967,31 +2999,31 @@ Data.DateTime = new Class {
   populate: ->
     i = 0
     while i < 24
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @hourList.addItem item
       i++
     i = 0
     while i < 60
-      item = new Iterable.ListItem {title: (if i<10 then '0'+i else i),removeable:false}
+      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
       @minuteList.addItem item
       i++
     i = 0
     while i < 30
-      item = new Iterable.ListItem {title:i+1,removeable:false}
+      item = new Iterable.ListItem {label:i+1,removeable:false}
       item.value = i+1
       @days.addItem item
       i++
     i = 0
     while i < 12
-      item = new Iterable.ListItem {title:i+1,removeable:false}
+      item = new Iterable.ListItem {label:i+1,removeable:false}
       item.value = i
       @month.addItem item
       i++
     i = @options.yearFrom
     while i <= new Date().getFullYear()
-      item = new Iterable.ListItem {title:i,removeable:false}
+      item = new Iterable.ListItem {label:i,removeable:false}
       item.value = i
       @years.addItem item
       i++
@@ -3437,7 +3469,7 @@ Data.Unit = new Class {
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100], size:120}
     @sel = new Core.Select({size: 80})
     Object.each UnitList,((item) ->
-      @sel.addItem new Iterable.ListItem({title:item,removeable:false,draggable:false})
+      @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
     ).bind @
     @number.addEvent 'change', ((value) ->
       @value = value

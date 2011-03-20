@@ -73,7 +73,7 @@ Data.Unit = new Class {
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100], size:120}
     @sel = new Core.Select({size: 80})
     Object.each UnitList,((item) ->
-      @sel.addItem new Iterable.ListItem({title:item,removeable:false,draggable:false})
+      @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
     ).bind @
     @number.addEvent 'change', ((value) ->
       @value = value

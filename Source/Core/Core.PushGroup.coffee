@@ -19,8 +19,10 @@ Core.PushGroup = new Class {
     Interfaces.Enabled
     Interfaces.Children
   ]
-  options:{
-    class: GDotUI.Theme.PushGroup.class
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.PushGroup.class
+    }
   }
   initialize: (options) ->
     @buttons = []
@@ -34,8 +36,6 @@ Core.PushGroup = new Class {
         btn.on()
         btn.supress()
     @fireEvent 'change', item
-  create: ->
-    @base.addClass @options.class
   addItem: (item) ->
     if @buttons.indexOf(item) is -1
       @buttons.push item  

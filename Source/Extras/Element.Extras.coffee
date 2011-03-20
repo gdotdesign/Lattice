@@ -11,7 +11,31 @@ provides: Element.Extras
 
 ...
 ###
+Element.Properties.checked = {
+  get: ->
+    if @getChecked?
+      @getChecked()
+  set: (value) ->
+    @setAttribute 'checked', value
+    if @on? and @off?
+      if value
+        @on()
+      else
+        @off()
+}
 (->
+  Element.Events.outerClick = {
+    base: 'mousedown'
+    condition: (event) ->
+      event.stopPropagation()
+      off
+    onAdd: (fn) ->
+      window.addEvent 'click', fn
+      window.addEvent 'outer', fn
+    onRemove: (fn) ->
+      window.removeEvent 'click', fn
+      window.removeEvent 'outer', fn
+  }
   Element.implement {
     oldGrab: Element::grab
     oldInject: Element::inject

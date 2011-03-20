@@ -19,34 +19,32 @@ provides: [Core.Picker, outerClick]
     window.fireEvent 'outer'
     oldPrototypeStart.run arguments, @
 )()
-Element.Events.outerClick = {
-    base: 'mousedown'
-    condition: (event) ->
-      event.stopPropagation()
-      off
-    onAdd: (fn) ->
-      window.addEvent 'click', fn
-      window.addEvent 'outer', fn
-    onRemove: (fn) ->
-      window.removeEvent 'click', fn
-      window.removeEvent 'outer', fn
-}
+
 Core.Picker = new Class {
   Extends: Core.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
   Binds: ['show'
           'hide']
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Picker.class
+    }
+    offset: {
+      value: GDotUI.Theme.Picker.offset
+      setter: (value) ->
+        value
+    }
+    position: {
+      value: {x:'auto',y:'auto'}
+    }
+  }
   options:{
-    class: GDotUI.Theme.Picker.class
-    offset: GDotUI.Theme.Picker.offset
     event: GDotUI.Theme.Picker.event
     picking: GDotUI.Theme.Picker.picking
   }
   initialize: (options) ->
     @parent options
-    @
   create: ->
-    @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
   onReady: ->
     if not @base.hasChild @contentElement
@@ -56,27 +54,46 @@ Core.Picker = new Class {
     asize = @attachedTo.getSize()
     position = @attachedTo.getPosition()
     size = @base.getSize()
-    offset = @options.offset
+    offset = @offset
+    console.log offset
     x = ''
     y = ''
-    if (position.x-size.x-winscroll.x) < 0
-      x = 'right'
-      xpos = position.x+asize.x+offset
-    if (position.x+size.x+asize.x) > winsize.x
-      x = 'left'
-      xpos = position.x-size.x-offset
-    if not ((position.x+size.x+asize.x)>winsize.x) and not ((position.x-size.x) < 0) 
-      x = 'center'
-      xpos = (position.x+asize.x/2)-(size.x/2)
-    if position.y+size.y-winscroll.y > winsize.y
-      y = 'up'
-      ypos = position.y-size.y-offset
-    else
-      y = 'down'
-      if x=='center'
-        ypos = position.y+asize.y+offset
+    if @position.x is 'auto' and @position.y is 'auto'
+      if (position.x-size.x-winscroll.x) < 0
+        x = 'right'
+        xpos = position.x+asize.x+offset
+      if (position.x+size.x+asize.x) > winsize.x
+        x = 'left'
+        xpos = position.x-size.x-offset
+      if not ((position.x+size.x+asize.x)>winsize.x) and not ((position.x-size.x) < 0) 
+        x = 'center'
+        xpos = (position.x+asize.x/2)-(size.x/2)
+      if position.y+size.y-winscroll.y > winsize.y
+        y = 'up'
+        ypos = position.y-size.y-offset
       else
-        ypos = position.y
+        y = 'down'
+        if x=='center'
+          ypos = position.y+asize.y+offset
+        else
+          ypos = position.y
+    if @position.x isnt 'auto'
+      switch @position.x
+        when 'left'
+          xpos = position.x-size.x-offset
+        when 'right'
+          xpos = position.x+asize.x+offset
+        when 'center'
+          xpos = (position.x+asize.x/2)-(size.x/2)
+          console.log xpos
+    if @position.y isnt 'auto'
+      switch @position.y
+        when 'top'
+          ypos = position.y-size.y-offset
+        when 'bottom'
+          ypos = position.y+asize.y+offset
+        when 'center'
+          ypos = position.y
     @base.setStyles {
       left : xpos
       top : ypos
