@@ -3,6 +3,7 @@ window.addEvent('domready', function(){
   icons = ['/home.png', '/idea-inv.png', '/layers-inv.png','/save-inv.png','/documents-inv.png']
   positions = ['horizontal', 'vertical', 'grid', 'circular','linear']
   iconGroup = new Core.IconGroup({mode:'grid',rows:3,spacing:{y:10,x:10},radius:60});
+
   slider = new Data.Number({label:'Radius'})
   slider.addEvent('change',function(value){
     iconGroup.set('radius', value)
@@ -33,6 +34,7 @@ window.addEvent('domready', function(){
     iconGroup.set('columns', value)
   });
   slider5.setValue(0)
+  /*
   pushgroup = new Core.Select({editable:false});
   pushgroup.addEvent('change', function(value){
     iconGroup.set('mode',value)
@@ -65,11 +67,12 @@ window.addEvent('domready', function(){
       p = new Iterable.ListItem({title:item})
       pushgroup.addItem(p)
   })
+  */
   for(i=0;i<8;i++){
     icon = new Core.Icon({image:icons[Math.round(Math.random()*4)]});
     iconGroup.addIcon(icon)
   }
-  pushgroup.setValue('grid')
+  //pushgroup.setValue('grid')
   $("demo").adopt(iconGroup)
-  $("options").adopt(slider,slider1, slider2,slider3,slider4,slider5,pushgroup);
+  $("options").adopt(slider,slider1, slider2,slider3,slider4,slider5);
 });

@@ -85,12 +85,14 @@ Core.Select = new Class {
       }
       @removeIcon.addEvent 'invoked',( (el,e)->
         e.stop()
-        @removeItem @list.get('selected')
-        @text.set 'text', @options.default or ''
+        if @enabled
+          @removeItem @list.get('selected')
+          @text.set 'text', @options.default or ''
       ).bind @
       @addIcon.addEvent 'invoked',( (el,e)->
         e.stop()
-        @prompt.justShow()
+        if @enabled
+          @prompt.justShow()
         #a = window.prompt('something')
         #if a
         #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
@@ -98,14 +100,17 @@ Core.Select = new Class {
       ).bind @
       @base.adopt  @removeIcon, @addIcon
     @picker = new Core.Picker({offset:0})
-    @picker.attach @base
+    @picker.attachedTo = @base
+    @base.addEvent 'click', ( (e) ->
+      if @enabled
+        @picker.show e
+    ).bind @
     @list = new Iterable.List({class:'select-list'})
     @picker.setContent @list.base
     @base.adopt @text
     
     @prompt = new Prompt();
     @prompt.justAttach @base
-    
     @list.addEvent 'select', ( (item,e)->
       if e?
         e.stop()

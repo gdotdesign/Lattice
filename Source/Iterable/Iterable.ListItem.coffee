@@ -46,11 +46,11 @@ Iterable.ListItem = new Class {
     @parent options
   create: ->
     @base.addClass(@options.classes.class).setStyle  'position','relative'
-    @remove = new Core.Icon {image: @options.icons.remove}
-    @handles = new Core.Icon {image: @options.icons.handle}
-    @handles.base.addClass  @options.classes.handle
+    #@remove = new Core.Icon {image: @options.icons.remove}
+    #@handles = new Core.Icon {image: @options.icons.handle}
+    #@handles.base.addClass  @options.classes.handle
     
-    $$(@remove.base,@handles.base).setStyle 'position','absolute'
+    #$$(@remove.base,@handles.base).setStyle 'position','absolute'
     @title = new Element('div').addClass(@options.classes.title).set 'text', @options.title
     @subtitle = new Element('div').addClass(@options.classes.subtitle).set 'text', @options.subtitle
     @base.adopt @title,@subtitle
@@ -73,9 +73,9 @@ Iterable.ListItem = new Class {
         if @editing
           @fireEvent 'edit', @
     ).bindWithEvent @
-    @remove.addEvent 'invoked', ( ->
-      @fireEvent 'delete', @
-    ).bindWithEvent @
+    #@remove.addEvent 'invoked', ( ->
+    #  @fireEvent 'delete', @
+    #).bindWithEvent @
     @
   toggleEdit: ->
     if @editing
@@ -98,17 +98,17 @@ Iterable.ListItem = new Class {
       @editing = on
   ready: ->
     if not @editing
-      handSize = @handles.base.getSize()
-      remSize = @remove.base.getSize()
+      #handSize = @handles.base.getSize()
+      #remSize = @remove.base.getSize()
       baseSize = @base.getSize()
-      @remove.base.setStyles {
-        "right":-remSize.x
-        "top":(baseSize.y-remSize.y)/2
-        }
-      @handles.base.setStyles {
-        "left":-handSize.x,
-        "top":(baseSize.y-handSize.y)/2
-        }
+      #@remove.base.setStyles {
+      #  "right":-remSize.x
+      #  "top":(baseSize.y-remSize.y)/2
+      #  }
+      #@handles.base.setStyles {
+      #  "left":-handSize.x,
+      #  "top":(baseSize.y-handSize.y)/2
+      #  }
       @parent()
       if @options.draggable
         @drag.addEvent 'beforeStart',( ->

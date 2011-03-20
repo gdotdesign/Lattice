@@ -36,16 +36,24 @@ getCSS = (selector, property) ->
 
 Core.Abstract = new Class {
   Implements:[Events
-              Options
               Interfaces.Mux]
+  Attributes: {
+    class: {
+      setter: (value, old) ->
+        @base.removeClass old
+        @base.addClass value
+        value
+    }
+  }
   initialize: (options) ->
-    @setOptions options
     @base = new Element 'div'
     @base.addEvent 'addedToDom', @ready.bindWithEvent @
-    @create()
     @mux()
+    @create()
+    @setAttributes options
     @
   create: ->
+  update: ->
   ready: ->
     @base.removeEvents 'addedToDom'
   toElement: ->

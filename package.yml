@@ -50,6 +50,7 @@ sources:
   - "Source/Interfaces/Interfaces.Reflow.coffee" 
   - "Source/Interfaces/Interfaces.Enabled.coffee"
   - "Source/Interfaces/Interfaces.Draggable.coffee"
+  - "Source/Interfaces/Interfaces.Size.coffee"
   - "Source/Interfaces/Interfaces.Restoreable.coffee"
   - "Source/Interfaces/Interfaces.Controls.coffee"
   - "Source/Iterable/Iterable.ListItem.coffee"

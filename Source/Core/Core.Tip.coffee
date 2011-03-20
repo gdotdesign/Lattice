@@ -15,6 +15,7 @@ provides: Core.Tip
 ###
 Core.Tip = new Class {
   Extends:Core.Abstract
+  Implements: Interfaces.Enabled
   Binds:['enter'
          'leave']
   Attributes: {
@@ -66,19 +67,19 @@ Core.Tip = new Class {
     document.id(item).removeEvent 'mouseleave', @leave
     @attachedTo = null
   enter: ->
-    @over = true
-    #if @attachedTo.enabled
-    @id = ( ->
-      if @over
-        @show()
-    ).bind(@).delay @options.delay
+    if @enabled
+      @over = true
+      @id = ( ->
+        if @over
+          @show()
+      ).bind(@).delay @options.delay
   leave: ->
-    if @id?
-      clearTimeout(@id)
-      @id = null
-    @over = false
-    #if @attachedTo.enabled
-    @hide()
+    if @enabled
+      if @id?
+        clearTimeout(@id)
+        @id = null
+      @over = false
+      @hide()
   ready: ->
     p = @attachedTo.getPosition()
     s = @attachedTo.getSize()

@@ -23,10 +23,12 @@ Class.Mutators.Delegates = (delegations) ->
 				if ret is @[target] then @ else ret
 
 Class.Mutators.Attributes = (attributes) ->
-    
     $setter = attributes.$setter
     $getter = attributes.$getter
     
+    if @::$attributes
+      attributes = Object.merge @::$attributes, attributes
+
     delete attributes.$setter
     delete attributes.$getter
 
@@ -54,18 +56,24 @@ Class.Mutators.Attributes = (attributes) ->
               oldVal = attr.value
               if !attr.validator or attr.validator.call(@, value)
                 if attr.setter
-                  newVal = attr.setter.call @, value
+                  newVal = attr.setter.attempt [value, oldVal], @
                 else
                   newVal = value             
                 attr.value = newVal
+                @[name] = newVal
                 @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
+                @update()
           else if $setter
             $setter.call @, name, value
 
       setAttributes: (attributes) ->
-        $each(attributes, (value, name) ->
-          @set name, value
-        , @)
+        attributes = Object.merge {}, attributes
+        Object.each @$attributes, (value,name) ->
+          if attributes[name]?
+            @set name, attributes[name]
+          else if value.value?
+            @set name, value.value
+        , @
 
       getAttributes: () ->
         attributes = {}

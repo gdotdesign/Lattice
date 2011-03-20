@@ -22,24 +22,20 @@ Core.Icon = new Class {
   Attributes: {
     image: {
       setter: (value) ->
-        @options.image = value
-        @update()
+        @image = value
     }
-  }
-  options:{
-    image: null
-    class: GDotUI.Theme.Icon.class
+    class: {
+      value: GDotUI.Theme.Icon.class
+    }
   }
   initialize: (options) ->
     @parent options
   update: ->
-    if @options.image?
-      @base.setStyle 'background-image', 'url(' + @options.image + ')'
+    if @image?
+      @base.setStyle 'background-image', 'url(' + @image + ')'
   create: ->
-    @base.addClass @options.class
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]
     ).bindWithEvent @
-    @update()
 }

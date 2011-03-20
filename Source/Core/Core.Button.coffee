@@ -7,7 +7,7 @@ description: Basic button element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI]
+requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI, Interfaces.Size]
 
 provides: Core.Button
 
@@ -18,29 +18,26 @@ Core.Button = new Class {
   Implements:[
     Interfaces.Enabled
     Interfaces.Controls
+    Interfaces.Size
   ]
   Attributes: {
     label: {
+      value: GDotUI.Theme.Button.label
       setter: (value) ->
-        @options.label = value
-        @update()
+        @base.set 'value', value
+        value
+    }
+    class: {
+      value: GDotUI.Theme.Button.class
     }
   }
-  options:{
-    label: GDotUI.Theme.Button.label
-    class: GDotUI.Theme.Button.class
-  }
-  initialize: (options) ->
-    @parent options 
-  update: ->
-    @base.set 'value', @options.label
+  initialize: (attributes) ->
+    @parent attributes 
   create: ->
     delete @base
-    @base = new Element 'input', {type:'button'}
-    @base.addClass @options.class
+    @base = new Element "input", {type:'button'}
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]
       ).bind @
-    @update()
 }

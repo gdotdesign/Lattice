@@ -19,15 +19,17 @@ Core.IconGroup = new Class {
   Binds: ['delegate']
   Attributes: {
     mode: {
+      value: "horizontal"
       setter: (value) ->
-        @options.mode = value
+        @mode = value
         @update()
       validator: (value) ->
         if ['horizontal','vertical','circular','grid','linear'].indexOf(value) > -1 then true else false
     }
     spacing: {
+      value: {x: 0,y: 0}
       setter: (value) ->
-        @options.spacing = value
+        @spacing = value
         @update()
       validator: (value) ->
         if typeOf(value) is 'object'
@@ -35,8 +37,9 @@ Core.IconGroup = new Class {
         else no
     }
     startAngle: {
+      value: 0
       setter: (value) ->
-        @options.startAngle = Number.from(value)
+        @startAngle = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
@@ -44,15 +47,17 @@ Core.IconGroup = new Class {
         else no
     }
     radius: {
+      value: 0
       setter: (value) ->
-        @options.radius = Number.from(value)
+        @radius = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))? then yes else no
     }
     degree: {
+      value: 360
       setter: (value) ->
-        @options.degree = Number.from(value)
+        @degree = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
@@ -61,7 +66,7 @@ Core.IconGroup = new Class {
     }
     rows: {
       setter: (value) ->
-        @options.rows = Number.from(value)
+        @rows = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
@@ -70,31 +75,23 @@ Core.IconGroup = new Class {
     }
     columns: {
       setter: (value) ->
-        @options.columns = Number.from(value)
+        @columns = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
           if a > 0 then yes else no
         else no
     }
-  }
-  options: {
-    mode: "horizontal"
-    spacing: {
-      x: 0
-      y: 0
+    class: {
+      value: GDotUI.Theme.IconGroup.class
     }
-    startAngle: 0 #degree
-    radius: 0 #degree
-    degree: 360 #degree
-    class: GDotUI.Theme.IconGroup.class
   }
   initialize: (options) ->
     @icons = []
+    console.log options
     @parent options
   create: ->
     @base.setStyle 'position', 'relative'
-    @base.addClass @options.class
   delegate: ->
     @fireEvent 'invoked', arguments
   addIcon: (icon) ->
@@ -118,21 +115,21 @@ Core.IconGroup = new Class {
     x = 0
     y = 0
     @size = {x:0, y:0}
-    spacing = @options.spacing
-    switch @options.mode
+    spacing = @spacing
+    switch @mode
       when 'grid'
-        if @options.rows? and @options.columns?
-          if Number.from(@options.rows) < Number.from(@options.columns)
-            @options.rows = null
+        if @rows? and @columns?
+          if Number.from(@rows) < Number.from(@columns)
+            @rows = null
           else
-            @options.columns = null
-        if @options.columns?
-          columns = @options.columns
+            @columns = null
+        if @columns?
+          columns = @columns
           rows = Math.round @icons.length/columns
-        if @options.rows?
-          rows = @options.rows
+        if @rows?
+          rows = @rows
           columns = Math.round @icons.length/rows
-        console.log rows, columns
+        #console.log rows, columns
         icpos = @icons.map ((item,i) ->
           if i % columns == 0
             x = 0
@@ -169,10 +166,10 @@ Core.IconGroup = new Class {
           ).bind @
       when 'circular'
         n = @icons.length
-        radius = @options.radius
-        startAngle = @options.startAngle
+        radius = @radius
+        startAngle = @startAngle
         ker = 2*@radius*Math.PI
-        fok = @options.degree/n
+        fok = @degree/n
         icpos = @icons.map (item,i) ->
           if i==0
             foks = startAngle * (Math.PI/180)

@@ -13,6 +13,17 @@ window.addEvent('domready', function(){
     select.set('size', value)
   });
   slider.setValue(200)
-  $("options").adopt(slider);
+  
+  push = new Core.Push({label:'Enable / Disable',size:200});
+  push.addEvent('invoked',function(){
+    if(push.get('state')){
+      select.enable();
+    }else{
+      select.disable();
+    }
+  })
+  push.on();
+  
+  $("options").adopt(slider,push);
   $$('.demo')[0].grab(select);
 })

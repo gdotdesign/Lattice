@@ -1,52 +1,28 @@
----EVENTS
-invoked:Dispatches when clicked
----CSS
-.redButton{
-  background-image: -moz-linear-gradient(100% 100% 90deg, #FF8800, #FFCC00);
-  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#FFCC00), to(#FF8800));
-  box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
-  -moz-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
-  -webkit-box-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
-  -moz-border-radius: 5px;
-  -webkit-border-radius: 5px;
-  -khtml-border-radius: 5px;
-  border-radius: 5px;
-  border: none;
-  padding: 10px;
-  font-size: 12px;
-  background-color: #a22;
-  color: #333;
-  font-weight: bold;
-  text-shadow: 0 0 5px rgba(0,0,0,0.2);
-  cursor: pointer;
-}
-.redButton .icon{
-  margin-right: 5px;
-  float: left;
-}
-.redButton:active{
-  position: relative;
-  top: 1px;
-  left: 1px;
-}
 ---JS
 window.addEvent('domready', function(){
-  defaultBtn = new Core.Button({label:"Default Button! Depends on the Theme."});
-  redBtn = new Core.Button({
-    label: "I'm red, with custom Style!",
-    'class': "redButton"})
-  $$(".demo").adopt(defaultBtn,redBtn);
+  button = new Core.Button({label:"Default Button!"});
+  
+  push = new Core.Push({label:'Enable / Disable',size:200});
+  push.addEvent('invoked',function(){
+    if(push.get('state')){
+      button.enable();
+    }else{
+      button.disable();
+    }
+  })
+  push.on();
+  text = new Data.Text();
+  text.addEvent('change',function(value){
+    button.set('label', value)
+  });
+  text.setValue('Default Button!')
+  
+  slider = new Data.Number({label:'Size'})
+  slider.addEvent('change',function(value){
+    button.set('size', value)
+  });
+  slider.setValue(200)
+  
+  $$(".demo").adopt(button);
+  $("options").adopt(text,slider,push);
 });
----CLASSES
-Button:{
-  class:'button',
-  defaultText: '',
-  defaultIcon: ''
-}
----OPTIONS
-class:Class that applies to the base class.
-text:The text (label) of the button.
-icon:Url for an image (icon) for the button.
----USAGE
-var myButton = new Core.Button(options)
-document.body.grab(myButton);

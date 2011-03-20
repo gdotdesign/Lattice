@@ -278,7 +278,7 @@ Data.Color.SlotControls = new Class {
     @alpha = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Alpha'}
     @col = new Core.PushGroup()
     Data.Color.ReturnValues.options.each ((item) ->
-      @col.addItem new Core.Push({text:item.label})
+      @col.addItem new Core.Push({label:item.label})
     ).bind @
   ready: ->
     @adoptChildren @hue, @saturation, @lightness, @alpha, @col

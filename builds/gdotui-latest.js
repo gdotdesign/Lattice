@@ -101,6 +101,9 @@ Class.Mutators.Attributes = function(attributes) {
   var $getter, $setter;
   $setter = attributes.$setter;
   $getter = attributes.$getter;
+  if (this.prototype.$attributes) {
+    attributes = Object.merge(this.prototype.$attributes, attributes);
+  }
   delete attributes.$setter;
   delete attributes.$getter;
   this.implement(new Events);
@@ -135,15 +138,17 @@ Class.Mutators.Attributes = function(attributes) {
           oldVal = attr.value;
           if (!attr.validator || attr.validator.call(this, value)) {
             if (attr.setter) {
-              newVal = attr.setter.call(this, value);
+              newVal = attr.setter.attempt([value, oldVal], this);
             } else {
               newVal = value;
             }
             attr.value = newVal;
-            return this.fireEvent(name + 'Change', {
+            this[name] = newVal;
+            this.fireEvent(name + 'Change', {
               newVal: newVal,
               oldVal: oldVal
             });
+            return this.update();
           }
         }
       } else if ($setter) {
@@ -151,8 +156,13 @@ Class.Mutators.Attributes = function(attributes) {
       }
     },
     setAttributes: function(attributes) {
-      return $each(attributes, function(value, name) {
-        return this.set(name, value);
+      attributes = Object.merge({}, attributes);
+      return Object.each(this.$attributes, function(value, name) {
+        if (attributes[name] != null) {
+          return this.set(name, attributes[name]);
+        } else if (value.value != null) {
+          return this.set(name, value.value);
+        }
       }, this);
     },
     getAttributes: function() {
@@ -268,16 +278,26 @@ getCSS = function(selector, property) {
   return ret;
 };
 Core.Abstract = new Class({
-  Implements: [Events, Options, Interfaces.Mux],
+  Implements: [Events, Interfaces.Mux],
+  Attributes: {
+    "class": {
+      setter: function(value, old) {
+        this.base.removeClass(old);
+        this.base.addClass(value);
+        return value;
+      }
+    }
+  },
   initialize: function(options) {
-    this.setOptions(options);
     this.base = new Element('div');
     this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
-    this.create();
     this.mux();
+    this.create();
+    this.setAttributes(options);
     return this;
   },
   create: function() {},
+  update: function() {},
   ready: function() {
     return this.base.removeEvents('addedToDom');
   },
@@ -399,31 +419,27 @@ Core.Icon = new Class({
   Attributes: {
     image: {
       setter: function(value) {
-        this.options.image = value;
-        return this.update();
+        return this.image = value;
       }
+    },
+    "class": {
+      value: GDotUI.Theme.Icon["class"]
     }
-  },
-  options: {
-    image: null,
-    "class": GDotUI.Theme.Icon["class"]
   },
   initialize: function(options) {
     return this.parent(options);
   },
   update: function() {
-    if (this.options.image != null) {
-      return this.base.setStyle('background-image', 'url(' + this.options.image + ')');
+    if (this.image != null) {
+      return this.base.setStyle('background-image', 'url(' + this.image + ')');
     }
   },
   create: function() {
-    this.base.addClass(this.options["class"]);
-    this.base.addEvent('click', (function(e) {
+    return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
       }
     }).bindWithEvent(this));
-    return this.update();
   }
 });
 /*
@@ -477,8 +493,9 @@ Core.IconGroup = new Class({
   Binds: ['delegate'],
   Attributes: {
     mode: {
+      value: "horizontal",
       setter: function(value) {
-        this.options.mode = value;
+        this.mode = value;
         return this.update();
       },
       validator: function(value) {
@@ -490,8 +507,12 @@ Core.IconGroup = new Class({
       }
     },
     spacing: {
+      value: {
+        x: 0,
+        y: 0
+      },
       setter: function(value) {
-        this.options.spacing = value;
+        this.spacing = value;
         return this.update();
       },
       validator: function(value) {
@@ -507,8 +528,9 @@ Core.IconGroup = new Class({
       }
     },
     startAngle: {
+      value: 0,
       setter: function(value) {
-        this.options.startAngle = Number.from(value);
+        this.startAngle = Number.from(value);
         return this.update();
       },
       validator: function(value) {
@@ -525,8 +547,9 @@ Core.IconGroup = new Class({
       }
     },
     radius: {
+      value: 0,
       setter: function(value) {
-        this.options.radius = Number.from(value);
+        this.radius = Number.from(value);
         return this.update();
       },
       validator: function(value) {
@@ -539,8 +562,9 @@ Core.IconGroup = new Class({
       }
     },
     degree: {
+      value: 360,
       setter: function(value) {
-        this.options.degree = Number.from(value);
+        this.degree = Number.from(value);
         return this.update();
       },
       validator: function(value) {
@@ -558,7 +582,7 @@ Core.IconGroup = new Class({
     },
     rows: {
       setter: function(value) {
-        this.options.rows = Number.from(value);
+        this.rows = Number.from(value);
         return this.update();
       },
       validator: function(value) {
@@ -576,7 +600,7 @@ Core.IconGroup = new Class({
     },
     columns: {
       setter: function(value) {
-        this.options.columns = Number.from(value);
+        this.columns = Number.from(value);
         return this.update();
       },
       validator: function(value) {
@@ -591,26 +615,18 @@ Core.IconGroup = new Class({
           return false;
         }
       }
-    }
-  },
-  options: {
-    mode: "horizontal",
-    spacing: {
-      x: 0,
-      y: 0
     },
-    startAngle: 0,
-    radius: 0,
-    degree: 360,
-    "class": GDotUI.Theme.IconGroup["class"]
+    "class": {
+      value: GDotUI.Theme.IconGroup["class"]
+    }
   },
   initialize: function(options) {
     this.icons = [];
+    console.log(options);
     return this.parent(options);
   },
   create: function() {
-    this.base.setStyle('position', 'relative');
-    return this.base.addClass(this.options["class"]);
+    return this.base.setStyle('position', 'relative');
   },
   delegate: function() {
     return this.fireEvent('invoked', arguments);
@@ -648,25 +664,24 @@ Core.IconGroup = new Class({
       x: 0,
       y: 0
     };
-    spacing = this.options.spacing;
-    switch (this.options.mode) {
+    spacing = this.spacing;
+    switch (this.mode) {
       case 'grid':
-        if ((this.options.rows != null) && (this.options.columns != null)) {
-          if (Number.from(this.options.rows) < Number.from(this.options.columns)) {
-            this.options.rows = null;
+        if ((this.rows != null) && (this.columns != null)) {
+          if (Number.from(this.rows) < Number.from(this.columns)) {
+            this.rows = null;
           } else {
-            this.options.columns = null;
+            this.columns = null;
           }
         }
-        if (this.options.columns != null) {
-          columns = this.options.columns;
+        if (this.columns != null) {
+          columns = this.columns;
           rows = Math.round(this.icons.length / columns);
         }
-        if (this.options.rows != null) {
-          rows = this.options.rows;
+        if (this.rows != null) {
+          rows = this.rows;
           columns = Math.round(this.icons.length / rows);
         }
-        console.log(rows, columns);
         icpos = this.icons.map((function(item, i) {
           if (i % columns === 0) {
             x = 0;
@@ -720,10 +735,10 @@ Core.IconGroup = new Class({
         break;
       case 'circular':
         n = this.icons.length;
-        radius = this.options.radius;
-        startAngle = this.options.startAngle;
+        radius = this.radius;
+        startAngle = this.startAngle;
         ker = 2 * this.radius * Math.PI;
-        fok = this.options.degree / n;
+        fok = this.degree / n;
         icpos = this.icons.map(function(item, i) {
           var foks;
           if (i === 0) {
@@ -768,6 +783,7 @@ provides: Core.Tip
 */
 Core.Tip = new Class({
   Extends: Core.Abstract,
+  Implements: Interfaces.Enabled,
   Binds: ['enter', 'leave'],
   Attributes: {
     label: {
@@ -828,20 +844,24 @@ Core.Tip = new Class({
     return this.attachedTo = null;
   },
   enter: function() {
-    this.over = true;
-    return this.id = (function() {
-      if (this.over) {
-        return this.show();
-      }
-    }).bind(this).delay(this.options.delay);
+    if (this.enabled) {
+      this.over = true;
+      return this.id = (function() {
+        if (this.over) {
+          return this.show();
+        }
+      }).bind(this).delay(this.options.delay);
+    }
   },
   leave: function() {
-    if (this.id != null) {
-      clearTimeout(this.id);
-      this.id = null;
+    if (this.enabled) {
+      if (this.id != null) {
+        clearTimeout(this.id);
+        this.id = null;
+      }
+      this.over = false;
+      return this.hide();
     }
-    this.over = false;
-    return this.hide();
   },
   ready: function() {
     var p, s, s1;
@@ -892,28 +912,89 @@ provides: [Core.Slider, ResetSlider]
 Core.Slider = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Controls, Interfaces.Enabled],
-  Delegates: {
-    'slider': ['set', 'setRange']
-  },
-  options: {
-    reset: false,
-    steps: 100,
-    range: [0, 0],
-    mode: 'horizontal',
-    "class": GDotUI.Theme.Slider.classes.base,
-    bar: GDotUI.Theme.Slider.classes.bar
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Slider.classes.base
+    },
+    mode: {
+      value: 'horizontal',
+      setter: function(value, old) {
+        var size;
+        this.base.removeClass(old);
+        this.base.addClass(value);
+        switch (value) {
+          case 'horizontal':
+            this.modifier = 'width';
+            this.drag.options.modifiers = {
+              x: 'width',
+              y: ''
+            };
+            this.drag.options.invert = false;
+            if (!(this.size != null)) {
+              size = Number.from(getCSS("/\\." + (this.get('class')) + ".horizontal$/", 'width'));
+            }
+            this.set('size', size);
+            this.base.setStyle('height', Number.from(getCSS("/\\." + (this.get('class')) + ".horizontal$/", 'height')));
+            this.progress.setStyles({
+              top: 0,
+              width: this.reset ? this.size / 2 : 0
+            });
+            break;
+          case 'vertical':
+            this.modifier = 'height';
+            this.drag.options.modifiers = {
+              x: '',
+              y: 'height'
+            };
+            this.drag.options.invert = true;
+            if (!(this.size != null)) {
+              size = Number.from(getCSS("/\\." + this["class"] + ".vertical$/", 'height'));
+            }
+            this.set('size', size);
+            this.base.setStyle('width', Number.from(getCSS("/\\." + this["class"] + ".vertical$/", 'width')));
+            this.progress.setStyles({
+              height: this.reset ? this.size / 2 : 0,
+              right: 0
+            });
+        }
+        return value;
+      }
+    },
+    bar: {
+      value: GDotUI.Theme.Slider.classes.bar,
+      setter: function(value, old) {
+        this.progress.removeClass(old);
+        this.progress.addClass(value);
+        return value;
+      }
+    },
+    reset: {
+      value: false
+    },
+    steps: {
+      value: 100
+    },
+    range: {
+      value: [0, 0]
+    },
+    size: {
+      setter: function(value) {
+        this.base.setStyle(this.modifier, value);
+        return value;
+      }
+    }
   },
   initialize: function(options) {
     this.value = 0;
     return this.parent(options);
   },
-  set: function(position) {
+  setValue: function(position) {
     var percent;
-    if (this.options.reset) {
+    if (this.get('reset')) {
       this.value = Number.from(position);
     } else {
-      position = Math.round((position / this.options.steps) * this.size);
-      percent = Math.round((position / this.size) * this.options.steps);
+      position = Math.round((position / this.get('steps')) * this.size);
+      percent = Math.round((position / this.size) * this.get('steps'));
       if (position < 0) {
         this.progress.setStyle(this.modifier, 0 + "px");
       }
@@ -921,75 +1002,36 @@ Core.Slider = new Class({
         this.progress.setStyle(this.modifier, this.size + "px");
       }
       if (!(position < 0) && !(position > this.size)) {
-        this.progress.setStyle(this.modifier, (percent / this.options.steps) * this.size + "px");
+        this.progress.setStyle(this.modifier, (percent / this.get('steps')) * this.size + "px");
       }
     }
-    console.log(position, this.size, this.options.steps);
-    if (this.options.reset) {
+    console.log(position, this.size, this.get('steps'));
+    if (this.get('reset')) {
       return this.value;
     } else {
-      return Math.round((position / this.size) * this.options.steps);
+      return Math.round((position / this.size) * this.get('steps'));
     }
   },
   create: function() {
-    var modifiers;
-    this.base.addClass(this.options["class"]);
-    this.base.addClass(this.options.mode);
-    this.progress = new Element("div." + this.options.bar);
     this.base.setStyle('position', 'relative');
+    this.progress = new Element("div");
     this.progress.setStyles({
       position: 'absolute',
       bottom: 0,
       left: 0
     });
-    if (this.options.mode === 'horizontal') {
-      this.modifier = 'width';
-      modifiers = {
-        x: 'width',
-        y: ''
-      };
-      if (this.options.size != null) {
-        this.size = this.options.size;
-        this.base.setStyle('width', this.size);
-      } else {
-        this.size = Number.from(getCSS("/\\." + this.options["class"] + ".horizontal$/", 'width'));
-      }
-      this.progress.setStyles({
-        top: 0,
-        width: this.options.reset ? this.size / 2 : 0
-      });
-    }
-    if (this.options.mode === 'vertical') {
-      if (this.options.size) {
-        this.size = Number.from(this.options.size);
-        this.base.setStyle('height', this.size);
-      } else {
-        this.size = Number.from(getCSS("/\\." + this.options["class"] + ".vertical$/", 'height'));
-      }
-      modifiers = {
-        x: '',
-        y: 'height'
-      };
-      this.modifier = 'height';
-      this.progress.setStyles({
-        height: this.options.reset ? this.size / 2 : 0,
-        right: 0
-      });
-    }
     this.base.adopt(this.progress);
     this.drag = new Drag(this.progress, {
-      handle: this.base,
-      modifiers: modifiers,
-      invert: this.options.mode === 'vertical' ? true : false
+      handle: this.base
     });
     this.drag.addEvent('beforeStart', (function(el, e) {
-      this.lastpos = Math.round((Number.from(el.getStyle(this.modifier)) / this.size) * this.options.steps);
+      this.lastpos = Math.round((Number.from(el.getStyle(this.modifier)) / this.size) * this.steps);
       if (!this.enabled) {
         return this.disabledTop = el.getStyle(this.modifier);
       }
     }).bind(this));
     this.drag.addEvent('complete', (function(el, e) {
-      if (this.options.reset) {
+      if (this.get('reset')) {
         if (this.enabled) {
           el.setStyle(this.modifier, this.size / 2 + "px");
         }
@@ -1000,17 +1042,17 @@ Core.Slider = new Class({
       var offset, pos;
       if (this.enabled) {
         pos = Number.from(el.getStyle(this.modifier));
-        offset = Math.round((pos / this.size) * this.options.steps) - this.lastpos;
-        this.lastpos = Math.round((Number.from(el.getStyle(this.modifier)) / this.size) * this.options.steps);
+        offset = Math.round((pos / this.size) * this.steps) - this.lastpos;
+        this.lastpos = Math.round((Number.from(el.getStyle(this.modifier)) / this.size) * this.steps);
         if (pos > this.size) {
-          el.setStyle(this.modifier, this.size + "px");
+          el.setStyle(this.modifier, "" + this.size + "px");
           pos = this.size;
         } else {
-          if (this.options.reset) {
+          if (this.reset) {
             this.value += offset;
           }
         }
-        return this.fireEvent('step', this.options.reset ? this.value : Math.round((pos / this.size) * this.options.steps));
+        return this.fireEvent('step', this.reset ? this.value : Math.round((pos / this.size) * this.steps));
       } else {
         return el.setStyle(this.modifier, this.disabledTop);
       }
@@ -1019,7 +1061,7 @@ Core.Slider = new Class({
       var offset, pos;
       e.stop();
       offset = Number.from(e.wheel);
-      if (this.options.reset) {
+      if (this.get('reset')) {
         this.value += offset;
       } else {
         pos = Number.from(this.progress.getStyle(this.modifier));
@@ -1032,11 +1074,11 @@ Core.Slider = new Class({
           pos = pos + offset;
         }
         if (!(pos + offset < 0) && !(pos + offset > this.size)) {
-          this.progress.setStyle(this.modifier, (pos + offset / this.options.steps * this.size) + "px");
+          this.progress.setStyle(this.modifier, (pos + offset / this.get('steps') * this.size) + "px");
           pos = pos + offset;
         }
       }
-      return this.fireEvent('step', this.options.reset ? this.value : Math.round((pos / this.size) * this.options.steps));
+      return this.fireEvent('step', this.get('reset') ? this.value : Math.round((pos / this.size) * this.get('steps')));
     }).bind(this));
   }
 });
@@ -1445,13 +1487,43 @@ Core.Float = new Class({
 /*
 ---
 
+name: Interfaces.Size
+
+description: Size minsize from css....
+
+license: MIT-style license.
+
+provides: Interfaces.Size
+
+requires: [GDotUI]
+...
+*/
+Interfaces.Size = new Class({
+  _$Size: function() {
+    this.size = Number.from(getCSS("/\\." + (this.get('class')) + "$/", 'width'));
+    this.minSize = Number.from(getCSS("/\\." + (this.get('class')) + "$/", 'min-width')) || 0;
+    return this.addAttribute('size', {
+      value: null,
+      setter: function(value, old) {
+        var size;
+        this.size = value;
+        size = this.size < this.minSize ? this.minSize : this.size;
+        this.base.setStyle('width', size);
+        return size;
+      }
+    });
+  }
+});
+/*
+---
+
 name: Core.Button
 
 description: Basic button element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI]
+requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI, Interfaces.Size]
 
 provides: Core.Button
 
@@ -1459,37 +1531,32 @@ provides: Core.Button
 */
 Core.Button = new Class({
   Extends: Core.Abstract,
-  Implements: [Interfaces.Enabled, Interfaces.Controls],
+  Implements: [Interfaces.Enabled, Interfaces.Controls, Interfaces.Size],
   Attributes: {
     label: {
+      value: GDotUI.Theme.Button.label,
       setter: function(value) {
-        this.options.label = value;
-        return this.update();
+        this.base.set('value', value);
+        return value;
       }
+    },
+    "class": {
+      value: GDotUI.Theme.Button["class"]
     }
   },
-  options: {
-    label: GDotUI.Theme.Button.label,
-    "class": GDotUI.Theme.Button["class"]
-  },
-  initialize: function(options) {
-    return this.parent(options);
-  },
-  update: function() {
-    return this.base.set('value', this.options.label);
+  initialize: function(attributes) {
+    return this.parent(attributes);
   },
   create: function() {
     delete this.base;
-    this.base = new Element('input', {
+    this.base = new Element("input", {
       type: 'button'
     });
-    this.base.addClass(this.options["class"]);
-    this.base.addEvent('click', (function(e) {
+    return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
       }
     }).bind(this));
-    return this.update();
   }
 });
 /*
@@ -2337,9 +2404,32 @@ provides: Core.Push
 */
 Core.Push = new Class({
   Extends: Core.Abstract,
+  Attributes: {
+    state: {
+      getter: function() {
+        if (this.base.hasClass('pushed')) {
+          return true;
+        } else {
+          return false;
+        }
+      }
+    },
+    label: {
+      setter: function(value) {
+        this.options.label = value;
+        return this.update();
+      }
+    },
+    size: {
+      setter: function(value) {
+        this.options.size = value;
+        return this.update();
+      }
+    }
+  },
   Implements: [Interfaces.Enabled],
   options: {
-    text: GDotUI.Theme.Push.defaultText,
+    label: GDotUI.Theme.Push.defaultText,
     "class": GDotUI.Theme.Push["class"]
   },
   initialize: function(options) {
@@ -2351,31 +2441,27 @@ Core.Push = new Class({
   off: function() {
     return this.base.removeClass('pushed');
   },
-  getState: function() {
-    if (this.base.hasClass('pushed')) {
-      return true;
-    } else {
-      return false;
+  update: function() {
+    if (this.options.size != null) {
+      this.size = this.options.size;
+      return this.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
     }
   },
   create: function() {
-    if (this.options.size != null) {
-      this.width = this.options.size;
-      this.base.setStyle('width', this.width);
-    } else {
-      this.width = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
-    }
-    this.base.addClass(this.options["class"]).set('text', this.options.text);
+    this.size = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'width'));
+    this.minSize = Number.from(getCSS("/\\." + this.options["class"] + "$/", 'min-width')) || 0;
+    this.base.addClass(this.options["class"]).set('text', this.options.label);
     this.base.addEvent('click', (function() {
       if (this.enabled) {
         return this.base.toggleClass('pushed');
       }
     }).bind(this));
-    return this.base.addEvent('click', (function(e) {
+    this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
       }
     }).bind(this));
+    return this.update();
   }
 });
 /*
@@ -2535,19 +2621,28 @@ Core.Select = new Class({
       });
       this.removeIcon.addEvent('invoked', (function(el, e) {
         e.stop();
-        this.removeItem(this.list.get('selected'));
-        return this.text.set('text', this.options["default"] || '');
+        if (this.enabled) {
+          this.removeItem(this.list.get('selected'));
+          return this.text.set('text', this.options["default"] || '');
+        }
       }).bind(this));
       this.addIcon.addEvent('invoked', (function(el, e) {
         e.stop();
-        return this.prompt.justShow();
+        if (this.enabled) {
+          return this.prompt.justShow();
+        }
       }).bind(this));
       this.base.adopt(this.removeIcon, this.addIcon);
     }
     this.picker = new Core.Picker({
       offset: 0
     });
-    this.picker.attach(this.base);
+    this.picker.attachedTo = this.base;
+    this.base.addEvent('click', (function(e) {
+      if (this.enabled) {
+        return this.picker.show(e);
+      }
+    }).bind(this));
     this.list = new Iterable.List({
       "class": 'select-list'
     });
@@ -2667,36 +2762,55 @@ provides: Data.Number
 */
 Data.Number = new Class({
   Extends: Core.Slider,
-  options: {
-    "class": GDotUI.Theme.Number.classes.base,
-    bar: GDotUI.Theme.Number.classes.bar,
-    text: GDotUI.Theme.Number.classes.text,
-    range: GDotUI.Theme.Number.range,
-    reset: GDotUI.Theme.Number.reset,
-    steps: GDotUI.Theme.Number.steps,
-    label: null
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Number.classes.base
+    },
+    bar: {
+      value: GDotUI.Theme.Number.classes.bar
+    },
+    text: {
+      value: GDotUI.Theme.Number.classes.text,
+      setter: function(value, old) {
+        this.textLabel.removeClass(old);
+        this.textLabel.addClass(value);
+        return value;
+      }
+    },
+    range: {
+      value: GDotUI.Theme.Number.range
+    },
+    reset: {
+      value: GDotUI.Theme.Number.reset
+    },
+    steps: {
+      value: GDotUI.Theme.Number.steps
+    },
+    label: {
+      value: null
+    }
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
     this.parent();
-    this.text = new Element("div." + this.options.text);
-    this.text.setStyles({
+    this.textLabel = new Element("div");
+    this.textLabel.setStyles({
       position: 'absolute',
       bottom: 0,
       left: 0,
       right: 0,
       top: 0
     });
-    this.base.grab(this.text);
+    this.base.grab(this.textLabel);
     return this.addEvent('step', (function(e) {
-      this.text.set('text', this.options.label != null ? this.options.label + " : " + e : e);
+      this.textLabel.set('text', this.label != null ? this.label + " : " + e : e);
       return this.fireEvent('change', e);
     }).bind(this));
   },
   getValue: function() {
-    if (this.options.reset) {
+    if (this.reset) {
       return this.value;
     } else {
       return Math.round((Number.from(this.progress.getStyle(this.modifier)) / this.size) * this.options.steps);
@@ -2704,8 +2818,8 @@ Data.Number = new Class({
   },
   setValue: function(step) {
     var real;
-    real = this.set(step);
-    return this.text.set('text', this.options.label != null ? this.options.label + " : " + real : real);
+    real = this.parent(step);
+    return this.textLabel.set('text', this.label != null ? this.label + " : " + real : real);
   }
 });
 /*
@@ -3031,7 +3145,7 @@ Data.Color.SlotControls = new Class({
     this.col = new Core.PushGroup();
     return Data.Color.ReturnValues.options.each((function(item) {
       return this.col.addItem(new Core.Push({
-        text: item.label
+        label: item.label
       }));
     }).bind(this));
   },
@@ -3285,14 +3399,6 @@ Iterable.ListItem = new Class({
   },
   create: function() {
     this.base.addClass(this.options.classes["class"]).setStyle('position', 'relative');
-    this.remove = new Core.Icon({
-      image: this.options.icons.remove
-    });
-    this.handles = new Core.Icon({
-      image: this.options.icons.handle
-    });
-    this.handles.base.addClass(this.options.classes.handle);
-    $$(this.remove.base, this.handles.base).setStyle('position', 'absolute');
     this.title = new Element('div').addClass(this.options.classes.title).set('text', this.options.title);
     this.subtitle = new Element('div').addClass(this.options.classes.subtitle).set('text', this.options.subtitle);
     this.base.adopt(this.title, this.subtitle);
@@ -3313,9 +3419,6 @@ Iterable.ListItem = new Class({
           return this.fireEvent('edit', this);
         }
       }
-    }).bindWithEvent(this));
-    this.remove.addEvent('invoked', (function() {
-      return this.fireEvent('delete', this);
     }).bindWithEvent(this));
     return this;
   },
@@ -3343,19 +3446,9 @@ Iterable.ListItem = new Class({
     }
   },
   ready: function() {
-    var baseSize, handSize, remSize;
+    var baseSize;
     if (!this.editing) {
-      handSize = this.handles.base.getSize();
-      remSize = this.remove.base.getSize();
       baseSize = this.base.getSize();
-      this.remove.base.setStyles({
-        "right": -remSize.x,
-        "top": (baseSize.y - remSize.y) / 2
-      });
-      this.handles.base.setStyles({
-        "left": -handSize.x,
-        "top": (baseSize.y - handSize.y) / 2
-      });
       this.parent();
       if (this.options.draggable) {
         return this.drag.addEvent('beforeStart', (function() {
@@ -4519,33 +4612,15 @@ Pickers.Base = new Class({
     return this;
   }
 });
-Pickers.Color = new Pickers.Base({
-  type: 'Color'
-});
-Pickers.Number = new Pickers.Base({
-  type: 'Number'
-});
-Pickers.Time = new Pickers.Base({
-  type: 'Time'
-});
-Pickers.Text = new Pickers.Base({
-  type: 'Text'
-});
-Pickers.Date = new Pickers.Base({
-  type: 'Date'
-});
-Pickers.DateTime = new Pickers.Base({
-  type: 'DateTime'
-});
-Pickers.Table = new Pickers.Base({
-  type: 'Table'
-});
-Pickers.Unit = new Pickers.Base({
-  type: 'Unit'
-});
-Pickers.Select = new Pickers.Base({
-  type: 'Select'
-});
-Pickers.List = new Pickers.Base({
-  type: 'List'
-});
+/*
+Pickers.Color = new Pickers.Base {type:'Color'}
+Pickers.Number = new Pickers.Base {type:'Number'}
+Pickers.Time = new Pickers.Base {type:'Time'}
+Pickers.Text = new Pickers.Base {type:'Text'}
+Pickers.Date = new Pickers.Base {type:'Date'}
+Pickers.DateTime = new Pickers.Base {type:'DateTime'}
+Pickers.Table = new Pickers.Base {type:'Table'}
+Pickers.Unit = new Pickers.Base {type:'Unit'}
+Pickers.Select = new Pickers.Base {type:'Select'}
+Pickers.List = new Pickers.Base {type:'List'}
+*/

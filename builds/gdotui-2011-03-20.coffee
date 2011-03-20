@@ -83,10 +83,12 @@ Class.Mutators.Delegates = (delegations) ->
 				if ret is @[target] then @ else ret
 
 Class.Mutators.Attributes = (attributes) ->
-    
     $setter = attributes.$setter
     $getter = attributes.$getter
     
+    if @::$attributes
+      attributes = Object.merge @::$attributes, attributes
+
     delete attributes.$setter
     delete attributes.$getter
 
@@ -114,18 +116,19 @@ Class.Mutators.Attributes = (attributes) ->
               oldVal = attr.value
               if !attr.validator or attr.validator.call(@, value)
                 if attr.setter
-                  newVal = attr.setter.call @, value
+                  newVal = attr.setter.attempt [value, oldVal], @
                 else
                   newVal = value             
                 attr.value = newVal
+                @[name] = newVal
                 @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
-                @fireEvent 'update'
+                @update()
           else if $setter
             $setter.call @, name, value
 
       setAttributes: (attributes) ->
+        attributes = Object.merge {}, attributes
         Object.each @$attributes, (value,name) ->
-          console.log Object.contains(attributes, name), attributes, name
           if attributes[name]?
             @set name, attributes[name]
           else if value.value?
@@ -245,7 +248,14 @@ getCSS = (selector, property) ->
 Core.Abstract = new Class {
   Implements:[Events
               Interfaces.Mux]
-  Attributes: {}
+  Attributes: {
+    class: {
+      setter: (value, old) ->
+        @base.removeClass old
+        @base.addClass value
+        value
+    }
+  }
   initialize: (options) ->
     @base = new Element 'div'
     @base.addEvent 'addedToDom', @ready.bindWithEvent @
@@ -362,26 +372,22 @@ Core.Icon = new Class {
   Attributes: {
     image: {
       setter: (value) ->
-        @options.image = value
-        @update()
+        @image = value
     }
-  }
-  options:{
-    image: null
-    class: GDotUI.Theme.Icon.class
+    class: {
+      value: GDotUI.Theme.Icon.class
+    }
   }
   initialize: (options) ->
     @parent options
   update: ->
-    if @options.image?
-      @base.setStyle 'background-image', 'url(' + @options.image + ')'
+    if @image?
+      @base.setStyle 'background-image', 'url(' + @image + ')'
   create: ->
-    @base.addClass @options.class
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]
     ).bindWithEvent @
-    @update()
 }
 
 
@@ -434,15 +440,17 @@ Core.IconGroup = new Class {
   Binds: ['delegate']
   Attributes: {
     mode: {
+      value: "horizontal"
       setter: (value) ->
-        @options.mode = value
+        @mode = value
         @update()
       validator: (value) ->
         if ['horizontal','vertical','circular','grid','linear'].indexOf(value) > -1 then true else false
     }
     spacing: {
+      value: {x: 0,y: 0}
       setter: (value) ->
-        @options.spacing = value
+        @spacing = value
         @update()
       validator: (value) ->
         if typeOf(value) is 'object'
@@ -450,8 +458,9 @@ Core.IconGroup = new Class {
         else no
     }
     startAngle: {
+      value: 0
       setter: (value) ->
-        @options.startAngle = Number.from(value)
+        @startAngle = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
@@ -459,15 +468,17 @@ Core.IconGroup = new Class {
         else no
     }
     radius: {
+      value: 0
       setter: (value) ->
-        @options.radius = Number.from(value)
+        @radius = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))? then yes else no
     }
     degree: {
+      value: 360
       setter: (value) ->
-        @options.degree = Number.from(value)
+        @degree = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
@@ -476,7 +487,7 @@ Core.IconGroup = new Class {
     }
     rows: {
       setter: (value) ->
-        @options.rows = Number.from(value)
+        @rows = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
@@ -485,31 +496,23 @@ Core.IconGroup = new Class {
     }
     columns: {
       setter: (value) ->
-        @options.columns = Number.from(value)
+        @columns = Number.from(value)
         @update()
       validator: (value) ->
         if (a = Number.from(value))?
           if a > 0 then yes else no
         else no
     }
-  }
-  options: {
-    mode: "horizontal"
-    spacing: {
-      x: 0
-      y: 0
+    class: {
+      value: GDotUI.Theme.IconGroup.class
     }
-    startAngle: 0 #degree
-    radius: 0 #degree
-    degree: 360 #degree
-    class: GDotUI.Theme.IconGroup.class
   }
   initialize: (options) ->
     @icons = []
+    console.log options
     @parent options
   create: ->
     @base.setStyle 'position', 'relative'
-    @base.addClass @options.class
   delegate: ->
     @fireEvent 'invoked', arguments
   addIcon: (icon) ->
@@ -533,21 +536,21 @@ Core.IconGroup = new Class {
     x = 0
     y = 0
     @size = {x:0, y:0}
-    spacing = @options.spacing
-    switch @options.mode
+    spacing = @spacing
+    switch @mode
       when 'grid'
-        if @options.rows? and @options.columns?
-          if Number.from(@options.rows) < Number.from(@options.columns)
-            @options.rows = null
+        if @rows? and @columns?
+          if Number.from(@rows) < Number.from(@columns)
+            @rows = null
           else
-            @options.columns = null
-        if @options.columns?
-          columns = @options.columns
+            @columns = null
+        if @columns?
+          columns = @columns
           rows = Math.round @icons.length/columns
-        if @options.rows?
-          rows = @options.rows
+        if @rows?
+          rows = @rows
           columns = Math.round @icons.length/rows
-        console.log rows, columns
+        #console.log rows, columns
         icpos = @icons.map ((item,i) ->
           if i % columns == 0
             x = 0
@@ -584,10 +587,10 @@ Core.IconGroup = new Class {
           ).bind @
       when 'circular'
         n = @icons.length
-        radius = @options.radius
-        startAngle = @options.startAngle
+        radius = @radius
+        startAngle = @startAngle
         ker = 2*@radius*Math.PI
-        fok = @options.degree/n
+        fok = @degree/n
         icpos = @icons.map (item,i) ->
           if i==0
             foks = startAngle * (Math.PI/180)
@@ -733,85 +736,104 @@ provides: [Core.Slider, ResetSlider]
 Core.Slider = new Class {
   Extends:Core.Abstract
   Implements:[ Interfaces.Controls, Interfaces.Enabled ]
-  Delegates:{ 'slider':[
-    'set'
-    'setRange'
-  ]}
-  options:{
-    reset: off
-    steps: 100
-    range: [0,0]
-    mode: 'horizontal'
-    class: GDotUI.Theme.Slider.classes.base
-    bar: GDotUI.Theme.Slider.classes.bar
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Slider.classes.base
+    }
+    mode: {
+      value: 'horizontal'
+      setter: (value, old) ->
+        @base.removeClass old
+        @base.addClass value
+        switch value
+          when 'horizontal'
+            @modifier = 'width'
+            @drag.options.modifiers = {x: 'width',y:''}
+            @drag.options.invert = false
+            if not @size?
+              size = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'width')
+            @set 'size', size
+            @base.setStyle 'height', Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'height')
+            @progress.setStyles {
+              top: 0
+              width: if @reset then @size/2 else 0
+            }
+          when 'vertical'
+            @modifier = 'height'
+            @drag.options.modifiers = {x: '',y: 'height'}
+            @drag.options.invert = true
+            if not @size?
+              size = Number.from getCSS("/\\.#{@class}.vertical$/",'height')
+            @set 'size', size
+            @base.setStyle 'width', Number.from getCSS("/\\.#{@class}.vertical$/",'width')
+            @progress.setStyles {
+              height: if @reset then @size/2 else 0
+              right: 0
+            }
+        value
+    }
+    bar: {
+      value: GDotUI.Theme.Slider.classes.bar
+      setter: (value, old) ->
+        @progress.removeClass old
+        @progress.addClass value
+        value
+    }
+    reset: {
+      value: off
+    }
+    steps: {
+      value: 100
+    }
+    range: {
+      value: [0,0]
+    }
+    size: {
+      setter: (value) ->
+        @base.setStyle @modifier, value
+        value
+    }
   }
   initialize: (options) ->
     @value = 0
+    
     @parent options
-  set: (position) ->
-    if @options.reset
+  setValue: (position) ->
+    if @get('reset')
       @value = Number.from position
     else
-      position = Math.round((position/@options.steps)*@size)
-      percent = Math.round((position/@size)*@options.steps)
+      position = Math.round((position/@get('steps'))*@size)
+      percent = Math.round((position/@size)*@get('steps'))
       if position < 0
         @progress.setStyle @modifier, 0+"px"
       if position > @size
         @progress.setStyle @modifier, @size+"px"
       if not(position < 0) and not(position > @size)
-        @progress.setStyle @modifier, (percent/@options.steps)*@size+"px"
-    console.log position, @size, @options.steps
-    if @options.reset then @value else Math.round((position/@size)*@options.steps)
+        @progress.setStyle @modifier, (percent/@get('steps'))*@size+"px"
+    console.log position, @size, @get('steps')
+    if @get('reset') then @value else Math.round((position/@size)*@get('steps'))
   create: ->
-    @base.addClass @options.class
-    @base.addClass @options.mode
-
-    @progress = new Element "div.#{@options.bar}"
 
     @base.setStyle 'position', 'relative'
+
+    @progress = new Element "div"
     @progress.setStyles {
       position: 'absolute'
       bottom: 0
       left: 0
-    }
-    
-    if @options.mode is 'horizontal'
-      @modifier = 'width'
-      modifiers = {x: 'width',y:''}
-      if @options.size?
-        @size = @options.size
-        @base.setStyle 'width', @size
-      else
-        @size = Number.from getCSS("/\\.#{@options.class}.horizontal$/",'width')
-      @progress.setStyles {
-        top: 0
-        width: if @options.reset then @size/2 else 0
-      }
-    if @options.mode is 'vertical'
-      if @options.size
-        @size = Number.from @options.size
-        @base.setStyle 'height', @size
-      else
-        @size = Number.from getCSS("/\\.#{@options.class}.vertical$/",'height')
-      modifiers = {x: '',y: 'height'}
-      @modifier = 'height'
-      @progress.setStyles {
-        height: if @options.reset then @size/2 else 0
-        right: 0
-      }
-      
+    }      
     @base.adopt @progress
     
-    @drag = new Drag @progress, {handle:@base, modifiers:modifiers, invert: if @options.mode is 'vertical' then true else false}
+    @drag = new Drag @progress, {handle:@base}
     
     @drag.addEvent 'beforeStart', ( (el,e) ->
-      @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@options.steps)
+      @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@steps)
       if not @enabled
         @disabledTop = el.getStyle @modifier
     ).bind @
     
     @drag.addEvent 'complete', ( (el,e) ->
-      if @options.reset
+      if @get('reset')
         if @enabled
           el.setStyle @modifier, @size/2+"px"
       @fireEvent 'complete'
@@ -820,15 +842,15 @@ Core.Slider = new Class {
     @drag.addEvent 'drag', ( (el,e) ->
       if @enabled
         pos = Number.from el.getStyle(@modifier)
-        offset = Math.round((pos/@size)*@options.steps)-@lastpos
-        @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@options.steps)
+        offset = Math.round((pos/@size)*@steps)-@lastpos
+        @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@steps)
         if pos > @size
-          el.setStyle @modifier, @size+"px"
+          el.setStyle @modifier, "#{@size}px"
           pos = @size
         else
-          if @options.reset
-            @value+=offset
-        @fireEvent 'step', if @options.reset then @value else Math.round((pos/@size)*@options.steps)
+          if @reset
+            @value += offset
+        @fireEvent 'step', if @reset then @value else Math.round((pos/@size)*@steps)
       else
         el.setStyle @modifier, @disabledTop
     ).bind @
@@ -836,7 +858,7 @@ Core.Slider = new Class {
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
       offset = Number.from e.wheel
-      if @options.reset
+      if @get('reset')
         @value += offset
       else
         pos = Number.from @progress.getStyle(@modifier)
@@ -847,9 +869,9 @@ Core.Slider = new Class {
           @progress.setStyle @modifier, @size+"px"
           pos = pos+offset
         if not(pos+offset < 0) and not(pos+offset > @size)
-          @progress.setStyle @modifier, (pos+offset/@options.steps*@size)+"px"
+          @progress.setStyle @modifier, (pos+offset/@get('steps')*@size)+"px"
           pos = pos+offset
-      @fireEvent 'step', if @options.reset then @value else Math.round((pos/@size)*@options.steps)
+      @fireEvent 'step', if @get('reset') then @value else Math.round((pos/@size)*@get('steps'))
     ).bind @
 
 }
@@ -1202,8 +1224,11 @@ Interfaces.Size = new Class {
     @minSize = Number.from(getCSS("/\\.#{@get('class')}$/",'min-width')) or 0
     @addAttribute 'size', {
       value: null
-      setter: (value) ->
-        @base.setStyle 'width', if @size < @minSize then @minSize else @size
+      setter: (value, old) ->
+        @size = value
+        size = if @size < @minSize then @minSize else @size
+        @base.setStyle 'width', size
+        size
     }
   
 }
@@ -1236,12 +1261,10 @@ Core.Button = new Class {
       value: GDotUI.Theme.Button.label
       setter: (value) ->
         @base.set 'value', value
+        value
     }
     class: {
       value: GDotUI.Theme.Button.class
-      setter: (value) ->
-        @base.addClass value
-        
     }
   }
   initialize: (attributes) ->
@@ -2284,40 +2307,58 @@ provides: Data.Number
 ###
 Data.Number = new Class {
   Extends: Core.Slider
-  options:{
-    class: GDotUI.Theme.Number.classes.base
-    bar: GDotUI.Theme.Number.classes.bar
-    text: GDotUI.Theme.Number.classes.text
-    range: GDotUI.Theme.Number.range
-    reset: GDotUI.Theme.Number.reset
-    steps: GDotUI.Theme.Number.steps
-    label: null
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Number.classes.base
+    }
+    bar: {
+      value: GDotUI.Theme.Number.classes.bar
+    }
+    text: {
+      value: GDotUI.Theme.Number.classes.text
+      setter: (value, old) ->
+        @textLabel.removeClass old
+        @textLabel.addClass value
+        value
+    }
+    range: {
+      value: GDotUI.Theme.Number.range
+    }
+    reset: {
+      value: GDotUI.Theme.Number.reset
+    }
+    steps: {
+      value: GDotUI.Theme.Number.steps
+    }
+    label: {
+      value: null
+    }
   }
   initialize: (options) ->
     @parent options
   create: ->
     @parent()
-    @text = new Element "div.#{@options.text}"
-    @text.setStyles {
+    @textLabel = new Element "div"
+    @textLabel.setStyles {
       position: 'absolute'
       bottom: 0
       left: 0
       right: 0
       top: 0
     }
-    @base.grab @text
+    @base.grab @textLabel
     @addEvent 'step',( (e) ->
-      @text.set 'text', if @options.label? then @options.label + " : " + e else e
+      @textLabel.set 'text', if @label? then @label + " : " + e else e
       @fireEvent 'change', e
     ).bind @
   getValue: ->
-    if @options.reset
+    if @reset
       @value
     else
       Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@options.steps)
   setValue: (step) ->
-    real = @set step
-    @text.set 'text', if @options.label? then @options.label + " : " + real else real
+    real = @parent step
+    @textLabel.set 'text', if @label? then @label + " : " + real else real
 }
 
 
