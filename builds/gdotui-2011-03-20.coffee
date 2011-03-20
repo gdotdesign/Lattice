@@ -1349,49 +1349,47 @@ Core.Picker = new Class {
     asize = @attachedTo.getSize()
     position = @attachedTo.getPosition()
     size = @base.getSize()
-    offset = @offset
-    console.log offset
     x = ''
     y = ''
     if @position.x is 'auto' and @position.y is 'auto'
-      if (position.x-size.x-winscroll.x) < 0
-        x = 'right'
-        xpos = position.x+asize.x+offset
-      if (position.x+size.x+asize.x) > winsize.x
+      if (position.x+size.x+asize.x) > (winsize.x-winscroll.x)
         x = 'left'
-        xpos = position.x-size.x-offset
-      if not ((position.x+size.x+asize.x)>winsize.x) and not ((position.x-size.x) < 0) 
-        x = 'center'
-        xpos = (position.x+asize.x/2)-(size.x/2)
-      if position.y+size.y-winscroll.y > winsize.y
-        y = 'up'
-        ypos = position.y-size.y-offset
       else
-        y = 'down'
-        if x=='center'
-          ypos = position.y+asize.y+offset
-        else
-          ypos = position.y
-    if @position.x isnt 'auto'
-      switch @position.x
-        when 'left'
-          xpos = position.x-size.x-offset
-        when 'right'
-          xpos = position.x+asize.x+offset
-        when 'center'
-          xpos = (position.x+asize.x/2)-(size.x/2)
-          console.log xpos
-    if @position.y isnt 'auto'
-      switch @position.y
-        when 'top'
-          ypos = position.y-size.y-offset
-        when 'bottom'
-          ypos = position.y+asize.y+offset
-        when 'center'
-          ypos = position.y
-    @base.setStyles {
-      left : xpos
-      top : ypos
+        x = 'right'
+             
+      if (position.y+size.y+asize.y) > (winsize.y-winscroll.y)
+        y = 'top'
+      else
+        y = 'bottom'
+
+      if not ((position.y+size.y+asize.y) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0)
+        y = 'center'
+      
+      position = {x:x,y:y}
+    else
+      position = @position
+    
+    ofa = {}
+                    
+    switch position.x
+      when 'center'
+        ofa.x = -size.x/2
+      when 'left'
+        ofa.x = -(@offset+size.x)
+      when 'right'
+        ofa.x = @offset
+    switch position.y
+      when 'center'
+        ofa.y = -size.y/2
+      when 'top'
+        ofa.y = -(@offset+size.y)
+      when 'bottom'
+        ofa.y = @offset
+
+    @base.position {
+      relativeTo: @attachedTo
+      position: position
+      offset: ofa
     }
   detach: ->
     if @contentElement?

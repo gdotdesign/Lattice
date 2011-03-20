@@ -1635,7 +1635,7 @@ Core.Picker = new Class({
     return this.base.setStyle('position', 'absolute');
   },
   onReady: function() {
-    var asize, offset, position, size, winscroll, winsize, x, xpos, y, ypos;
+    var asize, ofa, position, size, winscroll, winsize, x, y;
     if (!this.base.hasChild(this.contentElement)) {
       this.addChild(this.contentElement);
     }
@@ -1644,63 +1644,54 @@ Core.Picker = new Class({
     asize = this.attachedTo.getSize();
     position = this.attachedTo.getPosition();
     size = this.base.getSize();
-    offset = this.offset;
-    console.log(offset);
     x = '';
     y = '';
     if (this.position.x === 'auto' && this.position.y === 'auto') {
-      if ((position.x - size.x - winscroll.x) < 0) {
-        x = 'right';
-        xpos = position.x + asize.x + offset;
-      }
-      if ((position.x + size.x + asize.x) > winsize.x) {
+      if ((position.x + size.x + asize.x) > (winsize.x - winscroll.x)) {
         x = 'left';
-        xpos = position.x - size.x - offset;
-      }
-      if (!((position.x + size.x + asize.x) > winsize.x) && !((position.x - size.x) < 0)) {
-        x = 'center';
-        xpos = (position.x + asize.x / 2) - (size.x / 2);
-      }
-      if (position.y + size.y - winscroll.y > winsize.y) {
-        y = 'up';
-        ypos = position.y - size.y - offset;
       } else {
-        y = 'down';
-        if (x === 'center') {
-          ypos = position.y + asize.y + offset;
-        } else {
-          ypos = position.y;
-        }
+        x = 'right';
       }
-    }
-    if (this.position.x !== 'auto') {
-      switch (this.position.x) {
-        case 'left':
-          xpos = position.x - size.x - offset;
-          break;
-        case 'right':
-          xpos = position.x + asize.x + offset;
-          break;
-        case 'center':
-          xpos = (position.x + asize.x / 2) - (size.x / 2);
-          console.log(xpos);
+      if ((position.y + size.y + asize.y) > (winsize.y - winscroll.y)) {
+        y = 'top';
+      } else {
+        y = 'bottom';
       }
-    }
-    if (this.position.y !== 'auto') {
-      switch (this.position.y) {
-        case 'top':
-          ypos = position.y - size.y - offset;
-          break;
-        case 'bottom':
-          ypos = position.y + asize.y + offset;
-          break;
-        case 'center':
-          ypos = position.y;
+      if (!((position.y + size.y + asize.y) > (winsize.y - winscroll.y)) && !((position.y - size.y) < 0)) {
+        y = 'center';
       }
+      position = {
+        x: x,
+        y: y
+      };
+    } else {
+      position = this.position;
     }
-    return this.base.setStyles({
-      left: xpos,
-      top: ypos
+    ofa = {};
+    switch (position.x) {
+      case 'center':
+        ofa.x = -size.x / 2;
+        break;
+      case 'left':
+        ofa.x = -(this.offset + size.x);
+        break;
+      case 'right':
+        ofa.x = this.offset;
+    }
+    switch (position.y) {
+      case 'center':
+        ofa.y = -size.y / 2;
+        break;
+      case 'top':
+        ofa.y = -(this.offset + size.y);
+        break;
+      case 'bottom':
+        ofa.y = this.offset;
+    }
+    return this.base.position({
+      relativeTo: this.attachedTo,
+      position: position,
+      offset: ofa
     });
   },
   detach: function() {
