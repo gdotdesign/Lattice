@@ -3,7 +3,7 @@
 
 name: Core.Push
 
-description: Basic button element.
+description: Toggle button 'push' element.
 
 license: MIT-style license.
 
@@ -19,12 +19,13 @@ Core.Push = new Class {
   Attributes: {
     state: {
       getter: ->
-        if @base.hasClass 'pushed' then true else false
+        @base.hasClass 'pushed' 
     }
     label: {
-      value: GDotUI.Theme.Push.defaultText
+      value: GDotUI.Theme.Push.label
       setter: (value) ->
         @base.set 'text', value
+        value
     }
     class: {
       value: GDotUI.Theme.Push.class

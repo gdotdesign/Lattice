@@ -15,8 +15,18 @@ provides: Core.Tab
 ###
 Core.Tab = new Class {
   Extends: Core.Abstract
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Tab.class
+    }
+    label: {
+      value: ''
+      setter: (value) ->
+        @base.set 'text', value
+        value
+    }
+  }
   options:{
-    class: GDotUI.Theme.Tab.class
     label: ''
     image: GDotUI.Theme.Icons.remove
     active: GDotUI.Theme.Global.active
@@ -25,11 +35,10 @@ Core.Tab = new Class {
   initialize: (options) ->
     @parent options
   create: ->
-    @base.addClass @options.class
     @base.addEvent 'click', ( ->
       @fireEvent 'activate', @
     ).bindWithEvent @
-    @label = new Element 'div', {text: @options.label}
+    @label = new Element 'div'
     @icon = new Core.Icon {image: @options.image}
     @icon.addEvent 'invoked', ( (ic,e) ->
       e.stop()

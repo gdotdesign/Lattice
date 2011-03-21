@@ -15,16 +15,23 @@ provides: Data.Abstract
 ###
 Data.Abstract = new Class {
   Implements:[Events
-              Options
               Interfaces.Mux]
-  options:{}
+  Attributes: {
+    class: {
+      setter: (value, old) ->
+        @base.removeClass old
+        @base.addClass value
+        value
+    }
+  }
   initialize: (options) ->
-    @setOptions options
     @base = new Element 'div'
     @base.addEvent 'addedToDom', @ready.bindWithEvent @
-    @mux()
     @create()
+    @mux()
+    @setAttributes options
     @
+  update: ->
   create: ->
   ready: ->
   toElement: ->

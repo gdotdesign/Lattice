@@ -4,5 +4,11 @@ window.addEvent('domready', function(){
   for(i=0;i<5;i++){
     group.addItem(new Core.Push({label:i}));  
   }
+  slider = new Data.Number({label:'Size'})
+  slider.addEvent('change',function(value){
+    group.set('size', value)
+  });
+  slider.setValue(200)
   $$(".demo").grab(group);
+  $("options").adopt(slider);
 });

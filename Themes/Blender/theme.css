@@ -66,9 +66,29 @@
   .date-time .slot:first-child {
     width: 45px; }
 
-.slot .selected, .select .text, .pushgroup, .button:hover, .float .handle, .float .bottom, .push, .toggler .on, .toggler .off {
+.slot .selected, .select .text, .pushgroup, .button:hover, .float .handle, .float .bottom, .push, .toggler .sep {
   background-image: -moz-linear-gradient(100% 100% 90deg, #373737, #535353);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#535353), to(#373737)); }
+
+.slider.horizontal .progress {
+  background-image: -moz-linear-gradient(100% 100% 90deg, #7b7b7b, #979797);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#979797), to(#7b7b7b)); }
+
+.slider.vertical .progress {
+  background-image: -moz-linear-gradient(100% 100% 0deg, #979797, #7b7b7b);
+  background-image: -webkit-gradient(linear, right bottom, left bottom, from(#7b7b7b), to(#979797)); }
+
+.slider.horizontal {
+  background-image: -moz-linear-gradient(100% 100% 90deg, #5c5c5c, #565656);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#565656), to(#5c5c5c)); }
+
+.slider.vertical {
+  background-image: -moz-linear-gradient(100% 100% 0deg, #565656, #5c5c5c);
+  background-image: -webkit-gradient(linear, right bottom, left bottom, from(#5c5c5c), to(#565656)); }
+
+.number.horizontal {
+  background-image: -moz-linear-gradient(100% 100% 90deg, #7b7b7b, #979797);
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#979797), to(#7b7b7b)); }
 
 .select .text:active {
   background-image: -moz-linear-gradient(100% 100% 90deg, #535353, #373737);
@@ -78,13 +98,27 @@
   background-image: -moz-linear-gradient(100% 100% 90deg, #454545, #696969);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#696969), to(#454545)); }
 
-.toggler .sep, .button, .icon, .slider .progress, .number .progress {
+.button, .icon, .number .progress {
   background-image: -moz-linear-gradient(100% 100% 90deg, #6a6a6a, #898989);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#898989), to(#6a6a6a)); }
 
-.select-item:hover, .icon:active, .push.pushed, .button:active {
+.select-item:hover, .icon:active, .push.pushed, .button:active, .toggler .on, .toggler .off {
   background-image: -moz-linear-gradient(100% 100% 90deg, #4771b3, #638dcf);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#638dcf), to(#4771b3)); }
+
+.select.disabled {
+  cursor: auto; }
+
+.select.disabled .text {
+  background-image: -moz-linear-gradient(100% 100% 90deg, #373737, #535353) !important;
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#535353), to(#373737)) !important; }
+
+.button.disabled, .icon.disabled, .icon.supressed {
+  background-image: -moz-linear-gradient(100% 100% 90deg, #6a6a6a, #898989) !important;
+  background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#898989), to(#6a6a6a)) !important; }
+
+.button.disabled {
+  color: #212121 !important; }
 
 .slot, textarea, .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .color, .unit-pick {
   border: 1px solid #272727;
@@ -115,8 +149,15 @@
   -webkit-box-shadow: 0 0 0 transparent; }
 
 .button {
-  display: block;
-  width: 200px; }
+  width: 200px;
+  min-width: 85px;
+  height: 22px;
+  line-height: 22px;
+  text-align: center;
+  cursor: pointer;
+  color: #212121; }
+  .button:hover {
+    color: #eeeeee; }
 
 .slot {
   height: 100px;
@@ -136,6 +177,7 @@
   text-align: center; }
 
 textarea {
+  min-width: 85px;
   width: 200px;
   background-color: #a3a3a3;
   font-family: Sans;
@@ -154,6 +196,7 @@ textarea {
 
 .unit-pick {
   width: 200px;
+  min-width: 170px;
   height: 20px; }
   .unit-pick .number, .unit-pick .select {
     float: left; }
@@ -215,7 +258,8 @@ textarea {
   line-height: 21px;
   color: #f5f5f5;
   height: 20px;
-  width: 200px; }
+  width: 200px;
+  min-width: 85px; }
   .select:after {
     content: "";
     z-index: 1;
@@ -267,6 +311,8 @@ textarea {
   width: 30px;
   height: 30px;
   cursor: pointer; }
+  .icon.disabled {
+    background-color: #898989 !important; }
   .icon:hover {
     background-color: #9e9e9e; }
   .icon:active {
@@ -308,6 +354,7 @@ textarea {
 
 .pushgroup {
   width: 200px;
+  min-width: 85px;
   height: 22px; }
   .pushgroup .push:first-child {
     -moz-border-radius: 5px 0 0 5px;
@@ -329,7 +376,8 @@ textarea {
     border-radius: 0; }
 
 .push {
-  width: 40px;
+  width: 200px;
+  min-width: 85px;
   color: #f5f5f5;
   height: 22px;
   text-align: center;
@@ -340,49 +388,54 @@ textarea {
 
 .toggler {
   width: 200px;
+  min-width: 85px;
   height: 20px;
   overflow: hidden;
   cursor: pointer; }
   .toggler .on {
-    width: 50px; }
+    -moz-border-radius: 5px 0 0 5px;
+    -webkit-border-radius: 5px 0 0 5px;
+    -khtml-border-radius: 5px 0 0 5px;
+    border-radius: 5px 0 0 5px; }
+  .toggler .off {
+    -moz-border-radius: 0 5px 5px 0;
+    -webkit-border-radius: 0 5px 5px 0;
+    -khtml-border-radius: 0 5px 5px 0;
+    border-radius: 0 5px 5px 0; }
   .toggler .on, .toggler .off, .toggler .sep {
-    font-size: 10px;
-    font-weight: bold;
-    line-height: 20px;
+    font-size: 12px;
+    line-height: 22px;
     text-align: center;
     width: 50px;
-    color: #eeeeee; }
+    color: #1c1c1c; }
   .toggler .sep {
     -moz-border-radius: 5px;
     -webkit-border-radius: 5px;
     -khtml-border-radius: 5px;
     border-radius: 5px; }
 
-.button {
-  cursor: pointer;
-  color: #212121;
-  padding: 4px; }
-  .button:hover {
-    color: #eeeeee; }
-
 .number {
   border: none; }
   .number.horizontal {
     width: 200px;
+    min-width: 85px;
     height: 20px; }
   .number.vertical {
     width: 20px;
-    height: 200px; }
+    height: 200px;
+    min-height: 85px; }
 
 .slider.horizontal {
   width: 200px;
-  height: 10px; }
+  min-width: 85px;
+  height: 11px; }
 .slider.vertical {
-  width: 10px;
-  height: 200px; }
+  width: 11px;
+  height: 200px;
+  min-height: 85px; }
 
 .slider, .number {
-  background-color: #a3a3a3;
+  background-color: #565656;
   cursor: move;
   overflow: hidden; }
   .slider .progress, .number .progress {

@@ -36,7 +36,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a >= 0 and a <= 360 then yes else no
+          (a >= 0 and a <= 360)
         else no
     }
     radius: {
@@ -44,7 +44,7 @@ Core.IconGroup = new Class {
       setter: (value) ->
         Number.from(value)
       validator: (value) ->
-        if (a = Number.from(value))? then yes else no
+        (a = Number.from(value))?
     }
     degree: {
       value: 360
@@ -52,7 +52,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a >= 0 and a <= 360 then yes else no
+          a >= 0 and a <= 360
         else no
     }
     rows: {
@@ -60,7 +60,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a > 0 then yes else no
+          a > 0
         else no
     }
     columns: {
@@ -68,7 +68,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a > 0 then yes else no
+          a > 0
         else no
     }
     class: {
@@ -89,6 +89,7 @@ Core.IconGroup = new Class {
       @icons.push icon
       yes
     else no
+    @update()
   removeIcon: (icon) ->
     index = @icons.indexOf icon
     if index isnt -1
@@ -97,6 +98,7 @@ Core.IconGroup = new Class {
       @icons.splice index, 1
       yes
     else no
+    @update()
   ready: ->
     @update()
   update: ->
@@ -118,7 +120,6 @@ Core.IconGroup = new Class {
           if @rows?
             rows = @rows
             columns = Math.round @icons.length/rows
-          #console.log rows, columns
           icpos = @icons.map ((item,i) ->
             if i % columns == 0
               x = 0

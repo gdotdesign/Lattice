@@ -13,28 +13,6 @@ provides: Data.Unit
 
 ...
 ###
-UnitTable = {
-  "px":{
-    range:[-50,50]
-    steps:[100]
-  }
-  "%":{
-    range:[-50,50]
-    steps:[100]
-  }
-  "em":{
-    range:[-5,5]
-    steps:[100]
-  }
-  "s":{
-    range:[-10,10]
-    steps:[100]
-  }
-  "default":{
-    range:[-50,50]
-    steps:[100]
-  }
-}
 UnitList = {
   px: "px"
   '%': "%"
@@ -62,15 +40,20 @@ UnitList = {
   }
 Data.Unit = new Class {
   Extends:Data.Abstract
-  options:{
-    class: GDotUI.Theme.Unit.class
+  Implements: Interfaces.Size
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Unit.class
+    }
   }
   initialize: (options) ->
-    @parent(options)
+    @parent options
+  update: ->
+    @number.set 'size', @size-@sel.get('size')
   create: ->
     @value = 0
-    @base.addClass @options.class
-    @number = new Data.Number {range:[-50,50],reset: on, steps: [100], size:120}
+    @selectSize = 80
+    @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
     @sel = new Core.Select({size: 80})
     Object.each UnitList,((item) ->
       @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
@@ -84,6 +67,7 @@ Data.Unit = new Class {
       @fireEvent 'change', String(@value)+@sel.getValue()
     ).bindWithEvent @
     @base.adopt @number, @sel
+    @update()
   setValue: (value) ->
     if typeof value is 'string'
       match = value.match(/(-?\d*)(.*)/)

@@ -20,12 +20,14 @@ Interfaces.Enabled = new Class {
       @children.each (item) ->
         if item.disable?
           item.supress()
+    @base.addClass 'supressed'
     @enabled = off
   unsupress: ->
     if @children?
       @children.each (item) ->
         if item.enable?
           item.unsupress()
+    @base.removeClass 'supressed'
     @enabled = on
   enable: ->
     if @children?

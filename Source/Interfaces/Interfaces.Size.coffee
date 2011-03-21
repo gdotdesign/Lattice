@@ -16,6 +16,12 @@ Interfaces.Size = new Class {
   _$Size: ->
     @size = Number.from getCSS("/\\.#{@get('class')}$/",'width')
     @minSize = Number.from(getCSS("/\\.#{@get('class')}$/",'min-width')) or 0
+    @addAttribute 'minSize', {
+      value: null
+      setter: (value,old) ->
+        @base.setStyle 'min-width', value
+        value      
+    }
     @addAttribute 'size', {
       value: null
       setter: (value, old) ->

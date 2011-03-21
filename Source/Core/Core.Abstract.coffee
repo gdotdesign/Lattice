@@ -40,6 +40,7 @@ Core.Abstract = new Class {
   Attributes: {
     class: {
       setter: (value, old) ->
+        value = String.from value
         @base.removeClass old
         @base.addClass value
         value
@@ -47,7 +48,7 @@ Core.Abstract = new Class {
   }
   initialize: (options) ->
     @base = new Element 'div'
-    @base.addEvent 'addedToDom', @ready.bindWithEvent @
+    @base.addEvent 'addedToDom', @ready.bind @
     @mux()
     @create()
     @setAttributes options

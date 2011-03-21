@@ -3,7 +3,7 @@
 
 name: Core.Select
 
-description: Color data element. ( color picker )
+description: Select Element
 
 license: MIT-style license.
 
@@ -25,12 +25,12 @@ Prompt = new Class {
     @input = new Element 'input',{type:'text'}
     @button = new Element 'input', {type:'button'}
     @base.adopt @label,@input,@button;
-    @picker = new Core.Picker();
+    @picker = new Core.Picker()
     @picker.setContent @base
 }
 Core.Select = new Class {
   Extends:Core.Abstract
-  Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size]
+  Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children]
   Attributes: {
     class: {
       value: 'select'
@@ -44,13 +44,13 @@ Core.Select = new Class {
     }
     selected: {
       getter: ->
-        @list.get('selected')
+        @list.get 'selected'
     }
     editable: {
       value: yes
       setter: (value) ->
         if value
-          @base.adopt  @removeIcon, @addIcon
+          @adoptChildren  @removeIcon, @addIcon
         else
           document.id(@removeIcon).dispose()
           document.id(@addIcon).dispose()

@@ -24,7 +24,7 @@ Core.Button = new Class {
     label: {
       value: GDotUI.Theme.Button.label
       setter: (value) ->
-        @base.set 'value', value
+        @base.set 'text', value
         value
     }
     class: {
@@ -34,8 +34,6 @@ Core.Button = new Class {
   initialize: (attributes) ->
     @parent attributes 
   create: ->
-    delete @base
-    @base = new Element "input", {type:'button'}
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]

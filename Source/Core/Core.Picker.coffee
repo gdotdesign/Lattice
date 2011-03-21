@@ -13,18 +13,10 @@ provides: [Core.Picker, outerClick]
 
 ...
 ###
-( ->
-  oldPrototypeStart = Drag::start
-  Drag.prototype.start = ->
-    window.fireEvent 'outer'
-    oldPrototypeStart.run arguments, @
-)()
-
 Core.Picker = new Class {
   Extends: Core.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
-  Binds: ['show'
-          'hide']
+  Binds: ['show','hide']
   Attributes: {
     class: {
       value: GDotUI.Theme.Picker.class
@@ -36,6 +28,11 @@ Core.Picker = new Class {
     }
     position: {
       value: {x:'auto',y:'auto'}
+    }
+    event: {
+      value: GDotUI.Theme.Picker.event
+      setter: (value, old) ->
+        value
     }
   }
   options:{
@@ -67,7 +64,7 @@ Core.Picker = new Class {
       else
         y = 'bottom'
 
-      if not ((position.y+size.y+asize.y) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0)
+      if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0)
         y = 'center'
       
       position = {x:x,y:y}

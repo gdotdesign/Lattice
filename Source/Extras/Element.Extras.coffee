@@ -23,6 +23,12 @@ Element.Properties.checked = {
       else
         @off()
 }
+( ->
+  oldPrototypeStart = Drag::start
+  Drag.prototype.start = ->
+    window.fireEvent 'outer'
+    oldPrototypeStart.run arguments, @
+)()
 (->
   Element.Events.outerClick = {
     base: 'mousedown'

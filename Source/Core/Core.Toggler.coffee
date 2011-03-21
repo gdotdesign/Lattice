@@ -13,8 +13,6 @@ provides: Core.Toggler
 
 ...
 ###
-
-
 Core.Toggler = new Class {
   Extends: Core.Abstract
   Implements:[

@@ -3,7 +3,7 @@
 
 name: Core.PushGroup
 
-description: Basic button element.
+description: PushGroup element.
 
 license: MIT-style license.
 
@@ -18,12 +18,19 @@ Core.PushGroup = new Class {
   Implements:[
     Interfaces.Enabled
     Interfaces.Children
+    Interfaces.Size
   ]
   Attributes: {
     class: {
       value: GDotUI.Theme.PushGroup.class
     }
   }
+  update: ->
+    buttonwidth = Math.floor(@size / @buttons.length)
+    @buttons.each (btn) ->
+      btn.set 'size', buttonwidth
+    if last = @buttons.getLast()
+      last.set 'size', @size-buttonwidth*(@buttons.length-1)
   initialize: (options) ->
     @buttons = []
     @parent options 
@@ -39,10 +46,11 @@ Core.PushGroup = new Class {
   addItem: (item) ->
     if @buttons.indexOf(item) is -1
       @buttons.push item  
+      item.set 'minSize', 0
       @addChild item
       item.addEvent 'invoked', ( (it) ->
         @setActive item
         @fireEvent 'change', it
       ).bind @
-      @base.setStyle 'width', Number.from(@base.getStyle('width'))+item.width
+    @update()
 }

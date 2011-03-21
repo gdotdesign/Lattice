@@ -10,7 +10,7 @@ license: MIT-style license.
 provides: Element.Extras
 
 ...
-*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, Prompt, UnitList, UnitTable, checkForKey, getCSS;
+*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, Prompt, UnitList, checkForKey, getCSS;
 Element.Properties.checked = {
   get: function() {
     if (this.getChecked != null) {
@@ -28,6 +28,14 @@ Element.Properties.checked = {
     }
   }
 };
+(function() {
+  var oldPrototypeStart;
+  oldPrototypeStart = Drag.prototype.start;
+  return Drag.prototype.start = function() {
+    window.fireEvent('outer');
+    return oldPrototypeStart.run(arguments, this);
+  };
+})();
 (function() {
   Element.Events.outerClick = {
     base: 'mousedown',
@@ -261,11 +269,11 @@ requires: [GDotUI]
 */
 Interfaces.Mux = new Class({
   mux: function() {
-    return (new Hash(this)).each((function(value, key) {
-      if (key.test(/^_\$/) && $type(value) === "function") {
-        return value.run(null, this);
+    return new Hash(this).each(function(value, key) {
+      if (key.test(/^_\$/) && typeOf(value) === "function") {
+        return value.attempt(null, this);
       }
-    }).bind(this));
+    }, this);
   }
 });
 /*
@@ -314,6 +322,7 @@ Core.Abstract = new Class({
   Attributes: {
     "class": {
       setter: function(value, old) {
+        value = String.from(value);
         this.base.removeClass(old);
         this.base.addClass(value);
         return value;
@@ -322,7 +331,7 @@ Core.Abstract = new Class({
   },
   initialize: function(options) {
     this.base = new Element('div');
-    this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
+    this.base.addEvent('addedToDom', this.ready.bind(this));
     this.mux();
     this.create();
     this.setAttributes(options);
@@ -360,7 +369,7 @@ Interfaces.Controls = new Class({
     return this.base.setStyle('opacity', 1);
   },
   toggle: function() {
-    if (this.base.getStyle('opacity' === 0)) {
+    if (this.base.getStyle('opacity') === 0) {
       return this.show();
     } else {
       return this.hide();
@@ -393,6 +402,7 @@ Interfaces.Enabled = new Class({
         }
       });
     }
+    this.base.addClass('supressed');
     return this.enabled = false;
   },
   unsupress: function() {
@@ -403,6 +413,7 @@ Interfaces.Enabled = new Class({
         }
       });
     }
+    this.base.removeClass('supressed');
     return this.enabled = true;
   },
   enable: function() {
@@ -555,11 +566,7 @@ Core.IconGroup = new Class({
       validator: function(value) {
         var a;
         if ((a = Number.from(value)) != null) {
-          if (a >= 0 && a <= 360) {
-            return true;
-          } else {
-            return false;
-          }
+          return a >= 0 && a <= 360;
         } else {
           return false;
         }
@@ -572,11 +579,7 @@ Core.IconGroup = new Class({
       },
       validator: function(value) {
         var a;
-        if ((a = Number.from(value)) != null) {
-          return true;
-        } else {
-          return false;
-        }
+        return (a = Number.from(value)) != null;
       }
     },
     degree: {
@@ -587,11 +590,7 @@ Core.IconGroup = new Class({
       validator: function(value) {
         var a;
         if ((a = Number.from(value)) != null) {
-          if (a >= 0 && a <= 360) {
-            return true;
-          } else {
-            return false;
-          }
+          return a >= 0 && a <= 360;
         } else {
           return false;
         }
@@ -604,11 +603,7 @@ Core.IconGroup = new Class({
       validator: function(value) {
         var a;
         if ((a = Number.from(value)) != null) {
-          if (a > 0) {
-            return true;
-          } else {
-            return false;
-          }
+          return a > 0;
         } else {
           return false;
         }
@@ -621,11 +616,7 @@ Core.IconGroup = new Class({
       validator: function(value) {
         var a;
         if ((a = Number.from(value)) != null) {
-          if (a > 0) {
-            return true;
-          } else {
-            return false;
-          }
+          return a > 0;
         } else {
           return false;
         }
@@ -650,10 +641,11 @@ Core.IconGroup = new Class({
       icon.addEvent('invoked', this.delegate);
       this.addChild(icon);
       this.icons.push(icon);
-      return true;
+      true;
     } else {
-      return false;
+      false;
     }
+    return this.update();
   },
   removeIcon: function(icon) {
     var index;
@@ -662,10 +654,11 @@ Core.IconGroup = new Class({
       icon.removeEvent('invoked', this.delegate);
       icon.base.dispose();
       this.icons.splice(index, 1);
-      return true;
+      true;
     } else {
-      return false;
+      false;
     }
+    return this.update();
   },
   ready: function() {
     return this.update();
@@ -940,6 +933,7 @@ Core.Slider = new Class({
         this.base.addClass(value);
         switch (value) {
           case 'horizontal':
+            this.minSize = Number.from(getCSS("/\\." + (this.get('class')) + ".horizontal$/", 'min-width'));
             this.modifier = 'width';
             this.drag.options.modifiers = {
               x: 'width',
@@ -957,6 +951,7 @@ Core.Slider = new Class({
             });
             break;
           case 'vertical':
+            this.minSize = Number.from(getCSS("/\\." + (this.get('class')) + ".vertical$/", 'min-hieght'));
             this.modifier = 'height';
             this.drag.options.modifiers = {
               x: '',
@@ -998,10 +993,11 @@ Core.Slider = new Class({
         if (!(value != null)) {
           value = old;
         }
-        this.base.setStyle(this.modifier, value);
-        if (this.reset) {
-          this.progress.setStyle(this.modifier, this.reset ? value / 2 : 0);
+        if (this.minSize > value) {
+          value = this.minSize;
         }
+        this.base.setStyle(this.modifier, value);
+        this.progress.setStyle(this.modifier, this.reset ? value / 2 : this.value / this.steps * value);
         return value;
       }
     }
@@ -1015,7 +1011,7 @@ Core.Slider = new Class({
     if (this.reset) {
       this.value = Number.from(position);
     } else {
-      position = Math.round((position / this.get('steps')) * this.size);
+      position = Math.round((position / this.steps) * this.size);
       percent = Math.round((position / this.size) * this.get('steps'));
       if (position < 0) {
         this.progress.setStyle(this.modifier, 0 + "px");
@@ -1024,14 +1020,11 @@ Core.Slider = new Class({
         this.progress.setStyle(this.modifier, this.size + "px");
       }
       if (!(position < 0) && !(position > this.size)) {
-        this.progress.setStyle(this.modifier, (percent / this.get('steps')) * this.size + "px");
+        this.progress.setStyle(this.modifier, (percent / this.steps) * this.size + "px");
       }
+      this.value = Math.round((position / this.size) * this.steps);
     }
-    if (this.get('reset')) {
-      return this.value;
-    } else {
-      return Math.round((position / this.size) * this.get('steps'));
-    }
+    return this.value;
   },
   create: function() {
     this.base.setStyle('position', 'relative');
@@ -1073,7 +1066,10 @@ Core.Slider = new Class({
             this.value += offset;
           }
         }
-        return this.fireEvent('step', this.reset ? this.value : Math.round((pos / this.size) * this.steps));
+        if (!this.reset) {
+          this.value = Math.round((pos / this.size) * this.steps);
+        }
+        return this.fireEvent('step', this.value);
       } else {
         return el.setStyle(this.modifier, this.disabledTop);
       }
@@ -1523,6 +1519,13 @@ Interfaces.Size = new Class({
   _$Size: function() {
     this.size = Number.from(getCSS("/\\." + (this.get('class')) + "$/", 'width'));
     this.minSize = Number.from(getCSS("/\\." + (this.get('class')) + "$/", 'min-width')) || 0;
+    this.addAttribute('minSize', {
+      value: null,
+      setter: function(value, old) {
+        this.base.setStyle('min-width', value);
+        return value;
+      }
+    });
     return this.addAttribute('size', {
       value: null,
       setter: function(value, old) {
@@ -1557,7 +1560,7 @@ Core.Button = new Class({
     label: {
       value: GDotUI.Theme.Button.label,
       setter: function(value) {
-        this.base.set('value', value);
+        this.base.set('text', value);
         return value;
       }
     },
@@ -1569,10 +1572,6 @@ Core.Button = new Class({
     return this.parent(attributes);
   },
   create: function() {
-    delete this.base;
-    this.base = new Element("input", {
-      type: 'button'
-    });
     return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
         return this.fireEvent('invoked', [this, e]);
@@ -1595,14 +1594,6 @@ provides: [Core.Picker, outerClick]
 
 ...
 */
-(function() {
-  var oldPrototypeStart;
-  oldPrototypeStart = Drag.prototype.start;
-  return Drag.prototype.start = function() {
-    window.fireEvent('outer');
-    return oldPrototypeStart.run(arguments, this);
-  };
-})();
 Core.Picker = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Children],
@@ -1621,6 +1612,12 @@ Core.Picker = new Class({
       value: {
         x: 'auto',
         y: 'auto'
+      }
+    },
+    event: {
+      value: GDotUI.Theme.Picker.event,
+      setter: function(value, old) {
+        return value;
       }
     }
   },
@@ -1657,7 +1654,7 @@ Core.Picker = new Class({
       } else {
         y = 'bottom';
       }
-      if (!((position.y + size.y + asize.y) > (winsize.y - winscroll.y)) && !((position.y - size.y) < 0)) {
+      if (!((position.y + size.y / 2) > (winsize.y - winscroll.y)) && !((position.y - size.y) < 0)) {
         y = 'center';
       }
       position = {
@@ -1950,11 +1947,11 @@ Core.Slot = new Class({
     this.list = new Iterable.List();
     this.list.base.addEvent('addedToDom', (function() {
       return this.readyList();
-    }).bindWithEvent(this));
+    }).bind(this));
     return this.list.addEvent('select', (function(item) {
       this.update();
       return this.fireEvent('change', item);
-    }).bindWithEvent(this));
+    }).bind(this));
   },
   ready: function() {
     return this.base.adopt(this.list.base, this.overlay);
@@ -1988,7 +1985,7 @@ Core.Slot = new Class({
       'right': 0,
       'bottom': 0
     });
-    this.overlay.addEvent('mousewheel', this.mouseWheel.bindWithEvent(this));
+    this.overlay.addEvent('mousewheel', this.mouseWheel.bind(this));
     this.drag = new Drag(this.list.base, {
       modifiers: {
         x: '',
@@ -2002,11 +1999,11 @@ Core.Slot = new Class({
         this.disabledTop = this.list.base.getStyle('top');
       }
       return this.list.base.removeTransition();
-    }).bindWithEvent(this));
+    }).bind(this));
     this.drag.addEvent('complete', (function() {
       this.dragging = false;
       return this.update();
-    }).bindWithEvent(this));
+    }).bind(this));
     return this.update();
   },
   mouseWheel: function(e) {
@@ -2059,8 +2056,19 @@ provides: Core.Tab
 */
 Core.Tab = new Class({
   Extends: Core.Abstract,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Tab["class"]
+    },
+    label: {
+      value: '',
+      setter: function(value) {
+        this.base.set('text', value);
+        return value;
+      }
+    }
+  },
   options: {
-    "class": GDotUI.Theme.Tab["class"],
     label: '',
     image: GDotUI.Theme.Icons.remove,
     active: GDotUI.Theme.Global.active,
@@ -2070,13 +2078,10 @@ Core.Tab = new Class({
     return this.parent(options);
   },
   create: function() {
-    this.base.addClass(this.options["class"]);
     this.base.addEvent('click', (function() {
       return this.fireEvent('activate', this);
     }).bindWithEvent(this));
-    this.label = new Element('div', {
-      text: this.options.label
-    });
+    this.label = new Element('div');
     this.icon = new Core.Icon({
       image: this.options.image
     });
@@ -2116,17 +2121,18 @@ provides: Core.Tabs
 Core.Tabs = new Class({
   Extends: Core.Abstract,
   Binds: ['remove', 'change'],
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Tabs["class"]
+    }
+  },
   options: {
-    "class": GDotUI.Theme.Tabs["class"],
     autoRemove: true
   },
   initialize: function(options) {
     this.tabs = [];
     this.active = null;
     return this.parent(options);
-  },
-  create: function() {
-    return this.base.addClass(this.options["class"]);
   },
   add: function(tab) {
     if (this.tabs.indexOf(tab === -1)) {
@@ -2386,37 +2392,47 @@ provides: Core.Overlay
 */
 Core.Overlay = new Class({
   Extends: Core.Abstract,
+  Impelments: Interfaces.Enabled,
   Attributes: {
     "class": {
       value: GDotUI.Theme.Overlay["class"]
+    },
+    zindex: {
+      value: 0,
+      setter: function(value) {
+        this.base.setStyle('z-index', value);
+        return value;
+      }
     }
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
+    this.enabled = true;
     this.base.setStyles({
       position: "fixed",
       top: 0,
       left: 0,
       right: 0,
-      bottom: 0,
-      opacity: 0
+      bottom: 0
     });
-    return this.base.addEventListener('webkitTransitionEnd', (function(e) {
-      if (e.propertyName === "opacity" && this.base.getStyle('opacity') === 0) {
-        return this.base.setStyle('visiblity', 'hidden');
-      }
-    }).bindWithEvent(this));
-  },
-  hide: function() {
-    return this.base.setStyle('opacity', 0);
+    return this.hide();
   },
   show: function() {
-    return this.base.setStyles({
-      visiblity: 'visible',
-      opacity: 1
-    });
+    if (this.enabled) {
+      return this.base.show();
+    }
+  },
+  hide: function() {
+    if (this.enabled) {
+      return this.base.hide();
+    }
+  },
+  toggle: function() {
+    if (this.enabled) {
+      return this.base.toggle();
+    }
   }
 });
 /*
@@ -2424,7 +2440,7 @@ Core.Overlay = new Class({
 
 name: Core.Push
 
-description: Basic button element.
+description: Toggle button 'push' element.
 
 license: MIT-style license.
 
@@ -2440,17 +2456,14 @@ Core.Push = new Class({
   Attributes: {
     state: {
       getter: function() {
-        if (this.base.hasClass('pushed')) {
-          return true;
-        } else {
-          return false;
-        }
+        return this.base.hasClass('pushed');
       }
     },
     label: {
-      value: GDotUI.Theme.Push.defaultText,
+      value: GDotUI.Theme.Push.label,
       setter: function(value) {
-        return this.base.set('text', value);
+        this.base.set('text', value);
+        return value;
       }
     },
     "class": {
@@ -2484,7 +2497,7 @@ Core.Push = new Class({
 
 name: Core.PushGroup
 
-description: Basic button element.
+description: PushGroup element.
 
 license: MIT-style license.
 
@@ -2496,10 +2509,20 @@ provides: Core.PushGroup
 */
 Core.PushGroup = new Class({
   Extends: Core.Abstract,
-  Implements: [Interfaces.Enabled, Interfaces.Children],
+  Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
   Attributes: {
     "class": {
       value: GDotUI.Theme.PushGroup["class"]
+    }
+  },
+  update: function() {
+    var buttonwidth, last;
+    buttonwidth = Math.floor(this.size / this.buttons.length);
+    this.buttons.each(function(btn) {
+      return btn.set('size', buttonwidth);
+    });
+    if (last = this.buttons.getLast()) {
+      return last.set('size', this.size - buttonwidth * (this.buttons.length - 1));
     }
   },
   initialize: function(options) {
@@ -2521,13 +2544,14 @@ Core.PushGroup = new Class({
   addItem: function(item) {
     if (this.buttons.indexOf(item) === -1) {
       this.buttons.push(item);
+      item.set('minSize', 0);
       this.addChild(item);
       item.addEvent('invoked', (function(it) {
         this.setActive(item);
         return this.fireEvent('change', it);
       }).bind(this));
-      return this.base.setStyle('width', Number.from(this.base.getStyle('width')) + item.width);
     }
+    return this.update();
   }
 });
 /*
@@ -2535,7 +2559,7 @@ Core.PushGroup = new Class({
 
 name: Core.Select
 
-description: Color data element. ( color picker )
+description: Select Element
 
 license: MIT-style license.
 
@@ -2570,7 +2594,7 @@ Prompt = new Class({
 });
 Core.Select = new Class({
   Extends: Core.Abstract,
-  Implements: [Interfaces.Controls, Interfaces.Enabled, Interfaces.Size],
+  Implements: [Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children],
   Attributes: {
     "class": {
       value: 'select'
@@ -2593,7 +2617,7 @@ Core.Select = new Class({
       value: true,
       setter: function(value) {
         if (value) {
-          this.base.adopt(this.removeIcon, this.addIcon);
+          this.adoptChildren(this.removeIcon, this.addIcon);
         } else {
           document.id(this.removeIcon).dispose();
           document.id(this.addIcon).dispose();
@@ -2707,16 +2731,25 @@ provides: Data.Abstract
 ...
 */
 Data.Abstract = new Class({
-  Implements: [Events, Options, Interfaces.Mux],
-  options: {},
+  Implements: [Events, Interfaces.Mux],
+  Attributes: {
+    "class": {
+      setter: function(value, old) {
+        this.base.removeClass(old);
+        this.base.addClass(value);
+        return value;
+      }
+    }
+  },
   initialize: function(options) {
-    this.setOptions(options);
     this.base = new Element('div');
     this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
-    this.mux();
     this.create();
+    this.mux();
+    this.setAttributes(options);
     return this;
   },
+  update: function() {},
   create: function() {},
   ready: function() {},
   toElement: function() {
@@ -2744,22 +2777,27 @@ provides: Data.Text
 */
 Data.Text = new Class({
   Extends: Data.Abstract,
-  options: {
-    "class": GDotUI.Theme.Text["class"]
+  Implements: Interfaces.Size,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Text["class"]
+    }
   },
   initialize: function(options) {
     return this.parent(options);
   },
+  update: function() {
+    return this.text.setStyle('width', this.size);
+  },
   create: function() {
-    this.base.addClass(this.options["class"]);
     this.text = new Element('textarea');
     this.base.grab(this.text);
     this.addEvent('show', (function() {
       return this.text.focus();
-    }).bindWithEvent(this));
+    }).bind(this));
     return this.text.addEvent('keyup', (function(e) {
       return this.fireEvent('change', this.text.get('value'));
-    }).bindWithEvent(this));
+    }).bind(this));
   },
   getValue: function() {
     return this.text.get('value');
@@ -4009,72 +4047,6 @@ Data.TableCell = new Class({
 /*
 ---
 
-name: Data.Select
-
-description: Color data element. ( color picker )
-
-license: MIT-style license.
-
-requires: [Data.Abstract, GDotUI]
-
-provides: Data.Select
-
-...
-*/
-Data.Select = new Class({
-  Extends: Data.Abstract,
-  options: {
-    "class": GDotUI.Theme.Select["class"],
-    list: {}
-  },
-  initialize: function(options) {
-    return this.parent(options);
-  },
-  create: function() {
-    this.base.addClass(this.options["class"]);
-    this.select = new Element('select');
-    this.base.grab(this.select);
-    new Hash(this.options.list).each((function(value, key) {
-      var option;
-      option = new Element('option');
-      option.set('value', value);
-      option.set('text', key);
-      return this.select.grab(option);
-    }).bind(this));
-    return this.select.addEvent('change', (function() {
-      this.value = this.select.get('value');
-      return this.fireEvent('change', this.value);
-    }).bindWithEvent(this));
-  },
-  setList: function(list) {
-    this.select.getElements("option").destroy();
-    return new Hash(list).each((function(value, key) {
-      var option;
-      option = new Element('option');
-      option.set('value', value);
-      option.set('text', key);
-      return this.select.grab(option);
-    }).bind(this));
-  },
-  setValue: function(value) {
-    var selected;
-    selected = this.select.getElements("option[value=" + value + "]");
-    if (selected[0] != null) {
-      this.select.getElements("option").set('selected', null);
-      selected.set('selected', true);
-      return this.value = value;
-    }
-  },
-  getValue: function() {
-    if (!(this.value != null)) {
-      this.value = this.select.get('value');
-    }
-    return this.value;
-  }
-});
-/*
----
-
 name: Data.Unit
 
 description: Color data element. ( color picker )
@@ -4087,28 +4059,6 @@ provides: Data.Unit
 
 ...
 */
-UnitTable = {
-  "px": {
-    range: [-50, 50],
-    steps: [100]
-  },
-  "%": {
-    range: [-50, 50],
-    steps: [100]
-  },
-  "em": {
-    range: [-5, 5],
-    steps: [100]
-  },
-  "s": {
-    range: [-10, 10],
-    steps: [100]
-  },
-  "default": {
-    range: [-50, 50],
-    steps: [100]
-  }
-};
 UnitList = {
   px: "px",
   '%': "%",
@@ -4136,20 +4086,25 @@ UnitList = {
 };
 Data.Unit = new Class({
   Extends: Data.Abstract,
-  options: {
-    "class": GDotUI.Theme.Unit["class"]
+  Implements: Interfaces.Size,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Unit["class"]
+    }
   },
   initialize: function(options) {
     return this.parent(options);
   },
+  update: function() {
+    return this.number.set('size', this.size - this.sel.get('size'));
+  },
   create: function() {
     this.value = 0;
-    this.base.addClass(this.options["class"]);
+    this.selectSize = 80;
     this.number = new Data.Number({
       range: [-50, 50],
       reset: true,
-      steps: [100],
-      size: 120
+      steps: [100]
     });
     this.sel = new Core.Select({
       size: 80
@@ -4169,7 +4124,8 @@ Data.Unit = new Class({
     this.sel.addEvent('change', (function() {
       return this.fireEvent('change', String(this.value) + this.sel.getValue());
     }).bindWithEvent(this));
-    return this.base.adopt(this.number, this.sel);
+    this.base.adopt(this.number, this.sel);
+    return this.update();
   },
   setValue: function(value) {
     var match, unit;

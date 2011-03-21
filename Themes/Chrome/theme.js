@@ -20,7 +20,7 @@ GDotUI.Theme={
     },
     Push:{
         'class':'push',
-        defaultText: 'Push!',
+        label: 'Push!',
     },
     PushGroup:{
         'class':'pushgroup',

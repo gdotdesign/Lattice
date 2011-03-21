@@ -73,6 +73,12 @@
   -webkit-box-shadow: $ho $vo $blur $color !important
   
 //Gradient
+=linear_gradient_hor($top: #fff,$bottom: #000)
+  :background-image -moz-linear-gradient(100% 100% 0deg, $bottom, $top)
+  :background-image -webkit-gradient(linear, right bottom, left bottom, from($top), to($bottom))
 =linear_gradient($top: #fff,$bottom: #000)
   :background-image -moz-linear-gradient(100% 100% 90deg, $bottom, $top)
   :background-image -webkit-gradient(linear, 0% 0%, 0% 100%, from($top), to($bottom))
+=linear_gradient_imp($top: #fff,$bottom: #000)
+  :background-image -moz-linear-gradient(100% 100% 90deg, $bottom, $top) !important
+  :background-image -webkit-gradient(linear, 0% 0%, 0% 100%, from($top), to($bottom)) !important

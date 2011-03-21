@@ -15,31 +15,38 @@ provides: Core.Overlay
 ###
 Core.Overlay = new Class {
   Extends: Core.Abstract
+  Impelments: Interfaces.Enabled
   Attributes: {
     class: {
       value: GDotUI.Theme.Overlay.class
+    }
+    zindex: {
+      value: 0
+      setter: (value) ->
+        @base.setStyle 'z-index', value
+        value
     }
   }
   initialize: (options) ->
     @parent options 
   create: ->
+    @enabled = true
     @base.setStyles {
       position:"fixed"
       top:0
       left:0
       right:0
       bottom:0
-      opacity:0
-      }
-    @base.addEventListener 'webkitTransitionEnd', ((e) ->
-      if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
-        @base.setStyle 'visiblity', 'hidden'
-      ).bindWithEvent @
-  hide: ->
-    @base.setStyle 'opacity', 0
-  show: ->
-    @base.setStyles {
-      visiblity: 'visible'
-      opacity: 1
     }
+    @hide()
+  show: ->
+    if @enabled
+      @base.show()
+  hide: ->
+    if @enabled
+      @base.hide()
+  toggle: ->
+    if @enabled
+      @base.toggle()
+    
 }

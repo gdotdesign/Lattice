@@ -23,6 +23,12 @@ Element.Properties.checked = {
       else
         @off()
 }
+( ->
+  oldPrototypeStart = Drag::start
+  Drag.prototype.start = ->
+    window.fireEvent 'outer'
+    oldPrototypeStart.run arguments, @
+)()
 (->
   Element.Events.outerClick = {
     base: 'mousedown'
@@ -226,10 +232,10 @@ requires: [GDotUI]
 ###
 Interfaces.Mux = new Class {
   mux: ->
-    (new Hash @ ).each( ( (value,key) ->
-      if (key.test(/^_\$/) && $type(value)=="function")
-        value.run null, @
-    ).bind @ )
+    new Hash(@).each (value,key) ->
+      if key.test(/^_\$/) && typeOf(value)=="function"
+        value.attempt null, @
+    , @
 }
 
 
@@ -275,6 +281,7 @@ Core.Abstract = new Class {
   Attributes: {
     class: {
       setter: (value, old) ->
+        value = String.from value
         @base.removeClass old
         @base.addClass value
         value
@@ -282,7 +289,7 @@ Core.Abstract = new Class {
   }
   initialize: (options) ->
     @base = new Element 'div'
-    @base.addEvent 'addedToDom', @ready.bindWithEvent @
+    @base.addEvent 'addedToDom', @ready.bind @
     @mux()
     @create()
     @setAttributes options
@@ -317,7 +324,7 @@ Interfaces.Controls = new Class {
   show: -> 
     @base.setStyle 'opacity', 1
   toggle: ->
-    if @base.getStyle ('opacity') is 0
+    if @base.getStyle('opacity') is 0
       @show()
     else
       @hide()
@@ -481,7 +488,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a >= 0 and a <= 360 then yes else no
+          (a >= 0 and a <= 360)
         else no
     }
     radius: {
@@ -489,7 +496,7 @@ Core.IconGroup = new Class {
       setter: (value) ->
         Number.from(value)
       validator: (value) ->
-        if (a = Number.from(value))? then yes else no
+        (a = Number.from(value))?
     }
     degree: {
       value: 360
@@ -497,7 +504,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a >= 0 and a <= 360 then yes else no
+          a >= 0 and a <= 360
         else no
     }
     rows: {
@@ -505,7 +512,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a > 0 then yes else no
+          a > 0
         else no
     }
     columns: {
@@ -513,7 +520,7 @@ Core.IconGroup = new Class {
         Number.from(value)
       validator: (value) ->
         if (a = Number.from(value))?
-          if a > 0 then yes else no
+          a > 0
         else no
     }
     class: {
@@ -534,6 +541,7 @@ Core.IconGroup = new Class {
       @icons.push icon
       yes
     else no
+    @update()
   removeIcon: (icon) ->
     index = @icons.indexOf icon
     if index isnt -1
@@ -542,6 +550,7 @@ Core.IconGroup = new Class {
       @icons.splice index, 1
       yes
     else no
+    @update()
   ready: ->
     @update()
   update: ->
@@ -563,7 +572,6 @@ Core.IconGroup = new Class {
           if @rows?
             rows = @rows
             columns = Math.round @icons.length/rows
-          #console.log rows, columns
           icpos = @icons.map ((item,i) ->
             if i % columns == 0
               x = 0
@@ -1244,6 +1252,12 @@ Interfaces.Size = new Class {
   _$Size: ->
     @size = Number.from getCSS("/\\.#{@get('class')}$/",'width')
     @minSize = Number.from(getCSS("/\\.#{@get('class')}$/",'min-width')) or 0
+    @addAttribute 'minSize', {
+      value: null
+      setter: (value,old) ->
+        @base.setStyle 'min-width', value
+        value      
+    }
     @addAttribute 'size', {
       value: null
       setter: (value, old) ->
@@ -1282,7 +1296,7 @@ Core.Button = new Class {
     label: {
       value: GDotUI.Theme.Button.label
       setter: (value) ->
-        @base.set 'value', value
+        @base.set 'text', value
         value
     }
     class: {
@@ -1292,8 +1306,6 @@ Core.Button = new Class {
   initialize: (attributes) ->
     @parent attributes 
   create: ->
-    delete @base
-    @base = new Element "input", {type:'button'}
     @base.addEvent 'click', ((e) ->
       if @enabled
         @fireEvent 'invoked', [@, e]
@@ -1316,18 +1328,10 @@ provides: [Core.Picker, outerClick]
 
 ...
 ###
-( ->
-  oldPrototypeStart = Drag::start
-  Drag.prototype.start = ->
-    window.fireEvent 'outer'
-    oldPrototypeStart.run arguments, @
-)()
-
 Core.Picker = new Class {
   Extends: Core.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
-  Binds: ['show'
-          'hide']
+  Binds: ['show','hide']
   Attributes: {
     class: {
       value: GDotUI.Theme.Picker.class
@@ -1339,6 +1343,11 @@ Core.Picker = new Class {
     }
     position: {
       value: {x:'auto',y:'auto'}
+    }
+    event: {
+      value: GDotUI.Theme.Picker.event
+      setter: (value, old) ->
+        value
     }
   }
   options:{
@@ -1606,11 +1615,11 @@ Core.Slot = new Class {
     @list = new Iterable.List()
     @list.base.addEvent 'addedToDom', ( ->
       @readyList()
-    ).bindWithEvent @
+    ).bind @
     @list.addEvent 'select', ((item) ->
       @update()
       @fireEvent 'change', item
-    ).bindWithEvent @
+    ).bind @
   ready: ->
     @base.adopt @list.base, @overlay
   check: (el,e) ->
@@ -1638,18 +1647,18 @@ Core.Slot = new Class {
       'bottom': 0
     
     }
-    @overlay.addEvent 'mousewheel',@mouseWheel.bindWithEvent @
+    @overlay.addEvent 'mousewheel',@mouseWheel.bind @
     @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
     @drag.addEvent 'drag', @check
     @drag.addEvent 'beforeStart',( ->
       if not @enabled
         @disabledTop = @list.base.getStyle 'top' 
       @list.base.removeTransition()
-    ).bindWithEvent @
+    ).bind @
     @drag.addEvent 'complete', ( ->
       @dragging = off
       @update()
-    ).bindWithEvent @
+    ).bind @
     @update()
   mouseWheel: (e) ->
     if @enabled
@@ -1863,8 +1872,6 @@ provides: Core.Toggler
 
 ...
 ###
-
-
 Core.Toggler = new Class {
   Extends: Core.Abstract
   Implements:[
@@ -1992,33 +1999,40 @@ provides: Core.Overlay
 ###
 Core.Overlay = new Class {
   Extends: Core.Abstract
+  Impelments: Interfaces.Enabled
   Attributes: {
     class: {
       value: GDotUI.Theme.Overlay.class
+    }
+    zindex: {
+      value: 0
+      setter: (value) ->
+        @base.setStyle 'z-index', value
+        value
     }
   }
   initialize: (options) ->
     @parent options 
   create: ->
+    @enabled = true
     @base.setStyles {
       position:"fixed"
       top:0
       left:0
       right:0
       bottom:0
-      opacity:0
-      }
-    @base.addEventListener 'webkitTransitionEnd', ((e) ->
-      if e.propertyName == "opacity" and @base.getStyle('opacity') == 0
-        @base.setStyle 'visiblity', 'hidden'
-      ).bindWithEvent @
-  hide: ->
-    @base.setStyle 'opacity', 0
-  show: ->
-    @base.setStyles {
-      visiblity: 'visible'
-      opacity: 1
     }
+    @hide()
+  show: ->
+    if @enabled
+      @base.show()
+  hide: ->
+    if @enabled
+      @base.hide()
+  toggle: ->
+    if @enabled
+      @base.toggle()
+    
 }
 
 
@@ -2027,7 +2041,7 @@ Core.Overlay = new Class {
 
 name: Core.Push
 
-description: Basic button element.
+description: Toggle button 'push' element.
 
 license: MIT-style license.
 
@@ -2043,12 +2057,13 @@ Core.Push = new Class {
   Attributes: {
     state: {
       getter: ->
-        if @base.hasClass 'pushed' then true else false
+        @base.hasClass 'pushed' 
     }
     label: {
-      value: GDotUI.Theme.Push.defaultText
+      value: GDotUI.Theme.Push.label
       setter: (value) ->
         @base.set 'text', value
+        value
     }
     class: {
       value: GDotUI.Theme.Push.class
@@ -2077,7 +2092,7 @@ Core.Push = new Class {
 
 name: Core.PushGroup
 
-description: Basic button element.
+description: PushGroup element.
 
 license: MIT-style license.
 
@@ -2103,8 +2118,7 @@ Core.PushGroup = new Class {
     buttonwidth = Math.floor(@size / @buttons.length)
     @buttons.each (btn) ->
       btn.set 'size', buttonwidth
-    last = @buttons.getLast()
-    if last?
+    if last = @buttons.getLast()
       last.set 'size', @size-buttonwidth*(@buttons.length-1)
   initialize: (options) ->
     @buttons = []
@@ -2121,6 +2135,7 @@ Core.PushGroup = new Class {
   addItem: (item) ->
     if @buttons.indexOf(item) is -1
       @buttons.push item  
+      item.set 'minSize', 0
       @addChild item
       item.addEvent 'invoked', ( (it) ->
         @setActive item
@@ -2135,7 +2150,7 @@ Core.PushGroup = new Class {
 
 name: Core.Select
 
-description: Color data element. ( color picker )
+description: Select Element
 
 license: MIT-style license.
 
@@ -2157,7 +2172,7 @@ Prompt = new Class {
     @input = new Element 'input',{type:'text'}
     @button = new Element 'input', {type:'button'}
     @base.adopt @label,@input,@button;
-    @picker = new Core.Picker();
+    @picker = new Core.Picker()
     @picker.setContent @base
 }
 Core.Select = new Class {
@@ -2176,7 +2191,7 @@ Core.Select = new Class {
     }
     selected: {
       getter: ->
-        @list.get('selected')
+        @list.get 'selected'
     }
     editable: {
       value: yes
@@ -2300,6 +2315,7 @@ Data.Abstract = new Class {
     @mux()
     @setAttributes options
     @
+  update: ->
   create: ->
   ready: ->
   toElement: ->
@@ -2327,21 +2343,25 @@ provides: Data.Text
 ###
 Data.Text = new Class {
   Extends: Data.Abstract
-  options: {
-    class: GDotUI.Theme.Text.class
+  Implements: Interfaces.Size  
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Text.class
+    }
   }
   initialize: (options) ->
     @parent options
+  update: ->
+    @text.setStyle 'width', @size
   create: ->
-    @base.addClass @options.class
     @text = new Element 'textarea'
     @base.grab @text
     @addEvent 'show', ( ->
       @text.focus()
-      ).bindWithEvent this
+      ).bind this
     @text.addEvent 'keyup',( (e) ->
       @fireEvent 'change', @text.get('value')
-    ).bindWithEvent this
+    ).bind this
   getValue: ->
     @text.get('value')
   setValue: (text) ->
@@ -3366,63 +3386,6 @@ Data.TableCell = new Class {
 }
 
 
-###
----
-
-name: Data.Select
-
-description: Color data element. ( color picker )
-
-license: MIT-style license.
-
-requires: [Data.Abstract, GDotUI]
-
-provides: Data.Select
-
-...
-###
-Data.Select = new Class {
-  Extends:Data.Abstract
-  options:{
-    class: GDotUI.Theme.Select.class
-    list: {}
-  }
-  initialize: (options) ->
-    @parent(options)
-  create: ->
-    @base.addClass @options.class
-    @select = new Element 'select'
-    @base.grab @select
-    new Hash(@options.list).each ( (value,key) ->
-      option = new Element 'option'
-      option.set 'value', value
-      option.set 'text', key
-      @select.grab option
-    ).bind @
-    @select.addEvent 'change', ( ->
-      @value = @select.get 'value'
-      @fireEvent 'change', @value
-    ).bindWithEvent @
-  setList: (list) ->
-    @select.getElements("option").destroy()
-    new Hash(list).each ( (value,key) ->
-      option = new Element 'option'
-      option.set 'value', value
-      option.set 'text', key
-      @select.grab option
-    ).bind @
-  setValue: (value) ->
-    selected = @select.getElements "option[value=#{value}]"
-    if selected[0]?
-      @select.getElements("option").set 'selected', null
-      selected.set 'selected', true
-      @value = value
-  getValue: ->
-    if not @value?
-      @value = @select.get 'value'
-    @value
-}
-    
 
 
 ###
@@ -3440,28 +3403,6 @@ provides: Data.Unit
 
 ...
 ###
-UnitTable = {
-  "px":{
-    range:[-50,50]
-    steps:[100]
-  }
-  "%":{
-    range:[-50,50]
-    steps:[100]
-  }
-  "em":{
-    range:[-5,5]
-    steps:[100]
-  }
-  "s":{
-    range:[-10,10]
-    steps:[100]
-  }
-  "default":{
-    range:[-50,50]
-    steps:[100]
-  }
-}
 UnitList = {
   px: "px"
   '%': "%"
@@ -3498,7 +3439,6 @@ Data.Unit = new Class {
   initialize: (options) ->
     @parent options
   update: ->
-    console.log @size-@sel.get('size')
     @number.set 'size', @size-@sel.get('size')
   create: ->
     @value = 0

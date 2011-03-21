@@ -15,21 +15,25 @@ provides: Data.Text
 ###
 Data.Text = new Class {
   Extends: Data.Abstract
-  options: {
-    class: GDotUI.Theme.Text.class
+  Implements: Interfaces.Size  
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Text.class
+    }
   }
   initialize: (options) ->
     @parent options
+  update: ->
+    @text.setStyle 'width', @size
   create: ->
-    @base.addClass @options.class
     @text = new Element 'textarea'
     @base.grab @text
     @addEvent 'show', ( ->
       @text.focus()
-      ).bindWithEvent this
+      ).bind this
     @text.addEvent 'keyup',( (e) ->
       @fireEvent 'change', @text.get('value')
-    ).bindWithEvent this
+    ).bind this
   getValue: ->
     @text.get('value')
   setValue: (text) ->

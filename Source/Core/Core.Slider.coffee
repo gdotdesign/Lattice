@@ -27,6 +27,7 @@ Core.Slider = new Class {
         @base.addClass value
         switch value
           when 'horizontal'
+            @minSize = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'min-width')
             @modifier = 'width'
             @drag.options.modifiers = {x: 'width',y:''}
             @drag.options.invert = false
@@ -39,6 +40,7 @@ Core.Slider = new Class {
               right: 'auto'
             }
           when 'vertical'
+            @minSize = Number.from getCSS("/\\.#{@get('class')}.vertical$/",'min-hieght')
             @modifier = 'height'
             @drag.options.modifiers = {x: '',y: 'height'}
             @drag.options.invert = true
@@ -72,9 +74,10 @@ Core.Slider = new Class {
       setter: (value, old) ->
         if !value?
           value = old
+        if @minSize > value
+          value = @minSize
         @base.setStyle @modifier, value
-        if @reset
-          @progress.setStyle @modifier, if @reset then value/2 else 0
+        @progress.setStyle @modifier, if @reset then value/2 else @value/@steps*value
         value
     }
   }
@@ -86,15 +89,16 @@ Core.Slider = new Class {
     if @reset
       @value = Number.from position
     else
-      position = Math.round((position/@get('steps'))*@size)
+      position = Math.round((position/@steps)*@size)
       percent = Math.round((position/@size)*@get('steps'))
       if position < 0
         @progress.setStyle @modifier, 0+"px"
       if position > @size
         @progress.setStyle @modifier, @size+"px"
       if not(position < 0) and not(position > @size)
-        @progress.setStyle @modifier, (percent/@get('steps'))*@size+"px"
-    if @get('reset') then @value else Math.round((position/@size)*@get('steps'))
+        @progress.setStyle @modifier, (percent/@steps)*@size+"px"
+      @value = Math.round((position/@size)*@steps)
+    @value
   create: ->
 
     @base.setStyle 'position', 'relative'
@@ -133,7 +137,9 @@ Core.Slider = new Class {
         else
           if @reset
             @value += offset
-        @fireEvent 'step', if @reset then @value else Math.round((pos/@size)*@steps)
+        if not @reset
+          @value = Math.round((pos/@size)*@steps)
+        @fireEvent 'step', @value
       else
         el.setStyle @modifier, @disabledTop
     ).bind @

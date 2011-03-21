@@ -16,16 +16,18 @@ provides: Core.Tabs
 Core.Tabs = new Class {
   Extends: Core.Abstract
   Binds:['remove','change']
+  Attributes: {
+    class: {
+      value:  GDotUI.Theme.Tabs.class
+    }
+  }
   options:{
-    class: GDotUI.Theme.Tabs.class
     autoRemove: on
   }
   initialize: (options) ->
     @tabs = []
     @active = null
     @parent options
-  create: ->
-    @base.addClass @options.class
   add: (tab) ->
     if @tabs.indexOf tab == -1
       @tabs.push tab

@@ -36,11 +36,11 @@ Core.Slot = new Class {
     @list = new Iterable.List()
     @list.base.addEvent 'addedToDom', ( ->
       @readyList()
-    ).bindWithEvent @
+    ).bind @
     @list.addEvent 'select', ((item) ->
       @update()
       @fireEvent 'change', item
-    ).bindWithEvent @
+    ).bind @
   ready: ->
     @base.adopt @list.base, @overlay
   check: (el,e) ->
@@ -68,18 +68,18 @@ Core.Slot = new Class {
       'bottom': 0
     
     }
-    @overlay.addEvent 'mousewheel',@mouseWheel.bindWithEvent @
+    @overlay.addEvent 'mousewheel',@mouseWheel.bind @
     @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
     @drag.addEvent 'drag', @check
     @drag.addEvent 'beforeStart',( ->
       if not @enabled
         @disabledTop = @list.base.getStyle 'top' 
       @list.base.removeTransition()
-    ).bindWithEvent @
+    ).bind @
     @drag.addEvent 'complete', ( ->
       @dragging = off
       @update()
-    ).bindWithEvent @
+    ).bind @
     @update()
   mouseWheel: (e) ->
     if @enabled
