@@ -14,7 +14,6 @@ provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Ti
 ...
 ###
 Pickers.Base = new Class {
-  Implements:Options
   Delegates:{
     picker:['attach'
             'detach'
@@ -25,17 +24,20 @@ Pickers.Base = new Class {
           'disable'
           'enable']
   }
-  options:{
-    type:''
+  Attributes: {
+    type: {
+      value: null
+    }
   }
+  update: ->
   initialize: (options) ->
-    @setOptions options
+    @setAttributes options
     @picker = new Core.Picker()
-    @data = new Data[@options.type]()
-    @picker.setContent @data
+    @data = new Data[@type]()
+    @picker.set 'content', @data
     @
 }
-###
+
 Pickers.Color = new Pickers.Base {type:'Color'}
 Pickers.Number = new Pickers.Base {type:'Number'}
 Pickers.Time = new Pickers.Base {type:'Time'}
@@ -44,6 +46,6 @@ Pickers.Date = new Pickers.Base {type:'Date'}
 Pickers.DateTime = new Pickers.Base {type:'DateTime'}
 Pickers.Table = new Pickers.Base {type:'Table'}
 Pickers.Unit = new Pickers.Base {type:'Unit'}
-Pickers.Select = new Pickers.Base {type:'Select'}
+#Pickers.Select = new Pickers.Base {type:'Select'}
 Pickers.List = new Pickers.Base {type:'List'}
-###
+

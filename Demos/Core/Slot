@@ -2,7 +2,7 @@
 window.addEvent('domready', function(){
   group = new Core.Slot();
   for(i=0;i<5;i++){
-    group.addItem(new Iterable.ListItem({title:i,removeable:false}));  
+    group.addItem(new Iterable.ListItem({label:i,removeable:false}));  
   }
   $$(".demo").grab(group);
 });

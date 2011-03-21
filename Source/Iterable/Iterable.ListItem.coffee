@@ -11,12 +11,12 @@ requires: Core.Abstract
 
 provides: Iterable.ListItem
 
-requires: [GDotUI]
+requires: [GDotUI, Interfaces.Draggable]
 ...
 ###
 Iterable.ListItem = new Class {
   Extends:Core.Abstract
-  Implements: [ Interfaces.Draggable
+  Implements: [Interfaces.Draggable
                Interfaces.Enabled ]
   Attributes: {
     label: {

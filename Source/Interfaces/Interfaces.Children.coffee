@@ -23,4 +23,8 @@ Interfaces.Children = new Class {
   addChild: (el) ->
     @children.push el
     @base.grab el
+  removeChild: (el) ->
+    if @children.contains(el)
+      @children.erease el
+      el.dispose()
 }

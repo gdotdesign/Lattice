@@ -9,14 +9,14 @@ license: MIT-style license.
 
 requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List]
 
-provides: Core.Select
+provides: [Core.Select]
 
 ...
 ###
 Prompt = new Class {
   Extends:Core.Abstract
   Delegates: {
-    picker: ['justShow','hide','justAttach']
+    picker: ['show','hide','attach']
   }
   initialize: (options) ->
     @parent options
@@ -26,7 +26,7 @@ Prompt = new Class {
     @button = new Element 'input', {type:'button'}
     @base.adopt @label,@input,@button;
     @picker = new Core.Picker()
-    @picker.setContent @base
+    @picker.set 'content', @base
 }
 Core.Select = new Class {
   Extends:Core.Abstract
@@ -99,7 +99,7 @@ Core.Select = new Class {
     @addIcon.addEvent 'invoked',( (el,e)->
       e.stop()
       if @enabled
-        @prompt.justShow()
+        @prompt.show()
       #a = window.prompt('something')
       #if a
       #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
@@ -107,23 +107,19 @@ Core.Select = new Class {
     ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
-    @picker.attachedTo = @base
-    @base.addEvent 'click', ( (e) ->
-      if @enabled
-        @picker.show e
-    ).bind @
+    @picker.attach @base
     @list = new Iterable.List({class:'select-list'})
-    @picker.setContent @list.base
+    @picker.set 'content', @list
     @base.adopt @text
     
     @prompt = new Prompt();
-    @prompt.justAttach @base
+    @prompt.attach @base, false
     @list.addEvent 'select', ( (item,e)->
       if e?
         e.stop()
       @text.set 'text', item.label
       @fireEvent 'change', item.label
-      @picker.forceHide()
+      @picker.hide e, yes
     ).bind @
     @update();
     

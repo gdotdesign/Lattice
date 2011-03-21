@@ -1,7 +1,0 @@
----JS
-window.addEvent('domready', function(){
-  float = new Core.Float({resizeable:true, ghost:true, editable:true})
-  date = new Data.DateTime();
-  float.setContent(date)
-  float.show()
-});

@@ -1,36 +1,5 @@
----html
-<div id="vHolder"></div>
-<div id="over">
-  <div id="cpick"></div>
-</div>
-<div class="clear"></div>
----css
-#cpick{
-  position:relative;
-  width: 1000px;
-  height: 1000px;
-  background-color: #0085b5;
-  -webkit-background-size: 60px 60px;
-  background-image:  -webkit-gradient(linear, 0 0, 100% 100%, color-stop(.25, rgba(255, 255, 255, .1)), color-stop(.25, transparent), color-stop(.5, transparent), color-stop(.5, rgba(255, 255, 255, .1)), color-stop(.75, rgba(255, 255, 255, .1)), color-stop(.75, transparent), to(transparent));
-}
-#over{
-  overflow: hidden;
-  width: 200px;
-  height: 200px;
-  border: 1px dashed #aaa;
-}
 ---JS
 window.addEvent('domready', function(){
-  slider = new Core.Slider({mode:'vertical'});
-  slider1 = new Core.Slider();
-  $("vHolder").grab(slider);
-  $$($("vHolder"),$("over")).setStyle('float','left')
-  $$(".demo").grab(slider1);
-  slider1.base.setStyles({position:'relative',left:'12px'});
-  slider1.addEvent('step', function(e){
-    $("cpick").setStyle('left',Number.from(-(($("cpick").scrollWidth-200)*e/100)))
-  });
-  slider.addEvent('step', function(e){
-    $("cpick").setStyle('top',Number.from(-(($("cpick").scrollHeight-200)*e/100)))
-  });
+  slider = new Core.Slider();
+  $$(".demo").grab(slider);
 });

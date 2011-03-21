@@ -16,7 +16,7 @@ provides: [Core.Picker, outerClick]
 Core.Picker = new Class {
   Extends: Core.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
-  Binds: ['show','hide']
+  Binds: ['show','hide','delegate']
   Attributes: {
     class: {
       value: GDotUI.Theme.Picker.class
@@ -34,18 +34,27 @@ Core.Picker = new Class {
       setter: (value, old) ->
         value
     }
-  }
-  options:{
-    event: GDotUI.Theme.Picker.event
-    picking: GDotUI.Theme.Picker.picking
+    content: {
+      value: null
+      setter: (value, old)->
+        if old?
+          if old["$events"]
+            old.removeEvent 'change', @delegate
+          @removeChild old
+        @addChild value
+        if value["$events"]
+          value.addEvent 'change', @delegate
+        value
+    }
+    picking: {
+      value: GDotUI.Theme.Picker.picking
+    }
   }
   initialize: (options) ->
     @parent options
   create: ->
     @base.setStyle 'position', 'absolute'
-  onReady: ->
-    if not @base.hasChild @contentElement
-       @addChild @contentElement
+  ready: ->
     winsize = window.getSize()
     winscroll = window.getScroll()
     asize = @attachedTo.getSize()
@@ -54,19 +63,9 @@ Core.Picker = new Class {
     x = ''
     y = ''
     if @position.x is 'auto' and @position.y is 'auto'
-      if (position.x+size.x+asize.x) > (winsize.x-winscroll.x)
-        x = 'left'
-      else
-        x = 'right'
-             
-      if (position.y+size.y+asize.y) > (winsize.y-winscroll.y)
-        y = 'top'
-      else
-        y = 'bottom'
-
-      if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0)
-        y = 'center'
-      
+      if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then x = 'left' else x = 'right'          
+      if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then y = 'top' else y = 'bottom'
+      if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0) then y = 'center'    
       position = {x:x,y:y}
     else
       position = @position
@@ -93,57 +92,34 @@ Core.Picker = new Class {
       position: position
       offset: ofa
     }
+  attach: (el,auto) ->
+    auto = if !auto? then true else auto
+    if @attachedTo?
+      @detach()
+    @attachedTo = el
+    if auto
+      el.addEvent @event, @show
   detach: ->
-    if @contentElement?
-      @contentElement.removeEvents 'change'
     if @attachedTo?
-      @attachedTo.removeEvent @options.event, @show
+      @attachedTo.removeEvent @event, @show
       @attachedTo = null
-      @fireEvent 'detached'
-  justAttach: (input)->
+  delegate: ->
     if @attachedTo?
-      @detach()
-    @attachedTo = input
-  justShow: ->
-    document.getElement('body').grab @base
-    @base.addEvent 'outerClick', @hide.bindWithEvent @
-    @onReady()
-  attach: (input) ->
-    if @attachedTo?
-      @detach()
-    input.addEvent @options.event, @show
-    if @contentElement?
-      @contentElement.addEvent 'change', ((value) ->
-        @attachedTo.set 'value', value
-        @attachedTo.fireEvent 'change', value
-      ).bindWithEvent @
-    @attachedTo = input
-  attachAndShow: (el, e, callback) ->
-    @contentElement.readyCallback = callback
-    @attach el
-    @show e
+      @attachedTo.fireEvent 'change', arguments
   show: (e) ->
-    document.getElement('body').grab @base
+    document.body.grab @base
     if @attachedTo?
-      @attachedTo.addClass @options.picking
-    if e?
-      if e.stop?
-        e.stop()
-    if @contentElement?
-      @contentElement.fireEvent 'show'
-    @base.addEvent 'outerClick', @hide.bindWithEvent @
-    @onReady()
-  forceHide: ->
-    if @attachedTo?
-      @attachedTo.removeClass @options.picking
-    @base.dispose()
-  hide: (e) ->
-    if e?
+      @attachedTo.addClass @picking
+    if e? then if e.stop? then  e.stop()
+    @base.addEvent 'outerClick', @hide
+  hide: (e,force) ->
+    if force?
+      if @attachedTo?
+          @attachedTo.removeClass @picking
+        @base.dispose()
+    else if e?
       if @base.isVisible() and not @base.hasChild(e.target)
         if @attachedTo?
-          @attachedTo.removeClass @options.picking
-        #@detach()
+          @attachedTo.removeClass @picking
         @base.dispose()
-  setContent: (element) ->
-    @contentElement = element
 }

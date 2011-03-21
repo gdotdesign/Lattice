@@ -447,6 +447,10 @@ Interfaces.Children = new Class {
   addChild: (el) ->
     @children.push el
     @base.grab el
+  removeChild: (el) ->
+    if @children.contains(el)
+      @children.erease el
+      el.dispose()
 }
 
 
@@ -910,333 +914,6 @@ Core.Slider = new Class {
 ###
 ---
 
-name: Interfaces.Draggable
-
-description: Porived dragging for elements that implements it.
-
-license: MIT-style license.
-
-provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
-
-requires: [GDotUI]
-...
-###
-Drag.Float = new Class {
-	Extends: Drag.Move
-	initialize: (el,options) ->
-		@parent el, options
-	start: (event) ->
-		if @options.target == event.target
-			@parent event
-}
-Drag.Ghost = new Class {
-	Extends: Drag.Move
-	options: {
-	  opacity: 0.65
-		pos: false
-		remove: ''}
-	start: (event) ->
-		if not event.rightClick
-			@droppables = $$(@options.droppables)
-			@ghost()
-			@parent(event)
-	cancel: (event) ->
-		if event
-			@deghost()
-		@parent(event)
-	stop: (event) ->
-		@deghost()
-		@parent(event)
-	ghost: ->
-		@element = (@element.clone()
-		).setStyles({
-			'opacity': @options.opacity,
-			'position': 'absolute',
-			'z-index': 5003,
-			'top': @element.getCoordinates()['top'],
-			'left': @element.getCoordinates()['left']
-			'-webkit-transition-duration': '0s'
-		}).inject(document.body).store('parent', @element)
-		@element.getElements(@options.remove).dispose()	
-	deghost: ->
-		e = @element.retrieve 'parent'
-		newpos = @element.getPosition e.getParent()
-		if @options.pos && @overed==null
-			e.setStyles({
-			'top': newpos.y,
-			'left': newpos.x
-			})
-		@element.destroy();
-		@element = e;
-}
-Interfaces.Draggable = new Class {
-	Implements: Options
-	options:{
-		draggable: off
-		ghost: off
-		removeClasses: ''
-	}
-	_$Draggable: ->
-		if @options.draggable
-			if @handle == null
-				@handle = @base
-			if @options.ghost
-				@drag = new Drag.Ghost @base, {target:@handle, handle:@handle, remove:@options.removeClasses, droppables: @options.droppables, precalculate: on, pos:true}
-			else
-				@drag = new Drag.Float @base, {target:@handle, handle:@handle}
-			@drag.addEvent 'drop', (->
-				@fireEvent 'dropped', arguments
-			).bindWithEvent @
-}
-
-
-###
----
-
-name: Interfaces.Restoreable
-
-description: Interface to store and restore elements status and position after refresh.
-
-license: MIT-style license.
-
-provides: Interfaces.Restoreable
-
-requires: [GDotUI]
-
-...
-###
-Interfaces.Restoreable = new Class {
-  Impelments:[Options]
-  Binds: ['savePosition']
-  options:{
-    cookieID:null
-  }
-  _$Restoreable: ->
-    @addEvent 'dropped', @savePosition
-    if @options.resizeable
-      @sizeDrag.addEvent 'complete', ( ->
-        window.localStorage.setItem @options.cookieID+'.height', @scrollBase.getSize().y
-      ).bindWithEvent @
-  saveState: ->
-    state = if @base.isVisible() then 'visible' else 'hidden'
-    if @options.cookieID isnt null
-      window.localStorage.setItem @options.cookieID + '.state', state
-  savePosition: ->
-    if @options.cookieID isnt null
-      position = @base.getPosition()
-      state = if @base.isVisible() then 'visible' else 'hidden'
-      window.localStorage.setItem @options.cookieID + '.x', position.x
-      window.localStorage.setItem @options.cookieID + '.y', position.y
-      window.localStorage.setItem @options.cookieID + '.state', state
-  loadPosition: (loadstate)->
-    if @options.cookieID isnt null
-      @base.setStyle 'top', window.localStorage.getItem(@.options.cookieID + '.y') + "px"
-      @base.setStyle 'left', window.localStorage.getItem(@.options.cookieID + '.x') + "px"
-      @scrollBase.setStyle 'height', window.localStorage.getItem(@.options.cookieID +'.height') + "px"
-      if window.localStorage.getItem(@options.cookieID+'.x') is null
-        @center()
-      if window.localStorage.getItem(@.options.cookieID+'.state') == "hidden" 
-        @hide()
-}
-
-
-###
----
-
-name: Core.Float
-
-description: Core.Float is a "floating" panel, with controls. Think of it as a window, just more awesome.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider, Core.IconGroup, GDotUI]
-
-provides: Core.Float
-
-...
-###
-Core.Float = new Class {
-  Extends:Core.Abstract
-  Implements:[Interfaces.Draggable
-              Interfaces.Restoreable]
-  Binds:['resize'
-         'mouseEnter'
-         'mouseLeave'
-         'hide'
-         ]
-  options:{
-    classes:{
-      class: GDotUI.Theme.Float.class
-      controls: GDotUI.Theme.Float.controls
-      content: GDotUI.Theme.Float.content
-      handle: GDotUI.Theme.Float.topHandle
-      bottom: GDotUI.Theme.Float.bottomHandle
-      active: GDotUI.Theme.Global.active
-      inactive: GDotUI.Theme.Global.inactive
-    }
-    iconOptions: GDotUI.Theme.Float.iconOptions
-    icons:{
-      remove: GDotUI.Theme.Icons.remove
-      edit: GDotUI.Theme.Icons.edit
-    }
-    closeable: on
-    resizeable: off
-    editable: off
-    draggable: on
-    ghost: off
-    overlay: off
-  }
-  initialize: (options) ->
-    @showSilder = off
-    @readyr = no
-    @parent options
-  ready: ->
-    @base.adopt @controls
-    if @contentElement?
-      @content.grab @contentElement
-    if @options.restoreable
-      @loadPosition()
-    else
-      @base.position()
-    if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
-          if not @showSlider
-            @showSlider = on
-            if @mouseisover
-              @slider.show()
-    @parent()
-    @readyr = yes
-  create: ->
-    @base.addClass @options.classes.class
-    @base.setStyle 'position', 'fixed'
-    @base.setPosition {x:0,y:0}
-    @base.toggleClass @options.classes.inactive
-    
-    @controls =  new Element 'div', {class: @options.classes.controls}
-    @content = new Element 'div', {'class': @options.classes.content}
-    @handle = new Element 'div', {'class': @options.classes.handle}
-    @bottom = new Element 'div', {'class': @options.classes.bottom}
-
-    @base.adopt @handle, @content
-    
-    sliderSize = getCSS("/\\.#{@options.classes.class} .#{GDotUI.Theme.Slider.classes.base}$/",'height') or 100
-    console.log sliderSize
-    @slider = new Core.Slider {scrollBase:@content, range:[0,100], steps: 100, mode:'vertical', size: sliderSize}
-    @slider.addEvent 'complete', ( ->
-      console.log 'complete'
-      @scrolling = off
-    ).bind @
-    @slider.addEvent 'step', ((e)->
-      @scrollBase.scrollTop = ((@scrollBase.scrollHeight-@scrollBase.getSize().y)/100)*e
-      @scrolling = on
-    ).bind @
-    
-    @slider.hide()
-    
-    @icons = new Core.IconGroup @options.iconOptions
-    @controls.adopt @icons, @slider
-    
-    @close = new Core.Icon {image: @options.icons.remove}
-    @close.addEvent 'invoked', ( ->
-      @hide()
-    ).bindWithEvent @
-
-    @edit = new Core.Icon {image:@options.icons.edit}
-    @edit.addEvent 'invoked', ( ->
-      if @contentElement?
-        if @contentElement.toggleEdit?
-          @contentElement.toggleEdit()
-        @fireEvent('edit')
-    ).bindWithEvent @
-    
-    if @options.closeable
-      @icons.addIcon @close
-    if @options.editable
-      @icons.addIcon @edit
-    
-    @icons.hide()
-    
-    if @options.scrollBase? 
-      @scrollBase = @options.scrollBase
-    else
-      @scrollBase = @content
-    
-    @scrollBase.setStyle 'overflow', 'hidden'
-    
-    if @options.resizeable
-      @base.grab @bottom
-      @sizeDrag = new Drag @scrollBase, {handle:@bottom, modifiers:{x:'',y:'height'}}
-      @sizeDrag.addEvent 'drag', ( ->
-        if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
-          if not @showSlider
-            @showSlider = on
-            if @mouseisover
-              @slider.show()
-        else
-          if @showSlider
-            @showSlider = off
-            @slider.hide()
-        ).bindWithEvent @
-        @scrollBase.addEvent 'mousewheel',( (e) ->
-          @scrollBase.scrollTop = @scrollBase.scrollTop+e.wheel*12
-          @slider.set @scrollBase.scrollTop/(@scrollBase.scrollHeight-@scrollBase.getSize().y)*100
-        ).bindWithEvent @
-    @base.addEvent 'mouseenter', ( ->
-      @base.toggleClass @options.classes.active
-      @base.toggleClass @options.classes.inactive
-      $clear @iconsTimout
-      $clear @sliderTimout
-      if @showSlider
-        @slider.show()
-      @icons.show()
-      @mouseisover = on 
-    ).bindWithEvent @
-    @base.addEvent 'mouseleave', ( ->
-      @base.toggleClass @options.classes.active
-      @base.toggleClass @options.classes.inactive
-      if not @scrolling
-        if @showSlider
-          @sliderTimout = @slider.hide.delay 200, @slider
-      @iconsTimout = @icons.hide.delay 200, @icons
-      @mouseisover = off 
-    ).bindWithEvent @
-    if @options.overlay
-      @overlay = new Core.Overlay()
-  show: ->
-    if @options.overlay
-      document.getElement('body').grab @overlay
-      @overlay.show()
-    document.getElement('body').grab @base
-    @saveState()
-  hide: ->
-    if @options.overlay
-      @overlay.base.dispose()
-    @base.dispose()
-    @saveState()
-  toggle: (el) ->
-    if @base.isVisible()
-      @hide el
-    else
-      @show el
-  setContent: (element) -> 
-    @contentElement = element
-    if @readyr
-      @content.getChildren().dispose()
-      @content.grab @contentElement
-      if @scrollBase.getScrollSize().y > @scrollBase.getSize().y
-        @showSlider = on
-        if @mouseisover
-          @slider.show()
-      else
-        @showSlider = off
-        @slider.hide()
-  center: ->
-    @base.position()
-}
-
-
-###
----
-
 name: Interfaces.Size
 
 description: Size minsize from css....
@@ -1331,7 +1008,7 @@ provides: [Core.Picker, outerClick]
 Core.Picker = new Class {
   Extends: Core.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
-  Binds: ['show','hide']
+  Binds: ['show','hide','delegate']
   Attributes: {
     class: {
       value: GDotUI.Theme.Picker.class
@@ -1349,18 +1026,27 @@ Core.Picker = new Class {
       setter: (value, old) ->
         value
     }
-  }
-  options:{
-    event: GDotUI.Theme.Picker.event
-    picking: GDotUI.Theme.Picker.picking
+    content: {
+      value: null
+      setter: (value, old)->
+        if old?
+          if old["$events"]
+            old.removeEvent 'change', @delegate
+          @removeChild old
+        @addChild value
+        if value["$events"]
+          value.addEvent 'change', @delegate
+        value
+    }
+    picking: {
+      value: GDotUI.Theme.Picker.picking
+    }
   }
   initialize: (options) ->
     @parent options
   create: ->
     @base.setStyle 'position', 'absolute'
-  onReady: ->
-    if not @base.hasChild @contentElement
-       @addChild @contentElement
+  ready: ->
     winsize = window.getSize()
     winscroll = window.getScroll()
     asize = @attachedTo.getSize()
@@ -1369,19 +1055,9 @@ Core.Picker = new Class {
     x = ''
     y = ''
     if @position.x is 'auto' and @position.y is 'auto'
-      if (position.x+size.x+asize.x) > (winsize.x-winscroll.x)
-        x = 'left'
-      else
-        x = 'right'
-             
-      if (position.y+size.y+asize.y) > (winsize.y-winscroll.y)
-        y = 'top'
-      else
-        y = 'bottom'
-
-      if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0)
-        y = 'center'
-      
+      if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then x = 'left' else x = 'right'          
+      if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then y = 'top' else y = 'bottom'
+      if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0) then y = 'center'    
       position = {x:x,y:y}
     else
       position = @position
@@ -1408,59 +1084,36 @@ Core.Picker = new Class {
       position: position
       offset: ofa
     }
+  attach: (el,auto) ->
+    auto = if !auto? then true else auto
+    if @attachedTo?
+      @detach()
+    @attachedTo = el
+    if auto
+      el.addEvent @event, @show
   detach: ->
-    if @contentElement?
-      @contentElement.removeEvents 'change'
     if @attachedTo?
-      @attachedTo.removeEvent @options.event, @show
+      @attachedTo.removeEvent @event, @show
       @attachedTo = null
-      @fireEvent 'detached'
-  justAttach: (input)->
+  delegate: ->
     if @attachedTo?
-      @detach()
-    @attachedTo = input
-  justShow: ->
-    document.getElement('body').grab @base
-    @base.addEvent 'outerClick', @hide.bindWithEvent @
-    @onReady()
-  attach: (input) ->
-    if @attachedTo?
-      @detach()
-    input.addEvent @options.event, @show
-    if @contentElement?
-      @contentElement.addEvent 'change', ((value) ->
-        @attachedTo.set 'value', value
-        @attachedTo.fireEvent 'change', value
-      ).bindWithEvent @
-    @attachedTo = input
-  attachAndShow: (el, e, callback) ->
-    @contentElement.readyCallback = callback
-    @attach el
-    @show e
+      @attachedTo.fireEvent 'change', arguments
   show: (e) ->
-    document.getElement('body').grab @base
+    document.body.grab @base
     if @attachedTo?
-      @attachedTo.addClass @options.picking
-    if e?
-      if e.stop?
-        e.stop()
-    if @contentElement?
-      @contentElement.fireEvent 'show'
-    @base.addEvent 'outerClick', @hide.bindWithEvent @
-    @onReady()
-  forceHide: ->
-    if @attachedTo?
-      @attachedTo.removeClass @options.picking
-    @base.dispose()
-  hide: (e) ->
-    if e?
+      @attachedTo.addClass @picking
+    if e? then if e.stop? then  e.stop()
+    @base.addEvent 'outerClick', @hide
+  hide: (e,force) ->
+    if force?
+      if @attachedTo?
+          @attachedTo.removeClass @picking
+        @base.dispose()
+    else if e?
       if @base.isVisible() and not @base.hasChild(e.target)
         if @attachedTo?
-          @attachedTo.removeClass @options.picking
-        #@detach()
+          @attachedTo.removeClass @picking
         @base.dispose()
-  setContent: (element) ->
-    @contentElement = element
 }
 
 
@@ -1687,179 +1340,6 @@ Core.Slot = new Class {
 ###
 ---
 
-name: Core.Tab
-
-description: Tab element for Core.Tabs.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, GDotUI]
-
-provides: Core.Tab
-
-...
-###
-Core.Tab = new Class {
-  Extends: Core.Abstract
-  Attributes: {
-    class: {
-      value: GDotUI.Theme.Tab.class
-    }
-    label: {
-      value: ''
-      setter: (value) ->
-        @base.set 'text', value
-        value
-    }
-  }
-  options:{
-    label: ''
-    image: GDotUI.Theme.Icons.remove
-    active: GDotUI.Theme.Global.active
-    removeable: off
-  }
-  initialize: (options) ->
-    @parent options
-  create: ->
-    @base.addEvent 'click', ( ->
-      @fireEvent 'activate', @
-    ).bindWithEvent @
-    @label = new Element 'div'
-    @icon = new Core.Icon {image: @options.image}
-    @icon.addEvent 'invoked', ( (ic,e) ->
-      e.stop()
-      @fireEvent 'remove', @
-    ).bindWithEvent @
-    @base.adopt @label
-    if @options.removeable
-      @base.grab @icon
-  activate: ->
-    @fireEvent 'activated', @
-    @base.addClass @options.active 
-  deactivate: ->
-    @fireEvent 'deactivated', @
-    @base.removeClass @options.active
-}
-
-
-###
----
-
-name: Core.Tabs
-
-description: Tab navigation element.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, Core.Tab, GDotUI]
-
-provides: Core.Tabs
-
-...
-###
-Core.Tabs = new Class {
-  Extends: Core.Abstract
-  Binds:['remove','change']
-  Attributes: {
-    class: {
-      value:  GDotUI.Theme.Tabs.class
-    }
-  }
-  options:{
-    autoRemove: on
-  }
-  initialize: (options) ->
-    @tabs = []
-    @active = null
-    @parent options
-  add: (tab) ->
-    if @tabs.indexOf tab == -1
-      @tabs.push tab
-      @base.grab tab
-      tab.addEvent 'remove', @remove
-      tab.addEvent 'activate', @change
-  remove: (tab) ->
-    if @tabs.indexOf tab != -1
-      if @options.autoRemove
-        @removeTab tab
-      @fireEvent 'removed',tab
-  removeTab: (tab) ->
-    @tabs.erase tab
-    document.id(tab).dispose()
-    if tab is @active
-      if @tabs.length > 0
-        @change @tabs[0]
-    @fireEvent 'tabRemoved', tab
-  change: (tab) ->
-    if tab isnt @active
-      @setActive tab
-      @fireEvent 'change', tab
-  setActive: (tab) ->
-    if @active isnt tab
-      if @active?
-        @active.deactivate()
-      tab.activate()
-      @active = tab
-  getByLabel: (label) ->
-    (@tabs.filter (item, i) ->
-      if item.options.label is label
-        true
-      else
-        false)[0]
-}
-
-
-###
----
-
-name: Core.TabFloat
-
-description: Tabbed float.
-
-license: MIT-style license.
-
-requires: [Core.Float, Core.Tabs, GDotUI]
-
-provides: Core.TabFloat
-
-...
-###
-Core.TabFloat = new Class {
-  Extends: Core.Float
-  options: {
-  }
-  initialize: (options) ->
-    @parent options
-  create: ->
-    @parent()
-    @tabs = new Core.Tabs({class:'floatTabs'})
-    @tabs.addEvent 'change', ( (tab) ->
-      @lastTab = @tabs.tabs[@tabContents.indexOf(@activeContent)] 
-      index = @tabs.tabs.indexOf tab
-      @activeContent = @tabContents[index]
-      @setContent @tabContents[index]
-      @fireEvent 'tabChange'
-      ).bindWithEvent @
-    @tabContents = []
-    @base.grab @tabs, 'top'
-  addTab: (label,content) ->
-    @tabs.add new Core.Tab({class:'floatTab',label:label})
-    @tabContents.push content
-  setContent: (element) ->
-    index = null
-    @tabContents.each (item,i) ->
-      if item is element
-        index = i
-    if index?
-      @tabs.setActive @tabs.tabs[index]
-    @activeContent = @tabContents[index]
-    @parent @tabContents[index]
-}
-
-
-###
----
-
 name: Core.Toggler
 
 description: iOs style checkboxes
@@ -2039,6 +1519,131 @@ Core.Overlay = new Class {
 ###
 ---
 
+name: Core.Tab
+
+description: Tab element for Core.Tabs.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, GDotUI]
+
+provides: Core.Tab
+
+...
+###
+Core.Tab = new Class {
+  Extends: Core.Abstract
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Tab.class
+    }
+    label: {
+      value: ''
+      setter: (value) ->
+        @base.set 'text', value
+        value
+    }
+  }
+  options:{
+    label: ''
+    image: GDotUI.Theme.Icons.remove
+    active: GDotUI.Theme.Global.active
+    removeable: off
+  }
+  initialize: (options) ->
+    @parent options
+  create: ->
+    @base.addEvent 'click', ( ->
+      @fireEvent 'activate', @
+    ).bindWithEvent @
+    @label = new Element 'div'
+    @icon = new Core.Icon {image: @options.image}
+    @icon.addEvent 'invoked', ( (ic,e) ->
+      e.stop()
+      @fireEvent 'remove', @
+    ).bindWithEvent @
+    @base.adopt @label
+    if @options.removeable
+      @base.grab @icon
+  activate: ->
+    @fireEvent 'activated', @
+    @base.addClass @options.active 
+  deactivate: ->
+    @fireEvent 'deactivated', @
+    @base.removeClass @options.active
+}
+
+
+###
+---
+
+name: Core.Tabs
+
+description: Tab navigation element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Core.Tab, GDotUI]
+
+provides: Core.Tabs
+
+...
+###
+Core.Tabs = new Class {
+  Extends: Core.Abstract
+  Binds:['remove','change']
+  Attributes: {
+    class: {
+      value:  GDotUI.Theme.Tabs.class
+    }
+  }
+  options:{
+    autoRemove: on
+  }
+  initialize: (options) ->
+    @tabs = []
+    @active = null
+    @parent options
+  add: (tab) ->
+    if @tabs.indexOf tab == -1
+      @tabs.push tab
+      @base.grab tab
+      tab.addEvent 'remove', @remove
+      tab.addEvent 'activate', @change
+  remove: (tab) ->
+    if @tabs.indexOf tab != -1
+      if @options.autoRemove
+        @removeTab tab
+      @fireEvent 'removed',tab
+  removeTab: (tab) ->
+    @tabs.erase tab
+    document.id(tab).dispose()
+    if tab is @active
+      if @tabs.length > 0
+        @change @tabs[0]
+    @fireEvent 'tabRemoved', tab
+  change: (tab) ->
+    if tab isnt @active
+      @setActive tab
+      @fireEvent 'change', tab
+  setActive: (tab) ->
+    if @active isnt tab
+      if @active?
+        @active.deactivate()
+      tab.activate()
+      @active = tab
+  getByLabel: (label) ->
+    (@tabs.filter (item, i) ->
+      if item.options.label is label
+        true
+      else
+        false)[0]
+}
+
+
+###
+---
+
 name: Core.Push
 
 description: Toggle button 'push' element.
@@ -2156,14 +1761,14 @@ license: MIT-style license.
 
 requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List]
 
-provides: Core.Select
+provides: [Core.Select]
 
 ...
 ###
 Prompt = new Class {
   Extends:Core.Abstract
   Delegates: {
-    picker: ['justShow','hide','justAttach']
+    picker: ['show','hide','attach']
   }
   initialize: (options) ->
     @parent options
@@ -2173,7 +1778,7 @@ Prompt = new Class {
     @button = new Element 'input', {type:'button'}
     @base.adopt @label,@input,@button;
     @picker = new Core.Picker()
-    @picker.setContent @base
+    @picker.set 'content', @base
 }
 Core.Select = new Class {
   Extends:Core.Abstract
@@ -2246,7 +1851,7 @@ Core.Select = new Class {
     @addIcon.addEvent 'invoked',( (el,e)->
       e.stop()
       if @enabled
-        @prompt.justShow()
+        @prompt.show()
       #a = window.prompt('something')
       #if a
       #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
@@ -2254,23 +1859,19 @@ Core.Select = new Class {
     ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
-    @picker.attachedTo = @base
-    @base.addEvent 'click', ( (e) ->
-      if @enabled
-        @picker.show e
-    ).bind @
+    @picker.attach @base
     @list = new Iterable.List({class:'select-list'})
-    @picker.setContent @list.base
+    @picker.set 'content', @list
     @base.adopt @text
     
     @prompt = new Prompt();
-    @prompt.justAttach @base
+    @prompt.attach @base, false
     @list.addEvent 'select', ( (item,e)->
       if e?
         e.stop()
       @text.set 'text', item.label
       @fireEvent 'change', item.label
-      @picker.forceHide()
+      @picker.hide e, yes
     ).bind @
     @update();
     
@@ -2311,8 +1912,8 @@ Data.Abstract = new Class {
   initialize: (options) ->
     @base = new Element 'div'
     @base.addEvent 'addedToDom', @ready.bindWithEvent @
-    @create()
     @mux()
+    @create()
     @setAttributes options
     @
   update: ->
@@ -2889,6 +2490,89 @@ Data.Time = new Class {
 ###
 ---
 
+name: Interfaces.Draggable
+
+description: Porived dragging for elements that implements it.
+
+license: MIT-style license.
+
+provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
+
+requires: [GDotUI]
+...
+###
+Drag.Float = new Class {
+	Extends: Drag.Move
+	initialize: (el,options) ->
+		@parent el, options
+	start: (event) ->
+		if @options.target == event.target
+			@parent event
+}
+Drag.Ghost = new Class {
+	Extends: Drag.Move
+	options: {
+	  opacity: 0.65
+		pos: false
+		remove: ''}
+	start: (event) ->
+		if not event.rightClick
+			@droppables = $$(@options.droppables)
+			@ghost()
+			@parent(event)
+	cancel: (event) ->
+		if event
+			@deghost()
+		@parent(event)
+	stop: (event) ->
+		@deghost()
+		@parent(event)
+	ghost: ->
+		@element = (@element.clone()
+		).setStyles({
+			'opacity': @options.opacity,
+			'position': 'absolute',
+			'z-index': 5003,
+			'top': @element.getCoordinates()['top'],
+			'left': @element.getCoordinates()['left']
+			'-webkit-transition-duration': '0s'
+		}).inject(document.body).store('parent', @element)
+		@element.getElements(@options.remove).dispose()	
+	deghost: ->
+		e = @element.retrieve 'parent'
+		newpos = @element.getPosition e.getParent()
+		if @options.pos && @overed==null
+			e.setStyles({
+			'top': newpos.y,
+			'left': newpos.x
+			})
+		@element.destroy();
+		@element = e;
+}
+Interfaces.Draggable = new Class {
+	Implements: Options
+	options:{
+		draggable: off
+		ghost: off
+		removeClasses: ''
+	}
+	_$Draggable: ->
+		if @options.draggable
+			if @handle == null
+				@handle = @base
+			if @options.ghost
+				@drag = new Drag.Ghost @base, {target:@handle, handle:@handle, remove:@options.removeClasses, droppables: @options.droppables, precalculate: on, pos:true}
+			else
+				@drag = new Drag.Float @base, {target:@handle, handle:@handle}
+			@drag.addEvent 'drop', (->
+				@fireEvent 'dropped', arguments
+			).bindWithEvent @
+}
+
+
+###
+---
+
 name: Iterable.ListItem
 
 description: List items for Iterable.List.
@@ -2899,12 +2583,12 @@ requires: Core.Abstract
 
 provides: Iterable.ListItem
 
-requires: [GDotUI]
+requires: [GDotUI, Interfaces.Draggable]
 ...
 ###
 Iterable.ListItem = new Class {
   Extends:Core.Abstract
-  Implements: [ Interfaces.Draggable
+  Implements: [Interfaces.Draggable
                Interfaces.Enabled ]
   Attributes: {
     label: {
@@ -3386,8 +3070,6 @@ Data.TableCell = new Class {
 }
 
 
-
-
 ###
 ---
 
@@ -3397,7 +3079,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI]
+requires: [Data.Abstract, GDotUI, Core.Select, Data.Number]
 
 provides: Data.Unit
 
@@ -3540,47 +3222,6 @@ Data.List = new Class {
       self.add item
 }
     
-
-
-###
----
-
-name: Interfaces.Reflow
-
-description: Some control functions.
-
-license: MIT-style license.
-
-provides: Interfaces.Reflow
-
-requires: [GDotUI]
-
-...
-###
-Interfaces.Reflow = new Class {
-  Implements: Events
-  createTemp: ->
-    @sensor = new Element 'p'
-    @sensor.setStyles {
-      margin: 0,
-      padding: 0,
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      "z-index": -9999
-    }
-  pollReflow: ->
-    @base.grab @sensor
-    counter = 0  
-    interval = setInterval ( ->
-      if @sensor.offsetWidth > 2 or ++counter > 99
-        console.log interval
-        clearInterval interval
-        @sensor.dispose()
-        @ready()
-    ).bind(@) , 20
-    
-}
 
 
 ###
@@ -3823,7 +3464,6 @@ provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Ti
 ...
 ###
 Pickers.Base = new Class {
-  Implements:Options
   Delegates:{
     picker:['attach'
             'detach'
@@ -3834,17 +3474,20 @@ Pickers.Base = new Class {
           'disable'
           'enable']
   }
-  options:{
-    type:''
+  Attributes: {
+    type: {
+      value: null
+    }
   }
+  update: ->
   initialize: (options) ->
-    @setOptions options
+    @setAttributes options
     @picker = new Core.Picker()
-    @data = new Data[@options.type]()
-    @picker.setContent @data
+    @data = new Data[@type]()
+    @picker.set 'content', @data
     @
 }
-###
+
 Pickers.Color = new Pickers.Base {type:'Color'}
 Pickers.Number = new Pickers.Base {type:'Number'}
 Pickers.Time = new Pickers.Base {type:'Time'}
@@ -3853,7 +3496,7 @@ Pickers.Date = new Pickers.Base {type:'Date'}
 Pickers.DateTime = new Pickers.Base {type:'DateTime'}
 Pickers.Table = new Pickers.Base {type:'Table'}
 Pickers.Unit = new Pickers.Base {type:'Unit'}
-Pickers.Select = new Pickers.Base {type:'Select'}
+#Pickers.Select = new Pickers.Base {type:'Select'}
 Pickers.List = new Pickers.Base {type:'List'}
-###
+
 

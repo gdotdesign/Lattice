@@ -27,8 +27,8 @@ Data.Abstract = new Class {
   initialize: (options) ->
     @base = new Element 'div'
     @base.addEvent 'addedToDom', @ready.bindWithEvent @
-    @create()
     @mux()
+    @create()
     @setAttributes options
     @
   update: ->

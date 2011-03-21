@@ -509,6 +509,12 @@ Interfaces.Children = new Class({
   addChild: function(el) {
     this.children.push(el);
     return this.base.grab(el);
+  },
+  removeChild: function(el) {
+    if (this.children.contains(el)) {
+      this.children.erease(el);
+      return el.dispose();
+    }
   }
 });
 /*
@@ -1102,408 +1108,6 @@ Core.Slider = new Class({
 /*
 ---
 
-name: Interfaces.Draggable
-
-description: Porived dragging for elements that implements it.
-
-license: MIT-style license.
-
-provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
-
-requires: [GDotUI]
-...
-*/
-Drag.Float = new Class({
-  Extends: Drag.Move,
-  initialize: function(el, options) {
-    return this.parent(el, options);
-  },
-  start: function(event) {
-    if (this.options.target === event.target) {
-      return this.parent(event);
-    }
-  }
-});
-Drag.Ghost = new Class({
-  Extends: Drag.Move,
-  options: {
-    opacity: 0.65,
-    pos: false,
-    remove: ''
-  },
-  start: function(event) {
-    if (!event.rightClick) {
-      this.droppables = $$(this.options.droppables);
-      this.ghost();
-      return this.parent(event);
-    }
-  },
-  cancel: function(event) {
-    if (event) {
-      this.deghost();
-    }
-    return this.parent(event);
-  },
-  stop: function(event) {
-    this.deghost();
-    return this.parent(event);
-  },
-  ghost: function() {
-    this.element = (this.element.clone()).setStyles({
-      'opacity': this.options.opacity,
-      'position': 'absolute',
-      'z-index': 5003,
-      'top': this.element.getCoordinates()['top'],
-      'left': this.element.getCoordinates()['left'],
-      '-webkit-transition-duration': '0s'
-    }).inject(document.body).store('parent', this.element);
-    return this.element.getElements(this.options.remove).dispose();
-  },
-  deghost: function() {
-    var e, newpos;
-    e = this.element.retrieve('parent');
-    newpos = this.element.getPosition(e.getParent());
-    if (this.options.pos && this.overed === null) {
-      e.setStyles({
-        'top': newpos.y,
-        'left': newpos.x
-      });
-    }
-    this.element.destroy();
-    return this.element = e;
-  }
-});
-Interfaces.Draggable = new Class({
-  Implements: Options,
-  options: {
-    draggable: false,
-    ghost: false,
-    removeClasses: ''
-  },
-  _$Draggable: function() {
-    if (this.options.draggable) {
-      if (this.handle === null) {
-        this.handle = this.base;
-      }
-      if (this.options.ghost) {
-        this.drag = new Drag.Ghost(this.base, {
-          target: this.handle,
-          handle: this.handle,
-          remove: this.options.removeClasses,
-          droppables: this.options.droppables,
-          precalculate: true,
-          pos: true
-        });
-      } else {
-        this.drag = new Drag.Float(this.base, {
-          target: this.handle,
-          handle: this.handle
-        });
-      }
-      return this.drag.addEvent('drop', (function() {
-        return this.fireEvent('dropped', arguments);
-      }).bindWithEvent(this));
-    }
-  }
-});
-/*
----
-
-name: Interfaces.Restoreable
-
-description: Interface to store and restore elements status and position after refresh.
-
-license: MIT-style license.
-
-provides: Interfaces.Restoreable
-
-requires: [GDotUI]
-
-...
-*/
-Interfaces.Restoreable = new Class({
-  Impelments: [Options],
-  Binds: ['savePosition'],
-  options: {
-    cookieID: null
-  },
-  _$Restoreable: function() {
-    this.addEvent('dropped', this.savePosition);
-    if (this.options.resizeable) {
-      return this.sizeDrag.addEvent('complete', (function() {
-        return window.localStorage.setItem(this.options.cookieID + '.height', this.scrollBase.getSize().y);
-      }).bindWithEvent(this));
-    }
-  },
-  saveState: function() {
-    var state;
-    state = this.base.isVisible() ? 'visible' : 'hidden';
-    if (this.options.cookieID !== null) {
-      return window.localStorage.setItem(this.options.cookieID + '.state', state);
-    }
-  },
-  savePosition: function() {
-    var position, state;
-    if (this.options.cookieID !== null) {
-      position = this.base.getPosition();
-      state = this.base.isVisible() ? 'visible' : 'hidden';
-      window.localStorage.setItem(this.options.cookieID + '.x', position.x);
-      window.localStorage.setItem(this.options.cookieID + '.y', position.y);
-      return window.localStorage.setItem(this.options.cookieID + '.state', state);
-    }
-  },
-  loadPosition: function(loadstate) {
-    if (this.options.cookieID !== null) {
-      this.base.setStyle('top', window.localStorage.getItem(this.options.cookieID + '.y') + "px");
-      this.base.setStyle('left', window.localStorage.getItem(this.options.cookieID + '.x') + "px");
-      this.scrollBase.setStyle('height', window.localStorage.getItem(this.options.cookieID(+'.height')) + "px");
-      if (window.localStorage.getItem(this.options.cookieID + '.x') === null) {
-        this.center();
-      }
-      if (window.localStorage.getItem(this.options.cookieID + '.state') === "hidden") {
-        return this.hide();
-      }
-    }
-  }
-});
-/*
----
-
-name: Core.Float
-
-description: Core.Float is a "floating" panel, with controls. Think of it as a window, just more awesome.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, Interfaces.Draggable, Interfaces.Restoreable, Core.Slider, Core.IconGroup, GDotUI]
-
-provides: Core.Float
-
-...
-*/
-Core.Float = new Class({
-  Extends: Core.Abstract,
-  Implements: [Interfaces.Draggable, Interfaces.Restoreable],
-  Binds: ['resize', 'mouseEnter', 'mouseLeave', 'hide'],
-  options: {
-    classes: {
-      "class": GDotUI.Theme.Float["class"],
-      controls: GDotUI.Theme.Float.controls,
-      content: GDotUI.Theme.Float.content,
-      handle: GDotUI.Theme.Float.topHandle,
-      bottom: GDotUI.Theme.Float.bottomHandle,
-      active: GDotUI.Theme.Global.active,
-      inactive: GDotUI.Theme.Global.inactive
-    },
-    iconOptions: GDotUI.Theme.Float.iconOptions,
-    icons: {
-      remove: GDotUI.Theme.Icons.remove,
-      edit: GDotUI.Theme.Icons.edit
-    },
-    closeable: true,
-    resizeable: false,
-    editable: false,
-    draggable: true,
-    ghost: false,
-    overlay: false
-  },
-  initialize: function(options) {
-    this.showSilder = false;
-    this.readyr = false;
-    return this.parent(options);
-  },
-  ready: function() {
-    this.base.adopt(this.controls);
-    if (this.contentElement != null) {
-      this.content.grab(this.contentElement);
-    }
-    if (this.options.restoreable) {
-      this.loadPosition();
-    } else {
-      this.base.position();
-    }
-    if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
-      if (!this.showSlider) {
-        this.showSlider = true;
-        if (this.mouseisover) {
-          this.slider.show();
-        }
-      }
-    }
-    this.parent();
-    return this.readyr = true;
-  },
-  create: function() {
-    var sliderSize;
-    this.base.addClass(this.options.classes["class"]);
-    this.base.setStyle('position', 'fixed');
-    this.base.setPosition({
-      x: 0,
-      y: 0
-    });
-    this.base.toggleClass(this.options.classes.inactive);
-    this.controls = new Element('div', {
-      "class": this.options.classes.controls
-    });
-    this.content = new Element('div', {
-      'class': this.options.classes.content
-    });
-    this.handle = new Element('div', {
-      'class': this.options.classes.handle
-    });
-    this.bottom = new Element('div', {
-      'class': this.options.classes.bottom
-    });
-    this.base.adopt(this.handle, this.content);
-    sliderSize = getCSS("/\\." + this.options.classes["class"] + " ." + GDotUI.Theme.Slider.classes.base + "$/", 'height') || 100;
-    console.log(sliderSize);
-    this.slider = new Core.Slider({
-      scrollBase: this.content,
-      range: [0, 100],
-      steps: 100,
-      mode: 'vertical',
-      size: sliderSize
-    });
-    this.slider.addEvent('complete', (function() {
-      console.log('complete');
-      return this.scrolling = false;
-    }).bind(this));
-    this.slider.addEvent('step', (function(e) {
-      this.scrollBase.scrollTop = ((this.scrollBase.scrollHeight - this.scrollBase.getSize().y) / 100) * e;
-      return this.scrolling = true;
-    }).bind(this));
-    this.slider.hide();
-    this.icons = new Core.IconGroup(this.options.iconOptions);
-    this.controls.adopt(this.icons, this.slider);
-    this.close = new Core.Icon({
-      image: this.options.icons.remove
-    });
-    this.close.addEvent('invoked', (function() {
-      return this.hide();
-    }).bindWithEvent(this));
-    this.edit = new Core.Icon({
-      image: this.options.icons.edit
-    });
-    this.edit.addEvent('invoked', (function() {
-      if (this.contentElement != null) {
-        if (this.contentElement.toggleEdit != null) {
-          this.contentElement.toggleEdit();
-        }
-        return this.fireEvent('edit');
-      }
-    }).bindWithEvent(this));
-    if (this.options.closeable) {
-      this.icons.addIcon(this.close);
-    }
-    if (this.options.editable) {
-      this.icons.addIcon(this.edit);
-    }
-    this.icons.hide();
-    if (this.options.scrollBase != null) {
-      this.scrollBase = this.options.scrollBase;
-    } else {
-      this.scrollBase = this.content;
-    }
-    this.scrollBase.setStyle('overflow', 'hidden');
-    if (this.options.resizeable) {
-      this.base.grab(this.bottom);
-      this.sizeDrag = new Drag(this.scrollBase, {
-        handle: this.bottom,
-        modifiers: {
-          x: '',
-          y: 'height'
-        }
-      });
-      this.sizeDrag.addEvent('drag', (function() {
-        if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
-          if (!this.showSlider) {
-            this.showSlider = true;
-            if (this.mouseisover) {
-              return this.slider.show();
-            }
-          }
-        } else {
-          if (this.showSlider) {
-            this.showSlider = false;
-            return this.slider.hide();
-          }
-        }
-      }).bindWithEvent(this), this.scrollBase.addEvent('mousewheel', (function(e) {
-        this.scrollBase.scrollTop = this.scrollBase.scrollTop + e.wheel * 12;
-        return this.slider.set(this.scrollBase.scrollTop / (this.scrollBase.scrollHeight - this.scrollBase.getSize().y) * 100);
-      }).bindWithEvent(this)));
-    }
-    this.base.addEvent('mouseenter', (function() {
-      this.base.toggleClass(this.options.classes.active);
-      this.base.toggleClass(this.options.classes.inactive);
-      $clear(this.iconsTimout);
-      $clear(this.sliderTimout);
-      if (this.showSlider) {
-        this.slider.show();
-      }
-      this.icons.show();
-      return this.mouseisover = true;
-    }).bindWithEvent(this));
-    this.base.addEvent('mouseleave', (function() {
-      this.base.toggleClass(this.options.classes.active);
-      this.base.toggleClass(this.options.classes.inactive);
-      if (!this.scrolling) {
-        if (this.showSlider) {
-          this.sliderTimout = this.slider.hide.delay(200, this.slider);
-        }
-      }
-      this.iconsTimout = this.icons.hide.delay(200, this.icons);
-      return this.mouseisover = false;
-    }).bindWithEvent(this));
-    if (this.options.overlay) {
-      return this.overlay = new Core.Overlay();
-    }
-  },
-  show: function() {
-    if (this.options.overlay) {
-      document.getElement('body').grab(this.overlay);
-      this.overlay.show();
-    }
-    document.getElement('body').grab(this.base);
-    return this.saveState();
-  },
-  hide: function() {
-    if (this.options.overlay) {
-      this.overlay.base.dispose();
-    }
-    this.base.dispose();
-    return this.saveState();
-  },
-  toggle: function(el) {
-    if (this.base.isVisible()) {
-      return this.hide(el);
-    } else {
-      return this.show(el);
-    }
-  },
-  setContent: function(element) {
-    this.contentElement = element;
-    if (this.readyr) {
-      this.content.getChildren().dispose();
-      this.content.grab(this.contentElement);
-      if (this.scrollBase.getScrollSize().y > this.scrollBase.getSize().y) {
-        this.showSlider = true;
-        if (this.mouseisover) {
-          return this.slider.show();
-        }
-      } else {
-        this.showSlider = false;
-        return this.slider.hide();
-      }
-    }
-  },
-  center: function() {
-    return this.base.position();
-  }
-});
-/*
----
-
 name: Interfaces.Size
 
 description: Size minsize from css....
@@ -1597,7 +1201,7 @@ provides: [Core.Picker, outerClick]
 Core.Picker = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Children],
-  Binds: ['show', 'hide'],
+  Binds: ['show', 'hide', 'delegate'],
   Attributes: {
     "class": {
       value: GDotUI.Theme.Picker["class"]
@@ -1619,11 +1223,26 @@ Core.Picker = new Class({
       setter: function(value, old) {
         return value;
       }
+    },
+    content: {
+      value: null,
+      setter: function(value, old) {
+        if (old != null) {
+          if (old["$events"]) {
+            old.removeEvent('change', this.delegate);
+          }
+          this.removeChild(old);
+        }
+        this.addChild(value);
+        if (value["$events"]) {
+          value.addEvent('change', this.delegate);
+        }
+        return value;
+      }
+    },
+    picking: {
+      value: GDotUI.Theme.Picker.picking
     }
-  },
-  options: {
-    event: GDotUI.Theme.Picker.event,
-    picking: GDotUI.Theme.Picker.picking
   },
   initialize: function(options) {
     return this.parent(options);
@@ -1631,11 +1250,8 @@ Core.Picker = new Class({
   create: function() {
     return this.base.setStyle('position', 'absolute');
   },
-  onReady: function() {
+  ready: function() {
     var asize, ofa, position, size, winscroll, winsize, x, y;
-    if (!this.base.hasChild(this.contentElement)) {
-      this.addChild(this.contentElement);
-    }
     winsize = window.getSize();
     winscroll = window.getScroll();
     asize = this.attachedTo.getSize();
@@ -1691,79 +1307,53 @@ Core.Picker = new Class({
       offset: ofa
     });
   },
+  attach: function(el, auto) {
+    auto = !(auto != null) ? true : auto;
+    if (this.attachedTo != null) {
+      this.detach();
+    }
+    this.attachedTo = el;
+    if (auto) {
+      return el.addEvent(this.event, this.show);
+    }
+  },
   detach: function() {
-    if (this.contentElement != null) {
-      this.contentElement.removeEvents('change');
-    }
     if (this.attachedTo != null) {
-      this.attachedTo.removeEvent(this.options.event, this.show);
-      this.attachedTo = null;
-      return this.fireEvent('detached');
+      this.attachedTo.removeEvent(this.event, this.show);
+      return this.attachedTo = null;
     }
   },
-  justAttach: function(input) {
+  delegate: function() {
     if (this.attachedTo != null) {
-      this.detach();
+      return this.attachedTo.fireEvent('change', arguments);
     }
-    return this.attachedTo = input;
-  },
-  justShow: function() {
-    document.getElement('body').grab(this.base);
-    this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
-    return this.onReady();
-  },
-  attach: function(input) {
-    if (this.attachedTo != null) {
-      this.detach();
-    }
-    input.addEvent(this.options.event, this.show);
-    if (this.contentElement != null) {
-      this.contentElement.addEvent('change', (function(value) {
-        this.attachedTo.set('value', value);
-        return this.attachedTo.fireEvent('change', value);
-      }).bindWithEvent(this));
-    }
-    return this.attachedTo = input;
-  },
-  attachAndShow: function(el, e, callback) {
-    this.contentElement.readyCallback = callback;
-    this.attach(el);
-    return this.show(e);
   },
   show: function(e) {
-    document.getElement('body').grab(this.base);
+    document.body.grab(this.base);
     if (this.attachedTo != null) {
-      this.attachedTo.addClass(this.options.picking);
+      this.attachedTo.addClass(this.picking);
     }
     if (e != null) {
       if (e.stop != null) {
         e.stop();
       }
     }
-    if (this.contentElement != null) {
-      this.contentElement.fireEvent('show');
-    }
-    this.base.addEvent('outerClick', this.hide.bindWithEvent(this));
-    return this.onReady();
+    return this.base.addEvent('outerClick', this.hide);
   },
-  forceHide: function() {
-    if (this.attachedTo != null) {
-      this.attachedTo.removeClass(this.options.picking);
-    }
-    return this.base.dispose();
-  },
-  hide: function(e) {
-    if (e != null) {
+  hide: function(e, force) {
+    if (force != null) {
+      if (this.attachedTo != null) {
+        this.attachedTo.removeClass(this.picking);
+      }
+      return this.base.dispose();
+    } else if (e != null) {
       if (this.base.isVisible() && !this.base.hasChild(e.target)) {
         if (this.attachedTo != null) {
-          this.attachedTo.removeClass(this.options.picking);
+          this.attachedTo.removeClass(this.picking);
         }
         return this.base.dispose();
       }
     }
-  },
-  setContent: function(element) {
-    return this.contentElement = element;
   }
 });
 /*
@@ -2042,211 +1632,6 @@ Core.Slot = new Class({
 /*
 ---
 
-name: Core.Tab
-
-description: Tab element for Core.Tabs.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, GDotUI]
-
-provides: Core.Tab
-
-...
-*/
-Core.Tab = new Class({
-  Extends: Core.Abstract,
-  Attributes: {
-    "class": {
-      value: GDotUI.Theme.Tab["class"]
-    },
-    label: {
-      value: '',
-      setter: function(value) {
-        this.base.set('text', value);
-        return value;
-      }
-    }
-  },
-  options: {
-    label: '',
-    image: GDotUI.Theme.Icons.remove,
-    active: GDotUI.Theme.Global.active,
-    removeable: false
-  },
-  initialize: function(options) {
-    return this.parent(options);
-  },
-  create: function() {
-    this.base.addEvent('click', (function() {
-      return this.fireEvent('activate', this);
-    }).bindWithEvent(this));
-    this.label = new Element('div');
-    this.icon = new Core.Icon({
-      image: this.options.image
-    });
-    this.icon.addEvent('invoked', (function(ic, e) {
-      e.stop();
-      return this.fireEvent('remove', this);
-    }).bindWithEvent(this));
-    this.base.adopt(this.label);
-    if (this.options.removeable) {
-      return this.base.grab(this.icon);
-    }
-  },
-  activate: function() {
-    this.fireEvent('activated', this);
-    return this.base.addClass(this.options.active);
-  },
-  deactivate: function() {
-    this.fireEvent('deactivated', this);
-    return this.base.removeClass(this.options.active);
-  }
-});
-/*
----
-
-name: Core.Tabs
-
-description: Tab navigation element.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, Core.Tab, GDotUI]
-
-provides: Core.Tabs
-
-...
-*/
-Core.Tabs = new Class({
-  Extends: Core.Abstract,
-  Binds: ['remove', 'change'],
-  Attributes: {
-    "class": {
-      value: GDotUI.Theme.Tabs["class"]
-    }
-  },
-  options: {
-    autoRemove: true
-  },
-  initialize: function(options) {
-    this.tabs = [];
-    this.active = null;
-    return this.parent(options);
-  },
-  add: function(tab) {
-    if (this.tabs.indexOf(tab === -1)) {
-      this.tabs.push(tab);
-      this.base.grab(tab);
-      tab.addEvent('remove', this.remove);
-      return tab.addEvent('activate', this.change);
-    }
-  },
-  remove: function(tab) {
-    if (this.tabs.indexOf(tab !== -1)) {
-      if (this.options.autoRemove) {
-        this.removeTab(tab);
-      }
-      return this.fireEvent('removed', tab);
-    }
-  },
-  removeTab: function(tab) {
-    this.tabs.erase(tab);
-    document.id(tab).dispose();
-    if (tab === this.active) {
-      if (this.tabs.length > 0) {
-        this.change(this.tabs[0]);
-      }
-    }
-    return this.fireEvent('tabRemoved', tab);
-  },
-  change: function(tab) {
-    if (tab !== this.active) {
-      this.setActive(tab);
-      return this.fireEvent('change', tab);
-    }
-  },
-  setActive: function(tab) {
-    if (this.active !== tab) {
-      if (this.active != null) {
-        this.active.deactivate();
-      }
-      tab.activate();
-      return this.active = tab;
-    }
-  },
-  getByLabel: function(label) {
-    return (this.tabs.filter(function(item, i) {
-      if (item.options.label === label) {
-        return true;
-      } else {
-        return false;
-      }
-    }))[0];
-  }
-});
-/*
----
-
-name: Core.TabFloat
-
-description: Tabbed float.
-
-license: MIT-style license.
-
-requires: [Core.Float, Core.Tabs, GDotUI]
-
-provides: Core.TabFloat
-
-...
-*/
-Core.TabFloat = new Class({
-  Extends: Core.Float,
-  options: {},
-  initialize: function(options) {
-    return this.parent(options);
-  },
-  create: function() {
-    this.parent();
-    this.tabs = new Core.Tabs({
-      "class": 'floatTabs'
-    });
-    this.tabs.addEvent('change', (function(tab) {
-      var index;
-      this.lastTab = this.tabs.tabs[this.tabContents.indexOf(this.activeContent)];
-      index = this.tabs.tabs.indexOf(tab);
-      this.activeContent = this.tabContents[index];
-      this.setContent(this.tabContents[index]);
-      return this.fireEvent('tabChange');
-    }).bindWithEvent(this));
-    this.tabContents = [];
-    return this.base.grab(this.tabs, 'top');
-  },
-  addTab: function(label, content) {
-    this.tabs.add(new Core.Tab({
-      "class": 'floatTab',
-      label: label
-    }));
-    return this.tabContents.push(content);
-  },
-  setContent: function(element) {
-    var index;
-    index = null;
-    this.tabContents.each(function(item, i) {
-      if (item === element) {
-        return index = i;
-      }
-    });
-    if (index != null) {
-      this.tabs.setActive(this.tabs.tabs[index]);
-    }
-    this.activeContent = this.tabContents[index];
-    return this.parent(this.tabContents[index]);
-  }
-});
-/*
----
-
 name: Core.Toggler
 
 description: iOs style checkboxes
@@ -2438,6 +1823,152 @@ Core.Overlay = new Class({
 /*
 ---
 
+name: Core.Tab
+
+description: Tab element for Core.Tabs.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, GDotUI]
+
+provides: Core.Tab
+
+...
+*/
+Core.Tab = new Class({
+  Extends: Core.Abstract,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Tab["class"]
+    },
+    label: {
+      value: '',
+      setter: function(value) {
+        this.base.set('text', value);
+        return value;
+      }
+    }
+  },
+  options: {
+    label: '',
+    image: GDotUI.Theme.Icons.remove,
+    active: GDotUI.Theme.Global.active,
+    removeable: false
+  },
+  initialize: function(options) {
+    return this.parent(options);
+  },
+  create: function() {
+    this.base.addEvent('click', (function() {
+      return this.fireEvent('activate', this);
+    }).bindWithEvent(this));
+    this.label = new Element('div');
+    this.icon = new Core.Icon({
+      image: this.options.image
+    });
+    this.icon.addEvent('invoked', (function(ic, e) {
+      e.stop();
+      return this.fireEvent('remove', this);
+    }).bindWithEvent(this));
+    this.base.adopt(this.label);
+    if (this.options.removeable) {
+      return this.base.grab(this.icon);
+    }
+  },
+  activate: function() {
+    this.fireEvent('activated', this);
+    return this.base.addClass(this.options.active);
+  },
+  deactivate: function() {
+    this.fireEvent('deactivated', this);
+    return this.base.removeClass(this.options.active);
+  }
+});
+/*
+---
+
+name: Core.Tabs
+
+description: Tab navigation element.
+
+license: MIT-style license.
+
+requires: [Core.Abstract, Core.Tab, GDotUI]
+
+provides: Core.Tabs
+
+...
+*/
+Core.Tabs = new Class({
+  Extends: Core.Abstract,
+  Binds: ['remove', 'change'],
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Tabs["class"]
+    }
+  },
+  options: {
+    autoRemove: true
+  },
+  initialize: function(options) {
+    this.tabs = [];
+    this.active = null;
+    return this.parent(options);
+  },
+  add: function(tab) {
+    if (this.tabs.indexOf(tab === -1)) {
+      this.tabs.push(tab);
+      this.base.grab(tab);
+      tab.addEvent('remove', this.remove);
+      return tab.addEvent('activate', this.change);
+    }
+  },
+  remove: function(tab) {
+    if (this.tabs.indexOf(tab !== -1)) {
+      if (this.options.autoRemove) {
+        this.removeTab(tab);
+      }
+      return this.fireEvent('removed', tab);
+    }
+  },
+  removeTab: function(tab) {
+    this.tabs.erase(tab);
+    document.id(tab).dispose();
+    if (tab === this.active) {
+      if (this.tabs.length > 0) {
+        this.change(this.tabs[0]);
+      }
+    }
+    return this.fireEvent('tabRemoved', tab);
+  },
+  change: function(tab) {
+    if (tab !== this.active) {
+      this.setActive(tab);
+      return this.fireEvent('change', tab);
+    }
+  },
+  setActive: function(tab) {
+    if (this.active !== tab) {
+      if (this.active != null) {
+        this.active.deactivate();
+      }
+      tab.activate();
+      return this.active = tab;
+    }
+  },
+  getByLabel: function(label) {
+    return (this.tabs.filter(function(item, i) {
+      if (item.options.label === label) {
+        return true;
+      } else {
+        return false;
+      }
+    }))[0];
+  }
+});
+/*
+---
+
 name: Core.Push
 
 description: Toggle button 'push' element.
@@ -2565,14 +2096,14 @@ license: MIT-style license.
 
 requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List]
 
-provides: Core.Select
+provides: [Core.Select]
 
 ...
 */
 Prompt = new Class({
   Extends: Core.Abstract,
   Delegates: {
-    picker: ['justShow', 'hide', 'justAttach']
+    picker: ['show', 'hide', 'attach']
   },
   initialize: function(options) {
     return this.parent(options);
@@ -2589,7 +2120,7 @@ Prompt = new Class({
     });
     this.base.adopt(this.label, this.input, this.button);
     this.picker = new Core.Picker();
-    return this.picker.setContent(this.base);
+    return this.picker.set('content', this.base);
   }
 });
 Core.Select = new Class({
@@ -2674,7 +2205,7 @@ Core.Select = new Class({
     this.addIcon.addEvent('invoked', (function(el, e) {
       e.stop();
       if (this.enabled) {
-        return this.prompt.justShow();
+        return this.prompt.show();
       }
     }).bind(this));
     this.picker = new Core.Picker({
@@ -2684,26 +2215,21 @@ Core.Select = new Class({
         y: 'bottom'
       }
     });
-    this.picker.attachedTo = this.base;
-    this.base.addEvent('click', (function(e) {
-      if (this.enabled) {
-        return this.picker.show(e);
-      }
-    }).bind(this));
+    this.picker.attach(this.base);
     this.list = new Iterable.List({
       "class": 'select-list'
     });
-    this.picker.setContent(this.list.base);
+    this.picker.set('content', this.list);
     this.base.adopt(this.text);
     this.prompt = new Prompt();
-    this.prompt.justAttach(this.base);
+    this.prompt.attach(this.base, false);
     this.list.addEvent('select', (function(item, e) {
       if (e != null) {
         e.stop();
       }
       this.text.set('text', item.label);
       this.fireEvent('change', item.label);
-      return this.picker.forceHide();
+      return this.picker.hide(e, true);
     }).bind(this));
     return this.update();
   },
@@ -2744,8 +2270,8 @@ Data.Abstract = new Class({
   initialize: function(options) {
     this.base = new Element('div');
     this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
-    this.create();
     this.mux();
+    this.create();
     this.setAttributes(options);
     return this;
   },
@@ -3415,6 +2941,113 @@ Data.Time = new Class({
 /*
 ---
 
+name: Interfaces.Draggable
+
+description: Porived dragging for elements that implements it.
+
+license: MIT-style license.
+
+provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
+
+requires: [GDotUI]
+...
+*/
+Drag.Float = new Class({
+  Extends: Drag.Move,
+  initialize: function(el, options) {
+    return this.parent(el, options);
+  },
+  start: function(event) {
+    if (this.options.target === event.target) {
+      return this.parent(event);
+    }
+  }
+});
+Drag.Ghost = new Class({
+  Extends: Drag.Move,
+  options: {
+    opacity: 0.65,
+    pos: false,
+    remove: ''
+  },
+  start: function(event) {
+    if (!event.rightClick) {
+      this.droppables = $$(this.options.droppables);
+      this.ghost();
+      return this.parent(event);
+    }
+  },
+  cancel: function(event) {
+    if (event) {
+      this.deghost();
+    }
+    return this.parent(event);
+  },
+  stop: function(event) {
+    this.deghost();
+    return this.parent(event);
+  },
+  ghost: function() {
+    this.element = (this.element.clone()).setStyles({
+      'opacity': this.options.opacity,
+      'position': 'absolute',
+      'z-index': 5003,
+      'top': this.element.getCoordinates()['top'],
+      'left': this.element.getCoordinates()['left'],
+      '-webkit-transition-duration': '0s'
+    }).inject(document.body).store('parent', this.element);
+    return this.element.getElements(this.options.remove).dispose();
+  },
+  deghost: function() {
+    var e, newpos;
+    e = this.element.retrieve('parent');
+    newpos = this.element.getPosition(e.getParent());
+    if (this.options.pos && this.overed === null) {
+      e.setStyles({
+        'top': newpos.y,
+        'left': newpos.x
+      });
+    }
+    this.element.destroy();
+    return this.element = e;
+  }
+});
+Interfaces.Draggable = new Class({
+  Implements: Options,
+  options: {
+    draggable: false,
+    ghost: false,
+    removeClasses: ''
+  },
+  _$Draggable: function() {
+    if (this.options.draggable) {
+      if (this.handle === null) {
+        this.handle = this.base;
+      }
+      if (this.options.ghost) {
+        this.drag = new Drag.Ghost(this.base, {
+          target: this.handle,
+          handle: this.handle,
+          remove: this.options.removeClasses,
+          droppables: this.options.droppables,
+          precalculate: true,
+          pos: true
+        });
+      } else {
+        this.drag = new Drag.Float(this.base, {
+          target: this.handle,
+          handle: this.handle
+        });
+      }
+      return this.drag.addEvent('drop', (function() {
+        return this.fireEvent('dropped', arguments);
+      }).bindWithEvent(this));
+    }
+  }
+});
+/*
+---
+
 name: Iterable.ListItem
 
 description: List items for Iterable.List.
@@ -3425,7 +3058,7 @@ requires: Core.Abstract
 
 provides: Iterable.ListItem
 
-requires: [GDotUI]
+requires: [GDotUI, Interfaces.Draggable]
 ...
 */
 Iterable.ListItem = new Class({
@@ -4053,7 +3686,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI]
+requires: [Data.Abstract, GDotUI, Core.Select, Data.Number]
 
 provides: Data.Unit
 
@@ -4233,48 +3866,6 @@ Data.List = new Class({
     return value.each(function(item) {
       return self.add(item);
     });
-  }
-});
-/*
----
-
-name: Interfaces.Reflow
-
-description: Some control functions.
-
-license: MIT-style license.
-
-provides: Interfaces.Reflow
-
-requires: [GDotUI]
-
-...
-*/
-Interfaces.Reflow = new Class({
-  Implements: Events,
-  createTemp: function() {
-    this.sensor = new Element('p');
-    return this.sensor.setStyles({
-      margin: 0,
-      padding: 0,
-      position: 'absolute',
-      bottom: 0,
-      right: 0,
-      "z-index": -9999
-    });
-  },
-  pollReflow: function() {
-    var counter, interval;
-    this.base.grab(this.sensor);
-    counter = 0;
-    return interval = setInterval((function() {
-      if (this.sensor.offsetWidth > 2 || ++counter > 99) {
-        console.log(interval);
-        clearInterval(interval);
-        this.sensor.dispose();
-        return this.ready();
-      }
-    }).bind(this), 20);
   }
 });
 /*
@@ -4580,31 +4171,48 @@ provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Ti
 ...
 */
 Pickers.Base = new Class({
-  Implements: Options,
   Delegates: {
     picker: ['attach', 'detach', 'attachAndShow'],
     data: ['setValue', 'getValue', 'disable', 'enable']
   },
-  options: {
-    type: ''
+  Attributes: {
+    type: {
+      value: null
+    }
   },
+  update: function() {},
   initialize: function(options) {
-    this.setOptions(options);
+    this.setAttributes(options);
     this.picker = new Core.Picker();
-    this.data = new Data[this.options.type]();
-    this.picker.setContent(this.data);
+    this.data = new Data[this.type]();
+    this.picker.set('content', this.data);
     return this;
   }
 });
-/*
-Pickers.Color = new Pickers.Base {type:'Color'}
-Pickers.Number = new Pickers.Base {type:'Number'}
-Pickers.Time = new Pickers.Base {type:'Time'}
-Pickers.Text = new Pickers.Base {type:'Text'}
-Pickers.Date = new Pickers.Base {type:'Date'}
-Pickers.DateTime = new Pickers.Base {type:'DateTime'}
-Pickers.Table = new Pickers.Base {type:'Table'}
-Pickers.Unit = new Pickers.Base {type:'Unit'}
-Pickers.Select = new Pickers.Base {type:'Select'}
-Pickers.List = new Pickers.Base {type:'List'}
-*/
+Pickers.Color = new Pickers.Base({
+  type: 'Color'
+});
+Pickers.Number = new Pickers.Base({
+  type: 'Number'
+});
+Pickers.Time = new Pickers.Base({
+  type: 'Time'
+});
+Pickers.Text = new Pickers.Base({
+  type: 'Text'
+});
+Pickers.Date = new Pickers.Base({
+  type: 'Date'
+});
+Pickers.DateTime = new Pickers.Base({
+  type: 'DateTime'
+});
+Pickers.Table = new Pickers.Base({
+  type: 'Table'
+});
+Pickers.Unit = new Pickers.Base({
+  type: 'Unit'
+});
+Pickers.List = new Pickers.Base({
+  type: 'List'
+});

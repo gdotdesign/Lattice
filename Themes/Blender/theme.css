@@ -389,7 +389,7 @@ textarea {
 .toggler {
   width: 200px;
   min-width: 85px;
-  height: 20px;
+  height: 22px;
   overflow: hidden;
   cursor: pointer; }
   .toggler .on {
