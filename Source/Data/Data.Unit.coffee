@@ -7,7 +7,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Core.Select, Data.Number]
+requires: [Data.Abstract, GDotUI, Data.Select, Data.Number]
 
 provides: Data.Unit
 
@@ -54,7 +54,7 @@ Data.Unit = new Class {
     @value = 0
     @selectSize = 80
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
-    @sel = new Core.Select({size: 80})
+    @sel = new Data.Select({size: 80})
     Object.each UnitList,((item) ->
       @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
     ).bind @

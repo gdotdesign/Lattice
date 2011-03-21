@@ -37,7 +37,7 @@ Core.Slot = new Class {
     @list.base.addEvent 'addedToDom', ( ->
       @readyList()
     ).bind @
-    @list.addEvent 'select', ((item) ->
+    @list.addEvent 'selectedChange', ((item) ->
       @update()
       @fireEvent 'change', item
     ).bind @
@@ -51,7 +51,7 @@ Core.Slot = new Class {
       @list.items.each( ( (item,i) ->
         distance = -item.base.getPosition(@base).y + @base.getSize().y/2
         if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
-          @list.select item
+          @list.set 'selected', item
       ).bind @ )
     else
       el.setStyle 'top', @disabledTop
@@ -92,11 +92,11 @@ Core.Slot = new Class {
         else
           index = 1
       if index+e.wheel >= 0 and index+e.wheel < @list.items.length 
-        @list.select @list.items[index+e.wheel]
+        @list.set 'selected', @list.items[index+e.wheel]
       if index+e.wheel < 0
-        @list.select @list.items[@list.items.length-1]
+        @list.set 'selected', @list.items[@list.items.length-1]
       if index+e.wheel > @list.items.length-1
-        @list.select @list.items[0]
+        @list.set 'selected', @list.items[0]
   update: ->
     if not @dragging
       @list.base.addTransition()

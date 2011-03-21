@@ -26,26 +26,31 @@ Core.PushGroup = new Class {
     }
   }
   update: ->
-    buttonwidth = Math.floor(@size / @buttons.length)
-    @buttons.each (btn) ->
+    buttonwidth = Math.floor(@size / @children.length)
+    @children.each (btn) ->
       btn.set 'size', buttonwidth
-    if last = @buttons.getLast()
-      last.set 'size', @size-buttonwidth*(@buttons.length-1)
+    if last = @children.getLast()
+      last.set 'size', @size-buttonwidth*(@children.length-1)
   initialize: (options) ->
-    @buttons = []
+    @active = null
     @parent options 
   setActive: (item) ->
-    @buttons.each (btn) ->
-      if btn isnt item
-        btn.off()
-        btn.unsupress()
-      else
-        btn.on()
-        btn.supress()
-    @fireEvent 'change', item
+    if @active isnt item
+      @children.each (btn) ->
+        if btn isnt item
+          btn.off()
+          btn.unsupress()
+        else
+          btn.on()
+          btn.supress()
+      @active = item
+      @fireEvent 'change', item
+  removeItem: (item) ->
+    if @buttons.contains(item)
+      item.removeEvents 'invoked'
+      @removeChild item
   addItem: (item) ->
-    if @buttons.indexOf(item) is -1
-      @buttons.push item  
+    if not @children.contains(item)
       item.set 'minSize', 0
       @addChild item
       item.addEvent 'invoked', ( (it) ->

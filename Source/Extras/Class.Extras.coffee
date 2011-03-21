@@ -61,8 +61,9 @@ Class.Mutators.Attributes = (attributes) ->
                   newVal = value             
                 attr.value = newVal
                 @[name] = newVal
-                @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
                 @update()
+                if oldVal isnt newVal
+                  @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
           else if $setter
             $setter.call @, name, value
 

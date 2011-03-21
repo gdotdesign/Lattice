@@ -10,7 +10,7 @@ license: MIT-style license.
 provides: Element.Extras
 
 ...
-*/var Core, Data, Forms, GDotUI, Interfaces, Iterable, Pickers, Prompt, UnitList, checkForKey, getCSS;
+*/var Core, Data, Dialog, Forms, GDotUI, Interfaces, Iterable, Pickers, UnitList, checkForKey, getCSS;
 Element.Properties.checked = {
   get: function() {
     if (this.getChecked != null) {
@@ -184,11 +184,13 @@ Class.Mutators.Attributes = function(attributes) {
             }
             attr.value = newVal;
             this[name] = newVal;
-            this.fireEvent(name + 'Change', {
-              newVal: newVal,
-              oldVal: oldVal
-            });
-            return this.update();
+            this.update();
+            if (oldVal !== newVal) {
+              return this.fireEvent(name + 'Change', {
+                newVal: newVal,
+                oldVal: oldVal
+              });
+            }
           }
         }
       } else if ($setter) {
@@ -244,6 +246,7 @@ Data = {};
 Iterable = {};
 Pickers = {};
 Forms = {};
+Dialog = {};
 if (!(typeof GDotUI != "undefined" && GDotUI !== null)) {
   GDotUI = {};
 }
@@ -1018,7 +1021,7 @@ Core.Slider = new Class({
       this.value = Number.from(position);
     } else {
       position = Math.round((position / this.steps) * this.size);
-      percent = Math.round((position / this.size) * this.get('steps'));
+      percent = Math.round((position / this.size) * this.steps);
       if (position < 0) {
         this.progress.setStyle(this.modifier, 0 + "px");
       }
@@ -1134,8 +1137,7 @@ Interfaces.Size = new Class({
       value: null,
       setter: function(value, old) {
         var size;
-        this.size = value;
-        size = this.size < this.minSize ? this.minSize : this.size;
+        size = value < this.minSize ? this.minSize : value;
         this.base.setStyle('width', size);
         return size;
       }
@@ -1389,6 +1391,17 @@ Iterable.List = new Class({
             return false;
           }
         }).bind(this))[0];
+      },
+      setter: function(value, old) {
+        if (value != null) {
+          if (old !== value) {
+            if (old) {
+              old.base.removeClass(this.options.selected);
+            }
+            value.base.addClass(this.options.selected);
+          }
+        }
+        return value;
       }
     }
   },
@@ -1468,25 +1481,11 @@ Iterable.List = new Class({
     });
     return filtered[0];
   },
-  select: function(item, e) {
-    if (item != null) {
-      if (this.selected !== item) {
-        if (this.selected != null) {
-          this.selected.base.removeClass(this.options.selected);
-        }
-        this.selected = item;
-        this.selected.base.addClass(this.options.selected);
-        return this.fireEvent('select', [item, e]);
-      }
-    } else {
-      return this.fireEvent('empty');
-    }
-  },
   addItem: function(li) {
     this.items.push(li);
     this.base.grab(li);
     li.addEvent('select', (function(item, e) {
-      return this.select(item, e);
+      return this.set('selected', item);
     }).bindWithEvent(this));
     li.addEvent('invoked', (function(item) {
       return this.fireEvent('invoked', arguments);
@@ -1538,7 +1537,7 @@ Core.Slot = new Class({
     this.list.base.addEvent('addedToDom', (function() {
       return this.readyList();
     }).bind(this));
-    return this.list.addEvent('select', (function(item) {
+    return this.list.addEvent('selectedChange', (function(item) {
       this.update();
       return this.fireEvent('change', item);
     }).bind(this));
@@ -1556,7 +1555,7 @@ Core.Slot = new Class({
         var distance;
         distance = -item.base.getPosition(this.base).y + this.base.getSize().y / 2;
         if (distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2) {
-          return this.list.select(item);
+          return this.list.set('selected', item);
         }
       }).bind(this));
     } else {
@@ -1610,13 +1609,13 @@ Core.Slot = new Class({
         }
       }
       if (index + e.wheel >= 0 && index + e.wheel < this.list.items.length) {
-        this.list.select(this.list.items[index + e.wheel]);
+        this.list.set('selected', this.list.items[index + e.wheel]);
       }
       if (index + e.wheel < 0) {
-        this.list.select(this.list.items[this.list.items.length - 1]);
+        this.list.set('selected', this.list.items[this.list.items.length - 1]);
       }
       if (index + e.wheel > this.list.items.length - 1) {
-        return this.list.select(this.list.items[0]);
+        return this.list.set('selected', this.list.items[0]);
       }
     }
   },
@@ -2048,33 +2047,41 @@ Core.PushGroup = new Class({
   },
   update: function() {
     var buttonwidth, last;
-    buttonwidth = Math.floor(this.size / this.buttons.length);
-    this.buttons.each(function(btn) {
+    buttonwidth = Math.floor(this.size / this.children.length);
+    this.children.each(function(btn) {
       return btn.set('size', buttonwidth);
     });
-    if (last = this.buttons.getLast()) {
-      return last.set('size', this.size - buttonwidth * (this.buttons.length - 1));
+    if (last = this.children.getLast()) {
+      return last.set('size', this.size - buttonwidth * (this.children.length - 1));
     }
   },
   initialize: function(options) {
-    this.buttons = [];
+    this.active = null;
     return this.parent(options);
   },
   setActive: function(item) {
-    this.buttons.each(function(btn) {
-      if (btn !== item) {
-        btn.off();
-        return btn.unsupress();
-      } else {
-        btn.on();
-        return btn.supress();
-      }
-    });
-    return this.fireEvent('change', item);
+    if (this.active !== item) {
+      this.children.each(function(btn) {
+        if (btn !== item) {
+          btn.off();
+          return btn.unsupress();
+        } else {
+          btn.on();
+          return btn.supress();
+        }
+      });
+      this.active = item;
+      return this.fireEvent('change', item);
+    }
+  },
+  removeItem: function(item) {
+    if (this.buttons.contains(item)) {
+      item.removeEvents('invoked');
+      return this.removeChild(item);
+    }
   },
   addItem: function(item) {
-    if (this.buttons.indexOf(item) === -1) {
-      this.buttons.push(item);
+    if (!this.children.contains(item)) {
       item.set('minSize', 0);
       this.addChild(item);
       item.addEvent('invoked', (function(it) {
@@ -2088,42 +2095,82 @@ Core.PushGroup = new Class({
 /*
 ---
 
-name: Core.Select
+name: Dialog.Prompt
 
 description: Select Element
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List]
+requires: [Core.Abstract]
 
-provides: [Core.Select]
+provides: Dialog.Prompt
 
 ...
 */
-Prompt = new Class({
+Dialog.Prompt = new Class({
   Extends: Core.Abstract,
   Delegates: {
     picker: ['show', 'hide', 'attach']
+  },
+  Attributes: {
+    "class": {
+      value: 'dialog-prompt'
+    },
+    label: {
+      value: '',
+      setter: function(value) {
+        return this.labelDiv.set('text', value);
+      }
+    },
+    buttonLabel: {
+      value: 'Ok',
+      setter: function(value) {
+        return this.button.set('label', value);
+      }
+    },
+    labelClass: {
+      value: 'dialog-prompt-label',
+      setter: function(value, old) {
+        value = String.from(value);
+        this.labelDiv.removeClass(old);
+        this.labelDiv.addClass(value);
+        return value;
+      }
+    }
   },
   initialize: function(options) {
     return this.parent(options);
   },
   create: function() {
-    this.label = new Element('div', {
-      text: 'addStuff'
-    });
+    this.labelDiv = new Element('div');
     this.input = new Element('input', {
       type: 'text'
     });
-    this.button = new Element('input', {
-      type: 'button'
-    });
-    this.base.adopt(this.label, this.input, this.button);
+    this.button = new Core.Button();
+    this.base.adopt(this.labelDiv, this.input, this.button);
     this.picker = new Core.Picker();
-    return this.picker.set('content', this.base);
+    this.picker.set('content', this.base);
+    return this.button.addEvent('invoked', (function(el, e) {
+      return this.fireEvent('invoked', this.input.get('value'));
+    }).bind(this));
   }
 });
-Core.Select = new Class({
+/*
+---
+
+name: Data.Select
+
+description: Select Element
+
+license: MIT-style license.
+
+requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List, Dialog.Prompt]
+
+provides: [Data.Select]
+
+...
+*/
+Data.Select = new Class({
   Extends: Core.Abstract,
   Implements: [Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children],
   Attributes: {
@@ -2168,7 +2215,7 @@ Core.Select = new Class({
     }
   },
   setValue: function(value) {
-    return this.list.select(this.list.getItemFromTitle(value));
+    return this.list.set('selected', this.list.getItemFromTitle(value));
   },
   update: function() {
     return this.list.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
@@ -2221,15 +2268,28 @@ Core.Select = new Class({
     });
     this.picker.set('content', this.list);
     this.base.adopt(this.text);
-    this.prompt = new Prompt();
+    this.prompt = new Dialog.Prompt();
+    this.prompt.set('label', 'Add item:');
     this.prompt.attach(this.base, false);
-    this.list.addEvent('select', (function(item, e) {
-      if (e != null) {
-        e.stop();
+    this.prompt.addEvent('invoked', (function(value) {
+      var item;
+      if (value) {
+        item = new Iterable.ListItem({
+          label: value,
+          removeable: false,
+          draggable: false
+        });
+        this.addItem(item);
+        this.list.set('selected', item);
       }
+      return this.prompt.hide(null, true);
+    }).bind(this));
+    this.list.addEvent('selectedChange', (function() {
+      var item;
+      item = this.list.selected;
       this.text.set('text', item.label);
       this.fireEvent('change', item.label);
-      return this.picker.hide(e, true);
+      return this.picker.hide(null, true);
     }).bind(this));
     return this.update();
   },
@@ -2269,13 +2329,15 @@ Data.Abstract = new Class({
   },
   initialize: function(options) {
     this.base = new Element('div');
-    this.base.addEvent('addedToDom', this.ready.bindWithEvent(this));
+    this.base.addEvent('addedToDom', this.ready.bind(this));
     this.mux();
     this.create();
     this.setAttributes(options);
     return this;
   },
-  update: function() {},
+  update: function() {
+    return console.log('update');
+  },
   create: function() {},
   ready: function() {},
   toElement: function() {
@@ -2426,16 +2488,15 @@ provides: Data.Color
 */
 Data.Color = new Class({
   Extends: Data.Abstract,
-  Implements: [Interfaces.Enabled, Interfaces.Children],
+  Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
   Binds: ['change'],
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Color["class"]
+    }
+  },
   options: {
-    "class": GDotUI.Theme.Color["class"],
-    sb: GDotUI.Theme.Color.sb,
-    hue: GDotUI.Theme.Color.hue,
-    wrapper: GDotUI.Theme.Color.wrapper,
-    white: GDotUI.Theme.Color.white,
-    black: GDotUI.Theme.Color.black,
-    format: GDotUI.Theme.Color.format
+    wrapper: GDotUI.Theme.Color.wrapper
   },
   initialize: function(options) {
     this.parent(options);
@@ -2445,11 +2506,9 @@ Data.Color = new Class({
     this.saturation = 0;
     this.brightness = 100;
     this.center = {};
-    this.size = {};
     return this;
   },
   create: function() {
-    this.base.addClass(this.options["class"]);
     this.hslacone = $(document.createElement('canvas'));
     this.background = $(document.createElement('canvas'));
     this.wrapper = new Element('div').addClass(this.options.wrapper);
@@ -2459,29 +2518,30 @@ Data.Color = new Class({
       'z-index': 1
     });
     this.colorData = new Data.Color.SlotControls();
-    this.bgColor = new Color('#fff');
+    this.colorData.addEvent('change', (function() {
+      return this.fireEvent('change', arguments);
+    }).bind(this));
     this.base.adopt(this.wrapper);
-    this.hueN = this.colorData.hue;
-    this.saturationN = this.colorData.saturation;
-    this.lightness = this.colorData.lightness;
-    this.alpha = this.colorData.alpha;
-    this.hueN.addEvent('change', (function(step) {
-      if (typeof step === "object") {
-        step = 0;
-      }
-      return this.setHue(step);
-    }).bindWithEvent(this));
-    this.saturationN.addEvent('change', (function(step) {
-      return this.setSaturation(step);
-    }).bindWithEvent(this));
-    return this.lightness.addEvent('change', (function(step) {
-      this.hslacone.setStyle('opacity', step / 100);
-      return this.fireEvent('change', {
-        color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-        type: this.type,
-        alpha: this.alpha.getValue()
-      });
-    }).bindWithEvent(this));
+    this.colorData.lightnessData.addEvent('change', (function(step) {
+      return this.hslacone.setStyle('opacity', step / 100);
+    }).bind(this));
+    this.colorData.hueData.addEvent('change', (function(value) {
+      return this.positionKnob(value, this.colorData.get('saturation'));
+    }).bind(this));
+    this.colorData.saturationData.addEvent('change', (function(value) {
+      return this.positionKnob(this.colorData.get('hue'), value);
+    }).bind(this));
+    this.background.setStyles({
+      'position': 'absolute',
+      'z-index': 0
+    });
+    this.hslacone.setStyles({
+      'position': 'absolute',
+      'z-index': 1
+    });
+    this.xy = new Drag.Move(this.knob);
+    this.wrapper.adopt(this.background, this.hslacone, this.knob);
+    return this.base.grab(this.colorData);
   },
   drawHSLACone: function(width, brightness) {
     var ang, angle, c, c1, ctx, grad, i, w2, _ref, _results;
@@ -2513,47 +2573,44 @@ Data.Color = new Class({
     }
     return _results;
   },
-  ready: function() {
-    this.width = this.wrapper.getSize().y;
-    this.background.setStyles({
-      'position': 'absolute',
-      'z-index': 0
-    });
-    this.hslacone.setStyles({
-      'position': 'absolute',
-      'z-index': 1
-    });
-    this.hslacone.set('width', this.width);
-    this.hslacone.set('height', this.width);
-    this.background.set('width', this.width);
-    this.background.set('height', this.width);
-    this.wrapper.adopt(this.background, this.hslacone, this.knob);
-    this.drawHSLACone(this.width, 100);
-    this.xy = new Drag.Move(this.knob);
-    this.halfWidth = this.width / 2;
-    this.size = this.knob.getSize();
-    this.knob.setStyles({
-      left: this.halfWidth - this.size.x / 2,
-      top: this.halfWidth - this.size.y / 2
-    });
+  update: function() {
+    this.hslacone.set('width', this.size);
+    this.hslacone.set('height', this.size);
+    this.background.set('width', this.size);
+    this.background.set('height', this.size);
+    this.wrapper.setStyle('height', this.size);
+    this.drawHSLACone(this.size, 100);
+    this.colorData.set('size', this.size);
+    this.knobSize = this.knob.getSize();
+    this.halfWidth = this.size / 2;
     this.center = {
       x: this.halfWidth,
       y: this.halfWidth
     };
+    return this.positionKnob(this.colorData.get('hue'), this.colorData.get('saturation'));
+  },
+  positionKnob: function(hue, saturation) {
+    this.radius = saturation / 100 * this.halfWidth;
+    this.angle = -((180 - hue) * (Math.PI / 180));
+    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.knobSize.y / 2 + this.center.y);
+    return this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.knobSize.x / 2 + this.center.x);
+  },
+  ready: function() {
+    this.update();
     this.xy.addEvent('beforeStart', (function(el, e) {
       return this.lastPosition = el.getPosition(this.wrapper);
     }).bind(this));
-    this.xy.addEvent('drag', (function(el, e) {
+    return this.xy.addEvent('drag', (function(el, e) {
       var an, position, sat, x, y;
       if (this.enabled) {
         position = el.getPosition(this.wrapper);
-        x = this.center.x - position.x - this.size.x / 2;
-        y = this.center.y - position.y - this.size.y / 2;
+        x = this.center.x - position.x - this.knobSize.x / 2;
+        y = this.center.y - position.y - this.knobSize.y / 2;
         this.radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
         this.angle = Math.atan2(y, x);
         if (this.radius > this.halfWidth) {
-          el.setStyle('top', -Math.sin(this.angle) * this.halfWidth - this.size.y / 2 + this.center.y);
-          el.setStyle('left', -Math.cos(this.angle) * this.halfWidth - this.size.x / 2 + this.center.x);
+          el.setStyle('top', -Math.sin(this.angle) * this.halfWidth - this.knobSize.y / 2 + this.center.y);
+          el.setStyle('left', -Math.cos(this.angle) * this.halfWidth - this.knobSize.x / 2 + this.center.x);
           this.saturation = 100;
         } else {
           sat = Math.round(this.radius);
@@ -2561,111 +2618,12 @@ Data.Color = new Class({
         }
         an = Math.round(this.angle * (180 / Math.PI));
         this.hue = an < 0 ? 180 - Math.abs(an) : 180 + an;
-        this.hueN.setValue(this.hue);
-        this.saturationN.setValue(this.saturation);
-        this.colorData.updateControls();
-        return this.fireEvent('change', {
-          color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-          type: this.type,
-          alpha: this.alpha.getValue()
-        });
+        this.colorData.set('hue', this.hue);
+        return this.colorData.set('saturation', this.saturation);
       } else {
         return el.setPosition(this.lastPosition);
       }
     }).bind(this));
-    this.colorData.readyCallback = this.readyCallback;
-    this.addChild(this.colorData);
-    /*
-    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
-      item.addEvent 'click',( (e)->
-        @type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
-        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()}
-      ).bindWithEvent @
-    ).bind @
-    */
-    this.alpha.addEvent('change', (function(step) {
-      return this.fireEvent('change', {
-        color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-        type: this.type,
-        alpha: this.alpha.getValue()
-      });
-    }).bindWithEvent(this));
-    return this.parent();
-  },
-  readyCallback: function() {
-    this.alpha.setValue(100);
-    this.lightness.setValue(100);
-    this.hue.setValue(0);
-    this.saturation.setValue(0);
-    this.updateControls();
-    return delete this.readyCallback;
-  },
-  setHue: function(hue) {
-    this.angle = -((180 - hue) * (Math.PI / 180));
-    this.hue = hue;
-    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.size.y / 2 + this.center.y);
-    this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.size.x / 2 + this.center.x);
-    return this.fireEvent('change', {
-      color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-      type: this.type,
-      alpha: this.alpha.getValue()
-    });
-  },
-  setSaturation: function(sat) {
-    this.radius = sat;
-    this.saturation = sat;
-    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.size.y / 2 + this.center.y);
-    this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.size.x / 2 + this.center.x);
-    return this.fireEvent('change', {
-      color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-      type: this.type,
-      alpha: this.alpha.getValue()
-    });
-  },
-  setValue: function(color, alpha, type) {
-    this.hue = color.hsb[0];
-    this.saturation = color.hsb[1];
-    this.angle = -((180 - color.hsb[0]) * (Math.PI / 180));
-    this.radius = color.hsb[1];
-    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.size.y / 2 + this.center.y);
-    this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.size.x / 2 + this.center.x);
-    this.hueN.setValue(color.hsb[0]);
-    this.saturationN.setValue(color.hsb[1]);
-    this.alpha.setValue(alpha);
-    this.lightness.setValue(color.hsb[2]);
-    this.colorData.updateControls();
-    this.hslacone.setStyle('opacity', color.hsb[2] / 100);
-    this.colorData.base.getElements('input[type=radio]').each((function(item) {
-      if (item.get('value') === type) {
-        return item.set('checked', true);
-      }
-    }).bind(this));
-    return this.fireEvent('change', {
-      color: $HSB(this.hue, this.saturation, this.lightness.getValue()),
-      type: this.type,
-      alpha: this.alpha.getValue()
-    });
-  },
-  setColor: function() {
-    var type;
-    this.finalColor = $HSB(this.hue, this.saturation, 100);
-    return type = this.fireEvent('change', {
-      color: this.finalColor,
-      type: type,
-      alpha: this.alpha.getValue()
-    });
-  },
-  getValue: function() {
-    return this.finalColor;
-  },
-  change: function(pos) {
-    this.saturation.slider.slider.detach();
-    this.saturation.setValue(pos.x);
-    this.saturation.slider.slider.attach();
-    this.lightness.slider.slider.detach();
-    this.lightness.setValue(100 - pos.y);
-    this.lightness.slider.slider.attach();
-    return this.setColor();
   }
 });
 Data.Color.ReturnValues = {
@@ -2692,56 +2650,118 @@ Data.Color.ReturnValues = {
 };
 Data.Color.SlotControls = new Class({
   Extends: Data.Abstract,
-  Implements: [Interfaces.Enabled, Interfaces.Children],
-  options: {
-    "class": GDotUI.Theme.Color.controls["class"]
+  Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Color.controls["class"]
+    },
+    hue: {
+      value: 0,
+      setter: function(value) {
+        this.hueData.setValue(value);
+        return value;
+      },
+      getter: function() {
+        return this.hueData.getValue('value');
+      }
+    },
+    saturation: {
+      value: 0,
+      setter: function(value) {
+        this.saturationData.setValue(value);
+        return value;
+      },
+      getter: function() {
+        return this.saturationData.getValue('value');
+      }
+    },
+    lightness: {
+      value: 100,
+      setter: function(value) {
+        this.lightnessData.setValue(value);
+        return value;
+      }
+    },
+    alpha: {
+      value: 100,
+      setter: function(value) {
+        this.alphaData.setValue(value);
+        return value;
+      }
+    },
+    type: {
+      value: 'hex',
+      setter: function(value) {
+        this.col.children.each(function(item) {
+          if (item.label === value) {
+            return this.col.setActive(item);
+          }
+        }, this);
+        return value;
+      }
+    }
   },
-  initialize: function(options) {
-    return this.parent(options);
+  update: function() {
+    this.col.set('size', this.size);
+    this.hueData.set('size', this.size);
+    this.saturationData.set('size', this.size);
+    this.lightnessData.set('size', this.size);
+    this.alphaData.set('size', this.size);
+    if ((this.hue != null) && (this.saturation != null) && (this.lightness != null) && (this.type != null) && (this.alpha != null)) {
+      return this.fireEvent('change', {
+        color: $HSB(this.hue, this.saturation, this.lightness),
+        type: this.type,
+        alpha: this.alpha
+      });
+    }
   },
-  updateControls: function() {},
   create: function() {
-    this.base.addClass(this.options["class"]);
-    this.hue = new Data.Number({
+    this.hueData = new Data.Number({
       range: [0, 360],
       reset: false,
       steps: [360],
       label: 'Hue'
     });
-    this.hue.addEvent('change', this.updateControls.bind(this));
-    this.saturation = new Data.Number({
+    this.hueData.addEvent('change', (function(value) {
+      return this.set('hue', value);
+    }).bind(this));
+    this.saturationData = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: [100],
       label: 'Saturation'
     });
-    this.saturation.addEvent('change', this.updateControls.bind(this));
-    this.lightness = new Data.Number({
+    this.saturationData.addEvent('change', (function(value) {
+      return this.set('saturation', value);
+    }).bind(this));
+    this.lightnessData = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: [100],
       label: 'Lightness'
     });
-    this.lightness.addEvent('change', this.updateControls.bind(this));
-    this.alpha = new Data.Number({
+    this.lightnessData.addEvent('change', (function(value) {
+      return this.set('lightness', value);
+    }).bind(this));
+    this.alphaData = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: [100],
       label: 'Alpha'
     });
+    this.alphaData.addEvent('change', (function(value) {
+      return this.set('alpha', value);
+    }).bind(this));
     this.col = new Core.PushGroup();
-    return Data.Color.ReturnValues.options.each((function(item) {
+    Data.Color.ReturnValues.options.each((function(item) {
       return this.col.addItem(new Core.Push({
         label: item.label
       }));
     }).bind(this));
-  },
-  ready: function() {
-    this.adoptChildren(this.hue, this.saturation, this.lightness, this.alpha, this.col);
-    if (this.readyCallback != null) {
-      this.readyCallback();
-    }
-    return this.parent();
+    this.col.addEvent('change', (function(value) {
+      return this.set('type', value.label);
+    }).bind(this));
+    return this.adoptChildren(this.hueData, this.saturationData, this.lightnessData, this.alphaData, this.col);
   }
 });
 /*
@@ -2855,9 +2875,9 @@ Data.Date = new Class({
         i--;
       }
     }
-    this.days.select(this.days.list.items[this.date.getDate() - 1]);
-    this.month.select(this.month.list.items[this.date.getMonth()]);
-    return this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
+    this.days.list.set('selected', this.days.list.items[this.date.getDate() - 1]);
+    this.month.list.set('selected', this.month.list.items[this.date.getMonth()]);
+    return this.years.list.set('selected', this.years.list.getItemFromTitle(this.date.getFullYear()));
   }
 });
 /*
@@ -3686,7 +3706,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Core.Select, Data.Number]
+requires: [Data.Abstract, GDotUI, Data.Select, Data.Number]
 
 provides: Data.Unit
 
@@ -3739,7 +3759,7 @@ Data.Unit = new Class({
       reset: true,
       steps: [100]
     });
-    this.sel = new Core.Select({
+    this.sel = new Data.Select({
       size: 80
     });
     Object.each(UnitList, (function(item) {
@@ -4192,27 +4212,14 @@ Pickers.Base = new Class({
 Pickers.Color = new Pickers.Base({
   type: 'Color'
 });
-Pickers.Number = new Pickers.Base({
-  type: 'Number'
-});
-Pickers.Time = new Pickers.Base({
-  type: 'Time'
-});
-Pickers.Text = new Pickers.Base({
-  type: 'Text'
-});
-Pickers.Date = new Pickers.Base({
-  type: 'Date'
-});
-Pickers.DateTime = new Pickers.Base({
-  type: 'DateTime'
-});
-Pickers.Table = new Pickers.Base({
-  type: 'Table'
-});
-Pickers.Unit = new Pickers.Base({
-  type: 'Unit'
-});
-Pickers.List = new Pickers.Base({
-  type: 'List'
-});
+/*
+Pickers.Number = new Pickers.Base {type:'Number'}
+Pickers.Time = new Pickers.Base {type:'Time'}
+Pickers.Text = new Pickers.Base {type:'Text'}
+Pickers.Date = new Pickers.Base {type:'Date'}
+Pickers.DateTime = new Pickers.Base {type:'DateTime'}
+Pickers.Table = new Pickers.Base {type:'Table'}
+Pickers.Unit = new Pickers.Base {type:'Unit'}
+#Pickers.Select = new Pickers.Base {type:'Select'}
+Pickers.List = new Pickers.Base {type:'List'}
+*/

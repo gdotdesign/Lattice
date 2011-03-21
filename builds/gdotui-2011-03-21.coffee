@@ -151,8 +151,9 @@ Class.Mutators.Attributes = (attributes) ->
                   newVal = value             
                 attr.value = newVal
                 @[name] = newVal
-                @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
                 @update()
+                if oldVal isnt newVal
+                  @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
           else if $setter
             $setter.call @, name, value
 
@@ -204,6 +205,7 @@ Data = {}
 Iterable = {}
 Pickers = {}
 Forms = {}
+Dialog = {}
 
 if !GDotUI?
   GDotUI = {}
@@ -835,7 +837,7 @@ Core.Slider = new Class {
       @value = Number.from position
     else
       position = Math.round((position/@steps)*@size)
-      percent = Math.round((position/@size)*@get('steps'))
+      percent = Math.round((position/@size)*@steps)
       if position < 0
         @progress.setStyle @modifier, 0+"px"
       if position > @size
@@ -938,8 +940,7 @@ Interfaces.Size = new Class {
     @addAttribute 'size', {
       value: null
       setter: (value, old) ->
-        @size = value
-        size = if @size < @minSize then @minSize else @size
+        size = if value < @minSize then @minSize else value
         @base.setStyle 'width', size
         size
     }
@@ -1146,6 +1147,14 @@ Iterable.List = new Class {
         @items.filter(((item) ->
           if item.base.hasClass @options.selected then true else false
         ).bind(@))[0]
+      setter: (value, old) ->
+        if value?
+          if old != value
+            if old
+              old.base.removeClass @options.selected
+            value.base.addClass @options.selected
+        value
+        
     }
   }
   initialize: (options) ->
@@ -1202,21 +1211,11 @@ Iterable.List = new Class {
         yes
       else no
     filtered[0]
-  select: (item,e) ->
-    if item?
-      if @selected != item
-        if @selected?
-          @selected.base.removeClass @options.selected
-        @selected = item
-        @selected.base.addClass @options.selected
-        @fireEvent 'select', [item,e]
-    else
-      @fireEvent 'empty'
   addItem: (li) -> 
     @items.push li
     @base.grab li
     li.addEvent 'select', ( (item,e)->
-      @select item,e
+      @set 'selected', item 
       ).bindWithEvent @
     li.addEvent 'invoked', ( (item) ->
       @fireEvent 'invoked', arguments
@@ -1269,7 +1268,7 @@ Core.Slot = new Class {
     @list.base.addEvent 'addedToDom', ( ->
       @readyList()
     ).bind @
-    @list.addEvent 'select', ((item) ->
+    @list.addEvent 'selectedChange', ((item) ->
       @update()
       @fireEvent 'change', item
     ).bind @
@@ -1283,7 +1282,7 @@ Core.Slot = new Class {
       @list.items.each( ( (item,i) ->
         distance = -item.base.getPosition(@base).y + @base.getSize().y/2
         if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
-          @list.select item
+          @list.set 'selected', item
       ).bind @ )
     else
       el.setStyle 'top', @disabledTop
@@ -1324,11 +1323,11 @@ Core.Slot = new Class {
         else
           index = 1
       if index+e.wheel >= 0 and index+e.wheel < @list.items.length 
-        @list.select @list.items[index+e.wheel]
+        @list.set 'selected', @list.items[index+e.wheel]
       if index+e.wheel < 0
-        @list.select @list.items[@list.items.length-1]
+        @list.set 'selected', @list.items[@list.items.length-1]
       if index+e.wheel > @list.items.length-1
-        @list.select @list.items[0]
+        @list.set 'selected', @list.items[0]
   update: ->
     if not @dragging
       @list.base.addTransition()
@@ -1720,26 +1719,31 @@ Core.PushGroup = new Class {
     }
   }
   update: ->
-    buttonwidth = Math.floor(@size / @buttons.length)
-    @buttons.each (btn) ->
+    buttonwidth = Math.floor(@size / @children.length)
+    @children.each (btn) ->
       btn.set 'size', buttonwidth
-    if last = @buttons.getLast()
-      last.set 'size', @size-buttonwidth*(@buttons.length-1)
+    if last = @children.getLast()
+      last.set 'size', @size-buttonwidth*(@children.length-1)
   initialize: (options) ->
-    @buttons = []
+    @active = null
     @parent options 
   setActive: (item) ->
-    @buttons.each (btn) ->
-      if btn isnt item
-        btn.off()
-        btn.unsupress()
-      else
-        btn.on()
-        btn.supress()
-    @fireEvent 'change', item
+    if @active isnt item
+      @children.each (btn) ->
+        if btn isnt item
+          btn.off()
+          btn.unsupress()
+        else
+          btn.on()
+          btn.supress()
+      @active = item
+      @fireEvent 'change', item
+  removeItem: (item) ->
+    if @buttons.contains(item)
+      item.removeEvents 'invoked'
+      @removeChild item
   addItem: (item) ->
-    if @buttons.indexOf(item) is -1
-      @buttons.push item  
+    if not @children.contains(item)
       item.set 'minSize', 0
       @addChild item
       item.addEvent 'invoked', ( (it) ->
@@ -1753,34 +1757,77 @@ Core.PushGroup = new Class {
 ###
 ---
 
-name: Core.Select
+name: Dialog.Prompt
 
 description: Select Element
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List]
+requires: [Core.Abstract]
 
-provides: [Core.Select]
+provides: Dialog.Prompt
 
 ...
 ###
-Prompt = new Class {
+Dialog.Prompt = new Class {
   Extends:Core.Abstract
   Delegates: {
     picker: ['show','hide','attach']
   }
+  Attributes: {
+    class: {
+      value: 'dialog-prompt'
+    }
+    label: {
+      value: ''
+      setter: (value) ->
+        @labelDiv.set 'text', value
+    }
+    buttonLabel: {
+      value: 'Ok'
+      setter: (value) ->
+        @button.set 'label', value
+    }
+    labelClass: {
+      value: 'dialog-prompt-label'
+      setter: (value, old) ->
+        value = String.from value
+        @labelDiv.removeClass old
+        @labelDiv.addClass value
+        value
+    }
+  }
   initialize: (options) ->
     @parent options
   create: ->
-    @label = new Element 'div', {text:'addStuff'}
+    @labelDiv = new Element 'div'
     @input = new Element 'input',{type:'text'}
-    @button = new Element 'input', {type:'button'}
-    @base.adopt @label,@input,@button;
+    @button = new Core.Button()
+    @base.adopt @labelDiv, @input, @button
     @picker = new Core.Picker()
     @picker.set 'content', @base
+    @button.addEvent 'invoked', ((el,e)->
+      @fireEvent 'invoked', @input.get('value')
+    ).bind @
 }
-Core.Select = new Class {
+
+
+###
+---
+
+name: Data.Select
+
+description: Select Element
+
+license: MIT-style license.
+
+requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List, Dialog.Prompt]
+
+provides: [Data.Select]
+
+...
+###
+Data.Select = new Class {
   Extends:Core.Abstract
   Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children]
   Attributes: {
@@ -1817,7 +1864,7 @@ Core.Select = new Class {
     if li?
       li.label
   setValue: (value) ->
-    @list.select @list.getItemFromTitle(value)
+    @list.set 'selected', @list.getItemFromTitle(value)
   update: ->
     @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
   create: ->
@@ -1852,10 +1899,7 @@ Core.Select = new Class {
       e.stop()
       if @enabled
         @prompt.show()
-      #a = window.prompt('something')
-      #if a
-      #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
-      #  @addItem item
+      #
     ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
@@ -1864,14 +1908,24 @@ Core.Select = new Class {
     @picker.set 'content', @list
     @base.adopt @text
     
-    @prompt = new Prompt();
+    @prompt = new Dialog.Prompt();
+    @prompt.set 'label', 'Add item:'
     @prompt.attach @base, false
-    @list.addEvent 'select', ( (item,e)->
-      if e?
-        e.stop()
+    @prompt.addEvent 'invoked', ((value) ->
+      if value
+        item = new Iterable.ListItem {label:value,removeable:false,draggable:false}
+        @addItem item
+        @list.set 'selected', item
+      @prompt.hide null, yes
+    ).bind @
+    
+    @list.addEvent 'selectedChange', ( ->
+      item = @list.selected
+      #if e?
+      #  e.stop()
       @text.set 'text', item.label
       @fireEvent 'change', item.label
-      @picker.hide e, yes
+      @picker.hide null, yes
     ).bind @
     @update();
     
@@ -1911,12 +1965,13 @@ Data.Abstract = new Class {
   }
   initialize: (options) ->
     @base = new Element 'div'
-    @base.addEvent 'addedToDom', @ready.bindWithEvent @
+    @base.addEvent 'addedToDom', @ready.bind @
     @mux()
     @create()
     @setAttributes options
     @
   update: ->
+    console.log 'update'
   create: ->
   ready: ->
   toElement: ->
@@ -2059,19 +2114,18 @@ provides: Data.Color
 ###
 Data.Color = new Class {
   Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
+  Implements: [Interfaces.Enabled,Interfaces.Children, Interfaces.Size]
   Binds: ['change']
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Color.class
+    }
+  }
   options:{
-    class: GDotUI.Theme.Color.class
-    sb: GDotUI.Theme.Color.sb
-    hue: GDotUI.Theme.Color.hue 
     wrapper: GDotUI.Theme.Color.wrapper
-    white: GDotUI.Theme.Color.white
-    black: GDotUI.Theme.Color.black
-    format: GDotUI.Theme.Color.format
   }
   initialize: (options) ->
-    @parent(options)
+    @parent options
 
     @angle = 0
     @radius = 0    
@@ -2082,11 +2136,10 @@ Data.Color = new Class {
     @brightness = 100
     
     @center = {}
-    @size = {}
+    #@size = {}
     
     @
   create: ->
-    @base.addClass @options.class
     
     @hslacone = $(document.createElement('canvas'))
     @background = $(document.createElement('canvas'))
@@ -2099,25 +2152,37 @@ Data.Color = new Class {
       }
       
     @colorData = new Data.Color.SlotControls()
-    @bgColor = new Color('#fff')
+    @colorData.addEvent 'change', ( ->
+      @fireEvent 'change', arguments
+    ).bind @
     @base.adopt @wrapper
-    @hueN = @colorData.hue
-    @saturationN = @colorData.saturation
-    @lightness = @colorData.lightness
-    @alpha = @colorData.alpha
-    @hueN.addEvent 'change',( (step) ->
-      if typeof(step) == "object"
-        step = 0
-      @setHue(step)
-    ).bindWithEvent @
-    @saturationN.addEvent 'change',( (step) ->
-      @setSaturation step
-    ).bindWithEvent @
-    @lightness.addEvent 'change',( (step) ->
+
+    @colorData.lightnessData.addEvent 'change',( (step) ->
       @hslacone.setStyle 'opacity',step/100
-      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-    ).bindWithEvent @
+    ).bind @
+
+    @colorData.hueData.addEvent 'change', ((value) ->
+      @positionKnob value, @colorData.get('saturation')
+    ).bind @
     
+    @colorData.saturationData.addEvent 'change', ((value) ->
+      @positionKnob @colorData.get('hue'), value
+    ).bind @
+    
+    @background.setStyles {
+      'position': 'absolute'
+      'z-index': 0
+    }
+    
+    @hslacone.setStyles {
+      'position': 'absolute'
+      'z-index': 1
+    }
+    
+    @xy = new Drag.Move @knob
+    
+    @wrapper.adopt @background, @hslacone, @knob
+    @base.grab @colorData
   drawHSLACone: (width,brightness) ->
     ctx = @background.getContext '2d'
     ctx.fillStyle = "#000";
@@ -2143,36 +2208,27 @@ Data.Color = new Class {
       ctx.lineTo(width/2,0)
       ctx.stroke()
       ctx.rotate(angle)
-      
-  ready: ->
-    @width = @wrapper.getSize().y
-    @background.setStyles {
-      'position': 'absolute'
-      'z-index': 0
-    }
+  
+  update: ->  
+    @hslacone.set 'width', @size
+    @hslacone.set 'height', @size
+    @background.set 'width', @size
+    @background.set 'height', @size
+    @wrapper.setStyle 'height', @size
+    @drawHSLACone @size, 100
+    @colorData.set 'size', @size
     
-    @hslacone.setStyles {
-      'position': 'absolute'
-      'z-index': 1
-    }
-    
-    @hslacone.set 'width', @width
-    @hslacone.set 'height', @width
-    @background.set 'width', @width
-    @background.set 'height', @width
-    
-    @wrapper.adopt @background, @hslacone, @knob
-    
-    @drawHSLACone @width, 100
-    
-    @xy = new Drag.Move @knob
-    
-    @halfWidth = @width/2
-    @size = @knob.getSize()
-    @knob.setStyles {left:@halfWidth-@size.x/2, top:@halfWidth-@size.y/2}
-    
+    @knobSize = @knob.getSize()
+    @halfWidth = @size/2
     @center = {x: @halfWidth, y:@halfWidth}
-    
+    @positionKnob @colorData.get('hue'), @colorData.get('saturation')
+  positionKnob: (hue,saturation) ->
+    @radius = saturation/100*@halfWidth
+    @angle = -((180-hue)*(Math.PI/180))
+    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@knobSize.y/2+@center.y
+    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@knobSize.x/2+@center.x
+  ready: ->
+    @update()
     @xy.addEvent 'beforeStart',((el,e) ->
         @lastPosition = el.getPosition(@wrapper)
       ).bind @
@@ -2180,15 +2236,15 @@ Data.Color = new Class {
       if @enabled
         position = el.getPosition(@wrapper)
         
-        x = @center.x-position.x-@size.x/2
-        y = @center.y-position.y-@size.y/2
+        x = @center.x-position.x-@knobSize.x/2
+        y = @center.y-position.y-@knobSize.y/2
         
         @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
         @angle = Math.atan2(y,x)
         
         if @radius > @halfWidth
-          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@size.y/2+@center.y
-          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@size.x/2+@center.x
+          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@knobSize.y/2+@center.y
+          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@knobSize.x/2+@center.x
           @saturation = 100
         else
           sat =  Math.round @radius 
@@ -2196,82 +2252,11 @@ Data.Color = new Class {
         
         an = Math.round(@angle*(180/Math.PI))
         @hue = if an < 0 then 180-Math.abs(an) else 180+an
-        @hueN.setValue @hue
-        @saturationN.setValue @saturation
-        @colorData.updateControls()
-        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
+        @colorData.set 'hue', @hue
+        @colorData.set 'saturation', @saturation
       else
         el.setPosition @lastPosition
     ).bind @
-   
-    
-    @colorData.readyCallback = @readyCallback
-    @addChild @colorData
-    
-   
-    ###
-    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
-      item.addEvent 'click',( (e)->
-        @type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
-        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-      ).bindWithEvent @
-    ).bind @
-    ###
-    @alpha.addEvent 'change',( (step) ->
-      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-    ).bindWithEvent @
-    @parent()
-  readyCallback: ->  
-    @alpha.setValue 100
-    @lightness.setValue 100
-    @hue.setValue 0
-    @saturation.setValue 0
-    @updateControls()
-    delete @readyCallback
-  setHue: (hue) ->
-    @angle = -((180-hue)*(Math.PI/180))
-    @hue = hue
-    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
-    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
-    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-  setSaturation: (sat) ->
-    @radius = sat
-    @saturation = sat
-    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
-    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
-    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-  setValue: (color, alpha, type) ->
-    @hue = color.hsb[0]
-    @saturation = color.hsb[1]
-    @angle = -((180-color.hsb[0])*(Math.PI/180))
-    @radius = color.hsb[1]
-    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
-    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
-    @hueN.setValue color.hsb[0]
-    @saturationN.setValue color.hsb[1]
-    @alpha.setValue alpha
-    @lightness.setValue color.hsb[2]
-    @colorData.updateControls()
-    @hslacone.setStyle 'opacity',color.hsb[2]/100
-    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
-      if item.get('value') == type
-        item.set 'checked', true
-    ).bind @
-    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()}
-  setColor: ->
-    @finalColor = $HSB(@hue,@saturation,100)
-    type = 
-    @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
-  getValue: ->
-    @finalColor
-  change: (pos) ->
-    @saturation.slider.slider.detach()
-    @saturation.setValue pos.x
-    @saturation.slider.slider.attach()
-    @lightness.slider.slider.detach()
-    @lightness.setValue 100-pos.y
-    @lightness.slider.slider.attach()
-    @setColor()
 }
 Data.Color.ReturnValues = {
   type: 'radio'
@@ -2301,35 +2286,82 @@ Data.Color.ReturnValues = {
 }
 Data.Color.SlotControls = new Class {
   Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
-  options:{
-    class:GDotUI.Theme.Color.controls.class
+  Implements: [Interfaces.Enabled,Interfaces.Children,Interfaces.Size]
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Color.controls.class
+    }
+    hue: {
+      value: 0
+      setter: (value) ->
+        @hueData.setValue value
+        value
+      getter: ->
+        @hueData.getValue 'value'
+    }
+    saturation: {
+      value: 0
+      setter: (value) ->
+        @saturationData.setValue value
+        value
+      getter: ->
+        @saturationData.getValue 'value'
+    }
+    lightness: {
+      value: 100
+      setter: (value) ->
+        @lightnessData.setValue value
+        value
+    }
+    alpha: {
+      value: 100
+      setter: (value) ->
+        @alphaData.setValue value
+        value
+    }
+    type: {
+      value: 'hex'
+      setter: (value) ->
+        @col.children.each (item) ->
+          if item.label == value
+            @col.setActive item
+        , @
+        value
+    }
   }
-  initialize: (options) ->
-    @parent(options)
-  updateControls: ->
-    #@hue.base.setStyle 'background-color', new $HSB(@hue.getValue(),100,100)
-    #@saturation.base.setStyle 'background-color', new $HSB(@hue.getValue(),@saturation.getValue(),100)
-    #@lightness.base.setStyle 'background-color', new $HSB(0,0,@lightness.getValue())
+  update: ->
+    @col.set 'size', @size
+    @hueData.set 'size', @size
+    @saturationData.set 'size', @size
+    @lightnessData.set 'size', @size
+    @alphaData.set 'size', @size
+    if @hue? and @saturation? and @lightness? and @type? and @alpha?
+      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness), type:@type, alpha:@alpha} 
   create: ->
-    @base.addClass @options.class  
-    @hue = new Data.Number {range:[0,360],reset: off, steps: [360], label:'Hue'}
-    @hue.addEvent 'change', @updateControls.bind(@)
-    @saturation = new Data.Number {range:[0,100],reset: off, steps: [100] , label:'Saturation'}
-    @saturation.addEvent 'change', @updateControls.bind(@)
-    @lightness = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Lightness'}
-    @lightness.addEvent 'change', @updateControls.bind(@)
-    @alpha = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Alpha'}
+    @hueData = new Data.Number {range:[0,360],reset: off, steps: [360], label:'Hue'}
+    @hueData.addEvent 'change', ((value) ->
+      @set 'hue', value
+    ).bind @
+    @saturationData = new Data.Number {range:[0,100],reset: off, steps: [100] , label:'Saturation'}
+    @saturationData.addEvent 'change', ((value) ->
+      @set 'saturation', value
+    ).bind @
+    @lightnessData = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Lightness'}
+    @lightnessData.addEvent 'change', ((value) ->
+      @set 'lightness', value
+    ).bind @
+    @alphaData = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Alpha'}
+    @alphaData.addEvent 'change', ((value) ->
+      @set 'alpha', value
+    ).bind @
     @col = new Core.PushGroup()
     Data.Color.ReturnValues.options.each ((item) ->
       @col.addItem new Core.Push({label:item.label})
     ).bind @
-  ready: ->
-    @adoptChildren @hue, @saturation, @lightness, @alpha, @col
-    #@base.getElements('input[type=radio]')[0].set('checked',true)
-    if @readyCallback?
-      @readyCallback()
-    @parent()
+    @col.addEvent 'change', ((value) ->
+      @set 'type', value.label
+    ).bind @
+    @adoptChildren @hueData, @saturationData, @lightnessData, @alphaData, @col
 }
 
 
@@ -2418,9 +2450,9 @@ Data.Date = new Class {
       while i > cdays
         @days.list.removeItem @days.list.items[i-1]
         i--
-    @days.select @days.list.items[@date.getDate()-1]
-    @month.select @month.list.items[@date.getMonth()]
-    @years.select @years.list.getItemFromTitle(@date.getFullYear())
+    @days.list.set 'selected', @days.list.items[@date.getDate()-1]
+    @month.list.set 'selected', @month.list.items[@date.getMonth()]
+    @years.list.set 'selected', @years.list.getItemFromTitle(@date.getFullYear())
 }
 
 
@@ -3079,7 +3111,7 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Core.Select, Data.Number]
+requires: [Data.Abstract, GDotUI, Data.Select, Data.Number]
 
 provides: Data.Unit
 
@@ -3126,7 +3158,7 @@ Data.Unit = new Class {
     @value = 0
     @selectSize = 80
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
-    @sel = new Core.Select({size: 80})
+    @sel = new Data.Select({size: 80})
     Object.each UnitList,((item) ->
       @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
     ).bind @
@@ -3487,8 +3519,8 @@ Pickers.Base = new Class {
     @picker.set 'content', @data
     @
 }
-
 Pickers.Color = new Pickers.Base {type:'Color'}
+###
 Pickers.Number = new Pickers.Base {type:'Number'}
 Pickers.Time = new Pickers.Base {type:'Time'}
 Pickers.Text = new Pickers.Base {type:'Text'}
@@ -3498,5 +3530,5 @@ Pickers.Table = new Pickers.Base {type:'Table'}
 Pickers.Unit = new Pickers.Base {type:'Unit'}
 #Pickers.Select = new Pickers.Base {type:'Select'}
 Pickers.List = new Pickers.Base {type:'List'}
-
+###
 

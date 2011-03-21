@@ -27,6 +27,14 @@ Iterable.List = new Class {
         @items.filter(((item) ->
           if item.base.hasClass @options.selected then true else false
         ).bind(@))[0]
+      setter: (value, old) ->
+        if value?
+          if old != value
+            if old
+              old.base.removeClass @options.selected
+            value.base.addClass @options.selected
+        value
+        
     }
   }
   initialize: (options) ->
@@ -83,21 +91,11 @@ Iterable.List = new Class {
         yes
       else no
     filtered[0]
-  select: (item,e) ->
-    if item?
-      if @selected != item
-        if @selected?
-          @selected.base.removeClass @options.selected
-        @selected = item
-        @selected.base.addClass @options.selected
-        @fireEvent 'select', [item,e]
-    else
-      @fireEvent 'empty'
   addItem: (li) -> 
     @items.push li
     @base.grab li
     li.addEvent 'select', ( (item,e)->
-      @select item,e
+      @set 'selected', item 
       ).bindWithEvent @
     li.addEvent 'invoked', ( (item) ->
       @fireEvent 'invoked', arguments

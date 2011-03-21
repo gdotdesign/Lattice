@@ -90,7 +90,7 @@ Core.Slider = new Class {
       @value = Number.from position
     else
       position = Math.round((position/@steps)*@size)
-      percent = Math.round((position/@size)*@get('steps'))
+      percent = Math.round((position/@size)*@steps)
       if position < 0
         @progress.setStyle @modifier, 0+"px"
       if position > @size

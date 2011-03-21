@@ -1,6 +1,6 @@
 ---JS
 window.addEvent('domready', function(){
-  select = new Core.Select({'default':'background-break'});
+  select = new Data.Select({'default':'background-break'});
   list = [' bounding-box','each-box','continuous','border-box','padding-box','content-box','no-clip']
   list.each(function(item){
     select.addItem(new Iterable.ListItem({label:item,removeable:false,draggable:false}))

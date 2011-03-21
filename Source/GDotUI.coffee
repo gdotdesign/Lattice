@@ -19,6 +19,7 @@ Data = {}
 Iterable = {}
 Pickers = {}
 Forms = {}
+Dialog = {}
 
 if !GDotUI?
   GDotUI = {}

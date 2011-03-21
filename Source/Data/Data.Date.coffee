@@ -83,7 +83,7 @@ Data.Date = new Class {
       while i > cdays
         @days.list.removeItem @days.list.items[i-1]
         i--
-    @days.select @days.list.items[@date.getDate()-1]
-    @month.select @month.list.items[@date.getMonth()]
-    @years.select @years.list.getItemFromTitle(@date.getFullYear())
+    @days.list.set 'selected', @days.list.items[@date.getDate()-1]
+    @month.list.set 'selected', @month.list.items[@date.getMonth()]
+    @years.list.set 'selected', @years.list.getItemFromTitle(@date.getFullYear())
 }

@@ -33,12 +33,31 @@ $minWidth: 85px
 .select.disabled .text
   +linear_gradient_imp(#535353,#373737)
 
+.dialog-prompt
+  :background-color #626262
+  input
+    +basic_style
+    :width $width
+    :-webkit-user-select auto
+    :background-color #A3A3A3
+    :font-family Sans
+    :font-size 12px
+    :height 22px
+    :color #1c1c1c
+.dialog-prompt-label
+  :color #1c1c1c
+  :margin
+    :left 7px
+    :bottom 2px
+    :top 7px
+  :font-size 12px
+
 .button.disabled, .icon.disabled, .icon.supressed
   +linear_gradient_imp(#898989,#6a6a6a)
 .button.disabled
   :color #212121 !important
 
-.slot, textarea, .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .color, .unit-pick
+.slot, textarea, .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .unit-pick, .dialog-prompt
   +basic_style
 
 .picker > div:first-child
@@ -272,7 +291,7 @@ textarea
 .number
   :border none
   &.horizontal
-    :width $width 
+    :width $width
     :min-width $minWidth
     :height 20px
   &.vertical

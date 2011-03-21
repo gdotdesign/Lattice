@@ -1,34 +1,19 @@
 ###
 ---
 
-name: Core.Select
+name: Data.Select
 
 description: Select Element
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List]
+requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List, Dialog.Prompt]
 
-provides: [Core.Select]
+provides: [Data.Select]
 
 ...
 ###
-Prompt = new Class {
-  Extends:Core.Abstract
-  Delegates: {
-    picker: ['show','hide','attach']
-  }
-  initialize: (options) ->
-    @parent options
-  create: ->
-    @label = new Element 'div', {text:'addStuff'}
-    @input = new Element 'input',{type:'text'}
-    @button = new Element 'input', {type:'button'}
-    @base.adopt @label,@input,@button;
-    @picker = new Core.Picker()
-    @picker.set 'content', @base
-}
-Core.Select = new Class {
+Data.Select = new Class {
   Extends:Core.Abstract
   Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children]
   Attributes: {
@@ -65,7 +50,7 @@ Core.Select = new Class {
     if li?
       li.label
   setValue: (value) ->
-    @list.select @list.getItemFromTitle(value)
+    @list.set 'selected', @list.getItemFromTitle(value)
   update: ->
     @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
   create: ->
@@ -100,10 +85,7 @@ Core.Select = new Class {
       e.stop()
       if @enabled
         @prompt.show()
-      #a = window.prompt('something')
-      #if a
-      #  item = new Iterable.ListItem {title:a,removeable:false,draggable:false}
-      #  @addItem item
+      #
     ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
@@ -112,14 +94,24 @@ Core.Select = new Class {
     @picker.set 'content', @list
     @base.adopt @text
     
-    @prompt = new Prompt();
+    @prompt = new Dialog.Prompt();
+    @prompt.set 'label', 'Add item:'
     @prompt.attach @base, false
-    @list.addEvent 'select', ( (item,e)->
-      if e?
-        e.stop()
+    @prompt.addEvent 'invoked', ((value) ->
+      if value
+        item = new Iterable.ListItem {label:value,removeable:false,draggable:false}
+        @addItem item
+        @list.set 'selected', item
+      @prompt.hide null, yes
+    ).bind @
+    
+    @list.addEvent 'selectedChange', ( ->
+      item = @list.selected
+      #if e?
+      #  e.stop()
       @text.set 'text', item.label
       @fireEvent 'change', item.label
-      @picker.hide e, yes
+      @picker.hide null, yes
     ).bind @
     @update();
     

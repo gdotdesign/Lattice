@@ -15,19 +15,18 @@ provides: Data.Color
 ###
 Data.Color = new Class {
   Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
+  Implements: [Interfaces.Enabled,Interfaces.Children, Interfaces.Size]
   Binds: ['change']
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Color.class
+    }
+  }
   options:{
-    class: GDotUI.Theme.Color.class
-    sb: GDotUI.Theme.Color.sb
-    hue: GDotUI.Theme.Color.hue 
     wrapper: GDotUI.Theme.Color.wrapper
-    white: GDotUI.Theme.Color.white
-    black: GDotUI.Theme.Color.black
-    format: GDotUI.Theme.Color.format
   }
   initialize: (options) ->
-    @parent(options)
+    @parent options
 
     @angle = 0
     @radius = 0    
@@ -38,11 +37,10 @@ Data.Color = new Class {
     @brightness = 100
     
     @center = {}
-    @size = {}
+    #@size = {}
     
     @
   create: ->
-    @base.addClass @options.class
     
     @hslacone = $(document.createElement('canvas'))
     @background = $(document.createElement('canvas'))
@@ -55,25 +53,37 @@ Data.Color = new Class {
       }
       
     @colorData = new Data.Color.SlotControls()
-    @bgColor = new Color('#fff')
+    @colorData.addEvent 'change', ( ->
+      @fireEvent 'change', arguments
+    ).bind @
     @base.adopt @wrapper
-    @hueN = @colorData.hue
-    @saturationN = @colorData.saturation
-    @lightness = @colorData.lightness
-    @alpha = @colorData.alpha
-    @hueN.addEvent 'change',( (step) ->
-      if typeof(step) == "object"
-        step = 0
-      @setHue(step)
-    ).bindWithEvent @
-    @saturationN.addEvent 'change',( (step) ->
-      @setSaturation step
-    ).bindWithEvent @
-    @lightness.addEvent 'change',( (step) ->
+
+    @colorData.lightnessData.addEvent 'change',( (step) ->
       @hslacone.setStyle 'opacity',step/100
-      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-    ).bindWithEvent @
+    ).bind @
+
+    @colorData.hueData.addEvent 'change', ((value) ->
+      @positionKnob value, @colorData.get('saturation')
+    ).bind @
     
+    @colorData.saturationData.addEvent 'change', ((value) ->
+      @positionKnob @colorData.get('hue'), value
+    ).bind @
+    
+    @background.setStyles {
+      'position': 'absolute'
+      'z-index': 0
+    }
+    
+    @hslacone.setStyles {
+      'position': 'absolute'
+      'z-index': 1
+    }
+    
+    @xy = new Drag.Move @knob
+    
+    @wrapper.adopt @background, @hslacone, @knob
+    @base.grab @colorData
   drawHSLACone: (width,brightness) ->
     ctx = @background.getContext '2d'
     ctx.fillStyle = "#000";
@@ -99,36 +109,27 @@ Data.Color = new Class {
       ctx.lineTo(width/2,0)
       ctx.stroke()
       ctx.rotate(angle)
-      
-  ready: ->
-    @width = @wrapper.getSize().y
-    @background.setStyles {
-      'position': 'absolute'
-      'z-index': 0
-    }
+  
+  update: ->  
+    @hslacone.set 'width', @size
+    @hslacone.set 'height', @size
+    @background.set 'width', @size
+    @background.set 'height', @size
+    @wrapper.setStyle 'height', @size
+    @drawHSLACone @size, 100
+    @colorData.set 'size', @size
     
-    @hslacone.setStyles {
-      'position': 'absolute'
-      'z-index': 1
-    }
-    
-    @hslacone.set 'width', @width
-    @hslacone.set 'height', @width
-    @background.set 'width', @width
-    @background.set 'height', @width
-    
-    @wrapper.adopt @background, @hslacone, @knob
-    
-    @drawHSLACone @width, 100
-    
-    @xy = new Drag.Move @knob
-    
-    @halfWidth = @width/2
-    @size = @knob.getSize()
-    @knob.setStyles {left:@halfWidth-@size.x/2, top:@halfWidth-@size.y/2}
-    
+    @knobSize = @knob.getSize()
+    @halfWidth = @size/2
     @center = {x: @halfWidth, y:@halfWidth}
-    
+    @positionKnob @colorData.get('hue'), @colorData.get('saturation')
+  positionKnob: (hue,saturation) ->
+    @radius = saturation/100*@halfWidth
+    @angle = -((180-hue)*(Math.PI/180))
+    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@knobSize.y/2+@center.y
+    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@knobSize.x/2+@center.x
+  ready: ->
+    @update()
     @xy.addEvent 'beforeStart',((el,e) ->
         @lastPosition = el.getPosition(@wrapper)
       ).bind @
@@ -136,15 +137,15 @@ Data.Color = new Class {
       if @enabled
         position = el.getPosition(@wrapper)
         
-        x = @center.x-position.x-@size.x/2
-        y = @center.y-position.y-@size.y/2
+        x = @center.x-position.x-@knobSize.x/2
+        y = @center.y-position.y-@knobSize.y/2
         
         @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
         @angle = Math.atan2(y,x)
         
         if @radius > @halfWidth
-          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@size.y/2+@center.y
-          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@size.x/2+@center.x
+          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@knobSize.y/2+@center.y
+          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@knobSize.x/2+@center.x
           @saturation = 100
         else
           sat =  Math.round @radius 
@@ -152,82 +153,11 @@ Data.Color = new Class {
         
         an = Math.round(@angle*(180/Math.PI))
         @hue = if an < 0 then 180-Math.abs(an) else 180+an
-        @hueN.setValue @hue
-        @saturationN.setValue @saturation
-        @colorData.updateControls()
-        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
+        @colorData.set 'hue', @hue
+        @colorData.set 'saturation', @saturation
       else
         el.setPosition @lastPosition
     ).bind @
-   
-    
-    @colorData.readyCallback = @readyCallback
-    @addChild @colorData
-    
-   
-    ###
-    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
-      item.addEvent 'click',( (e)->
-        @type = @colorData.base.getElements( 'input[type=radio]:checked')[0].get('value')
-        @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-      ).bindWithEvent @
-    ).bind @
-    ###
-    @alpha.addEvent 'change',( (step) ->
-      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-    ).bindWithEvent @
-    @parent()
-  readyCallback: ->  
-    @alpha.setValue 100
-    @lightness.setValue 100
-    @hue.setValue 0
-    @saturation.setValue 0
-    @updateControls()
-    delete @readyCallback
-  setHue: (hue) ->
-    @angle = -((180-hue)*(Math.PI/180))
-    @hue = hue
-    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
-    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
-    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-  setSaturation: (sat) ->
-    @radius = sat
-    @saturation = sat
-    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
-    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
-    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()} 
-  setValue: (color, alpha, type) ->
-    @hue = color.hsb[0]
-    @saturation = color.hsb[1]
-    @angle = -((180-color.hsb[0])*(Math.PI/180))
-    @radius = color.hsb[1]
-    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@size.y/2+@center.y
-    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@size.x/2+@center.x
-    @hueN.setValue color.hsb[0]
-    @saturationN.setValue color.hsb[1]
-    @alpha.setValue alpha
-    @lightness.setValue color.hsb[2]
-    @colorData.updateControls()
-    @hslacone.setStyle 'opacity',color.hsb[2]/100
-    @colorData.base.getElements( 'input[type=radio]').each ((item) ->
-      if item.get('value') == type
-        item.set 'checked', true
-    ).bind @
-    @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness.getValue()), type:@type, alpha:@alpha.getValue()}
-  setColor: ->
-    @finalColor = $HSB(@hue,@saturation,100)
-    type = 
-    @fireEvent 'change', {color:@finalColor, type:type, alpha:@alpha.getValue()}
-  getValue: ->
-    @finalColor
-  change: (pos) ->
-    @saturation.slider.slider.detach()
-    @saturation.setValue pos.x
-    @saturation.slider.slider.attach()
-    @lightness.slider.slider.detach()
-    @lightness.setValue 100-pos.y
-    @lightness.slider.slider.attach()
-    @setColor()
 }
 Data.Color.ReturnValues = {
   type: 'radio'
@@ -257,33 +187,80 @@ Data.Color.ReturnValues = {
 }
 Data.Color.SlotControls = new Class {
   Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
-  options:{
-    class:GDotUI.Theme.Color.controls.class
+  Implements: [Interfaces.Enabled,Interfaces.Children,Interfaces.Size]
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Color.controls.class
+    }
+    hue: {
+      value: 0
+      setter: (value) ->
+        @hueData.setValue value
+        value
+      getter: ->
+        @hueData.getValue 'value'
+    }
+    saturation: {
+      value: 0
+      setter: (value) ->
+        @saturationData.setValue value
+        value
+      getter: ->
+        @saturationData.getValue 'value'
+    }
+    lightness: {
+      value: 100
+      setter: (value) ->
+        @lightnessData.setValue value
+        value
+    }
+    alpha: {
+      value: 100
+      setter: (value) ->
+        @alphaData.setValue value
+        value
+    }
+    type: {
+      value: 'hex'
+      setter: (value) ->
+        @col.children.each (item) ->
+          if item.label == value
+            @col.setActive item
+        , @
+        value
+    }
   }
-  initialize: (options) ->
-    @parent(options)
-  updateControls: ->
-    #@hue.base.setStyle 'background-color', new $HSB(@hue.getValue(),100,100)
-    #@saturation.base.setStyle 'background-color', new $HSB(@hue.getValue(),@saturation.getValue(),100)
-    #@lightness.base.setStyle 'background-color', new $HSB(0,0,@lightness.getValue())
+  update: ->
+    @col.set 'size', @size
+    @hueData.set 'size', @size
+    @saturationData.set 'size', @size
+    @lightnessData.set 'size', @size
+    @alphaData.set 'size', @size
+    if @hue? and @saturation? and @lightness? and @type? and @alpha?
+      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness), type:@type, alpha:@alpha} 
   create: ->
-    @base.addClass @options.class  
-    @hue = new Data.Number {range:[0,360],reset: off, steps: [360], label:'Hue'}
-    @hue.addEvent 'change', @updateControls.bind(@)
-    @saturation = new Data.Number {range:[0,100],reset: off, steps: [100] , label:'Saturation'}
-    @saturation.addEvent 'change', @updateControls.bind(@)
-    @lightness = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Lightness'}
-    @lightness.addEvent 'change', @updateControls.bind(@)
-    @alpha = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Alpha'}
+    @hueData = new Data.Number {range:[0,360],reset: off, steps: [360], label:'Hue'}
+    @hueData.addEvent 'change', ((value) ->
+      @set 'hue', value
+    ).bind @
+    @saturationData = new Data.Number {range:[0,100],reset: off, steps: [100] , label:'Saturation'}
+    @saturationData.addEvent 'change', ((value) ->
+      @set 'saturation', value
+    ).bind @
+    @lightnessData = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Lightness'}
+    @lightnessData.addEvent 'change', ((value) ->
+      @set 'lightness', value
+    ).bind @
+    @alphaData = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Alpha'}
+    @alphaData.addEvent 'change', ((value) ->
+      @set 'alpha', value
+    ).bind @
     @col = new Core.PushGroup()
     Data.Color.ReturnValues.options.each ((item) ->
       @col.addItem new Core.Push({label:item.label})
     ).bind @
-  ready: ->
-    @adoptChildren @hue, @saturation, @lightness, @alpha, @col
-    #@base.getElements('input[type=radio]')[0].set('checked',true)
-    if @readyCallback?
-      @readyCallback()
-    @parent()
+    @col.addEvent 'change', ((value) ->
+      @set 'type', value.label
+    ).bind @
+    @adoptChildren @hueData, @saturationData, @lightnessData, @alphaData, @col
 }

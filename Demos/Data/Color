@@ -32,21 +32,19 @@
 window.addEvent('domready', function(){
   color = new Data.Color();
   color.base.setStyle('float','left');
+  
+  slider = new Data.Number({label:'Size'})
+  slider.addEvent('change',function(value){
+    color.set('size', value)
+  });
+  slider.setValue(200)
+  
+  $("options").adopt(slider);
+  
   $(color).inject($("cpick"),'after')
   color.addEvent('change', function(e){
     $("cpick").setStyle('background-color',e.color);
+    $("cpick").setStyle('opacity', e.alpha/100);
     $("cpick").setStyle('color',e.color.hsb[2] < 50?'#fff':'#333');
   });
 });
----CLASSES
-Color:{
-   sb:'sb',
-   black:'black',
-   white:'white',
-   wrapper:'wrapper',
-   class:'color',
-   format: 'hex', 
-   controls:{
-       class:'slotcontrol'
-   }
-}

@@ -25,8 +25,7 @@ Interfaces.Size = new Class {
     @addAttribute 'size', {
       value: null
       setter: (value, old) ->
-        @size = value
-        size = if @size < @minSize then @minSize else @size
+        size = if value < @minSize then @minSize else value
         @base.setStyle 'width', size
         size
     }

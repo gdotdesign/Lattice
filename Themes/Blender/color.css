@@ -1,14 +1,20 @@
+.picker .color .number, .picker .color .pushgroup {
+  box-shadow: 0 0 0 0;
+  -moz-box-shadow: 0 0 0 0;
+  -webkit-box-shadow: 0 0 0 0; }
+
 .color {
-  width: 210px;
+  width: 200px;
+  min-width: 85px;
+  margin: 5px;
   padding: 10px; }
   .color .number {
     -webkit-transition-duration: 0; }
+  .color .pushgroup, .color .number {
+    margin: 5px 0; }
   .color .wrapper {
     position: relative;
-    width: 200px;
-    height: 200px;
-    margin: 10px 0;
-    margin-left: 5px; }
+    margin: 10px 0; }
   .color #xyknob {
     width: 10px;
     cursor: crosshair;

@@ -1,14 +1,20 @@
+.picker .color .number, .picker .color .pushgroup {
+  box-shadow: 0 0 0 0;
+  -moz-box-shadow: 0 0 0 0;
+  -webkit-box-shadow: 0 0 0 0; }
+
 .color {
-  width: 210px;
+  width: 200px;
+  min-width: 85px;
+  margin: 5px;
   padding: 10px; }
   .color .number {
     -webkit-transition-duration: 0; }
+  .color .pushgroup, .color .number {
+    margin: 5px 0; }
   .color .wrapper {
     position: relative;
-    width: 200px;
-    height: 200px;
-    margin: 10px 0;
-    margin-left: 5px; }
+    margin: 10px 0; }
   .color #xyknob {
     width: 10px;
     cursor: crosshair;
@@ -113,6 +119,37 @@
   background-image: -moz-linear-gradient(100% 100% 90deg, #373737, #535353) !important;
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#535353), to(#373737)) !important; }
 
+.dialog-prompt {
+  background-color: #626262; }
+  .dialog-prompt input {
+    border: 1px solid #272727;
+    font-size: 12px;
+    margin: 5px;
+    color: #666666;
+    background-color: #727272;
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
+    box-shadow: 0 1px 2px #878787;
+    -moz-box-shadow: 0 1px 2px #878787;
+    -webkit-box-shadow: 0 1px 2px #878787;
+    -webkit-user-select: none;
+    width: 200px;
+    -webkit-user-select: auto;
+    background-color: #a3a3a3;
+    font-family: Sans;
+    font-size: 12px;
+    height: 22px;
+    color: #1c1c1c; }
+
+.dialog-prompt-label {
+  color: #1c1c1c;
+  margin-left: 7px;
+  margin-bottom: 2px;
+  margin-top: 7px;
+  font-size: 12px; }
+
 .button.disabled, .icon.disabled, .icon.supressed {
   background-image: -moz-linear-gradient(100% 100% 90deg, #6a6a6a, #898989) !important;
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#898989), to(#6a6a6a)) !important; }
@@ -120,7 +157,7 @@
 .button.disabled {
   color: #212121 !important; }
 
-.slot, textarea, .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .color, .unit-pick {
+.slot, textarea, .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .unit-pick, .dialog-prompt {
   border: 1px solid #272727;
   font-size: 12px;
   margin: 5px;
