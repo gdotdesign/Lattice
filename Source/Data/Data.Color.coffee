@@ -31,15 +31,13 @@ Data.Color = new Class {
     @angle = 0
     @radius = 0    
     
-    #color
     @hue = 0
     @saturation = 0
     @brightness = 100
     
     @center = {}
-    #@size = {}
-    
     @
+    
   create: ->
     
     @hslacone = $(document.createElement('canvas'))
@@ -195,30 +193,34 @@ Data.Color.SlotControls = new Class {
     hue: {
       value: 0
       setter: (value) ->
-        @hueData.setValue value
+        @hueData.set 'value', value
         value
       getter: ->
-        @hueData.getValue 'value'
+        @hueData.value
     }
     saturation: {
       value: 0
       setter: (value) ->
-        @saturationData.setValue value
+        @saturationData.set 'value', value
         value
       getter: ->
-        @saturationData.getValue 'value'
+        @saturationData.value
     }
     lightness: {
       value: 100
       setter: (value) ->
-        @lightnessData.setValue value
+        @lightnessData.set 'value', value
         value
+      getter: ->
+        @lightnessData.value
     }
     alpha: {
       value: 100
       setter: (value) ->
-        @alphaData.setValue value
+        @alphaData.set 'value', value
         value
+      getter: ->
+        @alphaData.value
     }
     type: {
       value: 'hex'
@@ -228,39 +230,49 @@ Data.Color.SlotControls = new Class {
             @col.setActive item
         , @
         value
+      getter: ->
+        if @col.active?
+          @col.active.label
     }
   }
   update: ->
-    @col.set 'size', @size
-    @hueData.set 'size', @size
-    @saturationData.set 'size', @size
-    @lightnessData.set 'size', @size
-    @alphaData.set 'size', @size
-    if @hue? and @saturation? and @lightness? and @type? and @alpha?
-      @fireEvent 'change', {color:$HSB(@hue,@saturation,@lightness), type:@type, alpha:@alpha} 
+    hue = @get 'hue'
+    saturation = @get 'saturation'
+    lightness = @get 'lightness'
+    type = @get 'type'
+    alpha = @get 'alpha'
+    if hue? and saturation? and lightness? and type? and alpha?
+      @fireEvent 'change', {color:$HSB(hue,saturation,lightness), type:type, alpha:alpha} 
   create: ->
-    @hueData = new Data.Number {range:[0,360],reset: off, steps: [360], label:'Hue'}
+    @addEvent 'sizeChange',( ->
+      @col.set 'size', @size
+      @hueData.set 'size', @size
+      @saturationData.set 'size', @size
+      @lightnessData.set 'size', @size
+      @alphaData.set 'size', @size
+    ).bind @
+    @hueData = new Data.Number {range:[0,360],reset: off, steps: 360, label:'Hue'}
     @hueData.addEvent 'change', ((value) ->
-      @set 'hue', value
+      @update() 
     ).bind @
-    @saturationData = new Data.Number {range:[0,100],reset: off, steps: [100] , label:'Saturation'}
+    @saturationData = new Data.Number {range:[0,100],reset: off, steps: 100 , label:'Saturation'}
     @saturationData.addEvent 'change', ((value) ->
-      @set 'saturation', value
+      @update() 
     ).bind @
-    @lightnessData = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Lightness'}
+    @lightnessData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Lightness'}
     @lightnessData.addEvent 'change', ((value) ->
-      @set 'lightness', value
+      @update() 
     ).bind @
-    @alphaData = new Data.Number {range:[0,100],reset: off, steps: [100], label:'Alpha'}
+    @alphaData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Alpha'}
     @alphaData.addEvent 'change', ((value) ->
-      @set 'alpha', value
+      @update() 
     ).bind @
     @col = new Core.PushGroup()
     Data.Color.ReturnValues.options.each ((item) ->
       @col.addItem new Core.Push({label:item.label})
     ).bind @
     @col.addEvent 'change', ((value) ->
-      @set 'type', value.label
+      @update()
     ).bind @
     @adoptChildren @hueData, @saturationData, @lightnessData, @alphaData, @col
 }

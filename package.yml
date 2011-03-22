@@ -25,7 +25,6 @@ sources:
   - "Source/Core/Core.Picker.coffee"
   - "Source/Core/Core.Slot.coffee"
   - "Source/Core/Core.Toggler.coffee"
-  - "Source/Core/Core.Textarea.coffee"
   - "Source/Core/Core.Overlay.coffee"
   - "Source/Core/Core.Tab.coffee"
   - "Source/Core/Core.Tabs.coffee"

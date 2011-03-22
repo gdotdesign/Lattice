@@ -186,11 +186,12 @@ Class.Mutators.Attributes = function(attributes) {
             this[name] = newVal;
             this.update();
             if (oldVal !== newVal) {
-              return this.fireEvent(name + 'Change', {
+              this.fireEvent(name + 'Change', {
                 newVal: newVal,
                 oldVal: oldVal
               });
             }
+            return newVal;
           }
         }
       } else if ($setter) {
@@ -1009,31 +1010,28 @@ Core.Slider = new Class({
         this.progress.setStyle(this.modifier, this.reset ? value / 2 : this.value / this.steps * value);
         return value;
       }
+    },
+    value: {
+      value: 0,
+      setter: function(value) {
+        var percent;
+        if (!this.reset) {
+          percent = Math.round((value / this.steps) * 100);
+          if (value < 0) {
+            this.progress.setStyle(this.modifier, 0);
+            value = 0;
+          }
+          if (this.value > this.steps) {
+            this.progress.setStyle(this.modifier, this.size);
+            value = this.steps;
+          }
+          if (!(value < 0) && !(value > this.steps)) {
+            this.progress.setStyle(this.modifier, (percent / 100) * this.size);
+          }
+        }
+        return value;
+      }
     }
-  },
-  initialize: function(options) {
-    this.value = 0;
-    return this.parent(options);
-  },
-  setValue: function(position) {
-    var percent;
-    if (this.reset) {
-      this.value = Number.from(position);
-    } else {
-      position = Math.round((position / this.steps) * this.size);
-      percent = Math.round((position / this.size) * this.steps);
-      if (position < 0) {
-        this.progress.setStyle(this.modifier, 0 + "px");
-      }
-      if (position > this.size) {
-        this.progress.setStyle(this.modifier, this.size + "px");
-      }
-      if (!(position < 0) && !(position > this.size)) {
-        this.progress.setStyle(this.modifier, (percent / this.steps) * this.size + "px");
-      }
-      this.value = Math.round((position / this.size) * this.steps);
-    }
-    return this.value;
   },
   create: function() {
     this.base.setStyle('position', 'relative');
@@ -1068,7 +1066,7 @@ Core.Slider = new Class({
         offset = Math.round((pos / this.size) * this.steps) - this.lastpos;
         this.lastpos = Math.round((Number.from(el.getStyle(this.modifier)) / this.size) * this.steps);
         if (pos > this.size) {
-          el.setStyle(this.modifier, "" + this.size + "px");
+          el.setStyle(this.modifier, this.size);
           pos = this.size;
         } else {
           if (this.reset) {
@@ -1078,33 +1076,18 @@ Core.Slider = new Class({
         if (!this.reset) {
           this.value = Math.round((pos / this.size) * this.steps);
         }
-        return this.fireEvent('step', this.value);
+        this.fireEvent('step', this.value);
+        return this.update();
       } else {
         return el.setStyle(this.modifier, this.disabledTop);
       }
     }).bind(this));
     return this.base.addEvent('mousewheel', (function(e) {
-      var offset, pos;
       e.stop();
-      offset = Number.from(e.wheel);
-      if (this.reset) {
-        this.value += offset;
-      } else {
-        pos = Number.from(this.progress.getStyle(this.modifier));
-        if (pos + offset < 0) {
-          this.progress.setStyle(this.modifier, 0 + "px");
-          pos = 0;
-        }
-        if (pos + offset > this.size) {
-          this.progress.setStyle(this.modifier, this.size + "px");
-          pos = pos + offset;
-        }
-        if (!(pos + offset < 0) && !(pos + offset > this.size)) {
-          this.progress.setStyle(this.modifier, (pos + offset / this.steps * this.size) + "px");
-          pos = pos + offset;
-        }
+      if (this.enabled) {
+        this.set('value', this.value + Number.from(e.wheel));
+        return this.fireEvent('step', this.value);
       }
-      return this.fireEvent('step', this.reset ? this.value : Math.round((pos / this.size) * this.steps));
     }).bind(this));
   }
 });
@@ -1738,30 +1721,6 @@ Core.Toggler = new Class({
 /*
 ---
 
-name: Core.Textarea
-
-description: Html from markdown.
-
-license: MIT-style license.
-
-requires: [Core.Abstract, GDotUI]
-
-provides: Core.Textarea
-
-...
-*/
-Core.Textarea = new Class({
-  Extends: Core.Abstract,
-  initialize: function(options) {
-    return this.parent(options);
-  },
-  create: function() {
-    return this.parent;
-  }
-});
-/*
----
-
 name: Core.Overlay
 
 description: Overlay for modal dialogs and stuff.
@@ -1846,41 +1805,28 @@ Core.Tab = new Class({
         this.base.set('text', value);
         return value;
       }
+    },
+    activeClass: {
+      value: GDotUI.Theme.Global.active
     }
-  },
-  options: {
-    label: '',
-    image: GDotUI.Theme.Icons.remove,
-    active: GDotUI.Theme.Global.active,
-    removeable: false
-  },
-  initialize: function(options) {
-    return this.parent(options);
   },
   create: function() {
     this.base.addEvent('click', (function() {
       return this.fireEvent('activate', this);
-    }).bindWithEvent(this));
-    this.label = new Element('div');
-    this.icon = new Core.Icon({
-      image: this.options.image
-    });
-    this.icon.addEvent('invoked', (function(ic, e) {
-      e.stop();
-      return this.fireEvent('remove', this);
-    }).bindWithEvent(this));
-    this.base.adopt(this.label);
-    if (this.options.removeable) {
-      return this.base.grab(this.icon);
+    }).bind(this));
+    return this.base.adopt(this.label);
+  },
+  activate: function(event) {
+    if (event) {
+      this.fireEvent('activated', this);
     }
+    return this.base.addClass(this.activeClass);
   },
-  activate: function() {
-    this.fireEvent('activated', this);
-    return this.base.addClass(this.options.active);
-  },
-  deactivate: function() {
-    this.fireEvent('deactivated', this);
-    return this.base.removeClass(this.options.active);
+  deactivate: function(event) {
+    if (event) {
+      this.fireEvent('deactivated', this);
+    }
+    return this.base.removeClass(this.activeClass);
   }
 });
 /*
@@ -1904,10 +1850,20 @@ Core.Tabs = new Class({
   Attributes: {
     "class": {
       value: GDotUI.Theme.Tabs["class"]
+    },
+    active: {
+      setter: function(value, old) {
+        if (!(old != null)) {
+          value.activate(false);
+        } else {
+          if (old !== value) {
+            old.deactivate(false);
+          }
+          tab.activate(false);
+        }
+        return value;
+      }
     }
-  },
-  options: {
-    autoRemove: true
   },
   initialize: function(options) {
     this.tabs = [];
@@ -1942,17 +1898,8 @@ Core.Tabs = new Class({
   },
   change: function(tab) {
     if (tab !== this.active) {
-      this.setActive(tab);
+      this.set('active', tab);
       return this.fireEvent('change', tab);
-    }
-  },
-  setActive: function(tab) {
-    if (this.active !== tab) {
-      if (this.active != null) {
-        this.active.deactivate();
-      }
-      tab.activate();
-      return this.active = tab;
     }
   },
   getByLabel: function(label) {
@@ -2204,9 +2151,6 @@ Data.Select = new Class({
       }
     }
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   getValue: function() {
     var li;
     li = this.list.get('selected');
@@ -2439,9 +2383,6 @@ Data.Number = new Class({
       value: null
     }
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   create: function() {
     this.parent();
     this.textLabel = new Element("div");
@@ -2454,21 +2395,11 @@ Data.Number = new Class({
     });
     this.base.grab(this.textLabel);
     return this.addEvent('step', (function(e) {
-      this.textLabel.set('text', this.label != null ? this.label + " : " + e : e);
       return this.fireEvent('change', e);
     }).bind(this));
   },
-  getValue: function() {
-    if (this.reset) {
-      return this.value;
-    } else {
-      return Math.round((Number.from(this.progress.getStyle(this.modifier)) / this.size) * this.steps);
-    }
-  },
-  setValue: function(step) {
-    var real;
-    real = this.parent(step);
-    return this.textLabel.set('text', this.label != null ? this.label + " : " + real : real);
+  update: function() {
+    return this.textLabel.set('text', this.label != null ? this.label + " : " + this.value : this.value);
   }
 });
 /*
@@ -2658,35 +2589,41 @@ Data.Color.SlotControls = new Class({
     hue: {
       value: 0,
       setter: function(value) {
-        this.hueData.setValue(value);
+        this.hueData.set('value', value);
         return value;
       },
       getter: function() {
-        return this.hueData.getValue('value');
+        return this.hueData.value;
       }
     },
     saturation: {
       value: 0,
       setter: function(value) {
-        this.saturationData.setValue(value);
+        this.saturationData.set('value', value);
         return value;
       },
       getter: function() {
-        return this.saturationData.getValue('value');
+        return this.saturationData.value;
       }
     },
     lightness: {
       value: 100,
       setter: function(value) {
-        this.lightnessData.setValue(value);
+        this.lightnessData.set('value', value);
         return value;
+      },
+      getter: function() {
+        return this.lightnessData.value;
       }
     },
     alpha: {
       value: 100,
       setter: function(value) {
-        this.alphaData.setValue(value);
+        this.alphaData.set('value', value);
         return value;
+      },
+      getter: function() {
+        return this.alphaData.value;
       }
     },
     type: {
@@ -2698,59 +2635,72 @@ Data.Color.SlotControls = new Class({
           }
         }, this);
         return value;
+      },
+      getter: function() {
+        if (this.col.active != null) {
+          return this.col.active.label;
+        }
       }
     }
   },
   update: function() {
-    this.col.set('size', this.size);
-    this.hueData.set('size', this.size);
-    this.saturationData.set('size', this.size);
-    this.lightnessData.set('size', this.size);
-    this.alphaData.set('size', this.size);
-    if ((this.hue != null) && (this.saturation != null) && (this.lightness != null) && (this.type != null) && (this.alpha != null)) {
+    var alpha, hue, lightness, saturation, type;
+    hue = this.get('hue');
+    saturation = this.get('saturation');
+    lightness = this.get('lightness');
+    type = this.get('type');
+    alpha = this.get('alpha');
+    if ((hue != null) && (saturation != null) && (lightness != null) && (type != null) && (alpha != null)) {
       return this.fireEvent('change', {
-        color: $HSB(this.hue, this.saturation, this.lightness),
-        type: this.type,
-        alpha: this.alpha
+        color: $HSB(hue, saturation, lightness),
+        type: type,
+        alpha: alpha
       });
     }
   },
   create: function() {
+    this.addEvent('sizeChange', (function() {
+      this.col.set('size', this.size);
+      this.hueData.set('size', this.size);
+      this.saturationData.set('size', this.size);
+      this.lightnessData.set('size', this.size);
+      return this.alphaData.set('size', this.size);
+    }).bind(this));
     this.hueData = new Data.Number({
       range: [0, 360],
       reset: false,
-      steps: [360],
+      steps: 360,
       label: 'Hue'
     });
     this.hueData.addEvent('change', (function(value) {
-      return this.set('hue', value);
+      return this.update();
     }).bind(this));
     this.saturationData = new Data.Number({
       range: [0, 100],
       reset: false,
-      steps: [100],
+      steps: 100,
       label: 'Saturation'
     });
     this.saturationData.addEvent('change', (function(value) {
-      return this.set('saturation', value);
+      return this.update();
     }).bind(this));
     this.lightnessData = new Data.Number({
       range: [0, 100],
       reset: false,
-      steps: [100],
+      steps: 100,
       label: 'Lightness'
     });
     this.lightnessData.addEvent('change', (function(value) {
-      return this.set('lightness', value);
+      return this.update();
     }).bind(this));
     this.alphaData = new Data.Number({
       range: [0, 100],
       reset: false,
-      steps: [100],
+      steps: 100,
       label: 'Alpha'
     });
     this.alphaData.addEvent('change', (function(value) {
-      return this.set('alpha', value);
+      return this.update();
     }).bind(this));
     this.col = new Core.PushGroup();
     Data.Color.ReturnValues.options.each((function(item) {
@@ -2759,7 +2709,7 @@ Data.Color.SlotControls = new Class({
       }));
     }).bind(this));
     this.col.addEvent('change', (function(value) {
-      return this.set('type', value.label);
+      return this.update();
     }).bind(this));
     return this.adoptChildren(this.hueData, this.saturationData, this.lightnessData, this.alphaData, this.col);
   }

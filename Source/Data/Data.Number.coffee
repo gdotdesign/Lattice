@@ -42,8 +42,6 @@ Data.Number = new Class {
       value: null
     }
   }
-  initialize: (options) ->
-    @parent options
   create: ->
     @parent()
     @textLabel = new Element "div"
@@ -56,15 +54,8 @@ Data.Number = new Class {
     }
     @base.grab @textLabel
     @addEvent 'step',( (e) ->
-      @textLabel.set 'text', if @label? then @label + " : " + e else e
       @fireEvent 'change', e
     ).bind @
-  getValue: ->
-    if @reset
-      @value
-    else
-      Math.round((Number.from(@progress.getStyle(@modifier))/@size)*@steps)
-  setValue: (step) ->
-    real = @parent step
-    @textLabel.set 'text', if @label? then @label + " : " + real else real
+  update: ->
+    @textLabel.set 'text', if @label? then @label + " : " + @value else @value
 }

@@ -21,7 +21,7 @@ window.addEvent('domready', function(){
   slider.addEvent('change',function(value){
     button.set('size', value)
   });
-  slider.setValue(200)
+  slider.set('value',200)
   
   $$(".demo").adopt(button);
   $("options").adopt(text,slider,push);

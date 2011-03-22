@@ -80,7 +80,7 @@
       tabs.add(tab);
     });
     $(tabs).inject($$(".box")[1],'after');
-    tabs.setActive(tab2)
+    tabs.set('active',tab2)
     $$(".box")[1].adopt(tab2.content)
   });
   /*

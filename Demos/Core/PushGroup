@@ -8,7 +8,7 @@ window.addEvent('domready', function(){
   slider.addEvent('change',function(value){
     group.set('size', value)
   });
-  slider.setValue(200)
+  slider.set('value',200)
   $$(".demo").grab(group);
   $("options").adopt(slider);
 });

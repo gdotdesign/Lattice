@@ -453,6 +453,28 @@ textarea {
 
 .number {
   border: none; }
+  .number:after {
+    content: "";
+    z-index: 1;
+    position: absolute;
+    top: 6px;
+    left: 5px;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-right: 4px solid #494949; }
+  .number:before {
+    content: "";
+    z-index: 1;
+    position: absolute;
+    top: 6px;
+    right: 5px;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 4px solid #494949; }
   .number.horizontal {
     width: 200px;
     min-width: 85px;

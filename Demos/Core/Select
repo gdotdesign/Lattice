@@ -12,7 +12,7 @@ window.addEvent('domready', function(){
   slider.addEvent('change',function(value){
     select.set('size', value)
   });
-  slider.setValue(200)
+  slider.set('value',200)
   
   push = new Core.Push({label:'Enable / Disable',size:200});
   push.addEvent('invoked',function(){

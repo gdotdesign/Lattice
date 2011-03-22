@@ -8,33 +8,33 @@ window.addEvent('domready', function(){
   slider.addEvent('change',function(value){
     iconGroup.set('radius', value)
   });
-  slider.setValue(60)
+  slider.set('value',60)
   slider1 = new Data.Number({label:'Start Angle',reset:false,steps:360})
   slider1.addEvent('change',function(value){
     iconGroup.set('startAngle', value)
   });
-  slider1.setValue(0)
+  slider1.set('value',0)
   slider2 = new Data.Number({label:'Degree',reset:false,steps:360})
   slider2.addEvent('change',function(value){
     iconGroup.set('degree', value)
   });
-  slider2.setValue(360)
+  slider2.set('value',360)
   slider3 = new Data.Number({label:'Spacing',reset:false,steps:40})
   slider3.addEvent('change',function(value){
     iconGroup.set('spacing', {x:value,y:value})
   });
-  slider3.setValue(10)
+  slider3.set('value',10)
   slider4 = new Data.Number({label:'Rows',reset:false,steps:10})
   slider4.addEvent('change',function(value){
     iconGroup.set('rows', value)
   });
-  slider4.setValue(3)
+  slider4.set('value',3)
   slider5 = new Data.Number({label:'Columns',reset:false,steps:10})
   slider5.addEvent('change',function(value){
     iconGroup.set('columns', value)
   });
-  slider5.setValue(0)
-  pushgroup = new Core.Select({editable:false});
+  slider5.set('value',0)
+  pushgroup = new Data.Select({editable:false});
   pushgroup.addEvent('change', function(value){
     iconGroup.set('mode',value)
     if(value === 'grid'){

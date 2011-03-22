@@ -37,7 +37,7 @@ window.addEvent('domready', function(){
   slider.addEvent('change',function(value){
     color.set('size', value)
   });
-  slider.setValue(200)
+  slider.set('value',200)
   
   $("options").adopt(slider);
   

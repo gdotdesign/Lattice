@@ -80,25 +80,22 @@ Core.Slider = new Class {
         @progress.setStyle @modifier, if @reset then value/2 else @value/@steps*value
         value
     }
+    value: {
+      value: 0
+      setter: (value) ->
+        if !@reset
+          percent = Math.round((value/@steps)*100)
+          if value < 0
+            @progress.setStyle @modifier, 0
+            value = 0
+          if @value > @steps
+            @progress.setStyle @modifier, @size
+            value = @steps
+          if not(value < 0) and not(value > @steps)
+            @progress.setStyle @modifier, (percent/100)*@size
+        value
+    }
   }
-  initialize: (options) ->
-    @value = 0
-    
-    @parent options
-  setValue: (position) ->
-    if @reset
-      @value = Number.from position
-    else
-      position = Math.round((position/@steps)*@size)
-      percent = Math.round((position/@size)*@steps)
-      if position < 0
-        @progress.setStyle @modifier, 0+"px"
-      if position > @size
-        @progress.setStyle @modifier, @size+"px"
-      if not(position < 0) and not(position > @size)
-        @progress.setStyle @modifier, (percent/@steps)*@size+"px"
-      @value = Math.round((position/@size)*@steps)
-    @value
   create: ->
 
     @base.setStyle 'position', 'relative'
@@ -132,7 +129,7 @@ Core.Slider = new Class {
         offset = Math.round((pos/@size)*@steps)-@lastpos
         @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@steps)
         if pos > @size
-          el.setStyle @modifier, "#{@size}px"
+          el.setStyle @modifier, @size
           pos = @size
         else
           if @reset
@@ -140,27 +137,16 @@ Core.Slider = new Class {
         if not @reset
           @value = Math.round((pos/@size)*@steps)
         @fireEvent 'step', @value
+        @update()
       else
         el.setStyle @modifier, @disabledTop
     ).bind @
     
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
-      offset = Number.from e.wheel
-      if @reset
-        @value += offset
-      else
-        pos = Number.from @progress.getStyle(@modifier)
-        if pos+offset < 0
-          @progress.setStyle @modifier, 0+"px"
-          pos = 0
-        if pos+offset > @size
-          @progress.setStyle @modifier, @size+"px"
-          pos = pos+offset
-        if not(pos+offset < 0) and not(pos+offset > @size)
-          @progress.setStyle @modifier, (pos+offset/@steps*@size)+"px"
-          pos = pos+offset
-      @fireEvent 'step', if @reset then @value else Math.round((pos/@size)*@steps)
+      if @enabled
+        @set 'value', @value+Number.from(e.wheel)
+        @fireEvent 'step', @value
     ).bind @
 
 }

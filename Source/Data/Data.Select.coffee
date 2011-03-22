@@ -43,8 +43,6 @@ Data.Select = new Class {
           
     }
   }
-  initialize: (options) ->
-    @parent options
   getValue: ->
     li = @list.get('selected')
     if li?
@@ -85,7 +83,6 @@ Data.Select = new Class {
       e.stop()
       if @enabled
         @prompt.show()
-      #
     ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
@@ -107,13 +104,11 @@ Data.Select = new Class {
     
     @list.addEvent 'selectedChange', ( ->
       item = @list.selected
-      #if e?
-      #  e.stop()
       @text.set 'text', item.label
       @fireEvent 'change', item.label
       @picker.hide null, yes
     ).bind @
-    @update();
+    @update()
     
   addItem: (item) ->
     item.base.set 'class', 'select-item'

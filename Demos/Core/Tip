@@ -27,21 +27,21 @@ window.addEvent('domready', function(){
   slider1.addEvent('change',function(value){
     tip.set('delay', value)
   });
-  slider1.setValue(500)
+  slider1.set('value',500)
   slider2 = new Data.Number({label:'z-index',reset:false,steps:15})
   slider2.addEvent('change',function(value){
     tip.set('zindex', value)
   });
-  slider2.setValue(1)
+  slider2.set('value',1)
   
-  select = new Core.Select({size:95,editable:false})
+  select = new Data.Select({size:95,editable:false})
   select.addItem(new Iterable.ListItem({label:'top'}))
   select.addItem(new Iterable.ListItem({label:'center'}))
   select.addItem(new Iterable.ListItem({label:'bottom'}))
   select.addEvent('change',function(value){
     tip.set('location',{x:select1.getValue(),y:value})
   });
-  select1 = new Core.Select({size:95,editable:false})
+  select1 = new Data.Select({size:95,editable:false})
   select1.addItem(new Iterable.ListItem({label:'left'}))
   select1.addItem(new Iterable.ListItem({label:'center'}))
   select1.addItem(new Iterable.ListItem({label:'right'}))

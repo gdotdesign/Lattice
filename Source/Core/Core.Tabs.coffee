@@ -20,9 +20,16 @@ Core.Tabs = new Class {
     class: {
       value:  GDotUI.Theme.Tabs.class
     }
-  }
-  options:{
-    autoRemove: on
+    active: {
+      setter: (value, old) ->
+        if not old?
+          value.activate(false)
+        else
+          if old isnt value
+            old.deactivate(false)
+          tab.activate(false)
+        value
+    }
   }
   initialize: (options) ->
     @tabs = []
@@ -48,14 +55,8 @@ Core.Tabs = new Class {
     @fireEvent 'tabRemoved', tab
   change: (tab) ->
     if tab isnt @active
-      @setActive tab
+      @set 'active', tab
       @fireEvent 'change', tab
-  setActive: (tab) ->
-    if @active isnt tab
-      if @active?
-        @active.deactivate()
-      tab.activate()
-      @active = tab
   getByLabel: (label) ->
     (@tabs.filter (item, i) ->
       if item.options.label is label

@@ -25,32 +25,21 @@ Core.Tab = new Class {
         @base.set 'text', value
         value
     }
+    activeClass: {
+      value: GDotUI.Theme.Global.active
+    }
   }
-  options:{
-    label: ''
-    image: GDotUI.Theme.Icons.remove
-    active: GDotUI.Theme.Global.active
-    removeable: off
-  }
-  initialize: (options) ->
-    @parent options
   create: ->
     @base.addEvent 'click', ( ->
       @fireEvent 'activate', @
-    ).bindWithEvent @
-    @label = new Element 'div'
-    @icon = new Core.Icon {image: @options.image}
-    @icon.addEvent 'invoked', ( (ic,e) ->
-      e.stop()
-      @fireEvent 'remove', @
-    ).bindWithEvent @
+    ).bind @
     @base.adopt @label
-    if @options.removeable
-      @base.grab @icon
-  activate: ->
-    @fireEvent 'activated', @
-    @base.addClass @options.active 
-  deactivate: ->
-    @fireEvent 'deactivated', @
-    @base.removeClass @options.active
+  activate: (event) ->
+    if event
+      @fireEvent 'activated', @
+    @base.addClass @activeClass 
+  deactivate: (event) ->
+    if event
+      @fireEvent 'deactivated', @
+    @base.removeClass @activeClass
 }
