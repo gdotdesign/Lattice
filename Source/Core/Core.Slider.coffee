@@ -7,15 +7,23 @@ description: Slider element for other elements.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
 
-provides: [Core.Slider, ResetSlider]
+provides: Core.Slider
 
+todo: fix progress width and height mode change, implement range at some point
 ...
 ###
 Core.Slider = new Class {
   Extends:Core.Abstract
-  Implements:[ Interfaces.Controls, Interfaces.Enabled ]
+  Implements:[
+    Interfaces.Controls
+    Interfaces.Enabled
+  ]
   Attributes: {
     class: {
       value: GDotUI.Theme.Slider.classes.base
@@ -97,9 +105,7 @@ Core.Slider = new Class {
     }
   }
   create: ->
-
     @base.setStyle 'position', 'relative'
-
     @progress = new Element "div"
     @progress.setStyles {
       position: 'absolute'
@@ -109,20 +115,17 @@ Core.Slider = new Class {
     @base.adopt @progress
     
     @drag = new Drag @progress, {handle:@base}
-    
     @drag.addEvent 'beforeStart', ( (el,e) ->
       @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@steps)
       if not @enabled
         @disabledTop = el.getStyle @modifier
     ).bind @
-    
     @drag.addEvent 'complete', ( (el,e) ->
       if @reset
         if @enabled
           el.setStyle @modifier, @size/2+"px"
       @fireEvent 'complete'
     ).bind @
-      
     @drag.addEvent 'drag', ( (el,e) ->
       if @enabled
         pos = Number.from el.getStyle(@modifier)
@@ -141,7 +144,6 @@ Core.Slider = new Class {
       else
         el.setStyle @modifier, @disabledTop
     ).bind @
-    
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
       if @enabled

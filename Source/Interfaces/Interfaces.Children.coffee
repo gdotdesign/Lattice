@@ -16,6 +16,8 @@ provides: Interfaces.Children
 Interfaces.Children = new Class {
   _$Children: ->
     @children = []
+  hasChild: (child) ->
+    if @children.indexOf child is -1 then no else yes
   adoptChildren: ->
     children = Array.from(arguments)
     @children.append children

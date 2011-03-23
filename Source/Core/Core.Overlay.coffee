@@ -7,7 +7,10 @@ description: Overlay for modal dialogs and stuff.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Enabled
 
 provides: Core.Overlay
 
@@ -25,12 +28,11 @@ Core.Overlay = new Class {
       setter: (value) ->
         @base.setStyle 'z-index', value
         value
+      validator: (value) ->
+        typeOf(Number.from(value)) is 'number'
     }
   }
-  initialize: (options) ->
-    @parent options 
   create: ->
-    @enabled = true
     @base.setStyles {
       position:"fixed"
       top:0

@@ -7,7 +7,12 @@ description: iOs style checkboxes
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.Toggler
 
@@ -62,8 +67,6 @@ Core.Toggler = new Class {
         value
     }
   }
-  initialize: (options) ->
-    @parent options
   update: ->
     if @size
       $$(@onDiv,@offDiv,@separator).setStyles {

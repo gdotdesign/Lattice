@@ -7,10 +7,16 @@ description: PushGroup element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Children, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.PushGroup
 
+todo: setActive into set 'active'
 ...
 ###
 Core.PushGroup = new Class {
@@ -46,16 +52,16 @@ Core.PushGroup = new Class {
       @active = item
       @fireEvent 'change', item
   removeItem: (item) ->
-    if @buttons.contains(item)
+    if @hasChild item
       item.removeEvents 'invoked'
       @removeChild item
   addItem: (item) ->
-    if not @children.contains(item)
+    if not @hasChild item
       item.set 'minSize', 0
-      @addChild item
       item.addEvent 'invoked', ( (it) ->
-        @setActive item
+        @setActive it
         @fireEvent 'change', it
       ).bind @
+      @addChild item
     @update()
 }

@@ -7,7 +7,11 @@ description: Generic icon element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls 
+  - Interfaces.Enabled
 
 provides: Core.Icon
 
@@ -29,11 +33,9 @@ Core.Icon = new Class {
       value: GDotUI.Theme.Icon.class
     }
   }
-  initialize: (options) ->
-    @parent options
   create: ->
-    @base.addEvent 'click', ((e) ->
+    @base.addEvent 'click', ( ->
       if @enabled
-        @fireEvent 'invoked', [@, e]
+        @fireEvent 'invoked', @
     ).bind @
 }

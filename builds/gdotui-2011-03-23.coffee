@@ -252,7 +252,11 @@ description: Abstract base class for Core U.I. elements.
 
 license: MIT-style license.
 
-requires: [Interfaces.Mux, GDotUI, Element.Extras, Class.Extras]
+requires: 
+  - Class.Extras
+  - Element.Extras
+  - GDotUI
+  - Interfaces.Mux
 
 provides: Core.Abstract
 
@@ -394,7 +398,11 @@ description: Generic icon element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls 
+  - Interfaces.Enabled
 
 provides: Core.Icon
 
@@ -416,12 +424,10 @@ Core.Icon = new Class {
       value: GDotUI.Theme.Icon.class
     }
   }
-  initialize: (options) ->
-    @parent options
   create: ->
-    @base.addEvent 'click', ((e) ->
+    @base.addEvent 'click', ( ->
       if @enabled
-        @fireEvent 'invoked', [@, e]
+        @fireEvent 'invoked', @
     ).bind @
 }
 
@@ -444,6 +450,8 @@ provides: Interfaces.Children
 Interfaces.Children = new Class {
   _$Children: ->
     @children = []
+  hasChild: (child) ->
+    if @children.indexOf child is -1 then no else yes
   adoptChildren: ->
     children = Array.from(arguments)
     @children.append children
@@ -467,10 +475,16 @@ description: Icon group with 5 types of layout.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Children
+  - Interfaces.Enabled
 
 provides: Core.IconGroup
 
+todo: Circular center position and size
 ...
 ###
 Core.IconGroup = new Class {
@@ -516,6 +530,7 @@ Core.IconGroup = new Class {
         else no
     }
     rows: {
+      value: 1
       setter: (value) ->
         Number.from(value)
       validator: (value) ->
@@ -524,6 +539,7 @@ Core.IconGroup = new Class {
         else no
     }
     columns: {
+      value: 1
       setter: (value) ->
         Number.from(value)
       validator: (value) ->
@@ -535,34 +551,24 @@ Core.IconGroup = new Class {
       value: GDotUI.Theme.IconGroup.class
     }
   }
-  initialize: (options) ->
-    @icons = []
-    @parent options
   create: ->
     @base.setStyle 'position', 'relative'
   delegate: ->
     @fireEvent 'invoked', arguments
   addIcon: (icon) ->
-    if @icons.indexOf icon is -1
+    if not @hasChild icon
       icon.addEvent 'invoked', @delegate
       @addChild icon
-      @icons.push icon
-      yes
-    else no
-    @update()
+      @update()
   removeIcon: (icon) ->
-    index = @icons.indexOf icon
-    if index isnt -1
+    if @hasChild icon
       icon.removeEvent 'invoked', @delegate
-      icon.base.dispose()
-      @icons.splice index, 1
-      yes
-    else no
-    @update()
+      @removeChild icon
+      @update()
   ready: ->
     @update()
   update: ->
-    if @icons.length > 0 and @mode? 
+    if @children.length > 0 and @mode? 
       x = 0
       y = 0
       @size = {x:0, y:0}
@@ -571,27 +577,30 @@ Core.IconGroup = new Class {
         when 'grid'
           if @rows? and @columns?
             if Number.from(@rows) < Number.from(@columns)
-              @rows = null
+              rows = null
+              columns = @columns
             else
-              @columns = null
-          if @columns?
-            columns = @columns
-            rows = Math.round @icons.length/columns
-          if @rows?
-            rows = @rows
-            columns = Math.round @icons.length/rows
-          icpos = @icons.map ((item,i) ->
-            if i % columns == 0
-              x = 0
-              y = if i==0 then y else y+item.base.getSize().y+spacing.y
-            else
-              x = if i==0 then x else x+item.base.getSize().x+spacing.x
+              columns = null
+              rows = @rows
+          icpos = @children.map ((item,i) ->
+            if rows?
+              if i % rows == 0
+                y = 0
+                x = if i==0 then x else x+item.base.getSize().x+spacing.x
+              else
+                y = if i==0 then y else y+item.base.getSize().y+spacing.y
+            if columns?
+              if i % columns == 0
+                x = 0
+                y = if i==0 then y else y+item.base.getSize().y+spacing.y
+              else
+                x = if i==0 then x else x+item.base.getSize().x+spacing.x
             @size.x = x+item.base.getSize().x
             @size.y = y+item.base.getSize().y
             {x:x, y:y}
             ).bind @
         when 'linear'
-          icpos = @icons.map ((item,i) ->
+          icpos = @children.map ((item,i) ->
             x = if i==0 then x+x else x+spacing.x+item.base.getSize().x
             y = if i==0 then y+y else y+spacing.y+item.base.getSize().y
             @size.x = x+item.base.getSize().x
@@ -599,7 +608,7 @@ Core.IconGroup = new Class {
             {x:x, y:y}
             ).bind @
         when 'horizontal'
-          icpos = @icons.map ((item,i) ->
+          icpos = @children.map ((item,i) ->
             x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
             y = if i==0 then y else y
             @size.x = x+item.base.getSize().x
@@ -607,7 +616,7 @@ Core.IconGroup = new Class {
             {x:x, y:y}
             ).bind @
         when 'vertical'
-          icpos = @icons.map ((item,i) ->
+          icpos = @children.map ((item,i) ->
             x = if i==0 then x else x
             y = if i==0 then y+y else y+item.base.getSize().y+spacing.y
             @size.x = item.base.getSize().x
@@ -615,12 +624,12 @@ Core.IconGroup = new Class {
             {x:x,y:y}
             ).bind @
         when 'circular'
-          n = @icons.length
+          n = @children.length
           radius = @radius
           startAngle = @startAngle
           ker = 2*@radius*Math.PI
           fok = @degree/n
-          icpos = @icons.map (item,i) ->
+          icpos = @children.map (item,i) ->
             if i==0
               foks = startAngle * (Math.PI/180)
               x = Math.round(radius * Math.sin(foks))+radius/2+item.base.getSize().x
@@ -633,7 +642,7 @@ Core.IconGroup = new Class {
         width: @size.x
         height: @size.y
       }
-      @icons.each (item,i) ->
+      @children.each (item,i) ->
         item.base.setStyle 'top', icpos[i].y
         item.base.setStyle 'left', icpos[i].x
         item.base.setStyle 'position', 'absolute'
@@ -649,7 +658,9 @@ description: Tip class
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires: 
+  - Core.Abstract
+  - GDotUI
 
 provides: Core.Tip
 
@@ -658,17 +669,23 @@ provides: Core.Tip
 Core.Tip = new Class {
   Extends:Core.Abstract
   Implements: Interfaces.Enabled
-  Binds:['enter'
-         'leave']
+  Binds:[
+    'enter'
+    'leave'
+  ]
   Attributes: {
     class: {
       value: GDotUI.Theme.Tip.class
     }
     label: {
       value: ''
+      setter: (value) ->
+        @base.set 'html', value
     }
     zindex: {
       value: 1
+      setter: (value) ->
+        @base.setStyle 'z-index', value
     }
     delay: {
       value: 0
@@ -680,21 +697,17 @@ Core.Tip = new Class {
       value: 0
     }
   }
-  update: ->
-    @base.setStyle 'z-index', @zindex
-    @base.set 'html', @label
   create: ->
     @base.setStyle 'position', 'absolute'
-    @update()
   attach: (item) ->
     if @attachedTo?
       @detach()
-    document.id(item).addEvent 'mouseenter', @enter
-    document.id(item).addEvent 'mouseleave', @leave
     @attachedTo = document.id(item)
-  detach: (item) ->
-    document.id(item).removeEvent 'mouseenter', @enter
-    document.id(item).removeEvent 'mouseleave', @leave
+    @attachedTo.addEvent 'mouseenter', @enter
+    @attachedTo.addEvent 'mouseleave', @leave
+  detach: ->
+    @attachedTo.removeEvent 'mouseenter', @enter
+    @attachedTo.removeEvent 'mouseleave', @leave
     @attachedTo = null
   enter: ->
     if @enabled
@@ -711,6 +724,7 @@ Core.Tip = new Class {
       @over = false
       @hide()
   ready: ->
+    # monkeypatch this
     size = @base.getSize()
     offset = {x:0,y:0}
     switch @location.x
@@ -750,15 +764,23 @@ description: Slider element for other elements.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
 
-provides: [Core.Slider, ResetSlider]
+provides: Core.Slider
 
+todo: fix progress width and height mode change, implement range at some point
 ...
 ###
 Core.Slider = new Class {
   Extends:Core.Abstract
-  Implements:[ Interfaces.Controls, Interfaces.Enabled ]
+  Implements:[
+    Interfaces.Controls
+    Interfaces.Enabled
+  ]
   Attributes: {
     class: {
       value: GDotUI.Theme.Slider.classes.base
@@ -840,9 +862,7 @@ Core.Slider = new Class {
     }
   }
   create: ->
-
     @base.setStyle 'position', 'relative'
-
     @progress = new Element "div"
     @progress.setStyles {
       position: 'absolute'
@@ -852,20 +872,17 @@ Core.Slider = new Class {
     @base.adopt @progress
     
     @drag = new Drag @progress, {handle:@base}
-    
     @drag.addEvent 'beforeStart', ( (el,e) ->
       @lastpos = Math.round((Number.from(el.getStyle(@modifier))/@size)*@steps)
       if not @enabled
         @disabledTop = el.getStyle @modifier
     ).bind @
-    
     @drag.addEvent 'complete', ( (el,e) ->
       if @reset
         if @enabled
           el.setStyle @modifier, @size/2+"px"
       @fireEvent 'complete'
     ).bind @
-      
     @drag.addEvent 'drag', ( (el,e) ->
       if @enabled
         pos = Number.from el.getStyle(@modifier)
@@ -884,7 +901,6 @@ Core.Slider = new Class {
       else
         el.setStyle @modifier, @disabledTop
     ).bind @
-    
     @base.addEvent 'mousewheel', ( (e) ->
       e.stop()
       if @enabled
@@ -939,7 +955,12 @@ description: Basic button element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI, Interfaces.Size]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.Button
 
@@ -964,10 +985,10 @@ Core.Button = new Class {
     }
   }
   create: ->
-    @base.addEvent 'click', ((e) ->
+    @base.addEvent 'click', ( ->
       if @enabled
-        @fireEvent 'invoked', [@, e]
-      ).bind @
+        @fireEvent 'invoked', @
+    ).bind @
 }
 
 
@@ -980,15 +1001,23 @@ description: Data picker class.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
 
-provides: [Core.Picker, outerClick]
+provides: Core.Picker
 
+todo: Monkeypatch Element.position...
 ...
 ###
 Core.Picker = new Class {
   Extends: Core.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Children
+  ]
   Binds: ['show','hide','delegate']
   Attributes: {
     class: {
@@ -1001,6 +1030,8 @@ Core.Picker = new Class {
     }
     position: {
       value: {x:'auto',y:'auto'}
+      validator: (value) ->
+        value.x? and value.y?
     }
     event: {
       value: GDotUI.Theme.Picker.event
@@ -1023,11 +1054,10 @@ Core.Picker = new Class {
       value: GDotUI.Theme.Picker.picking
     }
   }
-  initialize: (options) ->
-    @parent options
   create: ->
     @base.setStyle 'position', 'absolute'
   ready: ->
+    # Below to Element.position monkeypatch
     winsize = window.getSize()
     winscroll = window.getScroll()
     asize = @attachedTo.getSize()
@@ -1061,14 +1091,14 @@ Core.Picker = new Class {
         ofa.y = -(@offset+size.y)
       when 'bottom'
         ofa.y = @offset
-
+    # endpatch
     @base.position {
       relativeTo: @attachedTo
       position: position
       offset: ofa
     }
   attach: (el,auto) ->
-    auto = if !auto? then true else auto
+    auto = if auto? then auto else true
     if @attachedTo?
       @detach()
     @attachedTo = el
@@ -1085,7 +1115,7 @@ Core.Picker = new Class {
     document.body.grab @base
     if @attachedTo?
       @attachedTo.addClass @picking
-    if e? then if e.stop? then  e.stop()
+    if e? then if e.stop? then e.stop()
     @base.addEvent 'outerClick', @hide
   hide: (e,force) ->
     if force?
@@ -1220,11 +1250,14 @@ description: iOs style slot control.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Iterable.List, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Iterable.List
 
 provides: Core.Slot
 
-todo: horizontal/vertical
+todo: horizontal/vertical, interfaces.size etc
 ...
 ###
 Core.Slot = new Class {
@@ -1235,20 +1268,22 @@ Core.Slot = new Class {
       value: GDotUI.Theme.Slot.class
     }
   }
-  Binds:['check'
-         'complete']
+  Binds:[
+    'check'
+    'complete'
+  ]
   Delegates:{
-    'list':['addItem'
-            'removeAll'
-            'select']
+    'list':[
+      'addItem'
+      'removeAll'
+      'select'
+    ]
   }
   create: ->
     @overlay = new Element 'div', {'text':' '}
     @overlay.addClass 'over'
     @list = new Iterable.List()
-    @list.base.addEvent 'addedToDom', ( ->
-      @readyList()
-    ).bind @
+    @list.base.addEvent 'addedToDom', @update.bind @
     @list.addEvent 'selectedChange', ((item) ->
       @update()
       @fireEvent 'change', item.newVal
@@ -1263,7 +1298,6 @@ Core.Slot = new Class {
       'left': 0
       'right': 0
       'bottom': 0
-    
     }
     @overlay.addEvent 'mousewheel',@mouseWheel.bind @
     @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
@@ -1284,22 +1318,20 @@ Core.Slot = new Class {
       @dragging = on
       lastDistance = 1000
       lastOne = null
-      @list.items.each( ( (item,i) ->
+      @list.items.each ((item,i) ->
         distance = -item.base.getPosition(@base).y + @base.getSize().y/2
         if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
           @list.set 'selected', item
-      ).bind @ )
+      ).bind @
     else
       el.setStyle 'top', @disabledTop
-  readyList: ->
-    @update()
   mouseWheel: (e) ->
     if @enabled
       e.stop()
       if @list.selected?
         index = @list.items.indexOf @list.selected
       else
-        if e.wheel==1
+        if e.wheel is 1
           index = 0
         else
           index = 1
@@ -1326,7 +1358,12 @@ description: iOs style checkboxes
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.Toggler
 
@@ -1381,8 +1418,6 @@ Core.Toggler = new Class {
         value
     }
   }
-  initialize: (options) ->
-    @parent options
   update: ->
     if @size
       $$(@onDiv,@offDiv,@separator).setStyles {
@@ -1427,7 +1462,10 @@ description: Overlay for modal dialogs and stuff.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Enabled
 
 provides: Core.Overlay
 
@@ -1445,12 +1483,11 @@ Core.Overlay = new Class {
       setter: (value) ->
         @base.setStyle 'z-index', value
         value
+      validator: (value) ->
+        typeOf(Number.from(value)) is 'number'
     }
   }
-  initialize: (options) ->
-    @parent options 
   create: ->
-    @enabled = true
     @base.setStyles {
       position:"fixed"
       top:0
@@ -1481,7 +1518,9 @@ description: Tab element for Core.Tabs.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
 
 provides: Core.Tab
 
@@ -1528,7 +1567,10 @@ description: Tab navigation element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Core.Tab, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Core.Tab 
 
 provides: Core.Tabs
 
@@ -1536,7 +1578,8 @@ provides: Core.Tabs
 ###
 Core.Tabs = new Class {
   Extends: Core.Abstract
-  Binds:['remove','change']
+  Implements: Interfaces.Children
+  Binds:['change']
   Attributes: {
     class: {
       value:  GDotUI.Theme.Tabs.class
@@ -1548,39 +1591,24 @@ Core.Tabs = new Class {
         else
           if old isnt value
             old.deactivate(false)
-          tab.activate(false)
+          value.activate(false)
         value
     }
   }
-  initialize: (options) ->
-    @tabs = []
-    @active = null
-    @parent options
   add: (tab) ->
-    if @tabs.indexOf tab == -1
-      @tabs.push tab
-      @base.grab tab
-      tab.addEvent 'remove', @remove
+    if not @hasChild tab
+      @addChild tab
       tab.addEvent 'activate', @change
   remove: (tab) ->
-    if @tabs.indexOf tab != -1
-      if @options.autoRemove
-        @removeTab tab
-      @fireEvent 'removed',tab
-  removeTab: (tab) ->
-    @tabs.erase tab
-    document.id(tab).dispose()
-    if tab is @active
-      if @tabs.length > 0
-        @change @tabs[0]
-    @fireEvent 'tabRemoved', tab
+    if @hasChild tab
+      @removeChild tab
   change: (tab) ->
     if tab isnt @active
       @set 'active', tab
       @fireEvent 'change', tab
   getByLabel: (label) ->
-    (@tabs.filter (item, i) ->
-      if item.options.label is label
+    (@children.filter (item, i) ->
+      if item.label is label
         true
       else
         false)[0]
@@ -1596,15 +1624,16 @@ description: Toggle button 'push' element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Button
 
 provides: Core.Push
 
 ...
 ###
 Core.Push = new Class {
-  Extends: Core.Abstract
-  Implements: [Interfaces.Size, Interfaces.Enabled]
+  Extends: Core.Button
   Attributes: {
     state: {
       getter: ->
@@ -1612,29 +1641,21 @@ Core.Push = new Class {
     }
     label: {
       value: GDotUI.Theme.Push.label
-      setter: (value) ->
-        @base.set 'text', value
-        value
     }
     class: {
       value: GDotUI.Theme.Push.class
     }
   }
-  initialize: (options) ->
-    @parent options 
   on: ->
     @base.addClass 'pushed'
   off: ->
     @base.removeClass 'pushed'
   create: ->
+    @parent()
     @base.addEvent 'click', ( ->
       if @enabled
         @base.toggleClass 'pushed'
-      ).bind @  
-    @base.addEvent 'click', ((e) ->
-      if @enabled
-        @fireEvent 'invoked', [@, e]
-      ).bind @
+    ).bind @  
 }
 
 
@@ -1647,10 +1668,16 @@ description: PushGroup element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Children, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.PushGroup
 
+todo: setActive into set 'active'
 ...
 ###
 Core.PushGroup = new Class {
@@ -1686,17 +1713,17 @@ Core.PushGroup = new Class {
       @active = item
       @fireEvent 'change', item
   removeItem: (item) ->
-    if @buttons.contains(item)
+    if @hasChild item
       item.removeEvents 'invoked'
       @removeChild item
   addItem: (item) ->
-    if not @children.contains(item)
+    if not @hasChild item
       item.set 'minSize', 0
-      @addChild item
       item.addEvent 'invoked', ( (it) ->
-        @setActive item
+        @setActive it
         @fireEvent 'change', it
       ).bind @
+      @addChild item
     @update()
 }
 

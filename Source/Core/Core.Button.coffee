@@ -7,7 +7,12 @@ description: Basic button element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI, Interfaces.Size]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.Button
 
@@ -32,8 +37,8 @@ Core.Button = new Class {
     }
   }
   create: ->
-    @base.addEvent 'click', ((e) ->
+    @base.addEvent 'click', ( ->
       if @enabled
-        @fireEvent 'invoked', [@, e]
-      ).bind @
+        @fireEvent 'invoked', @
+    ).bind @
 }

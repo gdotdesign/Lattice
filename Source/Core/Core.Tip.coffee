@@ -7,7 +7,9 @@ description: Tip class
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires: 
+  - Core.Abstract
+  - GDotUI
 
 provides: Core.Tip
 
@@ -16,17 +18,23 @@ provides: Core.Tip
 Core.Tip = new Class {
   Extends:Core.Abstract
   Implements: Interfaces.Enabled
-  Binds:['enter'
-         'leave']
+  Binds:[
+    'enter'
+    'leave'
+  ]
   Attributes: {
     class: {
       value: GDotUI.Theme.Tip.class
     }
     label: {
       value: ''
+      setter: (value) ->
+        @base.set 'html', value
     }
     zindex: {
       value: 1
+      setter: (value) ->
+        @base.setStyle 'z-index', value
     }
     delay: {
       value: 0
@@ -38,21 +46,17 @@ Core.Tip = new Class {
       value: 0
     }
   }
-  update: ->
-    @base.setStyle 'z-index', @zindex
-    @base.set 'html', @label
   create: ->
     @base.setStyle 'position', 'absolute'
-    @update()
   attach: (item) ->
     if @attachedTo?
       @detach()
-    document.id(item).addEvent 'mouseenter', @enter
-    document.id(item).addEvent 'mouseleave', @leave
     @attachedTo = document.id(item)
-  detach: (item) ->
-    document.id(item).removeEvent 'mouseenter', @enter
-    document.id(item).removeEvent 'mouseleave', @leave
+    @attachedTo.addEvent 'mouseenter', @enter
+    @attachedTo.addEvent 'mouseleave', @leave
+  detach: ->
+    @attachedTo.removeEvent 'mouseenter', @enter
+    @attachedTo.removeEvent 'mouseleave', @leave
     @attachedTo = null
   enter: ->
     if @enabled
@@ -69,6 +73,7 @@ Core.Tip = new Class {
       @over = false
       @hide()
   ready: ->
+    # monkeypatch this
     size = @base.getSize()
     offset = {x:0,y:0}
     switch @location.x

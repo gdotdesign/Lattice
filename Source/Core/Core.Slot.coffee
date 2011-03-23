@@ -7,11 +7,14 @@ description: iOs style slot control.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Iterable.List, GDotUI]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Iterable.List
 
 provides: Core.Slot
 
-todo: horizontal/vertical
+todo: horizontal/vertical, interfaces.size etc
 ...
 ###
 Core.Slot = new Class {
@@ -22,20 +25,22 @@ Core.Slot = new Class {
       value: GDotUI.Theme.Slot.class
     }
   }
-  Binds:['check'
-         'complete']
+  Binds:[
+    'check'
+    'complete'
+  ]
   Delegates:{
-    'list':['addItem'
-            'removeAll'
-            'select']
+    'list':[
+      'addItem'
+      'removeAll'
+      'select'
+    ]
   }
   create: ->
     @overlay = new Element 'div', {'text':' '}
     @overlay.addClass 'over'
     @list = new Iterable.List()
-    @list.base.addEvent 'addedToDom', ( ->
-      @readyList()
-    ).bind @
+    @list.base.addEvent 'addedToDom', @update.bind @
     @list.addEvent 'selectedChange', ((item) ->
       @update()
       @fireEvent 'change', item.newVal
@@ -50,7 +55,6 @@ Core.Slot = new Class {
       'left': 0
       'right': 0
       'bottom': 0
-    
     }
     @overlay.addEvent 'mousewheel',@mouseWheel.bind @
     @drag = new Drag @list.base, {modifiers:{x:'',y:'top'},handle:@overlay}
@@ -71,22 +75,20 @@ Core.Slot = new Class {
       @dragging = on
       lastDistance = 1000
       lastOne = null
-      @list.items.each( ( (item,i) ->
+      @list.items.each ((item,i) ->
         distance = -item.base.getPosition(@base).y + @base.getSize().y/2
         if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
           @list.set 'selected', item
-      ).bind @ )
+      ).bind @
     else
       el.setStyle 'top', @disabledTop
-  readyList: ->
-    @update()
   mouseWheel: (e) ->
     if @enabled
       e.stop()
       if @list.selected?
         index = @list.items.indexOf @list.selected
       else
-        if e.wheel==1
+        if e.wheel is 1
           index = 0
         else
           index = 1

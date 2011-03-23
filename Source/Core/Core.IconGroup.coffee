@@ -7,10 +7,16 @@ description: Icon group with 5 types of layout.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Children
+  - Interfaces.Enabled
 
 provides: Core.IconGroup
 
+todo: Circular center position and size
 ...
 ###
 Core.IconGroup = new Class {
@@ -56,6 +62,7 @@ Core.IconGroup = new Class {
         else no
     }
     rows: {
+      value: 1
       setter: (value) ->
         Number.from(value)
       validator: (value) ->
@@ -64,6 +71,7 @@ Core.IconGroup = new Class {
         else no
     }
     columns: {
+      value: 1
       setter: (value) ->
         Number.from(value)
       validator: (value) ->
@@ -75,34 +83,24 @@ Core.IconGroup = new Class {
       value: GDotUI.Theme.IconGroup.class
     }
   }
-  initialize: (options) ->
-    @icons = []
-    @parent options
   create: ->
     @base.setStyle 'position', 'relative'
   delegate: ->
     @fireEvent 'invoked', arguments
   addIcon: (icon) ->
-    if @icons.indexOf icon is -1
+    if not @hasChild icon
       icon.addEvent 'invoked', @delegate
       @addChild icon
-      @icons.push icon
-      yes
-    else no
-    @update()
+      @update()
   removeIcon: (icon) ->
-    index = @icons.indexOf icon
-    if index isnt -1
+    if @hasChild icon
       icon.removeEvent 'invoked', @delegate
-      icon.base.dispose()
-      @icons.splice index, 1
-      yes
-    else no
-    @update()
+      @removeChild icon
+      @update()
   ready: ->
     @update()
   update: ->
-    if @icons.length > 0 and @mode? 
+    if @children.length > 0 and @mode? 
       x = 0
       y = 0
       @size = {x:0, y:0}
@@ -111,27 +109,30 @@ Core.IconGroup = new Class {
         when 'grid'
           if @rows? and @columns?
             if Number.from(@rows) < Number.from(@columns)
-              @rows = null
+              rows = null
+              columns = @columns
             else
-              @columns = null
-          if @columns?
-            columns = @columns
-            rows = Math.round @icons.length/columns
-          if @rows?
-            rows = @rows
-            columns = Math.round @icons.length/rows
-          icpos = @icons.map ((item,i) ->
-            if i % columns == 0
-              x = 0
-              y = if i==0 then y else y+item.base.getSize().y+spacing.y
-            else
-              x = if i==0 then x else x+item.base.getSize().x+spacing.x
+              columns = null
+              rows = @rows
+          icpos = @children.map ((item,i) ->
+            if rows?
+              if i % rows == 0
+                y = 0
+                x = if i==0 then x else x+item.base.getSize().x+spacing.x
+              else
+                y = if i==0 then y else y+item.base.getSize().y+spacing.y
+            if columns?
+              if i % columns == 0
+                x = 0
+                y = if i==0 then y else y+item.base.getSize().y+spacing.y
+              else
+                x = if i==0 then x else x+item.base.getSize().x+spacing.x
             @size.x = x+item.base.getSize().x
             @size.y = y+item.base.getSize().y
             {x:x, y:y}
             ).bind @
         when 'linear'
-          icpos = @icons.map ((item,i) ->
+          icpos = @children.map ((item,i) ->
             x = if i==0 then x+x else x+spacing.x+item.base.getSize().x
             y = if i==0 then y+y else y+spacing.y+item.base.getSize().y
             @size.x = x+item.base.getSize().x
@@ -139,7 +140,7 @@ Core.IconGroup = new Class {
             {x:x, y:y}
             ).bind @
         when 'horizontal'
-          icpos = @icons.map ((item,i) ->
+          icpos = @children.map ((item,i) ->
             x = if i==0 then x+x else x+item.base.getSize().x+spacing.x
             y = if i==0 then y else y
             @size.x = x+item.base.getSize().x
@@ -147,7 +148,7 @@ Core.IconGroup = new Class {
             {x:x, y:y}
             ).bind @
         when 'vertical'
-          icpos = @icons.map ((item,i) ->
+          icpos = @children.map ((item,i) ->
             x = if i==0 then x else x
             y = if i==0 then y+y else y+item.base.getSize().y+spacing.y
             @size.x = item.base.getSize().x
@@ -155,12 +156,12 @@ Core.IconGroup = new Class {
             {x:x,y:y}
             ).bind @
         when 'circular'
-          n = @icons.length
+          n = @children.length
           radius = @radius
           startAngle = @startAngle
           ker = 2*@radius*Math.PI
           fok = @degree/n
-          icpos = @icons.map (item,i) ->
+          icpos = @children.map (item,i) ->
             if i==0
               foks = startAngle * (Math.PI/180)
               x = Math.round(radius * Math.sin(foks))+radius/2+item.base.getSize().x
@@ -173,7 +174,7 @@ Core.IconGroup = new Class {
         width: @size.x
         height: @size.y
       }
-      @icons.each (item,i) ->
+      @children.each (item,i) ->
         item.base.setStyle 'top', icpos[i].y
         item.base.setStyle 'left', icpos[i].x
         item.base.setStyle 'position', 'absolute'

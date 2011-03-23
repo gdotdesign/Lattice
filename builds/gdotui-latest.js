@@ -289,7 +289,11 @@ description: Abstract base class for Core U.I. elements.
 
 license: MIT-style license.
 
-requires: [Interfaces.Mux, GDotUI, Element.Extras, Class.Extras]
+requires:
+  - Class.Extras
+  - Element.Extras
+  - GDotUI
+  - Interfaces.Mux
 
 provides: Core.Abstract
 
@@ -454,7 +458,11 @@ description: Generic icon element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
 
 provides: Core.Icon
 
@@ -474,13 +482,10 @@ Core.Icon = new Class({
       value: GDotUI.Theme.Icon["class"]
     }
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   create: function() {
-    return this.base.addEvent('click', (function(e) {
+    return this.base.addEvent('click', (function() {
       if (this.enabled) {
-        return this.fireEvent('invoked', [this, e]);
+        return this.fireEvent('invoked', this);
       }
     }).bind(this));
   }
@@ -503,6 +508,13 @@ provides: Interfaces.Children
 Interfaces.Children = new Class({
   _$Children: function() {
     return this.children = [];
+  },
+  hasChild: function(child) {
+    if (this.children.indexOf(child === -1)) {
+      return false;
+    } else {
+      return true;
+    }
   },
   adoptChildren: function() {
     var children;
@@ -530,10 +542,16 @@ description: Icon group with 5 types of layout.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Children
+  - Interfaces.Enabled
 
 provides: Core.IconGroup
 
+todo: Circular center position and size
 ...
 */
 Core.IconGroup = new Class({
@@ -607,6 +625,7 @@ Core.IconGroup = new Class({
       }
     },
     rows: {
+      value: 1,
       setter: function(value) {
         return Number.from(value);
       },
@@ -620,6 +639,7 @@ Core.IconGroup = new Class({
       }
     },
     columns: {
+      value: 1,
       setter: function(value) {
         return Number.from(value);
       },
@@ -636,10 +656,6 @@ Core.IconGroup = new Class({
       value: GDotUI.Theme.IconGroup["class"]
     }
   },
-  initialize: function(options) {
-    this.icons = [];
-    return this.parent(options);
-  },
   create: function() {
     return this.base.setStyle('position', 'relative');
   },
@@ -647,35 +663,25 @@ Core.IconGroup = new Class({
     return this.fireEvent('invoked', arguments);
   },
   addIcon: function(icon) {
-    if (this.icons.indexOf(icon === -1)) {
+    if (!this.hasChild(icon)) {
       icon.addEvent('invoked', this.delegate);
       this.addChild(icon);
-      this.icons.push(icon);
-      true;
-    } else {
-      false;
+      return this.update();
     }
-    return this.update();
   },
   removeIcon: function(icon) {
-    var index;
-    index = this.icons.indexOf(icon);
-    if (index !== -1) {
+    if (this.hasChild(icon)) {
       icon.removeEvent('invoked', this.delegate);
-      icon.base.dispose();
-      this.icons.splice(index, 1);
-      true;
-    } else {
-      false;
+      this.removeChild(icon);
+      return this.update();
     }
-    return this.update();
   },
   ready: function() {
     return this.update();
   },
   update: function() {
     var columns, fok, icpos, ker, n, radius, rows, spacing, startAngle, x, y;
-    if (this.icons.length > 0 && (this.mode != null)) {
+    if (this.children.length > 0 && (this.mode != null)) {
       x = 0;
       y = 0;
       this.size = {
@@ -687,25 +693,29 @@ Core.IconGroup = new Class({
         case 'grid':
           if ((this.rows != null) && (this.columns != null)) {
             if (Number.from(this.rows) < Number.from(this.columns)) {
-              this.rows = null;
+              rows = null;
+              columns = this.columns;
             } else {
-              this.columns = null;
+              columns = null;
+              rows = this.rows;
             }
           }
-          if (this.columns != null) {
-            columns = this.columns;
-            rows = Math.round(this.icons.length / columns);
-          }
-          if (this.rows != null) {
-            rows = this.rows;
-            columns = Math.round(this.icons.length / rows);
-          }
-          icpos = this.icons.map((function(item, i) {
-            if (i % columns === 0) {
-              x = 0;
-              y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
-            } else {
-              x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
+          icpos = this.children.map((function(item, i) {
+            if (rows != null) {
+              if (i % rows === 0) {
+                y = 0;
+                x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
+              } else {
+                y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
+              }
+            }
+            if (columns != null) {
+              if (i % columns === 0) {
+                x = 0;
+                y = i === 0 ? y : y + item.base.getSize().y + spacing.y;
+              } else {
+                x = i === 0 ? x : x + item.base.getSize().x + spacing.x;
+              }
             }
             this.size.x = x + item.base.getSize().x;
             this.size.y = y + item.base.getSize().y;
@@ -716,7 +726,7 @@ Core.IconGroup = new Class({
           }).bind(this));
           break;
         case 'linear':
-          icpos = this.icons.map((function(item, i) {
+          icpos = this.children.map((function(item, i) {
             x = i === 0 ? x + x : x + spacing.x + item.base.getSize().x;
             y = i === 0 ? y + y : y + spacing.y + item.base.getSize().y;
             this.size.x = x + item.base.getSize().x;
@@ -728,7 +738,7 @@ Core.IconGroup = new Class({
           }).bind(this));
           break;
         case 'horizontal':
-          icpos = this.icons.map((function(item, i) {
+          icpos = this.children.map((function(item, i) {
             x = i === 0 ? x + x : x + item.base.getSize().x + spacing.x;
             y = i === 0 ? y : y;
             this.size.x = x + item.base.getSize().x;
@@ -740,7 +750,7 @@ Core.IconGroup = new Class({
           }).bind(this));
           break;
         case 'vertical':
-          icpos = this.icons.map((function(item, i) {
+          icpos = this.children.map((function(item, i) {
             x = i === 0 ? x : x;
             y = i === 0 ? y + y : y + item.base.getSize().y + spacing.y;
             this.size.x = item.base.getSize().x;
@@ -752,12 +762,12 @@ Core.IconGroup = new Class({
           }).bind(this));
           break;
         case 'circular':
-          n = this.icons.length;
+          n = this.children.length;
           radius = this.radius;
           startAngle = this.startAngle;
           ker = 2 * this.radius * Math.PI;
           fok = this.degree / n;
-          icpos = this.icons.map(function(item, i) {
+          icpos = this.children.map(function(item, i) {
             var foks;
             if (i === 0) {
               foks = startAngle * (Math.PI / 180);
@@ -777,7 +787,7 @@ Core.IconGroup = new Class({
         width: this.size.x,
         height: this.size.y
       });
-      return this.icons.each(function(item, i) {
+      return this.children.each(function(item, i) {
         item.base.setStyle('top', icpos[i].y);
         item.base.setStyle('left', icpos[i].x);
         return item.base.setStyle('position', 'absolute');
@@ -794,7 +804,9 @@ description: Tip class
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires:
+  - Core.Abstract
+  - GDotUI
 
 provides: Core.Tip
 
@@ -809,10 +821,16 @@ Core.Tip = new Class({
       value: GDotUI.Theme.Tip["class"]
     },
     label: {
-      value: ''
+      value: '',
+      setter: function(value) {
+        return this.base.set('html', value);
+      }
     },
     zindex: {
-      value: 1
+      value: 1,
+      setter: function(value) {
+        return this.base.setStyle('z-index', value);
+      }
     },
     delay: {
       value: 0
@@ -827,25 +845,20 @@ Core.Tip = new Class({
       value: 0
     }
   },
-  update: function() {
-    this.base.setStyle('z-index', this.zindex);
-    return this.base.set('html', this.label);
-  },
   create: function() {
-    this.base.setStyle('position', 'absolute');
-    return this.update();
+    return this.base.setStyle('position', 'absolute');
   },
   attach: function(item) {
     if (this.attachedTo != null) {
       this.detach();
     }
-    document.id(item).addEvent('mouseenter', this.enter);
-    document.id(item).addEvent('mouseleave', this.leave);
-    return this.attachedTo = document.id(item);
+    this.attachedTo = document.id(item);
+    this.attachedTo.addEvent('mouseenter', this.enter);
+    return this.attachedTo.addEvent('mouseleave', this.leave);
   },
-  detach: function(item) {
-    document.id(item).removeEvent('mouseenter', this.enter);
-    document.id(item).removeEvent('mouseleave', this.leave);
+  detach: function() {
+    this.attachedTo.removeEvent('mouseenter', this.enter);
+    this.attachedTo.removeEvent('mouseleave', this.leave);
     return this.attachedTo = null;
   },
   enter: function() {
@@ -921,10 +934,15 @@ description: Slider element for other elements.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
 
-provides: [Core.Slider, ResetSlider]
+provides: Core.Slider
 
+todo: fix progress width and height mode change, implement range at some point
 ...
 */
 Core.Slider = new Class({
@@ -1135,7 +1153,12 @@ description: Basic button element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Controls, GDotUI, Interfaces.Size]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.Button
 
@@ -1157,9 +1180,9 @@ Core.Button = new Class({
     }
   },
   create: function() {
-    return this.base.addEvent('click', (function(e) {
+    return this.base.addEvent('click', (function() {
       if (this.enabled) {
-        return this.fireEvent('invoked', [this, e]);
+        return this.fireEvent('invoked', this);
       }
     }).bind(this));
   }
@@ -1173,10 +1196,15 @@ description: Data picker class.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
 
-provides: [Core.Picker, outerClick]
+provides: Core.Picker
 
+todo: Monkeypatch Element.position...
 ...
 */
 Core.Picker = new Class({
@@ -1197,6 +1225,9 @@ Core.Picker = new Class({
       value: {
         x: 'auto',
         y: 'auto'
+      },
+      validator: function(value) {
+        return (value.x != null) && (value.y != null);
       }
     },
     event: {
@@ -1224,9 +1255,6 @@ Core.Picker = new Class({
     picking: {
       value: GDotUI.Theme.Picker.picking
     }
-  },
-  initialize: function(options) {
-    return this.parent(options);
   },
   create: function() {
     return this.base.setStyle('position', 'absolute');
@@ -1293,7 +1321,7 @@ Core.Picker = new Class({
     });
   },
   attach: function(el, auto) {
-    auto = !(auto != null) ? true : auto;
+    auto = auto != null ? auto : true;
     if (this.attachedTo != null) {
       this.detach();
     }
@@ -1490,11 +1518,14 @@ description: iOs style slot control.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Iterable.List, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Iterable.List
 
 provides: Core.Slot
 
-todo: horizontal/vertical
+todo: horizontal/vertical, interfaces.size etc
 ...
 */
 Core.Slot = new Class({
@@ -1515,9 +1546,7 @@ Core.Slot = new Class({
     });
     this.overlay.addClass('over');
     this.list = new Iterable.List();
-    this.list.base.addEvent('addedToDom', (function() {
-      return this.readyList();
-    }).bind(this));
+    this.list.base.addEvent('addedToDom', this.update.bind(this));
     this.list.addEvent('selectedChange', (function(item) {
       this.update();
       return this.fireEvent('change', item.newVal);
@@ -1573,9 +1602,6 @@ Core.Slot = new Class({
       return el.setStyle('top', this.disabledTop);
     }
   },
-  readyList: function() {
-    return this.update();
-  },
   mouseWheel: function(e) {
     var index;
     if (this.enabled) {
@@ -1618,7 +1644,12 @@ description: iOs style checkboxes
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Controls, Interfaces.Enabled, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Controls
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.Toggler
 
@@ -1675,9 +1706,6 @@ Core.Toggler = new Class({
       }
     }
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   update: function() {
     if (this.size) {
       $$(this.onDiv, this.offDiv, this.separator).setStyles({
@@ -1725,7 +1753,10 @@ description: Overlay for modal dialogs and stuff.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Enabled
 
 provides: Core.Overlay
 
@@ -1743,14 +1774,13 @@ Core.Overlay = new Class({
       setter: function(value) {
         this.base.setStyle('z-index', value);
         return value;
+      },
+      validator: function(value) {
+        return typeOf(Number.from(value)) === 'number';
       }
     }
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   create: function() {
-    this.enabled = true;
     this.base.setStyles({
       position: "fixed",
       top: 0,
@@ -1785,7 +1815,9 @@ description: Tab element for Core.Tabs.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
 
 provides: Core.Tab
 
@@ -1836,7 +1868,10 @@ description: Tab navigation element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Core.Tab, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Core.Tab
 
 provides: Core.Tabs
 
@@ -1844,7 +1879,8 @@ provides: Core.Tabs
 */
 Core.Tabs = new Class({
   Extends: Core.Abstract,
-  Binds: ['remove', 'change'],
+  Implements: Interfaces.Children,
+  Binds: ['change'],
   Attributes: {
     "class": {
       value: GDotUI.Theme.Tabs["class"]
@@ -1857,42 +1893,22 @@ Core.Tabs = new Class({
           if (old !== value) {
             old.deactivate(false);
           }
-          tab.activate(false);
+          value.activate(false);
         }
         return value;
       }
     }
   },
-  initialize: function(options) {
-    this.tabs = [];
-    this.active = null;
-    return this.parent(options);
-  },
   add: function(tab) {
-    if (this.tabs.indexOf(tab === -1)) {
-      this.tabs.push(tab);
-      this.base.grab(tab);
-      tab.addEvent('remove', this.remove);
+    if (!this.hasChild(tab)) {
+      this.addChild(tab);
       return tab.addEvent('activate', this.change);
     }
   },
   remove: function(tab) {
-    if (this.tabs.indexOf(tab !== -1)) {
-      if (this.options.autoRemove) {
-        this.removeTab(tab);
-      }
-      return this.fireEvent('removed', tab);
+    if (this.hasChild(tab)) {
+      return this.removeChild(tab);
     }
-  },
-  removeTab: function(tab) {
-    this.tabs.erase(tab);
-    document.id(tab).dispose();
-    if (tab === this.active) {
-      if (this.tabs.length > 0) {
-        this.change(this.tabs[0]);
-      }
-    }
-    return this.fireEvent('tabRemoved', tab);
   },
   change: function(tab) {
     if (tab !== this.active) {
@@ -1901,8 +1917,8 @@ Core.Tabs = new Class({
     }
   },
   getByLabel: function(label) {
-    return (this.tabs.filter(function(item, i) {
-      if (item.options.label === label) {
+    return (this.children.filter(function(item, i) {
+      if (item.label === label) {
         return true;
       } else {
         return false;
@@ -1919,15 +1935,16 @@ description: Toggle button 'push' element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, GDotUI]
+requires:
+  - GDotUI
+  - Core.Button
 
 provides: Core.Push
 
 ...
 */
 Core.Push = new Class({
-  Extends: Core.Abstract,
-  Implements: [Interfaces.Size, Interfaces.Enabled],
+  Extends: Core.Button,
   Attributes: {
     state: {
       getter: function() {
@@ -1935,18 +1952,11 @@ Core.Push = new Class({
       }
     },
     label: {
-      value: GDotUI.Theme.Push.label,
-      setter: function(value) {
-        this.base.set('text', value);
-        return value;
-      }
+      value: GDotUI.Theme.Push.label
     },
     "class": {
       value: GDotUI.Theme.Push["class"]
     }
-  },
-  initialize: function(options) {
-    return this.parent(options);
   },
   on: function() {
     return this.base.addClass('pushed');
@@ -1955,14 +1965,10 @@ Core.Push = new Class({
     return this.base.removeClass('pushed');
   },
   create: function() {
-    this.base.addEvent('click', (function() {
+    this.parent();
+    return this.base.addEvent('click', (function() {
       if (this.enabled) {
         return this.base.toggleClass('pushed');
-      }
-    }).bind(this));
-    return this.base.addEvent('click', (function(e) {
-      if (this.enabled) {
-        return this.fireEvent('invoked', [this, e]);
       }
     }).bind(this));
   }
@@ -1976,10 +1982,16 @@ description: PushGroup element.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Interfaces.Enabled, Interfaces.Children, GDotUI]
+requires:
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Core.PushGroup
 
+todo: setActive into set 'active'
 ...
 */
 Core.PushGroup = new Class({
@@ -2020,19 +2032,19 @@ Core.PushGroup = new Class({
     }
   },
   removeItem: function(item) {
-    if (this.buttons.contains(item)) {
+    if (this.hasChild(item)) {
       item.removeEvents('invoked');
       return this.removeChild(item);
     }
   },
   addItem: function(item) {
-    if (!this.children.contains(item)) {
+    if (!this.hasChild(item)) {
       item.set('minSize', 0);
-      this.addChild(item);
       item.addEvent('invoked', (function(it) {
-        this.setActive(item);
+        this.setActive(it);
         return this.fireEvent('change', it);
       }).bind(this));
+      this.addChild(item);
     }
     return this.update();
   }

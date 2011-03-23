@@ -7,15 +7,23 @@ description: Data picker class.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children]
+requires: 
+  - GDotUI
+  - Core.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
 
-provides: [Core.Picker, outerClick]
+provides: Core.Picker
 
+todo: Monkeypatch Element.position...
 ...
 ###
 Core.Picker = new Class {
   Extends: Core.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Children
+  ]
   Binds: ['show','hide','delegate']
   Attributes: {
     class: {
@@ -28,6 +36,8 @@ Core.Picker = new Class {
     }
     position: {
       value: {x:'auto',y:'auto'}
+      validator: (value) ->
+        value.x? and value.y?
     }
     event: {
       value: GDotUI.Theme.Picker.event
@@ -50,11 +60,10 @@ Core.Picker = new Class {
       value: GDotUI.Theme.Picker.picking
     }
   }
-  initialize: (options) ->
-    @parent options
   create: ->
     @base.setStyle 'position', 'absolute'
   ready: ->
+    # Below to Element.position monkeypatch
     winsize = window.getSize()
     winscroll = window.getScroll()
     asize = @attachedTo.getSize()
@@ -88,14 +97,14 @@ Core.Picker = new Class {
         ofa.y = -(@offset+size.y)
       when 'bottom'
         ofa.y = @offset
-
+    # endpatch
     @base.position {
       relativeTo: @attachedTo
       position: position
       offset: ofa
     }
   attach: (el,auto) ->
-    auto = if !auto? then true else auto
+    auto = if auto? then auto else true
     if @attachedTo?
       @detach()
     @attachedTo = el
@@ -112,7 +121,7 @@ Core.Picker = new Class {
     document.body.grab @base
     if @attachedTo?
       @attachedTo.addClass @picking
-    if e? then if e.stop? then  e.stop()
+    if e? then if e.stop? then e.stop()
     @base.addEvent 'outerClick', @hide
   hide: (e,force) ->
     if force?
