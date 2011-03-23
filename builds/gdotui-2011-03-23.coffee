@@ -46,7 +46,46 @@ Element.Properties.checked = {
     oldGrab: Element::grab
     oldInject: Element::inject
     oldAdopt: Element::adopt
-    
+    oldPosition: Element::position
+    position: (options) ->
+      op = {
+        relativeTo: document.body
+        position: {x:'center',y:'center'}
+      }
+      options = Object.merge op, options
+      winsize = window.getSize()
+      winscroll = window.getScroll()
+      asize = options.relativeTo.getSize()
+      position = options.relativeTo.getPosition()
+      size = @getSize()
+      x = ''
+      y = ''
+      if options.position.x is 'auto' and options.position.y is 'auto'
+        if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then x = 'left' else x = 'right'          
+        if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then y = 'top' else y = 'bottom'
+        if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0) then y = 'center'    
+        options.position = {x:x,y:y}
+      
+      ofa = {}
+                      
+      switch options.position.x
+        when 'center'
+          if options.position.y isnt 'center'
+            ofa.x = -size.x/2
+        when 'left'
+          ofa.x = -(options.offset+size.x)
+        when 'right'
+          ofa.x = options.offset
+      switch options.position.y
+        when 'center'
+          if options.position.x isnt 'center'
+            ofa.y = -size.y/2
+        when 'top'
+          ofa.y = -(options.offset+size.y)
+        when 'bottom'
+          ofa.y = options.offset
+       options.offset = ofa
+       @oldPosition.attempt options, @
     removeTransition: ->
       @store 'transition', @getStyle( '-webkit-transition-duration' )
       @setStyle '-webkit-transition-duration', '0'
@@ -724,29 +763,10 @@ Core.Tip = new Class {
       @over = false
       @hide()
   ready: ->
-    # monkeypatch this
-    size = @base.getSize()
-    offset = {x:0,y:0}
-    switch @location.x
-      when 'center'
-        if @location.y isnt 'center'
-          offset.x = -size.x/2
-      when 'left'
-        offset.x = -(@offset+size.x)
-      when 'right'
-        offset.x = @offset
-    switch @location.y
-      when 'center'
-        if @location.x isnt 'center'
-          offset.y = -size.y/2
-      when 'top'
-        offset.y = -(@offset+size.y)
-      when 'bottom'
-        offset.y = @offset
     @base.position {
       relativeTo: @attachedTo
       position: @location
-      offset: offset
+      offset: @offset
     }
   hide: ->
     @base.dispose()
@@ -1008,8 +1028,6 @@ requires:
   - Interfaces.Enabled
 
 provides: Core.Picker
-
-todo: Monkeypatch Element.position...
 ...
 ###
 Core.Picker = new Class {
@@ -1057,45 +1075,10 @@ Core.Picker = new Class {
   create: ->
     @base.setStyle 'position', 'absolute'
   ready: ->
-    # Below to Element.position monkeypatch
-    winsize = window.getSize()
-    winscroll = window.getScroll()
-    asize = @attachedTo.getSize()
-    position = @attachedTo.getPosition()
-    size = @base.getSize()
-    x = ''
-    y = ''
-    if @position.x is 'auto' and @position.y is 'auto'
-      if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then x = 'left' else x = 'right'          
-      if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then y = 'top' else y = 'bottom'
-      if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0) then y = 'center'    
-      position = {x:x,y:y}
-    else
-      position = @position
-    
-    ofa = {}
-                    
-    switch position.x
-      when 'center'
-        if position.y isnt 'center'
-          ofa.x = -size.x/2
-      when 'left'
-        ofa.x = -(@offset+size.x)
-      when 'right'
-        ofa.x = @offset
-    switch position.y
-      when 'center'
-        if position.x isnt 'center'
-          ofa.y = -size.y/2
-      when 'top'
-        ofa.y = -(@offset+size.y)
-      when 'bottom'
-        ofa.y = @offset
-    # endpatch
     @base.position {
       relativeTo: @attachedTo
-      position: position
-      offset: ofa
+      position: @position
+      offset: @offset
     }
   attach: (el,auto) ->
     auto = if auto? then auto else true
@@ -1651,11 +1634,11 @@ Core.Push = new Class {
   off: ->
     @base.removeClass 'pushed'
   create: ->
-    @parent()
     @base.addEvent 'click', ( ->
       if @enabled
         @base.toggleClass 'pushed'
     ).bind @  
+    @parent()
 }
 
 
@@ -1676,12 +1659,11 @@ requires:
   - Interfaces.Size
 
 provides: Core.PushGroup
-
-todo: setActive into set 'active'
 ...
 ###
 Core.PushGroup = new Class {
   Extends: Core.Abstract
+  Binds: ['change']
   Implements:[
     Interfaces.Enabled
     Interfaces.Children
@@ -1691,6 +1673,16 @@ Core.PushGroup = new Class {
     class: {
       value: GDotUI.Theme.PushGroup.class
     }
+    active: {
+      setter: (value, old) ->
+        if not old?
+          value.on()
+        else
+          if old isnt value
+            old.off()
+          value.on()
+        value
+    }
   }
   update: ->
     buttonwidth = Math.floor(@size / @children.length)
@@ -1698,31 +1690,19 @@ Core.PushGroup = new Class {
       btn.set 'size', buttonwidth
     if last = @children.getLast()
       last.set 'size', @size-buttonwidth*(@children.length-1)
-  initialize: (options) ->
-    @active = null
-    @parent options 
-  setActive: (item) ->
-    if @active isnt item
-      @children.each (btn) ->
-        if btn isnt item
-          btn.off()
-          btn.unsupress()
-        else
-          btn.on()
-          btn.supress()
-      @active = item
-      @fireEvent 'change', item
+  change: (button) ->
+    if button isnt @active
+      @set 'active', button
+      @fireEvent 'change', button
   removeItem: (item) ->
     if @hasChild item
       item.removeEvents 'invoked'
       @removeChild item
+    @update()
   addItem: (item) ->
     if not @hasChild item
       item.set 'minSize', 0
-      item.addEvent 'invoked', ( (it) ->
-        @setActive it
-        @fireEvent 'change', it
-      ).bind @
+      item.addEvent 'invoked', @change
       @addChild item
     @update()
 }
@@ -2286,7 +2266,7 @@ Data.Color.SlotControls = new Class {
       setter: (value) ->
         @col.children.each (item) ->
           if item.label == value
-            @col.setActive item
+            @col.set 'active', item
         , @
         value
       getter: ->

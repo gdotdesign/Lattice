@@ -227,7 +227,7 @@ Data.Color.SlotControls = new Class {
       setter: (value) ->
         @col.children.each (item) ->
           if item.label == value
-            @col.setActive item
+            @col.set 'active', item
         , @
         value
       getter: ->

@@ -56,6 +56,71 @@ Element.Properties.checked = {
     oldGrab: Element.prototype.grab,
     oldInject: Element.prototype.inject,
     oldAdopt: Element.prototype.adopt,
+    oldPosition: Element.prototype.position,
+    position: function(options) {
+      var asize, ofa, op, position, size, winscroll, winsize, x, y;
+      op = {
+        relativeTo: document.body,
+        position: {
+          x: 'center',
+          y: 'center'
+        }
+      };
+      options = Object.merge(op, options);
+      winsize = window.getSize();
+      winscroll = window.getScroll();
+      asize = options.relativeTo.getSize();
+      position = options.relativeTo.getPosition();
+      size = this.getSize();
+      x = '';
+      y = '';
+      if (options.position.x === 'auto' && options.position.y === 'auto') {
+        if ((position.x + size.x + asize.x) > (winsize.x - winscroll.x)) {
+          x = 'left';
+        } else {
+          x = 'right';
+        }
+        if ((position.y + size.y + asize.y) > (winsize.y - winscroll.y)) {
+          y = 'top';
+        } else {
+          y = 'bottom';
+        }
+        if (!((position.y + size.y / 2) > (winsize.y - winscroll.y)) && !((position.y - size.y) < 0)) {
+          y = 'center';
+        }
+        options.position = {
+          x: x,
+          y: y
+        };
+      }
+      ofa = {};
+      switch (options.position.x) {
+        case 'center':
+          if (options.position.y !== 'center') {
+            ofa.x = -size.x / 2;
+          }
+          break;
+        case 'left':
+          ofa.x = -(options.offset + size.x);
+          break;
+        case 'right':
+          ofa.x = options.offset;
+      }
+      switch (options.position.y) {
+        case 'center':
+          if (options.position.x !== 'center') {
+            ofa.y = -size.y / 2;
+          }
+          break;
+        case 'top':
+          ofa.y = -(options.offset + size.y);
+          break;
+        case 'bottom':
+          ofa.y = options.offset;
+      }
+      options.offset = ofa;
+      return this.oldPosition.attempt(options, this);
+    },
     removeTransition: function() {
       this.store('transition', this.getStyle('-webkit-transition-duration'));
       return this.setStyle('-webkit-transition-duration', '0');
@@ -882,40 +947,10 @@ Core.Tip = new Class({
     }
   },
   ready: function() {
-    var offset, size;
-    size = this.base.getSize();
-    offset = {
-      x: 0,
-      y: 0
-    };
-    switch (this.location.x) {
-      case 'center':
-        if (this.location.y !== 'center') {
-          offset.x = -size.x / 2;
-        }
-        break;
-      case 'left':
-        offset.x = -(this.offset + size.x);
-        break;
-      case 'right':
-        offset.x = this.offset;
-    }
-    switch (this.location.y) {
-      case 'center':
-        if (this.location.x !== 'center') {
-          offset.y = -size.y / 2;
-        }
-        break;
-      case 'top':
-        offset.y = -(this.offset + size.y);
-        break;
-      case 'bottom':
-        offset.y = this.offset;
-    }
     return this.base.position({
       relativeTo: this.attachedTo,
       position: this.location,
-      offset: offset
+      offset: this.offset
     });
   },
   hide: function() {
@@ -1203,8 +1238,6 @@ requires:
   - Interfaces.Enabled
 
 provides: Core.Picker
-
-todo: Monkeypatch Element.position...
 ...
 */
 Core.Picker = new Class({
@@ -1260,64 +1293,10 @@ Core.Picker = new Class({
     return this.base.setStyle('position', 'absolute');
   },
   ready: function() {
-    var asize, ofa, position, size, winscroll, winsize, x, y;
-    winsize = window.getSize();
-    winscroll = window.getScroll();
-    asize = this.attachedTo.getSize();
-    position = this.attachedTo.getPosition();
-    size = this.base.getSize();
-    x = '';
-    y = '';
-    if (this.position.x === 'auto' && this.position.y === 'auto') {
-      if ((position.x + size.x + asize.x) > (winsize.x - winscroll.x)) {
-        x = 'left';
-      } else {
-        x = 'right';
-      }
-      if ((position.y + size.y + asize.y) > (winsize.y - winscroll.y)) {
-        y = 'top';
-      } else {
-        y = 'bottom';
-      }
-      if (!((position.y + size.y / 2) > (winsize.y - winscroll.y)) && !((position.y - size.y) < 0)) {
-        y = 'center';
-      }
-      position = {
-        x: x,
-        y: y
-      };
-    } else {
-      position = this.position;
-    }
-    ofa = {};
-    switch (position.x) {
-      case 'center':
-        if (position.y !== 'center') {
-          ofa.x = -size.x / 2;
-        }
-        break;
-      case 'left':
-        ofa.x = -(this.offset + size.x);
-        break;
-      case 'right':
-        ofa.x = this.offset;
-    }
-    switch (position.y) {
-      case 'center':
-        if (position.x !== 'center') {
-          ofa.y = -size.y / 2;
-        }
-        break;
-      case 'top':
-        ofa.y = -(this.offset + size.y);
-        break;
-      case 'bottom':
-        ofa.y = this.offset;
-    }
     return this.base.position({
       relativeTo: this.attachedTo,
-      position: position,
-      offset: ofa
+      position: this.position,
+      offset: this.offset
     });
   },
   attach: function(el, auto) {
@@ -1965,12 +1944,12 @@ Core.Push = new Class({
     return this.base.removeClass('pushed');
   },
   create: function() {
-    this.parent();
-    return this.base.addEvent('click', (function() {
+    this.base.addEvent('click', (function() {
       if (this.enabled) {
         return this.base.toggleClass('pushed');
       }
     }).bind(this));
+    return this.parent();
   }
 });
 /*
@@ -1990,16 +1969,28 @@ requires:
   - Interfaces.Size
 
 provides: Core.PushGroup
-
-todo: setActive into set 'active'
 ...
 */
 Core.PushGroup = new Class({
   Extends: Core.Abstract,
+  Binds: ['change'],
   Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
   Attributes: {
     "class": {
       value: GDotUI.Theme.PushGroup["class"]
+    },
+    active: {
+      setter: function(value, old) {
+        if (!(old != null)) {
+          value.on();
+        } else {
+          if (old !== value) {
+            old.off();
+          }
+          value.on();
+        }
+        return value;
+      }
     }
   },
   update: function() {
@@ -2012,38 +2003,23 @@ Core.PushGroup = new Class({
       return last.set('size', this.size - buttonwidth * (this.children.length - 1));
     }
   },
-  initialize: function(options) {
-    this.active = null;
-    return this.parent(options);
-  },
-  setActive: function(item) {
-    if (this.active !== item) {
-      this.children.each(function(btn) {
-        if (btn !== item) {
-          btn.off();
-          return btn.unsupress();
-        } else {
-          btn.on();
-          return btn.supress();
-        }
-      });
-      this.active = item;
-      return this.fireEvent('change', item);
+  change: function(button) {
+    if (button !== this.active) {
+      this.set('active', button);
+      return this.fireEvent('change', button);
     }
   },
   removeItem: function(item) {
     if (this.hasChild(item)) {
       item.removeEvents('invoked');
-      return this.removeChild(item);
+      this.removeChild(item);
     }
+    return this.update();
   },
   addItem: function(item) {
     if (!this.hasChild(item)) {
       item.set('minSize', 0);
-      item.addEvent('invoked', (function(it) {
-        this.setActive(it);
-        return this.fireEvent('change', it);
-      }).bind(this));
+      item.addEvent('invoked', this.change);
       this.addChild(item);
     }
     return this.update();
@@ -2641,7 +2617,7 @@ Data.Color.SlotControls = new Class({
       setter: function(value) {
         this.col.children.each(function(item) {
           if (item.label === value) {
-            return this.col.setActive(item);
+            return this.col.set('active', item);
           }
         }, this);
         return value;

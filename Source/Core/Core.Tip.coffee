@@ -73,29 +73,10 @@ Core.Tip = new Class {
       @over = false
       @hide()
   ready: ->
-    # monkeypatch this
-    size = @base.getSize()
-    offset = {x:0,y:0}
-    switch @location.x
-      when 'center'
-        if @location.y isnt 'center'
-          offset.x = -size.x/2
-      when 'left'
-        offset.x = -(@offset+size.x)
-      when 'right'
-        offset.x = @offset
-    switch @location.y
-      when 'center'
-        if @location.x isnt 'center'
-          offset.y = -size.y/2
-      when 'top'
-        offset.y = -(@offset+size.y)
-      when 'bottom'
-        offset.y = @offset
     @base.position {
       relativeTo: @attachedTo
       position: @location
-      offset: offset
+      offset: @offset
     }
   hide: ->
     @base.dispose()

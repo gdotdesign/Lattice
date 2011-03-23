@@ -34,9 +34,9 @@ Core.Push = new Class {
   off: ->
     @base.removeClass 'pushed'
   create: ->
-    @parent()
     @base.addEvent 'click', ( ->
       if @enabled
         @base.toggleClass 'pushed'
     ).bind @  
+    @parent()
 }

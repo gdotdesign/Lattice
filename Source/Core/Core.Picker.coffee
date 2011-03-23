@@ -14,8 +14,6 @@ requires:
   - Interfaces.Enabled
 
 provides: Core.Picker
-
-todo: Monkeypatch Element.position...
 ...
 ###
 Core.Picker = new Class {
@@ -63,45 +61,10 @@ Core.Picker = new Class {
   create: ->
     @base.setStyle 'position', 'absolute'
   ready: ->
-    # Below to Element.position monkeypatch
-    winsize = window.getSize()
-    winscroll = window.getScroll()
-    asize = @attachedTo.getSize()
-    position = @attachedTo.getPosition()
-    size = @base.getSize()
-    x = ''
-    y = ''
-    if @position.x is 'auto' and @position.y is 'auto'
-      if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then x = 'left' else x = 'right'          
-      if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then y = 'top' else y = 'bottom'
-      if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0) then y = 'center'    
-      position = {x:x,y:y}
-    else
-      position = @position
-    
-    ofa = {}
-                    
-    switch position.x
-      when 'center'
-        if position.y isnt 'center'
-          ofa.x = -size.x/2
-      when 'left'
-        ofa.x = -(@offset+size.x)
-      when 'right'
-        ofa.x = @offset
-    switch position.y
-      when 'center'
-        if position.x isnt 'center'
-          ofa.y = -size.y/2
-      when 'top'
-        ofa.y = -(@offset+size.y)
-      when 'bottom'
-        ofa.y = @offset
-    # endpatch
     @base.position {
       relativeTo: @attachedTo
-      position: position
-      offset: ofa
+      position: @position
+      offset: @offset
     }
   attach: (el,auto) ->
     auto = if auto? then auto else true
