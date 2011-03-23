@@ -15,12 +15,14 @@ provides: Forms.Form
 ###
 Forms.Form = new Class {
   Extends:Core.Abstract
+  Implements: Options
   Binds:['success', 'faliure']
   options:{
     data: {}
   }
   initialize: (options) ->
     @fieldsets = []
+    @setOptions options
     @parent options
   create: ->
     delete @base
@@ -39,7 +41,7 @@ Forms.Form = new Class {
       @base.set 'action', @options.action
       @base.set 'method', @options.method
       
-    @submit = new Element 'input', {type:'button', value:@options.submit}
+    @submit = new Core.Button {label:@options.submit}
     @base.grab @submit
 
     @validator = new Form.Validator @base, {serial:false}

@@ -34,6 +34,12 @@ window.addEvent('domready', function(){
   });
   slider2.set('value',1)
   
+  slider3 = new Data.Number({label:'offset',reset:true})
+  slider3.addEvent('change',function(value){
+    tip.set('offset', value)
+  });
+  slider3.set('value',0)
+  
   select = new Data.Select({size:95,editable:false})
   select.addItem(new Iterable.ListItem({label:'top'}))
   select.addItem(new Iterable.ListItem({label:'center'}))
@@ -63,6 +69,6 @@ window.addEvent('domready', function(){
   })
   push.on();
   
-  $("options").adopt(text,slider1, slider2,push,select,select1);
+  $("options").adopt(text,slider1, slider2,slider3,push,select,select1);
 });
 

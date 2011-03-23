@@ -6,7 +6,7 @@ window.addEvent('domready', function(){
   slider.addEvent('change',function(value){
     defaultBtn.set('size', value)
   });
-  slider.setValue(200)
+  slider.set('value',200)
   
   $$(".demo").adopt(defaultBtn);
   $("options").adopt(slider);

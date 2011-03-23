@@ -31,8 +31,6 @@ Core.Button = new Class {
       value: GDotUI.Theme.Button.class
     }
   }
-  initialize: (attributes) ->
-    @parent attributes 
   create: ->
     @base.addEvent 'click', ((e) ->
       if @enabled

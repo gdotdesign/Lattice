@@ -33,15 +33,16 @@ Forms.Input = new Class {
       tg = new Core.Toggler()
       tg.base.setAttribute 'name', @options.name
       tg.base.setAttribute 'type', 'checkbox'
-      tg.checked = @options.checked || false
+      tg.set 'checked' , @options.checked or false
       @base = tg.base
     if @options.type is "textarea"
       @base = new Element 'textarea', {name: @options.name}
     if @options.type is "select"
-      @base = new Element 'select', {name: @options.name}
+      select = new Data.Select {default: @options.name}
       @options.options.each ( (item) ->
-        @base.grab new Element('option', {value:item.value,text:item.label})
+        select.addItem new Iterable.ListItem {label:item.label}
       ).bind @
+      @base = select.base
     if @options.type is "radio"
       @base = new Element 'div'
       @options.options.each ( (item,i) ->

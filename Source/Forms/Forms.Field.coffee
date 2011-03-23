@@ -20,21 +20,24 @@ Forms.Field = new Class {
     label: ''
   }
   initialize: (options) ->
+    @options = options
+    @options.structure = GDotUI.Theme.Forms.Field.struct
     @parent options
     @
   create: ->
     h = new Hash @options.structure
-    for key of h
+    h.each ((value,key) ->
       @base = new Element key
-      @createS h.get( key ), @base
-      break
+      @createS value, @base
+    ).bind @
     if @options.hidden
       @base.setStyle 'display', 'none'
   createS: (item,parent) ->
     if not parent?
       null
     else
-      switch $type(item)
+      console.log typeOf(item)
+      switch typeOf(item)
         when "object"
           for key of item
             data = new Hash(item).get key
@@ -46,6 +49,7 @@ Forms.Field = new Class {
               el = @label
             else
               el = new Element key 
+            console.log document.id(el)
             parent.grab el
             @createS data , el
           

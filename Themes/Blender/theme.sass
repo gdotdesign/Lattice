@@ -5,6 +5,34 @@
 
 $width: 200px
 $minWidth: 85px
+dl
+  :clear both
+  :height 30px
+  :margin 0
+dt
+  :width 200px
+  :float left
+dt
+  :margin-top 10px
+dd
+  :float right
+  :margin 0
+  :padding 0
+  :text-align left
+label
+  :margin 5px
+  :font-size 12px
+  :color #333
+fieldset
+  +basic_style
+  :margin-bottom 10px
+  :text-align left
+  :border-color #666
+  legend
+    :font-size 14px
+    :font-weight bold
+    :color #333
+    :padding 0 15px 0 15px
 
 .slot .selected, .select .text, .pushgroup, .button:hover, .float .handle, .float .bottom, .push, .toggler .sep
   +linear_gradient(#535353,#373737)
@@ -57,7 +85,7 @@ $minWidth: 85px
 .button.disabled
   :color #212121 !important
 
-.slot, textarea, .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .unit-pick, .dialog-prompt
+.slot, textarea, input[type=text], .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .unit-pick, .dialog-prompt
   +basic_style
 
 .picker > div:first-child
@@ -70,6 +98,8 @@ $minWidth: 85px
   +box_shadow(0,0,0,transparent)  
 
 .button
+  :overflow hidden
+  :white-space nowrap
   :width $width
   :min-width $minWidth
   :height 22px
@@ -98,7 +128,7 @@ $minWidth: 85px
   :text-align center
 
 
-textarea
+textarea, input[type=text]
   :min-width $minWidth
   :width $width
   :background-color #A3A3A3
@@ -106,7 +136,6 @@ textarea
   :font-size 12px
   :padding 6px
   :color #1c1c1c
-  :margin-bottom -2px
   :resize none
   -webkit-box-sizing: border-box 
   -moz-box-sizing: border-box  

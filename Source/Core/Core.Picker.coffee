@@ -74,14 +74,16 @@ Core.Picker = new Class {
                     
     switch position.x
       when 'center'
-        ofa.x = -size.x/2
+        if position.y isnt 'center'
+          ofa.x = -size.x/2
       when 'left'
         ofa.x = -(@offset+size.x)
       when 'right'
         ofa.x = @offset
     switch position.y
       when 'center'
-        ofa.y = -size.y/2
+        if position.x isnt 'center'
+          ofa.y = -size.y/2
       when 'top'
         ofa.y = -(@offset+size.y)
       when 'bottom'

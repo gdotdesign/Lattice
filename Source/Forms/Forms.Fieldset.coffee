@@ -20,13 +20,14 @@ Forms.Fieldset = new Class {
     inputs:[]
   }
   initialize: (options) ->
+    @options = options
     @parent options
   create: () ->
     delete @base
     @base = new Element 'fieldset'
     @legend = new Element 'legend', {text: @options.name}
     @base.grab @legend
-    @options.inputs.each ( ( (item) ->
+    @options.inputs.each ( (item) ->
       @base.grab new Forms.Field(item)
-    ).bindWithEvent this )
+    ).bind @
 }

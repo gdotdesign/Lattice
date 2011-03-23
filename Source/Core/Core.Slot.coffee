@@ -17,6 +17,11 @@ todo: horizontal/vertical
 Core.Slot = new Class {
   Extends: Core.Abstract
   Implements: Interfaces.Enabled
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Slot.class
+    }
+  }
   Binds:['check'
          'complete']
   Delegates:{
@@ -24,13 +29,7 @@ Core.Slot = new Class {
             'removeAll'
             'select']
   }
-  options:{
-    class: GDotUI.Theme.Slot.class
-  }
-  initilaize: (options) ->
-    @parent options
   create: ->
-    @base.addClass @options.class
     @overlay = new Element 'div', {'text':' '}
     @overlay.addClass 'over'
     @list = new Iterable.List()
@@ -39,23 +38,8 @@ Core.Slot = new Class {
     ).bind @
     @list.addEvent 'selectedChange', ((item) ->
       @update()
-      @fireEvent 'change', item
+      @fireEvent 'change', item.newVal
     ).bind @
-  ready: ->
-    @base.adopt @list.base, @overlay
-  check: (el,e) ->
-    if @enabled
-      @dragging = on
-      lastDistance = 1000
-      lastOne = null
-      @list.items.each( ( (item,i) ->
-        distance = -item.base.getPosition(@base).y + @base.getSize().y/2
-        if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
-          @list.set 'selected', item
-      ).bind @ )
-    else
-      el.setStyle 'top', @disabledTop
-  readyList: ->
     @base.setStyle 'overflow', 'hidden'
     @base.setStyle 'position', 'relative'
     @list.base.setStyle 'position', 'relative'
@@ -80,6 +64,21 @@ Core.Slot = new Class {
       @dragging = off
       @update()
     ).bind @
+  ready: ->
+    @base.adopt @list, @overlay
+  check: (el,e) ->
+    if @enabled
+      @dragging = on
+      lastDistance = 1000
+      lastOne = null
+      @list.items.each( ( (item,i) ->
+        distance = -item.base.getPosition(@base).y + @base.getSize().y/2
+        if distance < lastDistance and distance > 0 and distance < @base.getSize().y/2
+          @list.set 'selected', item
+      ).bind @ )
+    else
+      el.setStyle 'top', @disabledTop
+  readyList: ->
     @update()
   mouseWheel: (e) ->
     if @enabled

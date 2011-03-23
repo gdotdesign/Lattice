@@ -16,23 +16,29 @@ provides: Data.DateTime
 Data.DateTime = new Class {
   Extends:Data.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Date.DateTime.class
+    }
+    value: {
+      value: new Date()
+      setter: (value) ->
+        @value = value
+        @updateSlots()
+        value
+        
+    }
+  }
   options:{
-    class: GDotUI.Theme.Date.DateTime.class
-    format: GDotUI.Theme.Date.DateTime.format
     yearFrom: GDotUI.Theme.Date.yearFrom
   }
-  initialize: (options) ->
-    @parent options
   create: ->
-    @base.addClass @options.class
     @days = new Core.Slot()
     @month = new Core.Slot()
     @years = new Core.Slot()
-    @hourList = new Core.Slot()
-    @minuteList = new Core.Slot()
-    @date = new Date();
+    @hours = new Core.Slot()
+    @minutes = new Core.Slot()
     @populate()
-    @adoptChildren @years, @month, @days, @hourList, @minuteList
     @addEvents()
     @
   populate: ->
@@ -40,13 +46,13 @@ Data.DateTime = new Class {
     while i < 24
       item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
-      @hourList.addItem item
+      @hours.addItem item
       i++
     i = 0
     while i < 60
       item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
-      @minuteList.addItem item
+      @minutes.addItem item
       i++
     i = 0
     while i < 30
@@ -66,38 +72,40 @@ Data.DateTime = new Class {
       item.value = i
       @years.addItem item
       i++
+  update: ->
+    @fireEvent 'change', @value
   addEvents: ->
-    @hourList.addEvent 'change', ( (item) ->
-      @date.setHours item.value
-      @setValue()
-    ).bindWithEvent @
-    @minuteList.addEvent 'change', ( (item) ->
-      @date.setMinutes item.value
-      @setValue()
-    ).bindWithEvent @
+    @hours.addEvent 'change', ( (item) ->
+      @value.set 'hours', item.value
+      @update()
+    ).bind @
+    @minutes.addEvent 'change', ( (item) ->
+      @value.set 'minutes', item.value
+      @update()
+    ).bind @
     @years.addEvent 'change', ( (item) ->
-      @date.setYear item.value
-      @setValue()
-    ).bindWithEvent @
+      @value.set 'year', item.value
+      @update()
+    ).bind @
     @month.addEvent 'change', ( (item) ->
-      @date.setMonth item.value
-      @setValue()
-    ).bindWithEvent @
+      @value.set 'month', item.value
+      @update()
+    ).bind @
     @days.addEvent 'change', ( (item) ->
-      @date.setDate item.value
-      @setValue()
-    ).bindWithEvent @
+      @value.set 'date', item.value
+      @update()
+    ).bind @
     i = 0
   ready: ->
-    @setValue()
-    @parent()
-  update: ->
-    cdays = @date.get 'lastdayofmonth'
+    @adoptChildren @years, @month, @days, @hours, @minutes
+  updateSlots: ->
+    cdays = @value.get 'lastdayofmonth'
+    console.log @value.getDate(), 'hey',@value.get('hours')
     listlength = @days.list.items.length
     if cdays > listlength
       i = listlength+1
       while i <= cdays
-        item=new Iterable.ListItem {title:i}
+        item=new Iterable.ListItem {label:i}
         item.value = i
         @days.addItem item
         i++
@@ -106,16 +114,9 @@ Data.DateTime = new Class {
       while i > cdays
         @days.list.removeItem @days.list.items[i-1]
         i--
-  getValue: ->
-    @date
-  setValue: (date) ->
-    if date?
-      @date = date
-    @days.select @days.list.items[@date.getDate()-1]
-    @update()
-    @month.select @month.list.items[@date.getMonth()]
-    @years.select @years.list.getItemFromTitle(@date.getFullYear())
-    @hourList.select @hourList.list.items[@date.getHours()]
-    @minuteList.select @minuteList.list.items[@date.getMinutes()]
-    @fireEvent 'change', @date
+    @days.list.set 'selected', @days.list.items[@value.get('date')-1]
+    @month.list.set 'selected', @month.list.items[@value.get('month')]
+    @years.list.set 'selected', @years.list.getItemFromTitle(@value.get('year'))
+    @hours.list.set 'selected', @hours.list.items[@value.get('hours')]
+    @minutes.list.set 'selected', @minutes.list.items[@value.get('minutes')]
 }

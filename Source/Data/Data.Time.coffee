@@ -16,46 +16,52 @@ provides: Data.Time
 Data.Time = new Class {
   Extends:Data.Abstract
   Implements: [Interfaces.Enabled,Interfaces.Children]
-  options:{
-    class: GDotUI.Theme.Date.Time.class
-    format: GDotUI.Theme.Date.Time.format
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Date.Time.class
+    }
+    value: {
+      value: new Date()
+      setter: (value) ->
+        @value = value
+        @updateSlots()
+        value
+        
+    }
   }
-  initilaize: (options) ->
-    @parent options
   create: ->
-    @base.addClass @options.class
-    @hourList = new Core.Slot()
-    @minuteList = new Core.Slot()
-    @toDisable = [@hourList,@minuteList]
-    @hourList.addEvent 'change', ( (item) ->
-      @time.setHours item.value
-      @setValue()
-    ).bindWithEvent @
-    @minuteList.addEvent 'change', ( (item) ->
-      @time.setMinutes item.value
-      @setValue()
-    ).bindWithEvent @
+    @hours = new Core.Slot()
+    @minutes = new Core.Slot()
+    @populate()
+    @addEvents()
+    @
+  populate: ->
     i = 0
     while i < 24
       item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
-      @hourList.addItem item
+      @hours.addItem item
       i++
     i = 0
     while i < 60
       item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
       item.value = i
-      @minuteList.addItem item
+      @minutes.addItem item
       i++
+  update: ->
+    @fireEvent 'change', @value
+  addEvents: ->
+    @hours.addEvent 'change', ( (item) ->
+      @value.set 'hours', item.value
+      @update()
+    ).bind @
+    @minutes.addEvent 'change', ( (item) ->
+      @value.set 'minutes', item.value
+      @update()
+    ).bind @
   ready: ->
-    @adoptChildren @hourList, @minuteList
-    @setValue(@time or new Date())
-  getValue: ->
-    @time
-  setValue: (date) ->
-    if date?
-      @time = date
-    @hourList.select @hourList.list.items[@time.getHours()]
-    @minuteList.select @minuteList.list.items[@time.getMinutes()]
-    @fireEvent 'change', @time
+    @adoptChildren @hours, @minutes
+  updateSlots: ->
+    @hours.list.set 'selected', @hours.list.items[@value.get('hours')]
+    @minutes.list.set 'selected', @minutes.list.items[@value.get('minutes')]
 }

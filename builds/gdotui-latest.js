@@ -805,47 +805,33 @@ Core.Tip = new Class({
   Implements: Interfaces.Enabled,
   Binds: ['enter', 'leave'],
   Attributes: {
+    "class": {
+      value: GDotUI.Theme.Tip["class"]
+    },
     label: {
-      setter: function(value) {
-        this.options.label = value;
-        return this.update();
-      }
+      value: ''
     },
     zindex: {
-      setter: function(value) {
-        this.options.zindex = value;
-        return this.update();
-      }
+      value: 1
     },
     delay: {
-      setter: function(value) {
-        this.options.delay = value;
-        return this.update();
-      }
+      value: 0
     },
     location: {
-      setter: function(value) {
-        return this.options.location = value;
+      value: {
+        x: 'center',
+        y: 'center'
       }
+    },
+    offset: {
+      value: 0
     }
   },
-  options: {
-    "class": GDotUI.Theme.Tip["class"],
-    label: "",
-    location: GDotUI.Theme.Tip.location,
-    offset: GDotUI.Theme.Tip.offset,
-    zindex: GDotUI.Theme.Tip.zindex,
-    delay: 0
-  },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   update: function() {
-    this.base.setStyle('z-index', this.options.zindex);
-    return this.base.set('html', this.options.label);
+    this.base.setStyle('z-index', this.zindex);
+    return this.base.set('html', this.label);
   },
   create: function() {
-    this.base.addClass(this.options["class"]);
     this.base.setStyle('position', 'absolute');
     return this.update();
   },
@@ -869,7 +855,7 @@ Core.Tip = new Class({
         if (this.over) {
           return this.show();
         }
-      }).bind(this).delay(this.options.delay);
+      }).bind(this).delay(this.delay);
     }
   },
   leave: function() {
@@ -883,28 +869,41 @@ Core.Tip = new Class({
     }
   },
   ready: function() {
-    var p, s, s1;
-    p = this.attachedTo.getPosition();
-    s = this.attachedTo.getSize();
-    s1 = this.base.getSize();
-    switch (this.options.location.x) {
-      case "left":
-        this.base.setStyle('left', p.x - (s1.x + this.options.offset));
+    var offset, size;
+    size = this.base.getSize();
+    offset = {
+      x: 0,
+      y: 0
+    };
+    switch (this.location.x) {
+      case 'center':
+        if (this.location.y !== 'center') {
+          offset.x = -size.x / 2;
+        }
         break;
-      case "right":
-        this.base.setStyle('left', p.x + (s.x + this.options.offset));
+      case 'left':
+        offset.x = -(this.offset + size.x);
         break;
-      case "center":
-        this.base.setStyle('left', p.x - s1.x / 2 + s.x / 2);
+      case 'right':
+        offset.x = this.offset;
     }
-    switch (this.options.location.y) {
-      case "top":
-        return this.base.setStyle('top', p.y - (s.y + this.options.offset));
-      case "bottom":
-        return this.base.setStyle('top', p.y + (s.y + this.options.offset));
-      case "center":
-        return this.base.setStyle('top', p.y - s1.y / 2 + s.y / 2);
+    switch (this.location.y) {
+      case 'center':
+        if (this.location.x !== 'center') {
+          offset.y = -size.y / 2;
+        }
+        break;
+      case 'top':
+        offset.y = -(this.offset + size.y);
+        break;
+      case 'bottom':
+        offset.y = this.offset;
     }
+    return this.base.position({
+      relativeTo: this.attachedTo,
+      position: this.location,
+      offset: offset
+    });
   },
   hide: function() {
     return this.base.dispose();
@@ -1157,9 +1156,6 @@ Core.Button = new Class({
       value: GDotUI.Theme.Button["class"]
     }
   },
-  initialize: function(attributes) {
-    return this.parent(attributes);
-  },
   create: function() {
     return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
@@ -1268,7 +1264,9 @@ Core.Picker = new Class({
     ofa = {};
     switch (position.x) {
       case 'center':
-        ofa.x = -size.x / 2;
+        if (position.y !== 'center') {
+          ofa.x = -size.x / 2;
+        }
         break;
       case 'left':
         ofa.x = -(this.offset + size.x);
@@ -1278,7 +1276,9 @@ Core.Picker = new Class({
     }
     switch (position.y) {
       case 'center':
-        ofa.y = -size.y / 2;
+        if (position.x !== 'center') {
+          ofa.y = -size.y / 2;
+        }
         break;
       case 'top':
         ofa.y = -(this.offset + size.y);
@@ -1500,18 +1500,16 @@ todo: horizontal/vertical
 Core.Slot = new Class({
   Extends: Core.Abstract,
   Implements: Interfaces.Enabled,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Slot["class"]
+    }
+  },
   Binds: ['check', 'complete'],
   Delegates: {
     'list': ['addItem', 'removeAll', 'select']
   },
-  options: {
-    "class": GDotUI.Theme.Slot["class"]
-  },
-  initilaize: function(options) {
-    return this.parent(options);
-  },
   create: function() {
-    this.base.addClass(this.options["class"]);
     this.overlay = new Element('div', {
       'text': ' '
     });
@@ -1520,32 +1518,10 @@ Core.Slot = new Class({
     this.list.base.addEvent('addedToDom', (function() {
       return this.readyList();
     }).bind(this));
-    return this.list.addEvent('selectedChange', (function(item) {
+    this.list.addEvent('selectedChange', (function(item) {
       this.update();
-      return this.fireEvent('change', item);
+      return this.fireEvent('change', item.newVal);
     }).bind(this));
-  },
-  ready: function() {
-    return this.base.adopt(this.list.base, this.overlay);
-  },
-  check: function(el, e) {
-    var lastDistance, lastOne;
-    if (this.enabled) {
-      this.dragging = true;
-      lastDistance = 1000;
-      lastOne = null;
-      return this.list.items.each((function(item, i) {
-        var distance;
-        distance = -item.base.getPosition(this.base).y + this.base.getSize().y / 2;
-        if (distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2) {
-          return this.list.set('selected', item);
-        }
-      }).bind(this));
-    } else {
-      return el.setStyle('top', this.disabledTop);
-    }
-  },
-  readyList: function() {
     this.base.setStyle('overflow', 'hidden');
     this.base.setStyle('position', 'relative');
     this.list.base.setStyle('position', 'relative');
@@ -1572,10 +1548,32 @@ Core.Slot = new Class({
       }
       return this.list.base.removeTransition();
     }).bind(this));
-    this.drag.addEvent('complete', (function() {
+    return this.drag.addEvent('complete', (function() {
       this.dragging = false;
       return this.update();
     }).bind(this));
+  },
+  ready: function() {
+    return this.base.adopt(this.list, this.overlay);
+  },
+  check: function(el, e) {
+    var lastDistance, lastOne;
+    if (this.enabled) {
+      this.dragging = true;
+      lastDistance = 1000;
+      lastOne = null;
+      return this.list.items.each((function(item, i) {
+        var distance;
+        distance = -item.base.getPosition(this.base).y + this.base.getSize().y / 2;
+        if (distance < lastDistance && distance > 0 && distance < this.base.getSize().y / 2) {
+          return this.list.set('selected', item);
+        }
+      }).bind(this));
+    } else {
+      return el.setStyle('top', this.disabledTop);
+    }
+  },
+  readyList: function() {
     return this.update();
   },
   mouseWheel: function(e) {
@@ -2731,39 +2729,51 @@ provides: Data.Date
 */
 Data.Date = new Class({
   Extends: Data.Abstract,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Date["class"]
+    },
+    value: {
+      value: new Date(),
+      setter: function(value) {
+        this.value = value;
+        this.updateSlots();
+        return value;
+      }
+    }
+  },
   options: {
-    "class": GDotUI.Theme.Date["class"],
-    format: GDotUI.Theme.Date.format,
     yearFrom: GDotUI.Theme.Date.yearFrom
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   create: function() {
-    var i, item;
-    this.base.addClass(this.options["class"]);
     this.days = new Core.Slot();
     this.month = new Core.Slot();
     this.years = new Core.Slot();
+    this.populate();
+    return this.addEvents();
+  },
+  addEvents: function() {
     this.years.addEvent('change', (function(item) {
-      this.date.setYear(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
+      this.value.set('year', item.label);
+      return this.update();
+    }).bind(this));
     this.month.addEvent('change', (function(item) {
-      this.date.setMonth(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
-    this.days.addEvent('change', (function(item) {
-      this.date.setDate(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
+      this.value.set('month', item.label);
+      return this.update();
+    }).bind(this));
+    return this.days.addEvent('change', (function(item) {
+      this.value.set('date', item.label);
+      return this.update();
+    }).bind(this));
+  },
+  populate: function() {
+    var i, item, _results;
     i = 0;
     while (i < 30) {
       item = new Iterable.ListItem({
         label: i + 1,
         removeable: false
       });
-      item.value = i + 1;
       this.days.addItem(item);
       i++;
     }
@@ -2773,46 +2783,36 @@ Data.Date = new Class({
         label: i + 1,
         removeable: false
       });
-      item.value = i;
       this.month.addItem(item);
       i++;
     }
     i = this.options.yearFrom;
-    while (i <= new Date().getFullYear()) {
+    _results = [];
+    while (i <= new Date().get('year')) {
       item = new Iterable.ListItem({
         label: i,
         removeable: false
       });
-      item.value = i;
       this.years.addItem(item);
-      i++;
+      _results.push(i++);
     }
-    return this.base.adopt(this.years, this.month, this.days);
+    return _results;
   },
   ready: function() {
-    if (!(this.date != null)) {
-      return this.setValue(new Date());
-    }
-  },
-  getValue: function() {
-    return this.date;
-  },
-  setValue: function(date) {
-    if (date != null) {
-      this.date = date;
-    }
-    this.update();
-    return this.fireEvent('change', this.date);
+    return this.base.adopt(this.years, this.month, this.days);
   },
   update: function() {
+    return this.fireEvent('change', this.value);
+  },
+  updateSlots: function() {
     var cdays, i, item, listlength;
-    cdays = this.date.get('lastdayofmonth');
+    cdays = this.value.get('lastdayofmonth');
     listlength = this.days.list.items.length;
     if (cdays > listlength) {
       i = listlength + 1;
       while (i <= cdays) {
         item = new Iterable.ListItem({
-          title: i
+          label: i
         });
         item.value = i;
         this.days.addItem(item);
@@ -2825,9 +2825,9 @@ Data.Date = new Class({
         i--;
       }
     }
-    this.days.list.set('selected', this.days.list.items[this.date.getDate() - 1]);
-    this.month.list.set('selected', this.month.list.items[this.date.getMonth()]);
-    return this.years.list.set('selected', this.years.list.getItemFromTitle(this.date.getFullYear()));
+    this.days.list.set('selected', this.days.list.items[this.value.get('date') - 1]);
+    this.month.list.set('selected', this.month.list.items[this.value.get('month')]);
+    return this.years.list.set('selected', this.years.list.getItemFromTitle(this.value.get('year')));
   }
 });
 /*
@@ -2848,27 +2848,28 @@ provides: Data.Time
 Data.Time = new Class({
   Extends: Data.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Children],
-  options: {
-    "class": GDotUI.Theme.Date.Time["class"],
-    format: GDotUI.Theme.Date.Time.format
-  },
-  initilaize: function(options) {
-    return this.parent(options);
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Date.Time["class"]
+    },
+    value: {
+      value: new Date(),
+      setter: function(value) {
+        this.value = value;
+        this.updateSlots();
+        return value;
+      }
+    }
   },
   create: function() {
+    this.hours = new Core.Slot();
+    this.minutes = new Core.Slot();
+    this.populate();
+    this.addEvents();
+    return this;
+  },
+  populate: function() {
     var i, item, _results;
-    this.base.addClass(this.options["class"]);
-    this.hourList = new Core.Slot();
-    this.minuteList = new Core.Slot();
-    this.toDisable = [this.hourList, this.minuteList];
-    this.hourList.addEvent('change', (function(item) {
-      this.time.setHours(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
-    this.minuteList.addEvent('change', (function(item) {
-      this.time.setMinutes(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
     i = 0;
     while (i < 24) {
       item = new Iterable.ListItem({
@@ -2876,7 +2877,7 @@ Data.Time = new Class({
         removeable: false
       });
       item.value = i;
-      this.hourList.addItem(item);
+      this.hours.addItem(item);
       i++;
     }
     i = 0;
@@ -2887,25 +2888,30 @@ Data.Time = new Class({
         removeable: false
       });
       item.value = i;
-      this.minuteList.addItem(item);
+      this.minutes.addItem(item);
       _results.push(i++);
     }
     return _results;
   },
+  update: function() {
+    return this.fireEvent('change', this.value);
+  },
+  addEvents: function() {
+    this.hours.addEvent('change', (function(item) {
+      this.value.set('hours', item.value);
+      return this.update();
+    }).bind(this));
+    return this.minutes.addEvent('change', (function(item) {
+      this.value.set('minutes', item.value);
+      return this.update();
+    }).bind(this));
+  },
   ready: function() {
-    this.adoptChildren(this.hourList, this.minuteList);
-    return this.setValue(this.time || new Date());
+    return this.adoptChildren(this.hours, this.minutes);
   },
-  getValue: function() {
-    return this.time;
-  },
-  setValue: function(date) {
-    if (date != null) {
-      this.time = date;
-    }
-    this.hourList.select(this.hourList.list.items[this.time.getHours()]);
-    this.minuteList.select(this.minuteList.list.items[this.time.getMinutes()]);
-    return this.fireEvent('change', this.time);
+  updateSlots: function() {
+    this.hours.list.set('selected', this.hours.list.items[this.value.get('hours')]);
+    return this.minutes.list.set('selected', this.minutes.list.items[this.value.get('minutes')]);
   }
 });
 /*
@@ -3145,24 +3151,29 @@ provides: Data.DateTime
 Data.DateTime = new Class({
   Extends: Data.Abstract,
   Implements: [Interfaces.Enabled, Interfaces.Children],
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Date.DateTime["class"]
+    },
+    value: {
+      value: new Date(),
+      setter: function(value) {
+        this.value = value;
+        this.updateSlots();
+        return value;
+      }
+    }
+  },
   options: {
-    "class": GDotUI.Theme.Date.DateTime["class"],
-    format: GDotUI.Theme.Date.DateTime.format,
     yearFrom: GDotUI.Theme.Date.yearFrom
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   create: function() {
-    this.base.addClass(this.options["class"]);
     this.days = new Core.Slot();
     this.month = new Core.Slot();
     this.years = new Core.Slot();
-    this.hourList = new Core.Slot();
-    this.minuteList = new Core.Slot();
-    this.date = new Date();
+    this.hours = new Core.Slot();
+    this.minutes = new Core.Slot();
     this.populate();
-    this.adoptChildren(this.years, this.month, this.days, this.hourList, this.minuteList);
     this.addEvents();
     return this;
   },
@@ -3175,7 +3186,7 @@ Data.DateTime = new Class({
         removeable: false
       });
       item.value = i;
-      this.hourList.addItem(item);
+      this.hours.addItem(item);
       i++;
     }
     i = 0;
@@ -3185,7 +3196,7 @@ Data.DateTime = new Class({
         removeable: false
       });
       item.value = i;
-      this.minuteList.addItem(item);
+      this.minutes.addItem(item);
       i++;
     }
     i = 0;
@@ -3221,74 +3232,63 @@ Data.DateTime = new Class({
     }
     return _results;
   },
+  update: function() {
+    return this.fireEvent('change', this.value);
+  },
   addEvents: function() {
     var i;
-    this.hourList.addEvent('change', (function(item) {
-      this.date.setHours(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
-    this.minuteList.addEvent('change', (function(item) {
-      this.date.setMinutes(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
+    this.hours.addEvent('change', (function(item) {
+      this.value.set('hours', item.value);
+      return this.update();
+    }).bind(this));
+    this.minutes.addEvent('change', (function(item) {
+      this.value.set('minutes', item.value);
+      return this.update();
+    }).bind(this));
     this.years.addEvent('change', (function(item) {
-      this.date.setYear(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
+      this.value.set('year', item.value);
+      return this.update();
+    }).bind(this));
     this.month.addEvent('change', (function(item) {
-      this.date.setMonth(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
+      this.value.set('month', item.value);
+      return this.update();
+    }).bind(this));
     this.days.addEvent('change', (function(item) {
-      this.date.setDate(item.value);
-      return this.setValue();
-    }).bindWithEvent(this));
+      this.value.set('date', item.value);
+      return this.update();
+    }).bind(this));
     return i = 0;
   },
   ready: function() {
-    this.setValue();
-    return this.parent();
+    return this.adoptChildren(this.years, this.month, this.days, this.hours, this.minutes);
   },
-  update: function() {
-    var cdays, i, item, listlength, _results, _results2;
-    cdays = this.date.get('lastdayofmonth');
+  updateSlots: function() {
+    var cdays, i, item, listlength;
+    cdays = this.value.get('lastdayofmonth');
+    console.log(this.value.getDate(), 'hey', this.value.get('hours'));
     listlength = this.days.list.items.length;
     if (cdays > listlength) {
       i = listlength + 1;
-      _results = [];
       while (i <= cdays) {
         item = new Iterable.ListItem({
-          title: i
+          label: i
         });
         item.value = i;
         this.days.addItem(item);
-        _results.push(i++);
+        i++;
       }
-      return _results;
     } else if (cdays < listlength) {
       i = listlength;
-      _results2 = [];
       while (i > cdays) {
         this.days.list.removeItem(this.days.list.items[i - 1]);
-        _results2.push(i--);
+        i--;
       }
-      return _results2;
     }
-  },
-  getValue: function() {
-    return this.date;
-  },
-  setValue: function(date) {
-    if (date != null) {
-      this.date = date;
-    }
-    this.days.select(this.days.list.items[this.date.getDate() - 1]);
-    this.update();
-    this.month.select(this.month.list.items[this.date.getMonth()]);
-    this.years.select(this.years.list.getItemFromTitle(this.date.getFullYear()));
-    this.hourList.select(this.hourList.list.items[this.date.getHours()]);
-    this.minuteList.select(this.minuteList.list.items[this.date.getMinutes()]);
-    return this.fireEvent('change', this.date);
+    this.days.list.set('selected', this.days.list.items[this.value.get('date') - 1]);
+    this.month.list.set('selected', this.month.list.items[this.value.get('month')]);
+    this.years.list.set('selected', this.years.list.getItemFromTitle(this.value.get('year')));
+    this.hours.list.set('selected', this.hours.list.items[this.value.get('hours')]);
+    return this.minutes.list.set('selected', this.minutes.list.items[this.value.get('minutes')]);
   }
 });
 /*
@@ -3866,7 +3866,7 @@ Forms.Input = new Class({
     return this;
   },
   create: function() {
-    var tg;
+    var select, tg;
     delete this.base;
     if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'button') {
       this.base = new Element('input', {
@@ -3878,7 +3878,7 @@ Forms.Input = new Class({
       tg = new Core.Toggler();
       tg.base.setAttribute('name', this.options.name);
       tg.base.setAttribute('type', 'checkbox');
-      tg.checked = this.options.checked || false;
+      tg.set('checked', this.options.checked || false);
       this.base = tg.base;
     }
     if (this.options.type === "textarea") {
@@ -3887,15 +3887,15 @@ Forms.Input = new Class({
       });
     }
     if (this.options.type === "select") {
-      this.base = new Element('select', {
-        name: this.options.name
+      select = new Data.Select({
+        "default": this.options.name
       });
       this.options.options.each((function(item) {
-        return this.base.grab(new Element('option', {
-          value: item.value,
-          text: item.label
+        return select.addItem(new Iterable.ListItem({
+          label: item.label
         }));
       }).bind(this));
+      this.base = select.base;
     }
     if (this.options.type === "radio") {
       this.base = new Element('div');
@@ -3947,17 +3947,18 @@ Forms.Field = new Class({
     label: ''
   },
   initialize: function(options) {
+    this.options = options;
+    this.options.structure = GDotUI.Theme.Forms.Field.struct;
     this.parent(options);
     return this;
   },
   create: function() {
-    var h, key;
+    var h;
     h = new Hash(this.options.structure);
-    for (key in h) {
+    h.each((function(value, key) {
       this.base = new Element(key);
-      this.createS(h.get(key), this.base);
-      break;
-    }
+      return this.createS(value, this.base);
+    }).bind(this));
     if (this.options.hidden) {
       return this.base.setStyle('display', 'none');
     }
@@ -3967,7 +3968,8 @@ Forms.Field = new Class({
     if (!(parent != null)) {
       return null;
     } else {
-      switch ($type(item)) {
+      console.log(typeOf(item));
+      switch (typeOf(item)) {
         case "object":
           _results = [];
           for (key in item) {
@@ -3983,6 +3985,7 @@ Forms.Field = new Class({
             } else {
               el = new Element(key);
             }
+            console.log(document.id(el));
             parent.grab(el);
             _results.push(this.createS(data, el));
           }
@@ -4013,6 +4016,7 @@ Forms.Fieldset = new Class({
     inputs: []
   },
   initialize: function(options) {
+    this.options = options;
     return this.parent(options);
   },
   create: function() {
@@ -4024,7 +4028,7 @@ Forms.Fieldset = new Class({
     this.base.grab(this.legend);
     return this.options.inputs.each((function(item) {
       return this.base.grab(new Forms.Field(item));
-    }).bindWithEvent(this));
+    }).bind(this));
   }
 });
 /*
@@ -4044,12 +4048,14 @@ provides: Forms.Form
 */
 Forms.Form = new Class({
   Extends: Core.Abstract,
+  Implements: Options,
   Binds: ['success', 'faliure'],
   options: {
     data: {}
   },
   initialize: function(options) {
     this.fieldsets = [];
+    this.setOptions(options);
     return this.parent(options);
   },
   create: function() {
@@ -4074,9 +4080,8 @@ Forms.Form = new Class({
       this.base.set('action', this.options.action);
       this.base.set('method', this.options.method);
     }
-    this.submit = new Element('input', {
-      type: 'button',
-      value: this.options.submit
+    this.submit = new Core.Button({
+      label: this.options.submit
     });
     this.base.grab(this.submit);
     this.validator = new Form.Validator(this.base, {

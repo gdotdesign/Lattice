@@ -19,43 +19,31 @@ Core.Tip = new Class {
   Binds:['enter'
          'leave']
   Attributes: {
+    class: {
+      value: GDotUI.Theme.Tip.class
+    }
     label: {
-      setter: (value) ->
-        @options.label = value
-        @update()
+      value: ''
     }
     zindex: {
-      setter: (value) ->
-        @options.zindex = value
-        @update()
+      value: 1
     }
     delay: {
-      setter: (value) ->
-        @options.delay = value
-        @update()
+      value: 0
     }
     location: {
-      setter: (value) ->
-        @options.location = value
+      value: {x:'center',y:'center'}
+    }
+    offset: {
+      value: 0
     }
   }
-  options:{
-    class: GDotUI.Theme.Tip.class
-    label: ""
-    location: GDotUI.Theme.Tip.location
-    offset: GDotUI.Theme.Tip.offset
-    zindex: GDotUI.Theme.Tip.zindex
-    delay: 0
-  }
-  initialize: (options) ->
-    @parent options
   update: ->
-    @base.setStyle 'z-index', @options.zindex
-    @base.set 'html', @options.label
+    @base.setStyle 'z-index', @zindex
+    @base.set 'html', @label
   create: ->
-    @base.addClass @options.class
     @base.setStyle 'position', 'absolute'
-    @update();
+    @update()
   attach: (item) ->
     if @attachedTo?
       @detach()
@@ -72,7 +60,7 @@ Core.Tip = new Class {
       @id = ( ->
         if @over
           @show()
-      ).bind(@).delay @options.delay
+      ).bind(@).delay @delay
   leave: ->
     if @enabled
       if @id?
@@ -81,23 +69,29 @@ Core.Tip = new Class {
       @over = false
       @hide()
   ready: ->
-    p = @attachedTo.getPosition()
-    s = @attachedTo.getSize()
-    s1 = @base.getSize()
-    switch @options.location.x
-      when "left"
-        @base.setStyle 'left', p.x-(s1.x+@options.offset)
-      when "right"
-        @base.setStyle 'left', p.x+(s.x+@options.offset)
-      when "center"
-        @base.setStyle 'left', p.x-s1.x/2+s.x/2
-    switch @options.location.y
-      when "top"
-        @base.setStyle 'top', p.y-(s.y+@options.offset)
-      when "bottom"
-        @base.setStyle 'top', p.y+(s.y+@options.offset)
-      when "center"
-        @base.setStyle 'top', p.y-s1.y/2+s.y/2
+    size = @base.getSize()
+    offset = {x:0,y:0}
+    switch @location.x
+      when 'center'
+        if @location.y isnt 'center'
+          offset.x = -size.x/2
+      when 'left'
+        offset.x = -(@offset+size.x)
+      when 'right'
+        offset.x = @offset
+    switch @location.y
+      when 'center'
+        if @location.x isnt 'center'
+          offset.y = -size.y/2
+      when 'top'
+        offset.y = -(@offset+size.y)
+      when 'bottom'
+        offset.y = @offset
+    @base.position {
+      relativeTo: @attachedTo
+      position: @location
+      offset: offset
+    }
   hide: ->
     @base.dispose()
   show: ->

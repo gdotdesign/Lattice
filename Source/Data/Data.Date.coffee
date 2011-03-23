@@ -15,66 +15,68 @@ provides: Data.Date
 ###
 Data.Date = new Class {
   Extends: Data.Abstract
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Date.class
+    }
+    value: {
+      value: new Date()
+      setter: (value) ->
+        @value = value
+        @updateSlots()
+        value
+        
+    }
+  }
   options:{
-    class: GDotUI.Theme.Date.class
-    format: GDotUI.Theme.Date.format
     yearFrom: GDotUI.Theme.Date.yearFrom
   }
-  initialize: (options) ->
-    @parent options
   create: ->
-    @base.addClass @options.class
     @days = new Core.Slot()
     @month = new Core.Slot()
     @years = new Core.Slot()
+    @populate()
+    @addEvents()
+  addEvents: ->
     @years.addEvent 'change', ( (item) ->
-      @date.setYear item.value
-      @setValue()
-    ).bindWithEvent @
+      @value.set 'year', item.label
+      @update()
+    ).bind @
     @month.addEvent 'change', ( (item) ->
-      @date.setMonth item.value
-      @setValue()
-    ).bindWithEvent @
+      @value.set 'month', item.label
+      @update()
+    ).bind @
     @days.addEvent 'change', ( (item) ->
-      @date.setDate item.value
-      @setValue()
-    ).bindWithEvent @
+      @value.set 'date', item.label
+      @update()
+    ).bind @
+  populate: ->
     i = 0
     while i < 30
       item = new Iterable.ListItem {label:i+1,removeable:false}
-      item.value = i+1
       @days.addItem item
       i++
     i = 0
     while i < 12
       item = new Iterable.ListItem {label:i+1,removeable:false}
-      item.value = i
       @month.addItem item
       i++
     i = @options.yearFrom
-    while i <= new Date().getFullYear()
+    while i <= new Date().get('year')
       item = new Iterable.ListItem {label:i,removeable:false}
-      item.value = i
       @years.addItem item
       i++
-    @base.adopt @years, @month, @days
   ready: ->
-    if not @date?
-      @setValue new Date()
-  getValue: ->
-    @date
-  setValue: (date) ->
-    if date?
-      @date = date
-    @update()
-    @fireEvent 'change', @date
+    @base.adopt @years, @month, @days
   update: ->
-    cdays = @date.get 'lastdayofmonth'
+    @fireEvent 'change', @value
+  updateSlots: ->
+    cdays = @value.get 'lastdayofmonth'
     listlength = @days.list.items.length
     if cdays > listlength
       i = listlength+1
       while i <= cdays
-        item=new Iterable.ListItem {title:i}
+        item=new Iterable.ListItem {label:i}
         item.value = i
         @days.addItem item
         i++
@@ -83,7 +85,7 @@ Data.Date = new Class {
       while i > cdays
         @days.list.removeItem @days.list.items[i-1]
         i--
-    @days.list.set 'selected', @days.list.items[@date.getDate()-1]
-    @month.list.set 'selected', @month.list.items[@date.getMonth()]
-    @years.list.set 'selected', @years.list.getItemFromTitle(@date.getFullYear())
+    @days.list.set 'selected', @days.list.items[@value.get('date')-1]
+    @month.list.set 'selected', @month.list.items[@value.get('month')]
+    @years.list.set 'selected', @years.list.getItemFromTitle(@value.get('year'))
 }
