@@ -14,6 +14,12 @@ provides:
   - Class.Attributes
 ...
 ###
+Class.Singleton = new Class {
+	initialize: (classDefinition, options) ->
+		singletonClass = new Class(classDefinition)
+		new singletonClass(options)
+}
+
 Class.Mutators.Delegates = (delegations) ->
   new Hash(delegations).each (delegates, target) ->
     $splat(delegates).each (delegate) ->
@@ -51,24 +57,24 @@ Class.Mutators.Attributes = (attributes) ->
           return if $getter then $getter.call(@, name) else undefined
 
       set: (name, value) ->
-          attr = @$attributes[name]
-          if attr
-            if !attr.readOnly
-              oldVal = attr.value
-              if !attr.validator or attr.validator.call(@, value)
-                if attr.setter
-                  newVal = attr.setter.attempt [value, oldVal], @
-                else
-                  newVal = value             
-                attr.value = newVal
-                @[name] = newVal
-                #if attr.update
-                @update()
-                if oldVal isnt newVal
+        attr = @$attributes[name]
+        if attr
+          if !attr.readOnly
+            oldVal = attr.value
+            if !attr.validator or attr.validator.call(@, value)
+              if attr.setter
+                newVal = attr.setter.attempt [value, oldVal], @
+              else
+                newVal = value             
+              attr.value = newVal
+              @[name] = newVal
+              #if attr.update
+              @update()
+              if oldVal isnt newVal
                   @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
-                newVal
-          else if $setter
-            $setter.call @, name, value
+              newVal
+        else if $setter
+          $setter.call @, name, value
 
       setAttributes: (attributes) ->
         attributes = Object.merge {}, attributes

@@ -10,7 +10,7 @@ license: MIT-style license.
 provides: Element.Extras
 
 ...
-*/var Core, Data, Dialog, Forms, GDotUI, Interfaces, Iterable, Pickers, UnitList, checkForKey, getCSS;
+*/var Core, Data, Dialog, Forms, GDotUI, Interfaces, Iterable, Layout, Pickers, UnitList, checkForKey, getCSS;
 Element.Properties.checked = {
   get: function() {
     if (this.getChecked != null) {
@@ -101,7 +101,7 @@ Element.Properties.checked = {
     oldAdopt: Element.prototype.adopt,
     oldPosition: Element.prototype.position,
     position: function(options) {
-      var asize, ofa, op, position, size, winscroll, winsize, x, y;
+      var asize, ofa, op, position, size, winscroll, winsize;
       op = {
         relativeTo: document.body,
         position: {
@@ -115,28 +115,25 @@ Element.Properties.checked = {
       asize = options.relativeTo.getSize();
       position = options.relativeTo.getPosition();
       size = this.getSize();
-      x = '';
-      y = '';
-      if (options.position.x === 'auto' && options.position.y === 'auto') {
+      if (options.position.x === 'auto') {
         if ((position.x + size.x + asize.x) > (winsize.x - winscroll.x)) {
-          x = 'left';
+          options.position.x = 'left';
         } else {
-          x = 'right';
+          options.position.x = 'right';
         }
-        if ((position.y + size.y + asize.y) > (winsize.y - winscroll.y)) {
-          y = 'top';
-        } else {
-          y = 'bottom';
-        }
-        if (!((position.y + size.y / 2) > (winsize.y - winscroll.y)) && !((position.y - size.y) < 0)) {
-          y = 'center';
-        }
-        options.position = {
-          x: x,
-          y: y
-        };
       }
-      ofa = {};
+      if (options.position.y === 'auto') {
+        if ((position.y + size.y + asize.y) > (winsize.y - winscroll.y)) {
+          options.position.y = 'top';
+        } else {
+          options.position.y = 'bottom';
+        }
+      }
+      ofa = {
+        x: 0,
+        y: 0
+      };
+      console.log(options.position);
       switch (options.position.x) {
         case 'center':
           if (options.position.y !== 'center') {
@@ -162,6 +159,7 @@ Element.Properties.checked = {
           ofa.y = options.offset;
       }
       options.offset = ofa;
+      console.log(ofa);
       return this.oldPosition.attempt(options, this);
     },
     removeTransition: function() {
@@ -228,6 +226,13 @@ provides:
   - Class.Attributes
 ...
 */
+Class.Singleton = new Class({
+  initialize: function(classDefinition, options) {
+    var singletonClass;
+    singletonClass = new Class(classDefinition);
+    return new singletonClass(options);
+  }
+});
 Class.Mutators.Delegates = function(delegations) {
   return new Hash(delegations).each(function(delegates, target) {
     return $splat(delegates).each(function(delegate) {
@@ -348,6 +353,7 @@ requires: [Class.Delegates, Element.Extras]
 ...
 */
 Interfaces = {};
+Layout = {};
 Core = {};
 Data = {};
 Iterable = {};
@@ -2315,7 +2321,7 @@ Data.Select = new Class({
       offset: 0,
       position: {
         x: 'center',
-        y: 'bottom'
+        y: 'auto'
       }
     });
     this.picker.attach(this.base, false);
@@ -4093,33 +4099,498 @@ Pickers.Base = new Class({
     return this;
   }
 });
-Pickers.Color = new Pickers.Base({
-  type: 'Color'
+/*
+Pickers.Color = new Pickers.Base {type:'Color'}
+Pickers.Number = new Pickers.Base {type:'Number'}
+Pickers.Time = new Pickers.Base {type:'Time'}
+Pickers.Text = new Pickers.Base {type:'Text'}
+Pickers.Date = new Pickers.Base {type:'Date'}
+Pickers.DateTime = new Pickers.Base {type:'DateTime'}
+Pickers.Table = new Pickers.Base {type:'Table'}
+Pickers.Unit = new Pickers.Base {type:'Unit'}
+Pickers.Select = new Pickers.Base {type:'Select'}
+Pickers.List = new Pickers.Base {type:'List'}
+*/
+Layout.Blender = new Class({
+  Extends: Core.Abstract,
+  Implements: Interfaces.Children,
+  Attributes: {
+    "class": {
+      value: 'blender-layout'
+    }
+  },
+  create: function() {
+    var list, select, tip, view, view1, view2, view3, view4;
+    this.views = [];
+    view = new Layout.Blender.View({
+      top: 30,
+      left: 0,
+      right: "80%",
+      bottom: 300
+    });
+    view.base.setStyle('background-image', 'url(/Themes/Chrome/images/grid5.png)');
+    view1 = new Layout.Blender.View({
+      top: 300,
+      left: 0,
+      right: "100%",
+      bottom: "100%"
+    });
+    view2 = new Layout.Blender.View({
+      top: 0,
+      left: "80%",
+      right: "100%",
+      bottom: 150
+    });
+    view3 = new Layout.Blender.View({
+      top: 150,
+      left: "80%",
+      right: "100%",
+      bottom: 300
+    });
+    view4 = new Layout.Blender.View({
+      top: 0,
+      left: 0,
+      right: "80%",
+      bottom: 30
+    });
+    view2.addChild(new Element('div.dialog-prompt-label', {
+      text: 'Value'
+    }));
+    view2.addChild(new Data.Number());
+    view2.addChild(new Element('div.dialog-prompt-label', {
+      text: 'Value'
+    }));
+    tip = new Core.Tip({
+      label: 'Heey youuu!',
+      zindex: 100,
+      location: {
+        x: 'auto',
+        y: 'auto'
+      },
+      offset: 10
+    });
+    select = new Data.Select();
+    tip.attach(select);
+    view2.addChild(select);
+    list = [' bounding-box', 'each-box', 'continuous', 'border-box', 'padding-box', 'content-box', 'no-clip'];
+    list.each(function(item) {
+      return select.addItem(new Iterable.ListItem({
+        label: item,
+        removeable: false,
+        draggable: false
+      }));
+    });
+    new Layout.Blender.Hook({
+      ob: view4,
+      prop: 'bottom'
+    }, {
+      ob: view,
+      prop: 'top'
+    });
+    new Layout.Blender.Hook({
+      ob: view4,
+      prop: 'right'
+    }, {
+      ob: view,
+      prop: 'right'
+    });
+    new Layout.Blender.Hook({
+      ob: view,
+      prop: 'bottom'
+    }, {
+      ob: view1,
+      prop: 'top'
+    });
+    new Layout.Blender.Hook({
+      ob: view2,
+      prop: 'left'
+    }, {
+      ob: view3,
+      prop: 'left'
+    });
+    new Layout.Blender.Hook({
+      ob: view2,
+      prop: 'bottom'
+    }, {
+      ob: view3,
+      prop: 'top'
+    });
+    new Layout.Blender.Hook({
+      ob: view,
+      prop: 'bottom'
+    }, {
+      ob: view3,
+      prop: 'bottom'
+    });
+    new Layout.Blender.Hook({
+      ob: view,
+      prop: 'right'
+    }, {
+      ob: view2,
+      prop: 'left'
+    });
+    view.addEvent('topleft-bottom', (function(e) {
+      console.log('hehe?');
+      return this.addChild(new Layout.Blender.View());
+    }).bind(this));
+    this.adoptChildren(view, view1, view2, view3, view4);
+    return console.log('Blender Layout engine!');
+  },
+  getView: function(e) {}
 });
-Pickers.Number = new Pickers.Base({
-  type: 'Number'
+Layout.Blender.Hook = new Class({
+  initialize: function(side1, side2) {
+    side1.ob.addEvent("" + side1.prop + "Change", function(obj) {
+      return side2.ob.set(side2.prop, obj.newVal);
+    });
+    return side2.ob.addEvent("" + side2.prop + "Change", function(obj) {
+      return side1.ob.set(side1.prop, obj.newVal);
+    });
+  }
 });
-Pickers.Time = new Pickers.Base({
-  type: 'Time'
+Layout.Blender.View = new Class({
+  Extends: Core.Abstract,
+  Implements: Interfaces.Children,
+  Attributes: {
+    "class": {
+      value: 'blender-view'
+    },
+    top: {
+      setter: function(value) {
+        this.base.setStyle('top', value);
+        return value;
+      }
+    },
+    left: {
+      setter: function(value) {
+        if (String.from(value).test(/%$/)) {
+          value = window.getScrollSize().x * Number.from(value) / 100;
+        }
+        this.base.setStyle('left', value);
+        return value;
+      }
+    },
+    right: {
+      setter: function(value) {
+        if (String.from(value).test(/%$/)) {
+          value = window.getScrollSize().x * Number.from(value) / 100;
+        }
+        this.base.setStyle('right', window.getSize().x - value + 1);
+        return value;
+      }
+    },
+    bottom: {
+      setter: function(value) {
+        if (String.from(value).test(/%$/)) {
+          value = window.getScrollSize().y * Number.from(value) / 100;
+        }
+        this.base.setStyle('bottom', window.getSize().y - value + 1);
+        return value;
+      }
+    }
+  },
+  update: function() {
+    this.children.each((function(child) {
+      return child.set('size', this.base.getSize().x - 30);
+    }).bind(this));
+    this.slider.set('size', this.base.getSize().y - 60);
+    if (this.base.getSize().y < this.base.getScrollSize().y) {
+      return this.slider.show();
+    } else {
+      return this.slider.hide();
+    }
+  },
+  create: function() {
+    this.slider = new Core.Slider({
+      steps: 100,
+      mode: 'vertical'
+    });
+    this.toolbar = new Layout.Blender.ViewToolbar();
+    console.log(this.toolbar);
+    this.base.adopt(this.slider, this.toolbar);
+    this.restrains = {
+      top: false,
+      left: false,
+      right: false,
+      bottom: false
+    };
+    this.hooks = {
+      left: {
+        view: null
+      },
+      top: {},
+      right: {},
+      bottom: {}
+    };
+    this.position = {
+      x: 0,
+      y: 0
+    };
+    this.size = {
+      w: 0,
+      h: 0
+    };
+    this.topLeftCorner = new Layout.Blender.Corner({
+      "class": 'topleft'
+    });
+    this.topLeftCorner.addEvent('directionChange', (function(dir, e) {
+      if ((dir === 'bottom' || dir === 'top') && !this.restrains.top) {
+        this.drag.startpos = {
+          y: Number.from(this.base.getStyle('top'))
+        };
+        this.drag.options.modifiers = {
+          x: null,
+          y: 'top'
+        };
+        this.drag.options.invert = true;
+        this.drag.start(e);
+      }
+      if ((dir === 'left' || dir === 'right') && !this.restrains.right) {
+        this.drag.startpos = {
+          x: Number.from(this.get('right'))
+        };
+        this.drag.options.modifiers = {
+          x: 'right',
+          y: null
+        };
+        this.drag.options.invert = true;
+        return this.drag.start(e);
+      }
+    }).bind(this));
+    this.bottomRightCorner = new Layout.Blender.Corner({
+      "class": 'bottomleft'
+    });
+    this.bottomRightCorner.addEvent('directionChange', (function(dir, e) {
+      if ((dir === 'bottom' || dir === 'top') && !this.restrains.bottom) {
+        this.drag.startpos = {
+          y: Number.from(this.get('bottom'))
+        };
+        this.drag.options.modifiers = {
+          x: null,
+          y: 'bottom'
+        };
+        this.drag.options.invert = true;
+        this.drag.start(e);
+      }
+      if ((dir === 'left' || dir === 'right') && !this.restrains.left) {
+        this.drag.startpos = {
+          x: Number.from(this.base.getStyle('left'))
+        };
+        this.drag.options.modifiers = {
+          x: 'left',
+          y: null
+        };
+        this.drag.options.invert = true;
+        return this.drag.start(e);
+      }
+    }).bind(this));
+    this.adoptChildren(this.topLeftCorner, this.bottomRightCorner);
+    this.drag = new Drag(this.base, {
+      modifiers: {
+        x: '',
+        y: ''
+      },
+      style: false
+    });
+    this.drag.detach();
+    /*
+    @base.addEvent 'mousemove', ((e) ->
+      cd = @base.getCoordinates()
+      topoffset = Math.abs(e.client.y-cd.top)
+      bottomoffset = Math.abs(e.client.y-cd.bottom)
+      leftoffset = Math.abs(e.client.x-cd.left)
+      rightoffset = Math.abs(e.client.x-cd.right)
+      if bottomoffset < 6
+        @base.setStyle 'cursor', 's-resize'
+      else if topoffset < 6
+        @base.setStyle 'cursor', 'n-resize'
+      else if leftoffset < 6
+        @base.setStyle 'cursor', 'w-resize'
+      else if rightoffset < 6
+        @base.setStyle 'cursor', 'e-resize'
+      else
+        @base.setStyle 'cursor', 'auto'
+    ).bind @
+    @base.addEvent 'mousedown', ((e) ->
+      cd = @base.getCoordinates()
+      topoffset = Math.abs(e.client.y-cd.top)
+      bottomoffset = Math.abs(e.client.y-cd.bottom)
+      leftoffset = Math.abs(e.client.x-cd.left)
+      rightoffset = Math.abs(e.client.x-cd.right)
+      console.log leftoffset, rightoffset
+      @drag.options.modifiers = {x:'',y:''}
+      if bottomoffset < 6
+        @drag.options.modifiers.y = 'bottom'
+        @drag.options.invert = true
+      if topoffset < 6
+        @drag.options.modifiers.y = 'top'
+        @drag.options.invert = false
+      if leftoffset < 6
+        @drag.options.modifiers.x = 'left'
+        @drag.options.invert = false
+      if rightoffset < 6
+        @drag.options.modifiers.x = 'right'
+        @drag.options.invert = true
+      @drag.start(e)
+
+    ).bind @
+    */
+    return this.drag.addEvent('drag', (function(el, e) {
+      var offset, posx, posy;
+      if (this.drag.options.modifiers.x != null) {
+        offset = this.drag.mouse.start.x - this.drag.mouse.now.x;
+        if (this.drag.options.invert) {
+          offset = -offset;
+        }
+        posx = offset + this.drag.startpos.x;
+        this.set(this.drag.options.modifiers.x, posx > 0 ? posx : 0);
+      }
+      if (this.drag.options.modifiers.y != null) {
+        offset = this.drag.mouse.start.y - this.drag.mouse.now.y;
+        if (this.drag.options.invert) {
+          offset = -offset;
+        }
+        posy = offset + this.drag.startpos.y;
+        return this.set(this.drag.options.modifiers.y, posy > 0 ? posy : 0);
+      }
+    }).bind(this));
+  },
+  check: function() {}
 });
-Pickers.Text = new Pickers.Base({
-  type: 'Text'
+Layout.Blender.ViewToolbar = new Class({
+  Extends: Core.Abstract,
+  Implements: Interfaces.Children,
+  Attributes: {
+    "class": {
+      value: 'blender-toolbar'
+    }
+  },
+  create: function() {
+    var list, select;
+    select = new Data.Select({
+      editable: false,
+      size: 80
+    });
+    list = ['node editor', 'preview', 'setting', 'library', 'help', 'info'];
+    list.each(function(item) {
+      return select.addItem(new Iterable.ListItem({
+        label: item,
+        removeable: false,
+        draggable: false
+      }));
+    });
+    return this.addChild(select);
+  }
 });
-Pickers.Date = new Pickers.Base({
-  type: 'Date'
+Layout.Blender.Corner = new Class({
+  Extends: Core.Icon,
+  Attributes: {
+    snapDistance: {
+      value: 0
+    }
+  },
+  create: function() {
+    this.drag = new Drag(this.base, {
+      style: false
+    });
+    this.drag.addEvent('start', (function(el, e) {
+      this.startPosition = e.page;
+      return this.direction = null;
+    }).bind(this));
+    this.drag.addEvent('drag', (function(el, e) {
+      var directions, maxdir, maxoffset, offsets;
+      directions = [];
+      offsets = [];
+      if (this.startPosition.x < e.page.x) {
+        directions.push('right');
+        offsets.push(e.page.x - this.startPosition.x);
+      }
+      if (this.startPosition.x > e.page.x) {
+        directions.push('left');
+        offsets.push(this.startPosition.x - e.page.x);
+      }
+      if (this.startPosition.y < e.page.y) {
+        directions.push('bottom');
+        offsets.push(e.page.y - this.startPosition.y);
+      }
+      if (this.startPosition.y > e.page.y) {
+        directions.push('top');
+        offsets.push(this.startPosition.y - e.page.y);
+      }
+      maxdir = directions[offsets.indexOf(offsets.max())];
+      maxoffset = offsets.max();
+      if (maxoffset > this.snapDistance) {
+        if (this.direction !== maxdir) {
+          this.direction = maxdir;
+          this.fireEvent('directionChange', [maxdir, e]);
+          return this.drag.stop();
+        }
+      }
+    }).bind(this));
+    return this.parent();
+  }
 });
-Pickers.DateTime = new Pickers.Base({
-  type: 'DateTime'
-});
-Pickers.Table = new Pickers.Base({
-  type: 'Table'
-});
-Pickers.Unit = new Pickers.Base({
-  type: 'Unit'
-});
-Pickers.Select = new Pickers.Base({
-  type: 'Select'
-});
-Pickers.List = new Pickers.Base({
-  type: 'List'
-});
+/*
+Layout.Table = new Class {
+  Extends: Core.Abstract
+  Implements: [Interfaces.Children, Interfaces.Size]
+  Attributes: {
+    class: {
+      value: "layout-table"
+    }
+  }
+  initialize: ->
+    @parent arguments
+  update: ->
+    @children.each (child) ->
+      child.set 'size', @size
+    , @
+  addRow: ->
+    @addChild new Layout.Table.Row(arguments)
+
+}
+Layout.Table.Row = new Class {
+  Extends: Core.Abstract
+  Implements: [Interfaces.Children, Interfaces.Size]
+  Attributes: {
+    class: {
+      value: "layout-table-row"
+    }
+  }
+  initialie: ->
+    @parent arguments
+  update: ->
+    @children.each (child,i) ->
+      child.set 'size', @percentages[i]/100*@size
+    , @
+  getCell: (n) ->
+    @children[n]
+  create: ->
+    @percentages = []
+    arguments.each (item) ->
+      @percentages.push Number.from(item)
+    if @percentages.sum() isnt 100
+      console.log 'Warning: Cells don\'t sum up!'
+    @percentages.each (per) ->
+      @addChild new Layout.Table.Cell()
+    , @
+    @addChild new Element('div',{style:{float:'left'}})
+    @update()
+
+}
+Layout.Table.Cell = new Class {
+  Extends: Core.Abstract
+  Implements: [Interfaces.Children, Interfaces.Size]
+  Attributes: {
+    class: {
+      value: "layout-table-cell"
+    }
+  }
+  initialie: ->
+    @parent arguments
+  update: ->
+    @children.each (child) ->
+      child.set 'size', @size
+    , @
+}
+*/

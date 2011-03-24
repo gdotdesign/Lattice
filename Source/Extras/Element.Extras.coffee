@@ -95,16 +95,14 @@ Element.Properties.checked = {
       asize = options.relativeTo.getSize()
       position = options.relativeTo.getPosition()
       size = @getSize()
-      x = ''
-      y = ''
-      if options.position.x is 'auto' and options.position.y is 'auto'
-        if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then x = 'left' else x = 'right'          
-        if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then y = 'top' else y = 'bottom'
-        if not ((position.y+size.y/2) > (winsize.y-winscroll.y)) and not ((position.y-size.y) < 0) then y = 'center'    
-        options.position = {x:x,y:y}
+      if options.position.x is 'auto' 
+        if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then options.position.x = 'left' else options.position.x = 'right'          
+      if options.position.y is 'auto'
+        if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then options.position.y = 'top' else options.position.y = 'bottom'
       
-      ofa = {}
-                      
+      
+      ofa = {x:0,y:0}
+      console.log options.position             
       switch options.position.x
         when 'center'
           if options.position.y isnt 'center'
@@ -122,6 +120,7 @@ Element.Properties.checked = {
         when 'bottom'
           ofa.y = options.offset
        options.offset = ofa
+       console.log ofa
        @oldPosition.attempt options, @
     removeTransition: ->
       @store 'transition', @getStyle( '-webkit-transition-duration' )

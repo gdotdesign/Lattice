@@ -137,7 +137,7 @@ Data.Select = new Class {
         @prompt.show()
     ).bind @
     
-    @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
+    @picker = new Core.Picker({offset:0,position:{x:'center',y:'auto'}})
     @picker.attach @base, false
     @base.addEvent 'click', ((e) ->
       if @enabled

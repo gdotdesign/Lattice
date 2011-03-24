@@ -1,3 +1,59 @@
+.blender-layout {
+  background-color: #555555;
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0; }
+
+.blender-toolbar {
+  background-color: #888888;
+  z-index: 10; }
+
+.blender-view {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  bottom: 0;
+  background-color: #727272;
+  border-top: 1px solid #888888;
+  overflow: hidden; }
+  .blender-view .blender-toolbar {
+    position: absolute;
+    height: 30px;
+    right: 0;
+    left: 0;
+    bottom: 0; }
+  .blender-view .slider {
+    position: absolute !important;
+    top: 10px;
+    right: 0;
+    z-index: 11; }
+  .blender-view .topleft {
+    cursor: crosshair;
+    z-index: 99;
+    border-top: 7px solid #666666;
+    border-left: 7px solid transparent;
+    border-right: 7px solid #666666;
+    border-bottom: 7px solid transparent;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 0;
+    height: 0; }
+  .blender-view .bottomleft {
+    z-index: 99;
+    border-top: 7px solid transparent;
+    border-left: 7px solid #666666;
+    border-right: 7px solid transparent;
+    border-bottom: 7px solid #666666;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 0; }
+
 .picker .color .number, .picker .color .pushgroup {
   box-shadow: 0 0 0 0;
   -moz-box-shadow: 0 0 0 0;
@@ -29,7 +85,7 @@
     -webkit-box-shadow: 0 0 4px rgba(0, 0, 0, 0.4); }
 
 .time, .date, .date-time {
-  border: 1px solid #272727;
+  border: 1px solid #555555;
   font-size: 12px;
   margin: 5px;
   color: #666666;
@@ -96,7 +152,7 @@ label {
   color: #333333; }
 
 fieldset {
-  border: 1px solid #272727;
+  border: 1px solid #555555;
   font-size: 12px;
   margin: 5px;
   color: #666666;
@@ -201,7 +257,7 @@ fieldset {
 .dialog-prompt {
   background-color: #626262; }
   .dialog-prompt input {
-    border: 1px solid #272727;
+    border: 1px solid #555555;
     font-size: 12px;
     margin: 5px;
     color: #666666;
@@ -237,7 +293,7 @@ fieldset {
   color: #212121 !important; }
 
 .slot, textarea, input[type=text], .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .unit-pick, .dialog-prompt {
-  border: 1px solid #272727;
+  border: 1px solid #555555;
   font-size: 12px;
   margin: 5px;
   color: #666666;
@@ -346,7 +402,7 @@ textarea, input[type=text] {
 
 .picker, .tip {
   z-index: 99;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(20, 20, 20, 0.7);
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   -khtml-border-radius: 5px;
@@ -400,6 +456,10 @@ textarea, input[type=text] {
     border-right: 4px solid transparent;
     border-top: 4px solid #a3a3a3; }
   .select .text {
+    -moz-border-radius: 5px;
+    -webkit-border-radius: 5px;
+    -khtml-border-radius: 5px;
+    border-radius: 5px;
     padding-left: 15px; }
   .select .icon {
     line-height: 15px;
@@ -591,7 +651,7 @@ textarea, input[type=text] {
     -webkit-border-radius: 5px;
     -khtml-border-radius: 5px;
     border-radius: 5px;
-    border: 1px solid #272727; }
+    border: 1px solid #555555; }
   .slider input, .number input {
     -moz-border-radius: 10px;
     -webkit-border-radius: 10px;

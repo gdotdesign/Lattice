@@ -54,4 +54,5 @@ sources:
   - "Source/Forms/Forms.Fieldset.coffee"
   - "Source/Forms/Forms.Form.coffee"
   - "Source/Pickers/Pickers.coffee"
+  - "Source/Layout/Blender.coffee"
   
