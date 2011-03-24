@@ -7,35 +7,37 @@ description: Text data element.
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI]
-
+requires: 
+  - GDotUI
+  - Data.Abstract
+  - Interfaces.Size
+  
 provides: Data.Text
 
 ...
 ###
 Data.Text = new Class {
   Extends: Data.Abstract
-  Implements: Interfaces.Size  
+  Implements: Interfaces.Size
+  Binds: ['update']  
   Attributes: {
     class: {
       value: GDotUI.Theme.Text.class
     }
+    value: {
+      setter: (value) ->
+        @text.set 'value', value
+        value
+      getter: ->
+        @text.get 'value'
+    }
   }
-  initialize: (options) ->
-    @parent options
   update: ->
+    @fireEvent 'change', @get 'value'
     @text.setStyle 'width', @size
   create: ->
     @text = new Element 'textarea'
     @base.grab @text
-    @addEvent 'show', ( ->
-      @text.focus()
-      ).bind this
-    @text.addEvent 'keyup',( (e) ->
-      @fireEvent 'change', @text.get('value')
-    ).bind this
-  getValue: ->
-    @text.get('value')
-  setValue: (text) ->
-    @text.set('value',text);
+    @text.addEvent 'keyup', @update
+    
 }

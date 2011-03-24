@@ -7,36 +7,19 @@ description: Abstract base class for data elements.
 
 license: MIT-style license.
 
-requires: [GDotUI, Interfaces.Mux]
+requires: 
+  - GDotUI
+  - Core.Abstract
 
 provides: Data.Abstract
 
 ...
 ###
 Data.Abstract = new Class {
-  Implements:[Events
-              Interfaces.Mux]
+  Extends: Core.Abstract
   Attributes: {
-    class: {
-      setter: (value, old) ->
-        @base.removeClass old
-        @base.addClass value
-        value
-    }
     value: {
       value: null
     }
   }
-  initialize: (options) ->
-    @base = new Element 'div'
-    @base.addEvent 'addedToDom', @ready.bind @
-    @mux()
-    @create()
-    @setAttributes options
-    @
-  update: ->
-  create: ->
-  ready: ->
-  toElement: ->
-    @base
 }

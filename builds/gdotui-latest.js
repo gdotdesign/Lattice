@@ -2030,39 +2030,20 @@ description: Abstract base class for data elements.
 
 license: MIT-style license.
 
-requires: [GDotUI, Interfaces.Mux]
+requires:
+  - GDotUI
+  - Core.Abstract
 
 provides: Data.Abstract
 
 ...
 */
 Data.Abstract = new Class({
-  Implements: [Events, Interfaces.Mux],
+  Extends: Core.Abstract,
   Attributes: {
-    "class": {
-      setter: function(value, old) {
-        this.base.removeClass(old);
-        this.base.addClass(value);
-        return value;
-      }
-    },
     value: {
       value: null
     }
-  },
-  initialize: function(options) {
-    this.base = new Element('div');
-    this.base.addEvent('addedToDom', this.ready.bind(this));
-    this.mux();
-    this.create();
-    this.setAttributes(options);
-    return this;
-  },
-  update: function() {},
-  create: function() {},
-  ready: function() {},
-  toElement: function() {
-    return this.base;
   }
 });
 /*
@@ -2298,7 +2279,10 @@ description: Text data element.
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI]
+requires:
+  - GDotUI
+  - Data.Abstract
+  - Interfaces.Size
 
 provides: Data.Text
 
@@ -2307,32 +2291,29 @@ provides: Data.Text
 Data.Text = new Class({
   Extends: Data.Abstract,
   Implements: Interfaces.Size,
+  Binds: ['update'],
   Attributes: {
     "class": {
       value: GDotUI.Theme.Text["class"]
+    },
+    value: {
+      setter: function(value) {
+        this.text.set('value', value);
+        return value;
+      },
+      getter: function() {
+        return this.text.get('value');
+      }
     }
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   update: function() {
+    this.fireEvent('change', this.get('value'));
     return this.text.setStyle('width', this.size);
   },
   create: function() {
     this.text = new Element('textarea');
     this.base.grab(this.text);
-    this.addEvent('show', (function() {
-      return this.text.focus();
-    }).bind(this));
-    return this.text.addEvent('keyup', (function(e) {
-      return this.fireEvent('change', this.text.get('value'));
-    }).bind(this));
-  },
-  getValue: function() {
-    return this.text.get('value');
-  },
-  setValue: function(text) {
-    return this.text.set('value', text);
+    return this.text.addEvent('keyup', this.update);
   }
 });
 /*

@@ -15,7 +15,7 @@ window.addEvent('domready', function(){
   text.addEvent('change',function(value){
     button.set('label', value)
   });
-  text.setValue('Default Button!')
+  text.set('value','Default Button!')
   
   slider = new Data.Number({label:'Size'})
   slider.addEvent('change',function(value){
