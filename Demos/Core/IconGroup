@@ -70,7 +70,7 @@ window.addEvent('domready', function(){
     icon = new Core.Icon({image:icons[Math.round(Math.random()*4)]});
     iconGroup.addIcon(icon)
   }
-  pushgroup.setValue('grid')
+  pushgroup.set('value','grid')
   $("demo").adopt(iconGroup)
   $("options").adopt(slider,slider1, slider2,slider3,slider4,slider5,pushgroup);
 });

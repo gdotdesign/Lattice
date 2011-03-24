@@ -1146,7 +1146,6 @@ Core.Picker = new Class {
       @attachedTo.fireEvent 'change', arguments
   show: (e,auto) ->
     auto = if auto? then auto else true
-    console.log auto
     document.body.grab @base
     if @attachedTo?
       @attachedTo.addClass @picking
@@ -2843,13 +2842,13 @@ Data.Table = new Class {
     @header.addEvent 'next', ( ->
       @addCloumn ''
       @header.cells.getLast().editStart()
-    ).bindWithEvent @
+    ).bind @
     @header.addEvent 'editEnd', ( ->
       @fireEvent 'change', @getData()
       if not @header.cells.getLast().editing
         if @header.cells.getLast().getValue() is ''
           @removeLast()
-    ).bindWithEvent @
+    ).bind @
     @table.grab @header
     @addRow @columns
     @
@@ -2871,7 +2870,7 @@ Data.Table = new Class {
       index = @rows.indexOf row
       if index isnt @rows.length-1
         @rows[index+1].cells[0].editStart()
-    ).bindWithEvent @
+    ).bind @
     @rows.push row
     @table.grab row
   removeRow: (row,erase) ->
@@ -2966,14 +2965,14 @@ Data.TableRow = new Class {
     cell = new Data.TableCell({value:value})
     cell.addEvent 'editEnd', ( ->
       @fireEvent 'editEnd'
-    ).bindWithEvent @
+    ).bind @
     cell.addEvent 'next', ((cell) ->
       index = @cells.indexOf cell
       if index is @cells.length-1
         @fireEvent 'next', @
       else
         @cells[index+1].editStart()
-    ).bindWithEvent @
+    ).bind @
     @cells.push cell
     @base.grab cell
   empty: ->
@@ -3029,7 +3028,7 @@ Data.TableCell = new Class {
         if e.key is 'tab'
           e.stop()
           @fireEvent 'next', @
-      ).bindWithEvent @
+      ).bind @
       size = @base.getSize()
       @input.setStyles {width: size.x+"px !important",height:size.y+"px !important"}
       @input.focus()
@@ -3164,13 +3163,12 @@ provides: Data.List
 Data.List = new Class {
   Extends: Data.Abstract
   Binds: ['update']
-  options: {
-    class: GDotUI.Theme.DataList.class
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.DataList.class
+    }
   }
-  initialize: (options) ->
-    @parent options
   create: ->
-    @base.addClass @options.class
     @table = new Element 'table', {cellspacing:0, cellpadding:0}
     @base.grab @table
     @cells = []
@@ -3243,11 +3241,6 @@ Forms.Input = new Class {
   }
   initialize: (options) ->
     @setOptions options
-    @base = new Element 'div'
-    @create()
-    @
-  create: () ->
-    delete @base  
     if (@options.type is 'text' or @options.type is 'password' or @options.type is 'button')
       @base = new Element 'input', { type: @options.type, name: @options.name}
     if @options.type is 'checkbox'
@@ -3260,9 +3253,13 @@ Forms.Input = new Class {
       @base = new Element 'textarea', {name: @options.name}
     if @options.type is "select"
       select = new Data.Select {default: @options.name}
+      select.base.setAttribute 'name', @options.name
+      select.base.setAttribute 'type', 'select'
       @options.options.each ( (item) ->
         select.addItem new Iterable.ListItem {label:item.label}
       ).bind @
+      select.addEvent 'change', (v) ->
+        @base.set 'value', v
       @base = select.base
     if @options.type is "radio"
       @base = new Element 'div'
@@ -3276,7 +3273,7 @@ Forms.Input = new Class {
         if @options.type isnt "radio"
           @base.addClass val
       ).bind @
-    @base
+    @
   toElement: ->
     @base
 }
@@ -3291,52 +3288,50 @@ description: Field Element for Forms.Fieldset.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Forms.Input, GDotUI]
+requires: 
+  - GDotUI
+  - Forms.Input
 
 provides: Forms.Field
 
 ...
 ###
 Forms.Field = new Class {
-  Extends:Core.Abstract
-  options:{
-    structure: GDotUI.Theme.Forms.Field.struct
-    label: ''
+  Implements: [
+    Events
+    Options
+  ]
+  Attributes: {
+    structure: {
+      readOnly: true
+      value: GDotUI.Theme.Forms.Field.struct
+    }
   }
   initialize: (options) ->
-    @options = options
-    @options.structure = GDotUI.Theme.Forms.Field.struct
-    @parent options
-    @
-  create: ->
-    h = new Hash @options.structure
+    @setOptions options
+    h = new Hash @get 'structure'
     h.each ((value,key) ->
       @base = new Element key
-      @createS value, @base
+      @create value, @base
     ).bind @
-    if @options.hidden
-      @base.setStyle 'display', 'none'
-  createS: (item,parent) ->
+  create: (item,parent) ->
     if not parent?
       null
     else
-      console.log typeOf(item)
       switch typeOf(item)
         when "object"
           for key of item
             data = new Hash(item).get key
             if key == 'input'
-              @input = new Forms.Input @options  
-              el = @input
+              el = new Forms.Input @options  
             else if key == 'label'
-              @label = new Element 'label', {'text':@options.label}
-              el = @label
+              el = new Element 'label', {'text':@options.label}
             else
               el = new Element key 
-            console.log document.id(el)
             parent.grab el
-            @createS data , el
-          
+            @create data , el
+  toElement: ->
+    @base
 }
 
 
@@ -3356,22 +3351,25 @@ provides: Forms.Fieldset
 ...
 ###
 Forms.Fieldset = new Class {
-  Extends:Core.Abstract
+  Implements: [
+    Events
+    Options
+  ]
   options:{
     name:''
     inputs:[]
   }
   initialize: (options) ->
-    @options = options
-    @parent options
-  create: () ->
-    delete @base
+    @setOptions options
     @base = new Element 'fieldset'
     @legend = new Element 'legend', {text: @options.name}
     @base.grab @legend
     @options.inputs.each ( (item) ->
       @base.grab new Forms.Field(item)
     ).bind @
+    @
+  toElement: ->
+    @base
 }
 
 
@@ -3439,7 +3437,7 @@ Forms.Form = new Class {
       @base.grab fieldset
   geatherdata: ->
     data = {}
-    @base.getElements( 'select, input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each (item) ->
+    @base.getElements( 'div[type=select], input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each (item) ->
       data[item.get('name')] = if item.get('type')=="checkbox" then true else item.get('value')
     data
   send: ->

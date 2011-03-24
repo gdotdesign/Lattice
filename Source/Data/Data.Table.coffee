@@ -40,13 +40,13 @@ Data.Table = new Class {
     @header.addEvent 'next', ( ->
       @addCloumn ''
       @header.cells.getLast().editStart()
-    ).bindWithEvent @
+    ).bind @
     @header.addEvent 'editEnd', ( ->
       @fireEvent 'change', @getData()
       if not @header.cells.getLast().editing
         if @header.cells.getLast().getValue() is ''
           @removeLast()
-    ).bindWithEvent @
+    ).bind @
     @table.grab @header
     @addRow @columns
     @
@@ -68,7 +68,7 @@ Data.Table = new Class {
       index = @rows.indexOf row
       if index isnt @rows.length-1
         @rows[index+1].cells[0].editStart()
-    ).bindWithEvent @
+    ).bind @
     @rows.push row
     @table.grab row
   removeRow: (row,erase) ->
@@ -163,14 +163,14 @@ Data.TableRow = new Class {
     cell = new Data.TableCell({value:value})
     cell.addEvent 'editEnd', ( ->
       @fireEvent 'editEnd'
-    ).bindWithEvent @
+    ).bind @
     cell.addEvent 'next', ((cell) ->
       index = @cells.indexOf cell
       if index is @cells.length-1
         @fireEvent 'next', @
       else
         @cells[index+1].editStart()
-    ).bindWithEvent @
+    ).bind @
     @cells.push cell
     @base.grab cell
   empty: ->
@@ -226,7 +226,7 @@ Data.TableCell = new Class {
         if e.key is 'tab'
           e.stop()
           @fireEvent 'next', @
-      ).bindWithEvent @
+      ).bind @
       size = @base.getSize()
       @input.setStyles {width: size.x+"px !important",height:size.y+"px !important"}
       @input.focus()

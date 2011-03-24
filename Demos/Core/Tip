@@ -22,7 +22,7 @@ window.addEvent('domready', function(){
   text.addEvent('change',function(value){
     tip.set('label', value)
   });
-  text.setValue('Some tip here!')
+  text.set('value','Some tip here!')
   slider1 = new Data.Number({label:'Delay',reset:false,steps:3000})
   slider1.addEvent('change',function(value){
     tip.set('delay', value)
@@ -45,18 +45,18 @@ window.addEvent('domready', function(){
   select.addItem(new Iterable.ListItem({label:'center'}))
   select.addItem(new Iterable.ListItem({label:'bottom'}))
   select.addEvent('change',function(value){
-    tip.set('location',{x:select1.getValue(),y:value})
+    tip.set('location',{x:select1.get('value'),y:value})
   });
   select1 = new Data.Select({size:95,editable:false})
   select1.addItem(new Iterable.ListItem({label:'left'}))
   select1.addItem(new Iterable.ListItem({label:'center'}))
   select1.addItem(new Iterable.ListItem({label:'right'}))
   select1.addEvent('change',function(value){
-    tip.set('location',{x:value,y:select.getValue()})
+    tip.set('location',{x:value,y:select.get('value')})
   });
   
-  select.setValue('center')
-  select1.setValue('right')
+  select.set('value','center')
+  select1.set('value','right')
   $$(select.base,select1.base).setStyle('float','left');
   
   push = new Core.Push({label:'Enable / Disable',size:200});

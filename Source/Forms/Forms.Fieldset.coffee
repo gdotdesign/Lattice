@@ -14,20 +14,23 @@ provides: Forms.Fieldset
 ...
 ###
 Forms.Fieldset = new Class {
-  Extends:Core.Abstract
+  Implements: [
+    Events
+    Options
+  ]
   options:{
     name:''
     inputs:[]
   }
   initialize: (options) ->
-    @options = options
-    @parent options
-  create: () ->
-    delete @base
+    @setOptions options
     @base = new Element 'fieldset'
     @legend = new Element 'legend', {text: @options.name}
     @base.grab @legend
     @options.inputs.each ( (item) ->
       @base.grab new Forms.Field(item)
     ).bind @
+    @
+  toElement: ->
+    @base
 }

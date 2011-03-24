@@ -62,7 +62,7 @@ Forms.Form = new Class {
       @base.grab fieldset
   geatherdata: ->
     data = {}
-    @base.getElements( 'select, input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each (item) ->
+    @base.getElements( 'div[type=select], input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each (item) ->
       data[item.get('name')] = if item.get('type')=="checkbox" then true else item.get('value')
     data
   send: ->

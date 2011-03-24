@@ -82,7 +82,6 @@ Core.Picker = new Class {
       @attachedTo.fireEvent 'change', arguments
   show: (e,auto) ->
     auto = if auto? then auto else true
-    console.log auto
     document.body.grab @base
     if @attachedTo?
       @attachedTo.addClass @picking

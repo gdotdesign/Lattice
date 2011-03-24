@@ -118,6 +118,39 @@ fieldset {
     color: #333333;
     padding: 0 15px 0 15px; }
 
+.table tr:nth-child(odd), .data-list tr:nth-child(odd) {
+  background-color: #d3dced; }
+.table tr:nth-child(even), .data-list tr:nth-child(even) {
+  background-color: #c8cfde; }
+.table tr:first-child td, .data-list tr:first-child td {
+  font-weight: bold;
+  background-color: #eeeeee; }
+  .table tr:first-child td > input, .data-list tr:first-child td > input {
+    font-weight: bold; }
+.table tr td:first-child, .data-list tr td:first-child {
+  border: none; }
+.table tr td, .data-list tr td {
+  border-left: 1px solid #999999;
+  width: 60px;
+  height: 20px;
+  text-align: center; }
+  .table tr td > input, .data-list tr td > input {
+    width: inherit;
+    height: inherit;
+    outline: none;
+    border: none !important;
+    -moz-border-radius: 0;
+    -webkit-border-radius: 0;
+    -khtml-border-radius: 0;
+    border-radius: 0;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
+    box-shadow: 0 0 0 transparent;
+    -moz-box-shadow: 0 0 0 transparent;
+    -webkit-box-shadow: 0 0 0 transparent;
+    background-color: transparent; }
+
 .slot .selected, .select .text, .pushgroup, .button:hover, .float .handle, .float .bottom, .push, .toggler .sep {
   background-image: -moz-linear-gradient(100% 100% 90deg, #373737, #535353);
   background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#535353), to(#373737)); }

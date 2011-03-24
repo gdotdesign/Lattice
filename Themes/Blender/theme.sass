@@ -34,6 +34,38 @@ fieldset
     :color #333
     :padding 0 15px 0 15px
 
+.table, .data-list
+  tr:nth-child(odd) 
+    :background-color #D3DCED
+  tr:nth-child(even) 
+    :background-color #C8CFDE
+  tr:first-child
+    td
+      :font-weight bold
+      :background-color #eee
+      > input
+        :font-weight bold
+  tr
+    td:first-child
+      :border none
+  tr
+    td
+      :border-left 1px solid #999
+      :width 60px
+      :height 20px
+      :text-align center
+      > input
+        :width inherit
+        :height inherit
+        :outline none
+        :border none !important
+        +round_full(0)
+        :margin 0
+        :padding 0
+        :min-width 0
+        +box_shadow(0,0,0,transparent)
+        :background-color transparent
+
 .slot .selected, .select .text, .pushgroup, .button:hover, .float .handle, .float .bottom, .push, .toggler .sep
   +linear_gradient(#535353,#373737)
   

@@ -14,13 +14,12 @@ provides: Data.List
 Data.List = new Class {
   Extends: Data.Abstract
   Binds: ['update']
-  options: {
-    class: GDotUI.Theme.DataList.class
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.DataList.class
+    }
   }
-  initialize: (options) ->
-    @parent options
   create: ->
-    @base.addClass @options.class
     @table = new Element 'table', {cellspacing:0, cellpadding:0}
     @base.grab @table
     @cells = []

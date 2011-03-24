@@ -1,5 +1,5 @@
 ---JS
 window.addEvent('domready', function(){
-  slider = new Data.List();
+  slider = new Data.Table();
   $$(".demo").grab(slider);
 });

@@ -1378,7 +1378,6 @@ Core.Picker = new Class({
   },
   show: function(e, auto) {
     auto = auto != null ? auto : true;
-    console.log(auto);
     document.body.grab(this.base);
     if (this.attachedTo != null) {
       this.attachedTo.addClass(this.picking);
@@ -3275,7 +3274,7 @@ Data.Table = new Class({
     this.header.addEvent('next', (function() {
       this.addCloumn('');
       return this.header.cells.getLast().editStart();
-    }).bindWithEvent(this));
+    }).bind(this));
     this.header.addEvent('editEnd', (function() {
       this.fireEvent('change', this.getData());
       if (!this.header.cells.getLast().editing) {
@@ -3283,7 +3282,7 @@ Data.Table = new Class({
           return this.removeLast();
         }
       }
-    }).bindWithEvent(this));
+    }).bind(this));
     this.table.grab(this.header);
     this.addRow(this.columns);
     return this;
@@ -3315,7 +3314,7 @@ Data.Table = new Class({
       if (index !== this.rows.length - 1) {
         return this.rows[index + 1].cells[0].editStart();
       }
-    }).bindWithEvent(this));
+    }).bind(this));
     this.rows.push(row);
     return this.table.grab(row);
   },
@@ -3446,7 +3445,7 @@ Data.TableRow = new Class({
     });
     cell.addEvent('editEnd', (function() {
       return this.fireEvent('editEnd');
-    }).bindWithEvent(this));
+    }).bind(this));
     cell.addEvent('next', (function(cell) {
       var index;
       index = this.cells.indexOf(cell);
@@ -3455,7 +3454,7 @@ Data.TableRow = new Class({
       } else {
         return this.cells[index + 1].editStart();
       }
-    }).bindWithEvent(this));
+    }).bind(this));
     this.cells.push(cell);
     return this.base.grab(cell);
   },
@@ -3543,7 +3542,7 @@ Data.TableCell = new Class({
           e.stop();
           return this.fireEvent('next', this);
         }
-      }).bindWithEvent(this));
+      }).bind(this));
       size = this.base.getSize();
       this.input.setStyles({
         width: size.x + "px !important",
@@ -3698,14 +3697,12 @@ provides: Data.List
 Data.List = new Class({
   Extends: Data.Abstract,
   Binds: ['update'],
-  options: {
-    "class": GDotUI.Theme.DataList["class"]
-  },
-  initialize: function(options) {
-    return this.parent(options);
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.DataList["class"]
+    }
   },
   create: function() {
-    this.base.addClass(this.options["class"]);
     this.table = new Element('table', {
       cellspacing: 0,
       cellpadding: 0
@@ -3798,14 +3795,8 @@ Forms.Input = new Class({
     name: ''
   },
   initialize: function(options) {
-    this.setOptions(options);
-    this.base = new Element('div');
-    this.create();
-    return this;
-  },
-  create: function() {
     var select, tg;
-    delete this.base;
+    this.setOptions(options);
     if (this.options.type === 'text' || this.options.type === 'password' || this.options.type === 'button') {
       this.base = new Element('input', {
         type: this.options.type,
@@ -3828,11 +3819,16 @@ Forms.Input = new Class({
       select = new Data.Select({
         "default": this.options.name
       });
+      select.base.setAttribute('name', this.options.name);
+      select.base.setAttribute('type', 'select');
       this.options.options.each((function(item) {
         return select.addItem(new Iterable.ListItem({
           label: item.label
         }));
       }).bind(this));
+      select.addEvent('change', function(v) {
+        return this.base.set('value', v);
+      });
       this.base = select.base;
     }
     if (this.options.type === "radio") {
@@ -3857,7 +3853,7 @@ Forms.Input = new Class({
         }
       }).bind(this));
     }
-    return this.base;
+    return this;
   },
   toElement: function() {
     return this.base;
@@ -3872,64 +3868,59 @@ description: Field Element for Forms.Fieldset.
 
 license: MIT-style license.
 
-requires: [Core.Abstract, Forms.Input, GDotUI]
+requires:
+  - GDotUI
+  - Forms.Input
 
 provides: Forms.Field
 
 ...
 */
 Forms.Field = new Class({
-  Extends: Core.Abstract,
-  options: {
-    structure: GDotUI.Theme.Forms.Field.struct,
-    label: ''
-  },
-  initialize: function(options) {
-    this.options = options;
-    this.options.structure = GDotUI.Theme.Forms.Field.struct;
-    this.parent(options);
-    return this;
-  },
-  create: function() {
-    var h;
-    h = new Hash(this.options.structure);
-    h.each((function(value, key) {
-      this.base = new Element(key);
-      return this.createS(value, this.base);
-    }).bind(this));
-    if (this.options.hidden) {
-      return this.base.setStyle('display', 'none');
+  Implements: [Events, Options],
+  Attributes: {
+    structure: {
+      readOnly: true,
+      value: GDotUI.Theme.Forms.Field.struct
     }
   },
-  createS: function(item, parent) {
+  initialize: function(options) {
+    var h;
+    this.setOptions(options);
+    h = new Hash(this.get('structure'));
+    return h.each((function(value, key) {
+      this.base = new Element(key);
+      return this.create(value, this.base);
+    }).bind(this));
+  },
+  create: function(item, parent) {
     var data, el, key, _results;
     if (!(parent != null)) {
       return null;
     } else {
-      console.log(typeOf(item));
       switch (typeOf(item)) {
         case "object":
           _results = [];
           for (key in item) {
             data = new Hash(item).get(key);
             if (key === 'input') {
-              this.input = new Forms.Input(this.options);
-              el = this.input;
+              el = new Forms.Input(this.options);
             } else if (key === 'label') {
-              this.label = new Element('label', {
+              el = new Element('label', {
                 'text': this.options.label
               });
-              el = this.label;
             } else {
               el = new Element(key);
             }
-            console.log(document.id(el));
             parent.grab(el);
-            _results.push(this.createS(data, el));
+            _results.push(this.create(data, el));
           }
           return _results;
       }
     }
+  },
+  toElement: function() {
+    return this.base;
   }
 });
 /*
@@ -3948,25 +3939,25 @@ provides: Forms.Fieldset
 ...
 */
 Forms.Fieldset = new Class({
-  Extends: Core.Abstract,
+  Implements: [Events, Options],
   options: {
     name: '',
     inputs: []
   },
   initialize: function(options) {
-    this.options = options;
-    return this.parent(options);
-  },
-  create: function() {
-    delete this.base;
+    this.setOptions(options);
     this.base = new Element('fieldset');
     this.legend = new Element('legend', {
       text: this.options.name
     });
     this.base.grab(this.legend);
-    return this.options.inputs.each((function(item) {
+    this.options.inputs.each((function(item) {
       return this.base.grab(new Forms.Field(item));
     }).bind(this));
+    return this;
+  },
+  toElement: function() {
+    return this.base;
   }
 });
 /*
@@ -4049,7 +4040,7 @@ Forms.Form = new Class({
   geatherdata: function() {
     var data;
     data = {};
-    this.base.getElements('select, input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each(function(item) {
+    this.base.getElements('div[type=select], input[type=text], input[type=password], textarea, input[type=radio]:checked, input[type=checkbox]:checked').each(function(item) {
       return data[item.get('name')] = item.get('type') === "checkbox" ? true : item.get('value');
     });
     return data;

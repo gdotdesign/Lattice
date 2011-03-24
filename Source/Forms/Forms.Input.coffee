@@ -22,11 +22,6 @@ Forms.Input = new Class {
   }
   initialize: (options) ->
     @setOptions options
-    @base = new Element 'div'
-    @create()
-    @
-  create: () ->
-    delete @base  
     if (@options.type is 'text' or @options.type is 'password' or @options.type is 'button')
       @base = new Element 'input', { type: @options.type, name: @options.name}
     if @options.type is 'checkbox'
@@ -39,9 +34,13 @@ Forms.Input = new Class {
       @base = new Element 'textarea', {name: @options.name}
     if @options.type is "select"
       select = new Data.Select {default: @options.name}
+      select.base.setAttribute 'name', @options.name
+      select.base.setAttribute 'type', 'select'
       @options.options.each ( (item) ->
         select.addItem new Iterable.ListItem {label:item.label}
       ).bind @
+      select.addEvent 'change', (v) ->
+        @base.set 'value', v
       @base = select.base
     if @options.type is "radio"
       @base = new Element 'div'
@@ -55,7 +54,7 @@ Forms.Input = new Class {
         if @options.type isnt "radio"
           @base.addClass val
       ).bind @
-    @base
+    @
   toElement: ->
     @base
 }
