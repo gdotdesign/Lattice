@@ -186,11 +186,9 @@ provides:
 ...
 */
 Class.Mutators.Delegates = function(delegations) {
-  var self;
-  self = this;
   return new Hash(delegations).each(function(delegates, target) {
     return $splat(delegates).each(function(delegate) {
-      return self.prototype[delegate] = function() {
+      return this.prototype[delegate] = function() {
         var ret;
         ret = this[target][delegate].apply(this[target], arguments);
         if (ret === this[target]) {
@@ -199,8 +197,8 @@ Class.Mutators.Delegates = function(delegations) {
           return ret;
         }
       };
-    });
-  });
+    }, this);
+  }, this);
 };
 Class.Mutators.Attributes = function(attributes) {
   var $getter, $setter;
@@ -332,7 +330,8 @@ license: MIT-style license.
 
 provides: Interfaces.Mux
 
-requires: [GDotUI]
+requires:
+  - GDotUI
 
 ...
 */
@@ -435,18 +434,8 @@ requires: [GDotUI]
 ...
 */
 Interfaces.Controls = new Class({
-  hide: function() {
-    return this.base.setStyle('opacity', 0);
-  },
-  show: function() {
-    return this.base.setStyle('opacity', 1);
-  },
-  toggle: function() {
-    if (this.base.getStyle('opacity') === 0) {
-      return this.show();
-    } else {
-      return this.hide();
-    }
+  Delegates: {
+    base: ['hide', 'show', 'toggle']
   }
 });
 /*
@@ -460,7 +449,8 @@ license: MIT-style license.
 
 provides: Interfaces.Enabled
 
-requires: [GDotUI]
+requires:
+  - GDotUI
 ...
 */
 Interfaces.Enabled = new Class({
@@ -548,9 +538,9 @@ Core.Icon = new Class({
     }
   },
   create: function() {
-    return this.base.addEvent('click', (function() {
+    return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
-        return this.fireEvent('invoked', this);
+        return this.fireEvent('invoked', [this, e]);
       }
     }).bind(this));
   }
@@ -564,7 +554,8 @@ description:
 
 license: MIT-style license.
 
-requires: [GDotUI]
+requires:
+  - GDotUI
 
 provides: Interfaces.Children
 
@@ -596,6 +587,11 @@ Interfaces.Children = new Class({
       this.children.erease(el);
       return el.dispose();
     }
+  },
+  empty: function() {
+    return this.children.each(function(child) {
+      return this.removeChild(child);
+    }, this);
   }
 });
 /*
@@ -1215,9 +1211,9 @@ Core.Button = new Class({
     }
   },
   create: function() {
-    return this.base.addEvent('click', (function() {
+    return this.base.addEvent('click', (function(e) {
       if (this.enabled) {
-        return this.fireEvent('invoked', this);
+        return this.fireEvent('invoked', [this, e]);
       }
     }).bind(this));
   }
@@ -1463,7 +1459,7 @@ Iterable.List = new Class({
   getItemFromTitle: function(title) {
     var filtered;
     filtered = this.items.filter(function(item) {
-      if (item.title.get('text') === String(title)) {
+      if (String.from(item.title.get('text')).toLowerCase() === String(title).toLowerCase()) {
         return true;
       } else {
         return false;
@@ -2028,6 +2024,50 @@ Core.PushGroup = new Class({
 /*
 ---
 
+name: Data.Abstract
+
+description: Abstract base class for data elements.
+
+license: MIT-style license.
+
+requires: [GDotUI, Interfaces.Mux]
+
+provides: Data.Abstract
+
+...
+*/
+Data.Abstract = new Class({
+  Implements: [Events, Interfaces.Mux],
+  Attributes: {
+    "class": {
+      setter: function(value, old) {
+        this.base.removeClass(old);
+        this.base.addClass(value);
+        return value;
+      }
+    },
+    value: {
+      value: null
+    }
+  },
+  initialize: function(options) {
+    this.base = new Element('div');
+    this.base.addEvent('addedToDom', this.ready.bind(this));
+    this.mux();
+    this.create();
+    this.setAttributes(options);
+    return this;
+  },
+  update: function() {},
+  create: function() {},
+  ready: function() {},
+  toElement: function() {
+    return this.base;
+  }
+});
+/*
+---
+
 name: Dialog.Prompt
 
 description: Select Element
@@ -2097,14 +2137,22 @@ description: Select Element
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List, Dialog.Prompt]
+requires:
+  - GDotUI
+  - Data.Abstract
+  - Dialog.Prompt
+  - Interfaces.Controls
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
+  - Iterable.List
 
-provides: [Data.Select]
+provides: Data.Select
 
 ...
 */
 Data.Select = new Class({
-  Extends: Core.Abstract,
+  Extends: Data.Abstract,
   Implements: [Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children],
   Attributes: {
     "class": {
@@ -2135,22 +2183,27 @@ Data.Select = new Class({
         }
         return value;
       }
+    },
+    value: {
+      setter: function(value) {
+        return this.list.set('selected', this.list.getItemFromTitle(value));
+      },
+      getter: function() {
+        var li;
+        li = this.list.get('selected');
+        if (li != null) {
+          return li.label;
+        }
+      }
     }
   },
-  getValue: function() {
-    var li;
-    li = this.list.get('selected');
-    if (li != null) {
-      return li.label;
-    }
-  },
-  setValue: function(value) {
-    return this.list.set('selected', this.list.getItemFromTitle(value));
-  },
-  update: function() {
-    return this.list.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
+  ready: function() {
+    return this.set('size', this.size);
   },
   create: function() {
+    this.addEvent('sizeChange', (function() {
+      return this.list.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
+    }).bind(this));
     this.base.setStyle('position', 'relative');
     this.text = new Element('div.text');
     this.text.setStyles({
@@ -2192,7 +2245,12 @@ Data.Select = new Class({
         y: 'bottom'
       }
     });
-    this.picker.attach(this.base);
+    this.picker.attach(this.base, false);
+    this.base.addEvent('click', (function(e) {
+      if (this.enabled) {
+        return this.picker.show(e);
+      }
+    }).bind(this));
     this.list = new Iterable.List({
       "class": 'select-list'
     });
@@ -2229,53 +2287,6 @@ Data.Select = new Class({
   },
   removeItem: function(item) {
     return this.list.removeItem(item);
-  }
-});
-/*
----
-
-name: Data.Abstract
-
-description: Abstract base class for data elements.
-
-license: MIT-style license.
-
-requires: [GDotUI, Interfaces.Mux]
-
-provides: Data.Abstract
-
-...
-*/
-Data.Abstract = new Class({
-  Implements: [Events, Interfaces.Mux],
-  Attributes: {
-    "class": {
-      setter: function(value, old) {
-        this.base.removeClass(old);
-        this.base.addClass(value);
-        return value;
-      }
-    }
-  },
-  initialize: function(options) {
-    this.base = new Element('div');
-    this.base.addEvent('addedToDom', this.ready.bind(this));
-    this.mux();
-    this.create();
-    this.setAttributes(options);
-    return this;
-  },
-  update: function() {
-    return console.log('update');
-  },
-  create: function() {},
-  ready: function() {},
-  toElement: function() {
-    return this.base;
-  },
-  setValue: function() {},
-  getValue: function() {
-    return this.value;
   }
 });
 /*
@@ -2397,7 +2408,13 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children, Data.Number]
+requires:
+  - GDotUI
+  - Data.Abstract
+  - Data.Number
+  - Interfaces.Enabled
+  - Interfaces.Children
+  - Interfaces.Size
 
 provides: Data.Color
 
@@ -2405,168 +2422,7 @@ provides: Data.Color
 */
 Data.Color = new Class({
   Extends: Data.Abstract,
-  Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
-  Binds: ['change'],
-  Attributes: {
-    "class": {
-      value: GDotUI.Theme.Color["class"]
-    }
-  },
-  options: {
-    wrapper: GDotUI.Theme.Color.wrapper
-  },
-  initialize: function(options) {
-    this.parent(options);
-    this.angle = 0;
-    this.radius = 0;
-    this.hue = 0;
-    this.saturation = 0;
-    this.brightness = 100;
-    this.center = {};
-    return this;
-  },
-  create: function() {
-    this.hslacone = $(document.createElement('canvas'));
-    this.background = $(document.createElement('canvas'));
-    this.wrapper = new Element('div').addClass(this.options.wrapper);
-    this.knob = new Element('div').set('id', 'xyknob');
-    this.knob.setStyles({
-      'position': 'absolute',
-      'z-index': 1
-    });
-    this.colorData = new Data.Color.SlotControls();
-    this.colorData.addEvent('change', (function() {
-      return this.fireEvent('change', arguments);
-    }).bind(this));
-    this.base.adopt(this.wrapper);
-    this.colorData.lightnessData.addEvent('change', (function(step) {
-      return this.hslacone.setStyle('opacity', step / 100);
-    }).bind(this));
-    this.colorData.hueData.addEvent('change', (function(value) {
-      return this.positionKnob(value, this.colorData.get('saturation'));
-    }).bind(this));
-    this.colorData.saturationData.addEvent('change', (function(value) {
-      return this.positionKnob(this.colorData.get('hue'), value);
-    }).bind(this));
-    this.background.setStyles({
-      'position': 'absolute',
-      'z-index': 0
-    });
-    this.hslacone.setStyles({
-      'position': 'absolute',
-      'z-index': 1
-    });
-    this.xy = new Drag.Move(this.knob);
-    this.wrapper.adopt(this.background, this.hslacone, this.knob);
-    return this.base.grab(this.colorData);
-  },
-  drawHSLACone: function(width, brightness) {
-    var ang, angle, c, c1, ctx, grad, i, w2, _ref, _results;
-    ctx = this.background.getContext('2d');
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(width / 2, width / 2, width / 2, 0, Math.PI * 2, true);
-    ctx.closePath();
-    ctx.fill();
-    ctx = this.hslacone.getContext('2d');
-    ctx.translate(width / 2, width / 2);
-    w2 = -width / 2;
-    ang = width / 50;
-    angle = (1 / ang) * Math.PI / 180;
-    i = 0;
-    _results = [];
-    for (i = 0, _ref = 360 * ang - 1; (0 <= _ref ? i <= _ref : i >= _ref); (0 <= _ref ? i += 1 : i -= 1)) {
-      c = $HSB(360 + (i / ang), 100, brightness);
-      c1 = $HSB(360 + (i / ang), 0, brightness);
-      grad = ctx.createLinearGradient(0, 0, width / 2, 0);
-      grad.addColorStop(0, c1.hex);
-      grad.addColorStop(1, c.hex);
-      ctx.strokeStyle = grad;
-      ctx.beginPath();
-      ctx.moveTo(0, 0);
-      ctx.lineTo(width / 2, 0);
-      ctx.stroke();
-      _results.push(ctx.rotate(angle));
-    }
-    return _results;
-  },
-  update: function() {
-    this.hslacone.set('width', this.size);
-    this.hslacone.set('height', this.size);
-    this.background.set('width', this.size);
-    this.background.set('height', this.size);
-    this.wrapper.setStyle('height', this.size);
-    this.drawHSLACone(this.size, 100);
-    this.colorData.set('size', this.size);
-    this.knobSize = this.knob.getSize();
-    this.halfWidth = this.size / 2;
-    this.center = {
-      x: this.halfWidth,
-      y: this.halfWidth
-    };
-    return this.positionKnob(this.colorData.get('hue'), this.colorData.get('saturation'));
-  },
-  positionKnob: function(hue, saturation) {
-    this.radius = saturation / 100 * this.halfWidth;
-    this.angle = -((180 - hue) * (Math.PI / 180));
-    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.knobSize.y / 2 + this.center.y);
-    return this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.knobSize.x / 2 + this.center.x);
-  },
-  ready: function() {
-    this.update();
-    this.xy.addEvent('beforeStart', (function(el, e) {
-      return this.lastPosition = el.getPosition(this.wrapper);
-    }).bind(this));
-    return this.xy.addEvent('drag', (function(el, e) {
-      var an, position, sat, x, y;
-      if (this.enabled) {
-        position = el.getPosition(this.wrapper);
-        x = this.center.x - position.x - this.knobSize.x / 2;
-        y = this.center.y - position.y - this.knobSize.y / 2;
-        this.radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
-        this.angle = Math.atan2(y, x);
-        if (this.radius > this.halfWidth) {
-          el.setStyle('top', -Math.sin(this.angle) * this.halfWidth - this.knobSize.y / 2 + this.center.y);
-          el.setStyle('left', -Math.cos(this.angle) * this.halfWidth - this.knobSize.x / 2 + this.center.x);
-          this.saturation = 100;
-        } else {
-          sat = Math.round(this.radius);
-          this.saturation = Math.round((sat / this.halfWidth) * 100);
-        }
-        an = Math.round(this.angle * (180 / Math.PI));
-        this.hue = an < 0 ? 180 - Math.abs(an) : 180 + an;
-        this.colorData.set('hue', this.hue);
-        return this.colorData.set('saturation', this.saturation);
-      } else {
-        return el.setPosition(this.lastPosition);
-      }
-    }).bind(this));
-  }
-});
-Data.Color.ReturnValues = {
-  type: 'radio',
-  name: 'col',
-  options: [
-    {
-      label: 'rgb',
-      value: 'rgb'
-    }, {
-      label: 'rgba',
-      value: 'rgba'
-    }, {
-      label: 'hsl',
-      value: 'hsl'
-    }, {
-      label: 'hsla',
-      value: 'hsla'
-    }, {
-      label: 'hex',
-      value: 'hex'
-    }
-  ]
-};
-Data.Color.SlotControls = new Class({
-  Extends: Data.Abstract,
+  Binds: ['update'],
   Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
   Attributes: {
     "class": {
@@ -2627,6 +2483,15 @@ Data.Color.SlotControls = new Class({
           return this.col.active.label;
         }
       }
+    },
+    value: {
+      setter: function(value) {
+        this.set('hue', value.color.hsb[0]);
+        this.set('saturation', value.color.hsb[1]);
+        this.set('lightness', value.color.hsb[2]);
+        this.set('type', value.type);
+        return this.set('alpha', value.alpha);
+      }
     }
   },
   update: function() {
@@ -2658,248 +2523,204 @@ Data.Color.SlotControls = new Class({
       steps: 360,
       label: 'Hue'
     });
-    this.hueData.addEvent('change', (function(value) {
-      return this.update();
-    }).bind(this));
     this.saturationData = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: 100,
       label: 'Saturation'
     });
-    this.saturationData.addEvent('change', (function(value) {
-      return this.update();
-    }).bind(this));
     this.lightnessData = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: 100,
       label: 'Lightness'
     });
-    this.lightnessData.addEvent('change', (function(value) {
-      return this.update();
-    }).bind(this));
     this.alphaData = new Data.Number({
       range: [0, 100],
       reset: false,
       steps: 100,
       label: 'Alpha'
     });
-    this.alphaData.addEvent('change', (function(value) {
-      return this.update();
-    }).bind(this));
     this.col = new Core.PushGroup();
-    Data.Color.ReturnValues.options.each((function(item) {
+    ['rgb', 'rgba', 'hsl', 'hsla', 'hex'].each((function(item) {
       return this.col.addItem(new Core.Push({
-        label: item.label
+        label: item
       }));
     }).bind(this));
-    this.col.addEvent('change', (function(value) {
-      return this.update();
-    }).bind(this));
+    this.hueData.addEvent('change', this.update);
+    this.saturationData.addEvent('change', this.update);
+    this.lightnessData.addEvent('change', this.update);
+    this.alphaData.addEvent('change', this.update);
+    this.col.addEvent('change', this.update);
     return this.adoptChildren(this.hueData, this.saturationData, this.lightnessData, this.alphaData, this.col);
   }
 });
 /*
 ---
 
-name: Data.Date
+name: Data.ColorWheel
 
-description: Date picker element with Core.Slot-s
+description: ColorWheel data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Core.Slot, GDotUI]
+requires:
+  - GDotUI
+  - Data.Abstract
+  - Data.Color
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
 
-provides: Data.Date
+provides: Data.ColorWheel
 
 ...
 */
-Data.Date = new Class({
+Data.ColorWheel = new Class({
   Extends: Data.Abstract,
+  Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
   Attributes: {
     "class": {
-      value: GDotUI.Theme.Date["class"]
+      value: GDotUI.Theme.Color["class"]
     },
     value: {
-      value: new Date(),
       setter: function(value) {
-        this.value = value;
-        this.updateSlots();
+        return this.colorData.set('value', value);
+      }
+    },
+    wrapperClass: {
+      value: GDotUI.Theme.Color.wrapper,
+      setter: function(value, old) {
+        this.wrapper.removeClass(old);
+        this.wrapper.addClass(value);
         return value;
       }
-    }
-  },
-  options: {
-    yearFrom: GDotUI.Theme.Date.yearFrom
-  },
-  create: function() {
-    this.days = new Core.Slot();
-    this.month = new Core.Slot();
-    this.years = new Core.Slot();
-    this.populate();
-    return this.addEvents();
-  },
-  addEvents: function() {
-    this.years.addEvent('change', (function(item) {
-      this.value.set('year', item.label);
-      return this.update();
-    }).bind(this));
-    this.month.addEvent('change', (function(item) {
-      this.value.set('month', item.label);
-      return this.update();
-    }).bind(this));
-    return this.days.addEvent('change', (function(item) {
-      this.value.set('date', item.label);
-      return this.update();
-    }).bind(this));
-  },
-  populate: function() {
-    var i, item, _results;
-    i = 0;
-    while (i < 30) {
-      item = new Iterable.ListItem({
-        label: i + 1,
-        removeable: false
-      });
-      this.days.addItem(item);
-      i++;
-    }
-    i = 0;
-    while (i < 12) {
-      item = new Iterable.ListItem({
-        label: i + 1,
-        removeable: false
-      });
-      this.month.addItem(item);
-      i++;
-    }
-    i = this.options.yearFrom;
-    _results = [];
-    while (i <= new Date().get('year')) {
-      item = new Iterable.ListItem({
-        label: i,
-        removeable: false
-      });
-      this.years.addItem(item);
-      _results.push(i++);
-    }
-    return _results;
-  },
-  ready: function() {
-    return this.base.adopt(this.years, this.month, this.days);
-  },
-  update: function() {
-    return this.fireEvent('change', this.value);
-  },
-  updateSlots: function() {
-    var cdays, i, item, listlength;
-    cdays = this.value.get('lastdayofmonth');
-    listlength = this.days.list.items.length;
-    if (cdays > listlength) {
-      i = listlength + 1;
-      while (i <= cdays) {
-        item = new Iterable.ListItem({
-          label: i
-        });
-        item.value = i;
-        this.days.addItem(item);
-        i++;
-      }
-    } else if (cdays < listlength) {
-      i = listlength;
-      while (i > cdays) {
-        this.days.list.removeItem(this.days.list.items[i - 1]);
-        i--;
-      }
-    }
-    this.days.list.set('selected', this.days.list.items[this.value.get('date') - 1]);
-    this.month.list.set('selected', this.month.list.items[this.value.get('month')]);
-    return this.years.list.set('selected', this.years.list.getItemFromTitle(this.value.get('year')));
-  }
-});
-/*
----
-
-name: Data.Time
-
-description: Time picker element with Core.Slot-s
-
-license: MIT-style license.
-
-requires: [Data.Abstract, GDotUI, Interfaces.Children]
-
-provides: Data.Time
-
-...
-*/
-Data.Time = new Class({
-  Extends: Data.Abstract,
-  Implements: [Interfaces.Enabled, Interfaces.Children],
-  Attributes: {
-    "class": {
-      value: GDotUI.Theme.Date.Time["class"]
     },
-    value: {
-      value: new Date(),
-      setter: function(value) {
-        this.value = value;
-        this.updateSlots();
+    knobClass: {
+      value: 'xyknob',
+      setter: function(value, old) {
+        this.knob.removeClass(old);
+        this.knob.addClass(value);
         return value;
       }
     }
   },
   create: function() {
-    this.hours = new Core.Slot();
-    this.minutes = new Core.Slot();
-    this.populate();
-    this.addEvents();
-    return this;
+    this.hslacone = $(document.createElement('canvas'));
+    this.background = $(document.createElement('canvas'));
+    this.wrapper = new Element('div');
+    this.knob = new Element('div');
+    this.knob.setStyles({
+      'position': 'absolute',
+      'z-index': 1
+    });
+    this.colorData = new Data.Color();
+    this.colorData.addEvent('change', (function() {
+      return this.fireEvent('change', arguments);
+    }).bind(this));
+    this.base.adopt(this.wrapper);
+    this.colorData.lightnessData.addEvent('change', (function(step) {
+      return this.hslacone.setStyle('opacity', step / 100);
+    }).bind(this));
+    this.colorData.hueData.addEvent('change', (function(value) {
+      return this.positionKnob(value, this.colorData.get('saturation'));
+    }).bind(this));
+    this.colorData.saturationData.addEvent('change', (function(value) {
+      return this.positionKnob(this.colorData.get('hue'), value);
+    }).bind(this));
+    this.background.setStyles({
+      'position': 'absolute',
+      'z-index': 0
+    });
+    this.hslacone.setStyles({
+      'position': 'absolute',
+      'z-index': 1
+    });
+    this.xy = new Drag.Move(this.knob);
+    this.xy.addEvent('beforeStart', (function(el, e) {
+      return this.lastPosition = el.getPosition(this.wrapper);
+    }).bind(this));
+    this.xy.addEvent('drag', (function(el, e) {
+      var an, position, sat, x, y;
+      if (this.enabled) {
+        position = el.getPosition(this.wrapper);
+        x = this.center.x - position.x - this.knobSize.x / 2;
+        y = this.center.y - position.y - this.knobSize.y / 2;
+        this.radius = Math.sqrt(Math.pow(x, 2) + Math.pow(y, 2));
+        this.angle = Math.atan2(y, x);
+        if (this.radius > this.halfWidth) {
+          el.setStyle('top', -Math.sin(this.angle) * this.halfWidth - this.knobSize.y / 2 + this.center.y);
+          el.setStyle('left', -Math.cos(this.angle) * this.halfWidth - this.knobSize.x / 2 + this.center.x);
+          this.saturation = 100;
+        } else {
+          sat = Math.round(this.radius);
+          this.saturation = Math.round((sat / this.halfWidth) * 100);
+        }
+        an = Math.round(this.angle * (180 / Math.PI));
+        this.hue = an < 0 ? 180 - Math.abs(an) : 180 + an;
+        this.colorData.set('hue', this.hue);
+        return this.colorData.set('saturation', this.saturation);
+      } else {
+        return el.setPosition(this.lastPosition);
+      }
+    }).bind(this));
+    this.wrapper.adopt(this.background, this.hslacone, this.knob);
+    return this.addChild(this.colorData);
   },
-  populate: function() {
-    var i, item, _results;
-    i = 0;
-    while (i < 24) {
-      item = new Iterable.ListItem({
-        label: (i < 10 ? '0' + i : i),
-        removeable: false
-      });
-      item.value = i;
-      this.hours.addItem(item);
-      i++;
-    }
+  drawHSLACone: function(width) {
+    var ang, angle, c, c1, ctx, grad, i, w2, _ref, _results;
+    ctx = this.background.getContext('2d');
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(width / 2, width / 2, width / 2, 0, Math.PI * 2, true);
+    ctx.closePath();
+    ctx.fill();
+    ctx = this.hslacone.getContext('2d');
+    ctx.translate(width / 2, width / 2);
+    w2 = -width / 2;
+    ang = width / 50;
+    angle = (1 / ang) * Math.PI / 180;
     i = 0;
     _results = [];
-    while (i < 60) {
-      item = new Iterable.ListItem({
-        label: (i < 10 ? '0' + i : i),
-        removeable: false
-      });
-      item.value = i;
-      this.minutes.addItem(item);
-      _results.push(i++);
+    for (i = 0, _ref = 360 * ang - 1; (0 <= _ref ? i <= _ref : i >= _ref); (0 <= _ref ? i += 1 : i -= 1)) {
+      c = $HSB(360 + (i / ang), 100, 100);
+      c1 = $HSB(360 + (i / ang), 0, 100);
+      grad = ctx.createLinearGradient(0, 0, width / 2, 0);
+      grad.addColorStop(0, c1.hex);
+      grad.addColorStop(1, c.hex);
+      ctx.strokeStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(width / 2, 0);
+      ctx.stroke();
+      _results.push(ctx.rotate(angle));
     }
     return _results;
   },
   update: function() {
-    return this.fireEvent('change', this.value);
+    this.hslacone.set('width', this.size);
+    this.hslacone.set('height', this.size);
+    this.background.set('width', this.size);
+    this.background.set('height', this.size);
+    this.wrapper.setStyle('height', this.size);
+    this.drawHSLACone(this.size);
+    this.colorData.set('size', this.size);
+    this.knobSize = this.knob.getSize();
+    this.halfWidth = this.size / 2;
+    this.center = {
+      x: this.halfWidth,
+      y: this.halfWidth
+    };
+    return this.positionKnob(this.colorData.get('hue'), this.colorData.get('saturation'));
   },
-  addEvents: function() {
-    this.hours.addEvent('change', (function(item) {
-      this.value.set('hours', item.value);
-      return this.update();
-    }).bind(this));
-    return this.minutes.addEvent('change', (function(item) {
-      this.value.set('minutes', item.value);
-      return this.update();
-    }).bind(this));
+  positionKnob: function(hue, saturation) {
+    this.radius = saturation / 100 * this.halfWidth;
+    this.angle = -((180 - hue) * (Math.PI / 180));
+    this.knob.setStyle('top', -Math.sin(this.angle) * this.radius - this.knobSize.y / 2 + this.center.y);
+    return this.knob.setStyle('left', -Math.cos(this.angle) * this.radius - this.knobSize.x / 2 + this.center.x);
   },
   ready: function() {
-    return this.adoptChildren(this.hours, this.minutes);
-  },
-  updateSlots: function() {
-    this.hours.list.set('selected', this.hours.list.items[this.value.get('hours')]);
-    return this.minutes.list.set('selected', this.minutes.list.items[this.value.get('minutes')]);
+    return this.update();
   }
 });
 /*
@@ -3126,13 +2947,22 @@ Iterable.ListItem = new Class({
 
 name: Data.DateTime
 
-description:  Date & Time picker element with Core.Slot-s
+description:  Date & Time picker elements with Core.Slot-s
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Core.Slot, Iterable.ListItem]
+requires:
+  - GDotUI
+  - Core.Slot
+  - Data.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Iterable.ListItem
 
-provides: Data.DateTime
+provides:
+  - Data.DateTime
+  - Data.Date
+  - Data.Time
 
 ...
 */
@@ -3150,133 +2980,176 @@ Data.DateTime = new Class({
         this.updateSlots();
         return value;
       }
+    },
+    time: {
+      readonly: true,
+      value: true
+    },
+    date: {
+      readonly: true,
+      value: true
     }
   },
-  options: {
-    yearFrom: GDotUI.Theme.Date.yearFrom
-  },
   create: function() {
-    this.days = new Core.Slot();
-    this.month = new Core.Slot();
-    this.years = new Core.Slot();
-    this.hours = new Core.Slot();
-    this.minutes = new Core.Slot();
+    this.yearFrom = GDotUI.Theme.Date.yearFrom;
+    if (this.get('date')) {
+      this.days = new Core.Slot();
+      this.month = new Core.Slot();
+      this.years = new Core.Slot();
+    }
+    if (this.get('time')) {
+      this.hours = new Core.Slot();
+      this.minutes = new Core.Slot();
+    }
     this.populate();
-    this.addEvents();
+    if (this.get('time')) {
+      this.hours.addEvent('change', (function(item) {
+        this.value.set('hours', item.value);
+        return this.update();
+      }).bind(this));
+      this.minutes.addEvent('change', (function(item) {
+        this.value.set('minutes', item.value);
+        return this.update();
+      }).bind(this));
+    }
+    if (this.get('date')) {
+      this.years.addEvent('change', (function(item) {
+        this.value.set('year', item.value);
+        return this.update();
+      }).bind(this));
+      this.month.addEvent('change', (function(item) {
+        this.value.set('month', item.value);
+        return this.update();
+      }).bind(this));
+      this.days.addEvent('change', (function(item) {
+        this.value.set('date', item.value);
+        return this.update();
+      }).bind(this));
+    }
     return this;
   },
   populate: function() {
     var i, item, _results;
-    i = 0;
-    while (i < 24) {
-      item = new Iterable.ListItem({
-        label: (i < 10 ? '0' + i : i),
-        removeable: false
-      });
-      item.value = i;
-      this.hours.addItem(item);
-      i++;
+    if (this.get('time')) {
+      i = 0;
+      while (i < 24) {
+        item = new Iterable.ListItem({
+          label: (i < 10 ? '0' + i : i),
+          removeable: false
+        });
+        item.value = i;
+        this.hours.addItem(item);
+        i++;
+      }
+      i = 0;
+      while (i < 60) {
+        item = new Iterable.ListItem({
+          label: (i < 10 ? '0' + i : i),
+          removeable: false
+        });
+        item.value = i;
+        this.minutes.addItem(item);
+        i++;
+      }
     }
-    i = 0;
-    while (i < 60) {
-      item = new Iterable.ListItem({
-        label: (i < 10 ? '0' + i : i),
-        removeable: false
-      });
-      item.value = i;
-      this.minutes.addItem(item);
-      i++;
+    if (this.get('date')) {
+      i = 0;
+      while (i < 30) {
+        item = new Iterable.ListItem({
+          label: i + 1,
+          removeable: false
+        });
+        item.value = i + 1;
+        this.days.addItem(item);
+        i++;
+      }
+      i = 0;
+      while (i < 12) {
+        item = new Iterable.ListItem({
+          label: i + 1,
+          removeable: false
+        });
+        item.value = i;
+        this.month.addItem(item);
+        i++;
+      }
+      i = this.yearFrom;
+      _results = [];
+      while (i <= new Date().get('year')) {
+        item = new Iterable.ListItem({
+          label: i,
+          removeable: false
+        });
+        item.value = i;
+        this.years.addItem(item);
+        _results.push(i++);
+      }
+      return _results;
     }
-    i = 0;
-    while (i < 30) {
-      item = new Iterable.ListItem({
-        label: i + 1,
-        removeable: false
-      });
-      item.value = i + 1;
-      this.days.addItem(item);
-      i++;
-    }
-    i = 0;
-    while (i < 12) {
-      item = new Iterable.ListItem({
-        label: i + 1,
-        removeable: false
-      });
-      item.value = i;
-      this.month.addItem(item);
-      i++;
-    }
-    i = this.options.yearFrom;
-    _results = [];
-    while (i <= new Date().getFullYear()) {
-      item = new Iterable.ListItem({
-        label: i,
-        removeable: false
-      });
-      item.value = i;
-      this.years.addItem(item);
-      _results.push(i++);
-    }
-    return _results;
   },
   update: function() {
     return this.fireEvent('change', this.value);
   },
-  addEvents: function() {
-    var i;
-    this.hours.addEvent('change', (function(item) {
-      this.value.set('hours', item.value);
-      return this.update();
-    }).bind(this));
-    this.minutes.addEvent('change', (function(item) {
-      this.value.set('minutes', item.value);
-      return this.update();
-    }).bind(this));
-    this.years.addEvent('change', (function(item) {
-      this.value.set('year', item.value);
-      return this.update();
-    }).bind(this));
-    this.month.addEvent('change', (function(item) {
-      this.value.set('month', item.value);
-      return this.update();
-    }).bind(this));
-    this.days.addEvent('change', (function(item) {
-      this.value.set('date', item.value);
-      return this.update();
-    }).bind(this));
-    return i = 0;
-  },
   ready: function() {
-    return this.adoptChildren(this.years, this.month, this.days, this.hours, this.minutes);
+    if (this.get('date')) {
+      this.adoptChildren(this.years, this.month, this.days);
+    }
+    if (this.get('time')) {
+      return this.adoptChildren(this.hours, this.minutes);
+    }
   },
   updateSlots: function() {
     var cdays, i, item, listlength;
-    cdays = this.value.get('lastdayofmonth');
-    console.log(this.value.getDate(), 'hey', this.value.get('hours'));
-    listlength = this.days.list.items.length;
-    if (cdays > listlength) {
-      i = listlength + 1;
-      while (i <= cdays) {
-        item = new Iterable.ListItem({
-          label: i
-        });
-        item.value = i;
-        this.days.addItem(item);
-        i++;
+    if (this.get('date')) {
+      cdays = this.value.get('lastdayofmonth');
+      listlength = this.days.list.items.length;
+      if (cdays > listlength) {
+        i = listlength + 1;
+        while (i <= cdays) {
+          item = new Iterable.ListItem({
+            label: i
+          });
+          item.value = i;
+          this.days.addItem(item);
+          i++;
+        }
+      } else if (cdays < listlength) {
+        i = listlength;
+        while (i > cdays) {
+          this.days.list.removeItem(this.days.list.items[i - 1]);
+          i--;
+        }
       }
-    } else if (cdays < listlength) {
-      i = listlength;
-      while (i > cdays) {
-        this.days.list.removeItem(this.days.list.items[i - 1]);
-        i--;
-      }
+      this.days.list.set('selected', this.days.list.items[this.value.get('date') - 1]);
+      this.month.list.set('selected', this.month.list.items[this.value.get('month')]);
+      this.years.list.set('selected', this.years.list.getItemFromTitle(this.value.get('year')));
     }
-    this.days.list.set('selected', this.days.list.items[this.value.get('date') - 1]);
-    this.month.list.set('selected', this.month.list.items[this.value.get('month')]);
-    this.years.list.set('selected', this.years.list.getItemFromTitle(this.value.get('year')));
-    this.hours.list.set('selected', this.hours.list.items[this.value.get('hours')]);
-    return this.minutes.list.set('selected', this.minutes.list.items[this.value.get('minutes')]);
+    if (this.get('time')) {
+      this.hours.list.set('selected', this.hours.list.items[this.value.get('hours')]);
+      return this.minutes.list.set('selected', this.minutes.list.items[this.value.get('minutes')]);
+    }
+  }
+});
+Data.Time = new Class({
+  Extends: Data.DateTime,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Date.Time["class"]
+    },
+    date: {
+      value: false
+    }
+  }
+});
+Data.Date = new Class({
+  Extends: Data.DateTime,
+  Attributes: {
+    "class": {
+      value: GDotUI.Theme.Date["class"]
+    },
+    time: {
+      value: false
+    }
   }
 });
 /*
@@ -3644,7 +3517,14 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Data.Select, Data.Number]
+requires:
+  - GDotUI
+  - Data.Abstract
+  - Data.Number
+  - Data.Select
+  - Interfaces.Children
+  - Interfaces.Size
+  - Interfaces.Enabled
 
 provides: Data.Unit
 
@@ -3677,21 +3557,36 @@ UnitList = {
 };
 Data.Unit = new Class({
   Extends: Data.Abstract,
-  Implements: Interfaces.Size,
+  Implements: [Interfaces.Enabled, Interfaces.Children, Interfaces.Size],
+  Binds: ['update'],
   Attributes: {
     "class": {
       value: GDotUI.Theme.Unit["class"]
+    },
+    value: {
+      setter: function(value) {
+        var match, unit;
+        if (typeof value === 'string') {
+          match = value.match(/(-?\d*)(.*)/);
+          value = match[1];
+          unit = match[2];
+          console.log(unit, value);
+          this.sel.set('value', unit);
+          return this.number.set('value', value);
+        }
+      },
+      getter: function() {
+        return String.from(this.number.value + this.sel.value);
+      }
     }
   },
-  initialize: function(options) {
-    return this.parent(options);
-  },
   update: function() {
-    return this.number.set('size', this.size - this.sel.get('size'));
+    return this.fireEvent('change', String.from(this.number.value + this.sel.get('value')));
   },
   create: function() {
-    this.value = 0;
-    this.selectSize = 80;
+    this.addEvent('sizeChange', (function() {
+      return this.number.set('size', this.size - this.sel.get('size'));
+    }).bind(this));
     this.number = new Data.Number({
       range: [-50, 50],
       reset: true,
@@ -3707,29 +3602,13 @@ Data.Unit = new Class({
         draggable: false
       }));
     }).bind(this));
-    this.number.addEvent('change', (function(value) {
-      this.value = value;
-      return this.fireEvent('change', String(this.value) + this.sel.getValue());
-    }).bindWithEvent(this));
-    this.sel.setValue('px');
-    this.sel.addEvent('change', (function() {
-      return this.fireEvent('change', String(this.value) + this.sel.getValue());
-    }).bindWithEvent(this));
-    this.base.adopt(this.number, this.sel);
-    return this.update();
+    this.sel.set('value', 'px');
+    this.number.addEvent('change', this.update);
+    this.sel.addEvent('change', this.update);
+    return this.adoptChildren(this.number, this.sel);
   },
-  setValue: function(value) {
-    var match, unit;
-    if (typeof value === 'string') {
-      match = value.match(/(-?\d*)(.*)/);
-      value = match[1];
-      unit = match[2];
-      this.sel.setValue(unit);
-      return this.number.set(value);
-    }
-  },
-  getValue: function() {
-    return String(this.value) + this.sel.value;
+  ready: function() {
+    return this.set('size', this.size);
   }
 });
 /*

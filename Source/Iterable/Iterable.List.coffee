@@ -87,7 +87,7 @@ Iterable.List = new Class {
       @editing = on
   getItemFromTitle: (title) ->
     filtered = @items.filter (item) ->
-      if item.title.get('text') == String(title)
+      if String.from(item.title.get('text')).toLowerCase() is String(title).toLowerCase()
         yes
       else no
     filtered[0]

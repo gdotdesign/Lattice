@@ -15,12 +15,13 @@ provides:
 ...
 ###
 Class.Mutators.Delegates = (delegations) ->
-	self = @
-	new Hash(delegations).each (delegates, target) ->
-		$splat(delegates).each (delegate) ->
-			self.prototype[delegate] = ->
-				ret = @[target][delegate].apply @[target], arguments
-				if ret is @[target] then @ else ret
+  new Hash(delegations).each (delegates, target) ->
+    $splat(delegates).each (delegate) ->
+      @::[delegate] = ->
+        ret = @[target][delegate].apply @[target], arguments
+        if ret is @[target] then @ else ret
+    , @
+  , @
 
 Class.Mutators.Attributes = (attributes) ->
     $setter = attributes.$setter

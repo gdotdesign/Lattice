@@ -144,12 +144,13 @@ provides:
 ...
 ###
 Class.Mutators.Delegates = (delegations) ->
-	self = @
-	new Hash(delegations).each (delegates, target) ->
-		$splat(delegates).each (delegate) ->
-			self.prototype[delegate] = ->
-				ret = @[target][delegate].apply @[target], arguments
-				if ret is @[target] then @ else ret
+  new Hash(delegations).each (delegates, target) ->
+    $splat(delegates).each (delegate) ->
+      @::[delegate] = ->
+        ret = @[target][delegate].apply @[target], arguments
+        if ret is @[target] then @ else ret
+    , @
+  , @
 
 Class.Mutators.Attributes = (attributes) ->
     $setter = attributes.$setter
@@ -269,14 +270,15 @@ license: MIT-style license.
 
 provides: Interfaces.Mux
 
-requires: [GDotUI]
+requires: 
+  - GDotUI
 
 ...
 ###
 Interfaces.Mux = new Class {
   mux: ->
     new Hash(@).each (value,key) ->
-      if key.test(/^_\$/) && typeOf(value)=="function"
+      if key.test(/^_\$/) and typeOf(value) is "function"
         value.attempt null, @
     , @
 }
@@ -366,15 +368,9 @@ requires: [GDotUI]
 ...
 ###
 Interfaces.Controls = new Class {
-  hide: ->
-    @base.setStyle 'opacity', 0
-  show: -> 
-    @base.setStyle 'opacity', 1
-  toggle: ->
-    if @base.getStyle('opacity') is 0
-      @show()
-    else
-      @hide()
+  Delegates: {
+    base: ['hide','show','toggle']
+  }
 }
 
 
@@ -389,7 +385,8 @@ license: MIT-style license.
 
 provides: Interfaces.Enabled
 
-requires: [GDotUI]
+requires: 
+  - GDotUI
 ...
 ###
 Interfaces.Enabled = new Class {
@@ -480,7 +477,8 @@ description:
 
 license: MIT-style license.
 
-requires: [GDotUI]
+requires: 
+  - GDotUI
 
 provides: Interfaces.Children
 
@@ -492,7 +490,7 @@ Interfaces.Children = new Class {
   hasChild: (child) ->
     if @children.indexOf child is -1 then no else yes
   adoptChildren: ->
-    children = Array.from(arguments)
+    children = Array.from arguments 
     @children.append children
     @base.adopt arguments
   addChild: (el) ->
@@ -502,6 +500,10 @@ Interfaces.Children = new Class {
     if @children.contains(el)
       @children.erease el
       el.dispose()
+  empty: ->
+    @children.each (child) ->
+      @removeChild child
+    , @
 }
 
 
@@ -1005,9 +1007,9 @@ Core.Button = new Class {
     }
   }
   create: ->
-    @base.addEvent 'click', ( ->
+    @base.addEvent 'click', ((e)->
       if @enabled
-        @fireEvent 'invoked', @
+        @fireEvent 'invoked', [@, e]
     ).bind @
 }
 
@@ -1202,7 +1204,7 @@ Iterable.List = new Class {
       @editing = on
   getItemFromTitle: (title) ->
     filtered = @items.filter (item) ->
-      if item.title.get('text') == String(title)
+      if String.from(item.title.get('text')).toLowerCase() is String(title).toLowerCase()
         yes
       else no
     filtered[0]
@@ -1711,6 +1713,50 @@ Core.PushGroup = new Class {
 ###
 ---
 
+name: Data.Abstract
+
+description: Abstract base class for data elements.
+
+license: MIT-style license.
+
+requires: [GDotUI, Interfaces.Mux]
+
+provides: Data.Abstract
+
+...
+###
+Data.Abstract = new Class {
+  Implements:[Events
+              Interfaces.Mux]
+  Attributes: {
+    class: {
+      setter: (value, old) ->
+        @base.removeClass old
+        @base.addClass value
+        value
+    }
+    value: {
+      value: null
+    }
+  }
+  initialize: (options) ->
+    @base = new Element 'div'
+    @base.addEvent 'addedToDom', @ready.bind @
+    @mux()
+    @create()
+    @setAttributes options
+    @
+  update: ->
+  create: ->
+  ready: ->
+  toElement: ->
+    @base
+}
+
+
+###
+---
+
 name: Dialog.Prompt
 
 description: Select Element
@@ -1775,15 +1821,27 @@ description: Select Element
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List, Dialog.Prompt]
+requires:
+  - GDotUI
+  - Data.Abstract
+  - Dialog.Prompt
+  - Interfaces.Controls
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
+  - Iterable.List
 
-provides: [Data.Select]
+provides: Data.Select
 
 ...
 ###
 Data.Select = new Class {
-  Extends:Core.Abstract
-  Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children]
+  Extends: Data.Abstract
+  Implements:[
+    Interfaces.Controls
+    Interfaces.Enabled
+    Interfaces.Size
+    Interfaces.Children]
   Attributes: {
     class: {
       value: 'select'
@@ -1808,18 +1866,24 @@ Data.Select = new Class {
           document.id(@removeIcon).dispose()
           document.id(@addIcon).dispose()
         value
-          
+    }
+    value: {
+      setter: (value) ->
+        @list.set 'selected', @list.getItemFromTitle(value)
+      getter: ->
+        li = @list.get('selected')
+        if li?
+          li.label
     }
   }
-  getValue: ->
-    li = @list.get('selected')
-    if li?
-      li.label
-  setValue: (value) ->
-    @list.set 'selected', @list.getItemFromTitle(value)
-  update: ->
-    @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
+  ready: ->
+    @set 'size', @size
   create: ->
+    
+    @addEvent 'sizeChange', ( ->
+      @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
+    ).bind @
+    
     @base.setStyle 'position', 'relative'
     @text = new Element('div.text')
     @text.setStyles {
@@ -1854,7 +1918,11 @@ Data.Select = new Class {
     ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
-    @picker.attach @base
+    @picker.attach @base, false
+    @base.addEvent 'click', ((e) ->
+      if @enabled
+        @picker.show e
+    ).bind @
     @list = new Iterable.List({class:'select-list'})
     @picker.set 'content', @list
     @base.adopt @text
@@ -1883,51 +1951,6 @@ Data.Select = new Class {
     @list.addItem item
   removeItem: (item) ->
     @list.removeItem item
-}
-
-
-###
----
-
-name: Data.Abstract
-
-description: Abstract base class for data elements.
-
-license: MIT-style license.
-
-requires: [GDotUI, Interfaces.Mux]
-
-provides: Data.Abstract
-
-...
-###
-Data.Abstract = new Class {
-  Implements:[Events
-              Interfaces.Mux]
-  Attributes: {
-    class: {
-      setter: (value, old) ->
-        @base.removeClass old
-        @base.addClass value
-        value
-    }
-  }
-  initialize: (options) ->
-    @base = new Element 'div'
-    @base.addEvent 'addedToDom', @ready.bind @
-    @mux()
-    @create()
-    @setAttributes options
-    @
-  update: ->
-    console.log 'update'
-  create: ->
-  ready: ->
-  toElement: ->
-    @base
-  setValue: ->
-  getValue: ->
-    @value
 }
 
 
@@ -2046,7 +2069,13 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Interfaces.Enabled, Interfaces.Children, Data.Number]
+requires: 
+  - GDotUI
+  - Data.Abstract
+  - Data.Number
+  - Interfaces.Enabled
+  - Interfaces.Children
+  - Interfaces.Size
 
 provides: Data.Color
 
@@ -2054,177 +2083,12 @@ provides: Data.Color
 ###
 Data.Color = new Class {
   Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children, Interfaces.Size]
-  Binds: ['change']
-  Attributes: {
-    class: {
-      value: GDotUI.Theme.Color.class
-    }
-  }
-  options:{
-    wrapper: GDotUI.Theme.Color.wrapper
-  }
-  initialize: (options) ->
-    @parent options
-
-    @angle = 0
-    @radius = 0    
-    
-    @hue = 0
-    @saturation = 0
-    @brightness = 100
-    
-    @center = {}
-    @
-    
-  create: ->
-    
-    @hslacone = $(document.createElement('canvas'))
-    @background = $(document.createElement('canvas'))
-    @wrapper = new Element('div').addClass @options.wrapper
-   
-    @knob=new Element('div').set 'id', 'xyknob'
-    @knob.setStyles {
-      'position':'absolute'
-      'z-index': 1
-      }
-      
-    @colorData = new Data.Color.SlotControls()
-    @colorData.addEvent 'change', ( ->
-      @fireEvent 'change', arguments
-    ).bind @
-    @base.adopt @wrapper
-
-    @colorData.lightnessData.addEvent 'change',( (step) ->
-      @hslacone.setStyle 'opacity',step/100
-    ).bind @
-
-    @colorData.hueData.addEvent 'change', ((value) ->
-      @positionKnob value, @colorData.get('saturation')
-    ).bind @
-    
-    @colorData.saturationData.addEvent 'change', ((value) ->
-      @positionKnob @colorData.get('hue'), value
-    ).bind @
-    
-    @background.setStyles {
-      'position': 'absolute'
-      'z-index': 0
-    }
-    
-    @hslacone.setStyles {
-      'position': 'absolute'
-      'z-index': 1
-    }
-    
-    @xy = new Drag.Move @knob
-    
-    @wrapper.adopt @background, @hslacone, @knob
-    @base.grab @colorData
-  drawHSLACone: (width,brightness) ->
-    ctx = @background.getContext '2d'
-    ctx.fillStyle = "#000";
-    ctx.beginPath();
-    ctx.arc(width/2, width/2, width/2, 0, Math.PI*2, true); 
-    ctx.closePath();
-    ctx.fill();
-    ctx = @hslacone.getContext '2d'
-    ctx.translate width/2, width/2
-    w2 = -width/2
-    ang = width / 50
-    angle = (1/ang)*Math.PI/180
-    i = 0
-    for i in [0..(360)*(ang)-1]
-      c = $HSB(360+(i/ang),100,brightness)
-      c1 = $HSB(360+(i/ang),0,brightness)
-      grad = ctx.createLinearGradient(0,0,width/2,0)
-      grad.addColorStop(0, c1.hex)
-      grad.addColorStop(1, c.hex)
-      ctx.strokeStyle = grad
-      ctx.beginPath()
-      ctx.moveTo(0,0)
-      ctx.lineTo(width/2,0)
-      ctx.stroke()
-      ctx.rotate(angle)
-  
-  update: ->  
-    @hslacone.set 'width', @size
-    @hslacone.set 'height', @size
-    @background.set 'width', @size
-    @background.set 'height', @size
-    @wrapper.setStyle 'height', @size
-    @drawHSLACone @size, 100
-    @colorData.set 'size', @size
-    
-    @knobSize = @knob.getSize()
-    @halfWidth = @size/2
-    @center = {x: @halfWidth, y:@halfWidth}
-    @positionKnob @colorData.get('hue'), @colorData.get('saturation')
-  positionKnob: (hue,saturation) ->
-    @radius = saturation/100*@halfWidth
-    @angle = -((180-hue)*(Math.PI/180))
-    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@knobSize.y/2+@center.y
-    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@knobSize.x/2+@center.x
-  ready: ->
-    @update()
-    @xy.addEvent 'beforeStart',((el,e) ->
-        @lastPosition = el.getPosition(@wrapper)
-      ).bind @
-    @xy.addEvent 'drag', ((el,e) ->
-      if @enabled
-        position = el.getPosition(@wrapper)
-        
-        x = @center.x-position.x-@knobSize.x/2
-        y = @center.y-position.y-@knobSize.y/2
-        
-        @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
-        @angle = Math.atan2(y,x)
-        
-        if @radius > @halfWidth
-          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@knobSize.y/2+@center.y
-          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@knobSize.x/2+@center.x
-          @saturation = 100
-        else
-          sat =  Math.round @radius 
-          @saturation = Math.round((sat/@halfWidth)*100)
-        
-        an = Math.round(@angle*(180/Math.PI))
-        @hue = if an < 0 then 180-Math.abs(an) else 180+an
-        @colorData.set 'hue', @hue
-        @colorData.set 'saturation', @saturation
-      else
-        el.setPosition @lastPosition
-    ).bind @
-}
-Data.Color.ReturnValues = {
-  type: 'radio'
-  name: 'col'
-  options: [
-    {
-      label: 'rgb'
-      value: 'rgb'
-    }
-    {
-      label: 'rgba'
-      value: 'rgba'
-    }
-    {
-      label: 'hsl'
-      value: 'hsl'
-    }
-    {
-      label: 'hsla'
-      value: 'hsla'
-    }
-    {
-      label: 'hex'
-      value: 'hex'
-    }
+  Binds: ['update']
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Children
+    Interfaces.Size
   ]
-}
-Data.Color.SlotControls = new Class {
-  Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children,Interfaces.Size]
   Attributes: {
     class: {
       value: GDotUI.Theme.Color.controls.class
@@ -2273,6 +2137,14 @@ Data.Color.SlotControls = new Class {
         if @col.active?
           @col.active.label
     }
+    value: {
+      setter: (value) ->
+        @set 'hue', value.color.hsb[0]
+        @set 'saturation', value.color.hsb[1]
+        @set 'lightness', value.color.hsb[2]
+        @set 'type', value.type
+        @set 'alpha', value.alpha
+    }
   }
   update: ->
     hue = @get 'hue'
@@ -2290,29 +2162,23 @@ Data.Color.SlotControls = new Class {
       @lightnessData.set 'size', @size
       @alphaData.set 'size', @size
     ).bind @
+    
     @hueData = new Data.Number {range:[0,360],reset: off, steps: 360, label:'Hue'}
-    @hueData.addEvent 'change', ((value) ->
-      @update() 
-    ).bind @
     @saturationData = new Data.Number {range:[0,100],reset: off, steps: 100 , label:'Saturation'}
-    @saturationData.addEvent 'change', ((value) ->
-      @update() 
-    ).bind @
     @lightnessData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Lightness'}
-    @lightnessData.addEvent 'change', ((value) ->
-      @update() 
-    ).bind @
     @alphaData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Alpha'}
-    @alphaData.addEvent 'change', ((value) ->
-      @update() 
-    ).bind @
+    
     @col = new Core.PushGroup()
-    Data.Color.ReturnValues.options.each ((item) ->
-      @col.addItem new Core.Push({label:item.label})
+    ['rgb','rgba','hsl','hsla','hex'].each ((item) ->
+      @col.addItem new Core.Push({label:item})
     ).bind @
-    @col.addEvent 'change', ((value) ->
-      @update()
-    ).bind @
+    
+    @hueData.addEvent 'change',  @update
+    @saturationData.addEvent 'change',  @update
+    @lightnessData.addEvent 'change', @update
+    @alphaData.addEvent 'change',  @update
+    @col.addEvent 'change',  @update
+    
     @adoptChildren @hueData, @saturationData, @lightnessData, @alphaData, @col
 }
 
@@ -2320,162 +2186,173 @@ Data.Color.SlotControls = new Class {
 ###
 ---
 
-name: Data.Date
+name: Data.ColorWheel
 
-description: Date picker element with Core.Slot-s
+description: ColorWheel data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Core.Slot, GDotUI]
+requires: 
+  - GDotUI
+  - Data.Abstract
+  - Data.Color
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
 
-provides: Data.Date
+provides: Data.ColorWheel
 
 ...
 ###
-Data.Date = new Class {
+Data.ColorWheel = new Class {
   Extends: Data.Abstract
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Children
+    Interfaces.Size
+  ]
   Attributes: {
     class: {
-      value: GDotUI.Theme.Date.class
+      value: GDotUI.Theme.Color.class
     }
     value: {
-      value: new Date()
       setter: (value) ->
-        @value = value
-        @updateSlots()
+        @colorData.set 'value', value
+    }
+    wrapperClass: {
+      value: GDotUI.Theme.Color.wrapper
+      setter: (value, old) ->
+        @wrapper.removeClass old
+        @wrapper.addClass value
         value
-        
     }
-  }
-  options:{
-    yearFrom: GDotUI.Theme.Date.yearFrom
-  }
-  create: ->
-    @days = new Core.Slot()
-    @month = new Core.Slot()
-    @years = new Core.Slot()
-    @populate()
-    @addEvents()
-  addEvents: ->
-    @years.addEvent 'change', ( (item) ->
-      @value.set 'year', item.label
-      @update()
-    ).bind @
-    @month.addEvent 'change', ( (item) ->
-      @value.set 'month', item.label
-      @update()
-    ).bind @
-    @days.addEvent 'change', ( (item) ->
-      @value.set 'date', item.label
-      @update()
-    ).bind @
-  populate: ->
-    i = 0
-    while i < 30
-      item = new Iterable.ListItem {label:i+1,removeable:false}
-      @days.addItem item
-      i++
-    i = 0
-    while i < 12
-      item = new Iterable.ListItem {label:i+1,removeable:false}
-      @month.addItem item
-      i++
-    i = @options.yearFrom
-    while i <= new Date().get('year')
-      item = new Iterable.ListItem {label:i,removeable:false}
-      @years.addItem item
-      i++
-  ready: ->
-    @base.adopt @years, @month, @days
-  update: ->
-    @fireEvent 'change', @value
-  updateSlots: ->
-    cdays = @value.get 'lastdayofmonth'
-    listlength = @days.list.items.length
-    if cdays > listlength
-      i = listlength+1
-      while i <= cdays
-        item=new Iterable.ListItem {label:i}
-        item.value = i
-        @days.addItem item
-        i++
-    else if cdays < listlength
-      i = listlength
-      while i > cdays
-        @days.list.removeItem @days.list.items[i-1]
-        i--
-    @days.list.set 'selected', @days.list.items[@value.get('date')-1]
-    @month.list.set 'selected', @month.list.items[@value.get('month')]
-    @years.list.set 'selected', @years.list.getItemFromTitle(@value.get('year'))
-}
-
-
-###
----
-
-name: Data.Time
-
-description: Time picker element with Core.Slot-s
-
-license: MIT-style license.
-
-requires: [Data.Abstract, GDotUI, Interfaces.Children]
-
-provides: Data.Time
-
-...
-###
-Data.Time = new Class {
-  Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
-  Attributes: {
-    class: {
-      value: GDotUI.Theme.Date.Time.class
-    }
-    value: {
-      value: new Date()
-      setter: (value) ->
-        @value = value
-        @updateSlots()
+    knobClass: {
+      value: 'xyknob'
+      setter: (value, old) ->
+        @knob.removeClass old
+        @knob.addClass value
         value
-        
     }
   }
+   
   create: ->
-    @hours = new Core.Slot()
-    @minutes = new Core.Slot()
-    @populate()
-    @addEvents()
-    @
-  populate: ->
-    i = 0
-    while i < 24
-      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
-      item.value = i
-      @hours.addItem item
-      i++
-    i = 0
-    while i < 60
-      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
-      item.value = i
-      @minutes.addItem item
-      i++
-  update: ->
-    @fireEvent 'change', @value
-  addEvents: ->
-    @hours.addEvent 'change', ( (item) ->
-      @value.set 'hours', item.value
-      @update()
+    
+    @hslacone = $(document.createElement('canvas'))
+    @background = $(document.createElement('canvas'))
+    @wrapper = new Element 'div'
+   
+    @knob = new Element 'div'
+    @knob.setStyles {
+      'position':'absolute'
+      'z-index': 1
+      }
+      
+    @colorData = new Data.Color()
+    @colorData.addEvent 'change', ( ->
+      @fireEvent 'change', arguments
     ).bind @
-    @minutes.addEvent 'change', ( (item) ->
-      @value.set 'minutes', item.value
-      @update()
+    
+    @base.adopt @wrapper
+
+    @colorData.lightnessData.addEvent 'change',( (step) ->
+      @hslacone.setStyle 'opacity',step/100
     ).bind @
+    @colorData.hueData.addEvent 'change', ((value) ->
+      @positionKnob value, @colorData.get('saturation')
+    ).bind @  
+    @colorData.saturationData.addEvent 'change', ((value) ->
+      @positionKnob @colorData.get('hue'), value
+    ).bind @
+    
+    @background.setStyles {
+      'position': 'absolute'
+      'z-index': 0
+    }
+    
+    @hslacone.setStyles {
+      'position': 'absolute'
+      'z-index': 1
+    }
+    
+    @xy = new Drag.Move @knob
+    @xy.addEvent 'beforeStart',((el,e) ->
+        @lastPosition = el.getPosition(@wrapper)
+      ).bind @
+    @xy.addEvent 'drag', ((el,e) ->
+      if @enabled
+        position = el.getPosition(@wrapper)
+        
+        x = @center.x-position.x-@knobSize.x/2
+        y = @center.y-position.y-@knobSize.y/2
+        
+        @radius = Math.sqrt(Math.pow(x,2)+Math.pow(y,2))
+        @angle = Math.atan2(y,x)
+        
+        if @radius > @halfWidth
+          el.setStyle 'top', -Math.sin(@angle)*@halfWidth-@knobSize.y/2+@center.y
+          el.setStyle 'left', -Math.cos(@angle)*@halfWidth-@knobSize.x/2+@center.x
+          @saturation = 100
+        else
+          sat =  Math.round @radius 
+          @saturation = Math.round((sat/@halfWidth)*100)
+        
+        an = Math.round(@angle*(180/Math.PI))
+        @hue = if an < 0 then 180-Math.abs(an) else 180+an
+        @colorData.set 'hue', @hue
+        @colorData.set 'saturation', @saturation
+      else
+        el.setPosition @lastPosition
+    ).bind @
+    
+    @wrapper.adopt @background, @hslacone, @knob
+    @addChild @colorData
+  drawHSLACone: (width) ->
+    ctx = @background.getContext '2d'
+    ctx.fillStyle = "#000";
+    ctx.beginPath();
+    ctx.arc(width/2, width/2, width/2, 0, Math.PI*2, true); 
+    ctx.closePath();
+    ctx.fill();
+    ctx = @hslacone.getContext '2d'
+    ctx.translate width/2, width/2
+    w2 = -width/2
+    ang = width / 50
+    angle = (1/ang)*Math.PI/180
+    i = 0
+    for i in [0..(360)*(ang)-1]
+      c = $HSB(360+(i/ang),100,100)
+      c1 = $HSB(360+(i/ang),0,100)
+      grad = ctx.createLinearGradient(0,0,width/2,0)
+      grad.addColorStop(0, c1.hex)
+      grad.addColorStop(1, c.hex)
+      ctx.strokeStyle = grad
+      ctx.beginPath()
+      ctx.moveTo(0,0)
+      ctx.lineTo(width/2,0)
+      ctx.stroke()
+      ctx.rotate(angle)
+  
+  update: ->  
+    @hslacone.set 'width', @size
+    @hslacone.set 'height', @size
+    @background.set 'width', @size
+    @background.set 'height', @size
+    @wrapper.setStyle 'height', @size
+    @drawHSLACone @size
+    @colorData.set 'size', @size
+    
+    @knobSize = @knob.getSize()
+    @halfWidth = @size/2
+    @center = {x: @halfWidth, y:@halfWidth}
+    @positionKnob @colorData.get('hue'), @colorData.get('saturation')
+  positionKnob: (hue,saturation) ->
+    @radius = saturation/100*@halfWidth
+    @angle = -((180-hue)*(Math.PI/180))
+    @knob.setStyle 'top', -Math.sin(@angle)*@radius-@knobSize.y/2+@center.y
+    @knob.setStyle 'left', -Math.cos(@angle)*@radius-@knobSize.x/2+@center.x
   ready: ->
-    @adoptChildren @hours, @minutes
-  updateSlots: ->
-    @hours.list.set 'selected', @hours.list.items[@value.get('hours')]
-    @minutes.list.set 'selected', @minutes.list.items[@value.get('minutes')]
+    @update()
+    
 }
 
 
@@ -2691,19 +2568,31 @@ Iterable.ListItem = new Class {
 
 name: Data.DateTime
 
-description:  Date & Time picker element with Core.Slot-s
+description:  Date & Time picker elements with Core.Slot-s
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Core.Slot, Iterable.ListItem]
+requires: 
+  - GDotUI
+  - Core.Slot
+  - Data.Abstract
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Iterable.ListItem
 
-provides: Data.DateTime
+provides: 
+  - Data.DateTime
+  - Data.Date
+  - Data.Time
 
 ...
 ###
 Data.DateTime = new Class {
   Extends:Data.Abstract
-  Implements: [Interfaces.Enabled,Interfaces.Children]
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Children
+  ]
   Attributes: {
     class: {
       value: GDotUI.Theme.Date.DateTime.class
@@ -2714,99 +2603,133 @@ Data.DateTime = new Class {
         @value = value
         @updateSlots()
         value
-        
+    }
+    time: {
+      readonly: yes
+      value: yes
+    }
+    date: {
+      readonly: yes
+      value: yes
     }
   }
-  options:{
-    yearFrom: GDotUI.Theme.Date.yearFrom
-  }
   create: ->
-    @days = new Core.Slot()
-    @month = new Core.Slot()
-    @years = new Core.Slot()
-    @hours = new Core.Slot()
-    @minutes = new Core.Slot()
+    @yearFrom = GDotUI.Theme.Date.yearFrom
+    if @get('date')
+      @days = new Core.Slot()
+      @month = new Core.Slot()
+      @years = new Core.Slot()
+    if @get('time')
+      @hours = new Core.Slot()
+      @minutes = new Core.Slot()
     @populate()
-    @addEvents()
+    if @get('time')
+      @hours.addEvent 'change', ( (item) ->
+        @value.set 'hours', item.value
+        @update()
+      ).bind @
+      @minutes.addEvent 'change', ( (item) ->
+        @value.set 'minutes', item.value
+        @update()
+      ).bind @
+    if @get('date')
+      @years.addEvent 'change', ( (item) ->
+        @value.set 'year', item.value
+        @update()
+      ).bind @
+      @month.addEvent 'change', ( (item) ->
+        @value.set 'month', item.value
+        @update()
+      ).bind @
+      @days.addEvent 'change', ( (item) ->
+        @value.set 'date', item.value
+        @update()
+      ).bind @
     @
   populate: ->
-    i = 0
-    while i < 24
-      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
-      item.value = i
-      @hours.addItem item
-      i++
-    i = 0
-    while i < 60
-      item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
-      item.value = i
-      @minutes.addItem item
-      i++
-    i = 0
-    while i < 30
-      item = new Iterable.ListItem {label:i+1,removeable:false}
-      item.value = i+1
-      @days.addItem item
-      i++
-    i = 0
-    while i < 12
-      item = new Iterable.ListItem {label:i+1,removeable:false}
-      item.value = i
-      @month.addItem item
-      i++
-    i = @options.yearFrom
-    while i <= new Date().getFullYear()
-      item = new Iterable.ListItem {label:i,removeable:false}
-      item.value = i
-      @years.addItem item
-      i++
-  update: ->
-    @fireEvent 'change', @value
-  addEvents: ->
-    @hours.addEvent 'change', ( (item) ->
-      @value.set 'hours', item.value
-      @update()
-    ).bind @
-    @minutes.addEvent 'change', ( (item) ->
-      @value.set 'minutes', item.value
-      @update()
-    ).bind @
-    @years.addEvent 'change', ( (item) ->
-      @value.set 'year', item.value
-      @update()
-    ).bind @
-    @month.addEvent 'change', ( (item) ->
-      @value.set 'month', item.value
-      @update()
-    ).bind @
-    @days.addEvent 'change', ( (item) ->
-      @value.set 'date', item.value
-      @update()
-    ).bind @
-    i = 0
-  ready: ->
-    @adoptChildren @years, @month, @days, @hours, @minutes
-  updateSlots: ->
-    cdays = @value.get 'lastdayofmonth'
-    console.log @value.getDate(), 'hey',@value.get('hours')
-    listlength = @days.list.items.length
-    if cdays > listlength
-      i = listlength+1
-      while i <= cdays
-        item=new Iterable.ListItem {label:i}
+    if @get('time')
+      i = 0
+      while i < 24
+        item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
         item.value = i
+        @hours.addItem item
+        i++
+      i = 0
+      while i < 60
+        item = new Iterable.ListItem {label: (if i<10 then '0'+i else i),removeable:false}
+        item.value = i
+        @minutes.addItem item
+        i++
+    if @get('date')
+      i = 0
+      while i < 30
+        item = new Iterable.ListItem {label:i+1,removeable:false}
+        item.value = i+1
         @days.addItem item
         i++
-    else if cdays < listlength
-      i = listlength
-      while i > cdays
-        @days.list.removeItem @days.list.items[i-1]
-        i--
-    @days.list.set 'selected', @days.list.items[@value.get('date')-1]
-    @month.list.set 'selected', @month.list.items[@value.get('month')]
-    @years.list.set 'selected', @years.list.getItemFromTitle(@value.get('year'))
-    @hours.list.set 'selected', @hours.list.items[@value.get('hours')]
-    @minutes.list.set 'selected', @minutes.list.items[@value.get('minutes')]
+      i = 0
+      while i < 12
+        item = new Iterable.ListItem {label:i+1,removeable:false}
+        item.value = i
+        @month.addItem item
+        i++
+      i = @yearFrom
+      while i <= new Date().get 'year'
+        item = new Iterable.ListItem {label:i,removeable:false}
+        item.value = i
+        @years.addItem item
+        i++
+  update: ->
+    @fireEvent 'change', @value
+  ready: ->
+    if @get('date')
+      @adoptChildren @years, @month, @days
+    if @get('time')
+      @adoptChildren @hours, @minutes
+  updateSlots: ->
+    if @get('date')
+      cdays = @value.get 'lastdayofmonth'
+      listlength = @days.list.items.length
+      if cdays > listlength
+        i = listlength+1
+        while i <= cdays
+          item=new Iterable.ListItem {label:i}
+          item.value = i
+          @days.addItem item
+          i++
+      else if cdays < listlength
+        i = listlength
+        while i > cdays
+          @days.list.removeItem @days.list.items[i-1]
+          i--
+      @days.list.set 'selected', @days.list.items[@value.get('date')-1]
+      @month.list.set 'selected', @month.list.items[@value.get('month')]
+      @years.list.set 'selected', @years.list.getItemFromTitle(@value.get('year'))
+    if @get('time')
+      @hours.list.set 'selected', @hours.list.items[@value.get('hours')]
+      @minutes.list.set 'selected', @minutes.list.items[@value.get('minutes')]
+}
+Data.Time = new Class {
+  Extends:Data.DateTime
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Date.Time.class
+    }
+    date: {
+      value: no
+    }
+  }
+}
+Data.Date = new Class {
+  Extends:Data.DateTime
+  Attributes: {
+    class: {
+      value: GDotUI.Theme.Date.class
+    }
+    time: {
+      value: no
+    }
+  }
 }
 
 
@@ -3072,7 +2995,14 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Data.Select, Data.Number]
+requires: 
+  - GDotUI
+  - Data.Abstract
+  - Data.Number
+  - Data.Select 
+  - Interfaces.Children
+  - Interfaces.Size
+  - Interfaces.Enabled
 
 provides: Data.Unit
 
@@ -3105,43 +3035,47 @@ UnitList = {
   }
 Data.Unit = new Class {
   Extends:Data.Abstract
-  Implements: Interfaces.Size
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Children 
+    Interfaces.Size
+  ]
+  Binds: ['update']
   Attributes: {
     class: {
       value: GDotUI.Theme.Unit.class
     }
+    value: {
+      setter: (value) ->
+        if typeof value is 'string'
+          match = value.match(/(-?\d*)(.*)/)
+          value = match[1]
+          unit = match[2]
+          console.log unit, value
+          @sel.set 'value', unit
+          @number.set 'value', value
+      getter: ->
+        String.from @number.value+@sel.value
+    }
   }
-  initialize: (options) ->
-    @parent options
   update: ->
-    @number.set 'size', @size-@sel.get('size')
+    @fireEvent 'change', String.from @number.value+@sel.get('value')
   create: ->
-    @value = 0
-    @selectSize = 80
+    @addEvent 'sizeChange', ( ->
+      @number.set 'size', @size-@sel.get('size')
+    ).bind @
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
     @sel = new Data.Select({size: 80})
     Object.each UnitList,((item) ->
       @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
     ).bind @
-    @number.addEvent 'change', ((value) ->
-      @value = value
-      @fireEvent 'change', String(@value)+@sel.getValue()
-    ).bindWithEvent @
-    @sel.setValue 'px'
-    @sel.addEvent 'change', ( ->
-      @fireEvent 'change', String(@value)+@sel.getValue()
-    ).bindWithEvent @
-    @base.adopt @number, @sel
-    @update()
-  setValue: (value) ->
-    if typeof value is 'string'
-      match = value.match(/(-?\d*)(.*)/)
-      value = match[1]
-      unit = match[2]
-      @sel.setValue unit
-      @number.set value
-  getValue: ->
-    String(@value)+@sel.value
+    @sel.set 'value', 'px'
+
+    @number.addEvent 'change', @update
+    @sel.addEvent 'change',@update
+    @adoptChildren @number, @sel
+  ready: ->
+    @set 'size', @size
 }
     
 

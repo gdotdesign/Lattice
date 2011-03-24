@@ -15,7 +15,7 @@
   .color .wrapper {
     position: relative;
     margin: 10px 0; }
-  .color #xyknob {
+  .color .xyknob {
     width: 10px;
     cursor: crosshair;
     height: 10px;

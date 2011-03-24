@@ -9,7 +9,8 @@ license: MIT-style license.
 
 provides: Interfaces.Enabled
 
-requires: [GDotUI]
+requires: 
+  - GDotUI
 ...
 ###
 Interfaces.Enabled = new Class {

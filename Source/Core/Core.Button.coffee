@@ -37,8 +37,8 @@ Core.Button = new Class {
     }
   }
   create: ->
-    @base.addEvent 'click', ( ->
+    @base.addEvent 'click', ((e)->
       if @enabled
-        @fireEvent 'invoked', @
+        @fireEvent 'invoked', [@, e]
     ).bind @
 }

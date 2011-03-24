@@ -23,6 +23,9 @@ Data.Abstract = new Class {
         @base.addClass value
         value
     }
+    value: {
+      value: null
+    }
   }
   initialize: (options) ->
     @base = new Element 'div'
@@ -32,12 +35,8 @@ Data.Abstract = new Class {
     @setAttributes options
     @
   update: ->
-    console.log 'update'
   create: ->
   ready: ->
   toElement: ->
     @base
-  setValue: ->
-  getValue: ->
-    @value
 }

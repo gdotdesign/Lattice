@@ -7,7 +7,8 @@ description:
 
 license: MIT-style license.
 
-requires: [GDotUI]
+requires: 
+  - GDotUI
 
 provides: Interfaces.Children
 
@@ -19,7 +20,7 @@ Interfaces.Children = new Class {
   hasChild: (child) ->
     if @children.indexOf child is -1 then no else yes
   adoptChildren: ->
-    children = Array.from(arguments)
+    children = Array.from arguments 
     @children.append children
     @base.adopt arguments
   addChild: (el) ->
@@ -29,4 +30,8 @@ Interfaces.Children = new Class {
     if @children.contains(el)
       @children.erease el
       el.dispose()
+  empty: ->
+    @children.each (child) ->
+      @removeChild child
+    , @
 }

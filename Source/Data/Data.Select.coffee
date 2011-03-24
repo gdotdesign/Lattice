@@ -7,15 +7,27 @@ description: Select Element
 
 license: MIT-style license.
 
-requires: [Core.Abstract, GDotUI, Interfaces.Controls, Interfaces.Enabled, Interfaces.Children, Iterable.List, Dialog.Prompt]
+requires:
+  - GDotUI
+  - Data.Abstract
+  - Dialog.Prompt
+  - Interfaces.Controls
+  - Interfaces.Children
+  - Interfaces.Enabled
+  - Interfaces.Size
+  - Iterable.List
 
-provides: [Data.Select]
+provides: Data.Select
 
 ...
 ###
 Data.Select = new Class {
-  Extends:Core.Abstract
-  Implements:[ Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children]
+  Extends: Data.Abstract
+  Implements:[
+    Interfaces.Controls
+    Interfaces.Enabled
+    Interfaces.Size
+    Interfaces.Children]
   Attributes: {
     class: {
       value: 'select'
@@ -40,18 +52,24 @@ Data.Select = new Class {
           document.id(@removeIcon).dispose()
           document.id(@addIcon).dispose()
         value
-          
+    }
+    value: {
+      setter: (value) ->
+        @list.set 'selected', @list.getItemFromTitle(value)
+      getter: ->
+        li = @list.get('selected')
+        if li?
+          li.label
     }
   }
-  getValue: ->
-    li = @list.get('selected')
-    if li?
-      li.label
-  setValue: (value) ->
-    @list.set 'selected', @list.getItemFromTitle(value)
-  update: ->
-    @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
+  ready: ->
+    @set 'size', @size
   create: ->
+    
+    @addEvent 'sizeChange', ( ->
+      @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
+    ).bind @
+    
     @base.setStyle 'position', 'relative'
     @text = new Element('div.text')
     @text.setStyles {
@@ -86,7 +104,11 @@ Data.Select = new Class {
     ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'bottom'}})
-    @picker.attach @base
+    @picker.attach @base, false
+    @base.addEvent 'click', ((e) ->
+      if @enabled
+        @picker.show e
+    ).bind @
     @list = new Iterable.List({class:'select-list'})
     @picker.set 'content', @list
     @base.adopt @text

@@ -7,7 +7,14 @@ description: Color data element. ( color picker )
 
 license: MIT-style license.
 
-requires: [Data.Abstract, GDotUI, Data.Select, Data.Number]
+requires: 
+  - GDotUI
+  - Data.Abstract
+  - Data.Number
+  - Data.Select 
+  - Interfaces.Children
+  - Interfaces.Size
+  - Interfaces.Enabled
 
 provides: Data.Unit
 
@@ -40,42 +47,46 @@ UnitList = {
   }
 Data.Unit = new Class {
   Extends:Data.Abstract
-  Implements: Interfaces.Size
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Children 
+    Interfaces.Size
+  ]
+  Binds: ['update']
   Attributes: {
     class: {
       value: GDotUI.Theme.Unit.class
     }
+    value: {
+      setter: (value) ->
+        if typeof value is 'string'
+          match = value.match(/(-?\d*)(.*)/)
+          value = match[1]
+          unit = match[2]
+          console.log unit, value
+          @sel.set 'value', unit
+          @number.set 'value', value
+      getter: ->
+        String.from @number.value+@sel.value
+    }
   }
-  initialize: (options) ->
-    @parent options
   update: ->
-    @number.set 'size', @size-@sel.get('size')
+    @fireEvent 'change', String.from @number.value+@sel.get('value')
   create: ->
-    @value = 0
-    @selectSize = 80
+    @addEvent 'sizeChange', ( ->
+      @number.set 'size', @size-@sel.get('size')
+    ).bind @
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
     @sel = new Data.Select({size: 80})
     Object.each UnitList,((item) ->
       @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
     ).bind @
-    @number.addEvent 'change', ((value) ->
-      @value = value
-      @fireEvent 'change', String(@value)+@sel.getValue()
-    ).bindWithEvent @
-    @sel.setValue 'px'
-    @sel.addEvent 'change', ( ->
-      @fireEvent 'change', String(@value)+@sel.getValue()
-    ).bindWithEvent @
-    @base.adopt @number, @sel
-    @update()
-  setValue: (value) ->
-    if typeof value is 'string'
-      match = value.match(/(-?\d*)(.*)/)
-      value = match[1]
-      unit = match[2]
-      @sel.setValue unit
-      @number.set value
-  getValue: ->
-    String(@value)+@sel.value
+    @sel.set 'value', 'px'
+
+    @number.addEvent 'change', @update
+    @sel.addEvent 'change',@update
+    @adoptChildren @number, @sel
+  ready: ->
+    @set 'size', @size
 }
     
