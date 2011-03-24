@@ -63,8 +63,8 @@ Data.ColorWheel = new Class {
       }
       
     @colorData = new Data.Color()
-    @colorData.addEvent 'change', ( ->
-      @fireEvent 'change', arguments
+    @colorData.addEvent 'change', ( (e)->
+      @fireEvent 'change', e
     ).bind @
     
     @base.adopt @wrapper

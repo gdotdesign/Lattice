@@ -43,8 +43,7 @@ window.addEvent('domready', function(){
   
   $(color).inject($("cpick"),'after')
   color.addEvent('change', function(e){
-    $("cpick").setStyle('background-color',e.color);
-    $("cpick").setStyle('opacity', e.alpha/100);
-    $("cpick").setStyle('color',e.color.hsb[2] < 50?'#fff':'#333');
+    $("cpick").setStyle('background-color',e.format());
+    $("cpick").setStyle('color',e.hsb[2] < 50?'#fff':'#333');
   });
 });

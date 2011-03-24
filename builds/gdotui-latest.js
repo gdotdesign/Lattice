@@ -29,6 +29,49 @@ Element.Properties.checked = {
   }
 };
 (function() {
+  return Color.implement({
+    type: 'hex',
+    alpha: '',
+    setType: function(type) {
+      return this.type = type;
+    },
+    setAlpha: function(alpha) {
+      return this.alpha = alpha;
+    },
+    hsvToHsl: function() {
+      var h, hsl, l, s, v;
+      h = this.hsb[0];
+      s = this.hsb[1];
+      v = this.hsb[2];
+      l = (2 - s / 100) * v / 2;
+      hsl = [h, s * v / (l < 50 ? l * 2 : 200 - l * 2), l];
+      if (isNaN(hsl[1])) {
+        hsl[1] = 0;
+      }
+      return hsl;
+    },
+    format: function(type) {
+      if (type) {
+        this.setType(type);
+      }
+      switch (this.type) {
+        case "rgb":
+          return String.from("rgb(" + this.rgb[0] + ", " + this.rgb[1] + ", " + this.rgb[2] + ")");
+        case "rgba":
+          return String.from("rgba(" + this.rgb[0] + ", " + this.rgb[1] + ", " + this.rgb[2] + ", " + (this.alpha / 100) + ")");
+        case "hsl":
+          this.hsl = this.hsvToHsl();
+          return String.from("hsl(" + this.hsl[0] + ", " + this.hsl[1] + "%, " + this.hsl[2] + "%)");
+        case "hsla":
+          this.hsl = this.hsvToHsl();
+          return String.from("hsla(" + this.hsl[0] + ", " + this.hsl[1] + "%, " + this.hsl[2] + "%, " + (this.alpha / 100) + ")");
+        case "hex":
+          return String.from(this.hex);
+      }
+    }
+  });
+})();
+(function() {
   var oldPrototypeStart;
   oldPrototypeStart = Drag.prototype.start;
   return Drag.prototype.start = function() {
@@ -354,7 +397,7 @@ description: Abstract base class for Core U.I. elements.
 license: MIT-style license.
 
 requires:
-  - Class.Extras
+  - Class.Attributes
   - Element.Extras
   - GDotUI
   - Interfaces.Mux
@@ -2476,18 +2519,17 @@ Data.Color = new Class({
     }
   },
   update: function() {
-    var alpha, hue, lightness, saturation, type;
+    var alpha, hue, lightness, ret, saturation, type;
     hue = this.get('hue');
     saturation = this.get('saturation');
     lightness = this.get('lightness');
     type = this.get('type');
     alpha = this.get('alpha');
     if ((hue != null) && (saturation != null) && (lightness != null) && (type != null) && (alpha != null)) {
-      return this.fireEvent('change', {
-        color: $HSB(hue, saturation, lightness),
-        type: type,
-        alpha: alpha
-      });
+      ret = $HSB(hue, saturation, lightness);
+      ret.setAlpha(alpha);
+      ret.setType(type);
+      return this.fireEvent('change', new Hash(ret));
     }
   },
   create: function() {
@@ -2514,7 +2556,7 @@ Data.Color = new Class({
       range: [0, 100],
       reset: false,
       steps: 100,
-      label: 'Lightness'
+      label: 'Value'
     });
     this.alphaData = new Data.Number({
       range: [0, 100],
@@ -2596,8 +2638,8 @@ Data.ColorWheel = new Class({
       'z-index': 1
     });
     this.colorData = new Data.Color();
-    this.colorData.addEvent('change', (function() {
-      return this.fireEvent('change', arguments);
+    this.colorData.addEvent('change', (function(e) {
+      return this.fireEvent('change', e);
     }).bind(this));
     this.base.adopt(this.wrapper);
     this.colorData.lightnessData.addEvent('change', (function(step) {

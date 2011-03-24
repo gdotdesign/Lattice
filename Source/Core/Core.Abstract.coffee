@@ -8,7 +8,7 @@ description: Abstract base class for Core U.I. elements.
 license: MIT-style license.
 
 requires: 
-  - Class.Extras
+  - Class.Attributes
   - Element.Extras
   - GDotUI
   - Interfaces.Mux

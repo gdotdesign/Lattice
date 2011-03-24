@@ -24,6 +24,43 @@ Element.Properties.checked = {
         @off()
 }
 ( ->
+  Color.implement {
+    type: 'hex'
+    alpha: ''
+    setType: (type) ->
+      @type = type
+    setAlpha: (alpha) ->
+      @alpha = alpha
+    hsvToHsl: ->
+      h = @hsb[0]
+      s = @hsb[1]
+      v = @hsb[2]
+      l = (2 - s / 100) * v / 2;
+      hsl = [
+        h
+        s * v / (if l < 50 then l * 2 else 200 - l * 2)
+        l
+      ]
+      if isNaN(hsl[1]) then hsl[1] = 0
+      hsl
+    format: (type) ->
+      if type then @setType(type)
+      switch @type
+        when "rgb"
+          String.from "rgb(#{@rgb[0]}, #{@rgb[1]}, #{@rgb[2]})"
+        when "rgba"
+          String.from "rgba(#{@rgb[0]}, #{@rgb[1]}, #{@rgb[2]}, #{@alpha/100})"
+        when "hsl"
+          @hsl = @hsvToHsl()
+          String.from "hsl(#{@hsl[0]}, #{@hsl[1]}%, #{@hsl[2]}%)"
+        when "hsla"
+          @hsl = @hsvToHsl()
+          String.from "hsla(#{@hsl[0]}, #{@hsl[1]}%, #{@hsl[2]}%, #{@alpha/100})"
+        when "hex"
+          String.from @hex
+  }
+)()
+( ->
   oldPrototypeStart = Drag::start
   Drag.prototype.start = ->
     window.fireEvent 'outer'

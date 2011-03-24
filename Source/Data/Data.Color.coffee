@@ -91,7 +91,10 @@ Data.Color = new Class {
     type = @get 'type'
     alpha = @get 'alpha'
     if hue? and saturation? and lightness? and type? and alpha?
-      @fireEvent 'change', {color:$HSB(hue,saturation,lightness), type:type, alpha:alpha} 
+      ret = $HSB(hue,saturation,lightness)
+      ret.setAlpha alpha
+      ret.setType type
+      @fireEvent 'change', new Hash(ret)
   create: ->
     @addEvent 'sizeChange',( ->
       @col.set 'size', @size
@@ -103,7 +106,7 @@ Data.Color = new Class {
     
     @hueData = new Data.Number {range:[0,360],reset: off, steps: 360, label:'Hue'}
     @saturationData = new Data.Number {range:[0,100],reset: off, steps: 100 , label:'Saturation'}
-    @lightnessData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Lightness'}
+    @lightnessData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Value'}
     @alphaData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Alpha'}
     
     @col = new Core.PushGroup()
