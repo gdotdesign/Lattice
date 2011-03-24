@@ -51,7 +51,12 @@ GDotUI.Theme={
         'class':'unit-pick'
     },
     Select: {
-        'class':'select-pick'
+        'class':'select',
+        textClass: 'text',
+        addClass: 'add',
+        removeClass: 'remove',
+        listClass: 'select-list',
+        listItemClass: 'select-item',
     },
     Table:{
         'class':'table'

@@ -80,12 +80,15 @@ Core.Picker = new Class {
   delegate: ->
     if @attachedTo?
       @attachedTo.fireEvent 'change', arguments
-  show: (e) ->
+  show: (e,auto) ->
+    auto = if auto? then auto else true
+    console.log auto
     document.body.grab @base
     if @attachedTo?
       @attachedTo.addClass @picking
     if e? then if e.stop? then e.stop()
-    @base.addEvent 'outerClick', @hide
+    if auto
+      @base.addEvent 'outerClick', @hide
   hide: (e,force) ->
     if force?
       if @attachedTo?

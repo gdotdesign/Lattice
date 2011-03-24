@@ -9,12 +9,21 @@ license: MIT-style license.
 
 provides: Interfaces.Controls
 
-requires: [GDotUI]
+requires: 
+  - GDotUI
+  - Interfaces.Enabled
 
 ...
 ###
 Interfaces.Controls = new Class {
-  Delegates: {
-    base: ['hide','show','toggle']
-  }
+  Implements: Interfaces.Enabled
+  show: ->
+    if @enabled
+      @base.show()
+  hide: ->
+    if @enabled
+      @base.hide()
+  toggle: ->
+    if @enabled
+      @base.toggle()
 }

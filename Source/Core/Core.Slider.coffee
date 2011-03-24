@@ -15,7 +15,6 @@ requires:
 
 provides: Core.Slider
 
-todo: fix progress width and height mode change, implement range at some point
 ...
 ###
 Core.Slider = new Class {
@@ -33,6 +32,8 @@ Core.Slider = new Class {
       setter: (value, old) ->
         @base.removeClass old
         @base.addClass value
+        @base.set 'style', ''
+        @base.setStyle 'position', 'relative'
         switch value
           when 'horizontal'
             @minSize = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'min-width')
@@ -42,11 +43,13 @@ Core.Slider = new Class {
             if not @size?
               size = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'width')
             @set 'size', size
-            @base.setStyle 'height', Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'height')
+            @progress.set 'style', ''
             @progress.setStyles {
+              position: 'absolute'
               top: 0
-              right: 'auto'
-            }
+              bottom: 0
+              left: 0
+            } 
           when 'vertical'
             @minSize = Number.from getCSS("/\\.#{@get('class')}.vertical$/",'min-hieght')
             @modifier = 'height'
@@ -55,11 +58,15 @@ Core.Slider = new Class {
             if not @size?
               size = Number.from getCSS("/\\.#{@class}.vertical$/",'height')
             @set 'size', size
-            @base.setStyle 'width', Number.from getCSS("/\\.#{@class}.vertical$/",'width')
+            @progress.set 'style', ''
             @progress.setStyles {
+              position: 'absolute'
+              bottom: 0
+              left: 0
               right: 0
-              top: 'auto'
             }
+        if @base.isVisible()
+          @set 'value', @value
         value
     }
     bar: {
@@ -105,13 +112,8 @@ Core.Slider = new Class {
     }
   }
   create: ->
-    @base.setStyle 'position', 'relative'
     @progress = new Element "div"
-    @progress.setStyles {
-      position: 'absolute'
-      bottom: 0
-      left: 0
-    }      
+         
     @base.adopt @progress
     
     @drag = new Drag @progress, {handle:@base}

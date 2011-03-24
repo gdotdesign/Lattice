@@ -34,7 +34,7 @@ Core.Icon = new Class {
     }
   }
   create: ->
-    @base.addEvent 'click', ( (e)->
+    @base.addEvent 'click', ((e)->
       if @enabled
         @fireEvent 'invoked', [@, e]
     ).bind @

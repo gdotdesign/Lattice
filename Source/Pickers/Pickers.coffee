@@ -38,7 +38,6 @@ Pickers.Base = new Class {
     @
 }
 Pickers.Color = new Pickers.Base {type:'Color'}
-###
 Pickers.Number = new Pickers.Base {type:'Number'}
 Pickers.Time = new Pickers.Base {type:'Time'}
 Pickers.Text = new Pickers.Base {type:'Text'}
@@ -46,6 +45,5 @@ Pickers.Date = new Pickers.Base {type:'Date'}
 Pickers.DateTime = new Pickers.Base {type:'DateTime'}
 Pickers.Table = new Pickers.Base {type:'Table'}
 Pickers.Unit = new Pickers.Base {type:'Unit'}
-#Pickers.Select = new Pickers.Base {type:'Select'}
+Pickers.Select = new Pickers.Base {type:'Select'}
 Pickers.List = new Pickers.Base {type:'List'}
-###

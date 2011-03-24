@@ -392,28 +392,6 @@ Core.Abstract = new Class {
 ###
 ---
 
-name: Interfaces.Controls
-
-description: Some control functions.
-
-license: MIT-style license.
-
-provides: Interfaces.Controls
-
-requires: [GDotUI]
-
-...
-###
-Interfaces.Controls = new Class {
-  Delegates: {
-    base: ['hide','show','toggle']
-  }
-}
-
-
-###
----
-
 name: Interfaces.Enabled
 
 description: Provides enable and disable function to elements.
@@ -465,6 +443,37 @@ Interfaces.Enabled = new Class {
 ###
 ---
 
+name: Interfaces.Controls
+
+description: Some control functions.
+
+license: MIT-style license.
+
+provides: Interfaces.Controls
+
+requires: 
+  - GDotUI
+  - Interfaces.Enabled
+
+...
+###
+Interfaces.Controls = new Class {
+  Implements: Interfaces.Enabled
+  show: ->
+    if @enabled
+      @base.show()
+  hide: ->
+    if @enabled
+      @base.hide()
+  toggle: ->
+    if @enabled
+      @base.toggle()
+}
+
+
+###
+---
+
 name: Core.Icon
 
 description: Generic icon element.
@@ -498,7 +507,7 @@ Core.Icon = new Class {
     }
   }
   create: ->
-    @base.addEvent 'click', ( (e)->
+    @base.addEvent 'click', ((e)->
       if @enabled
         @fireEvent 'invoked', [@, e]
     ).bind @
@@ -831,7 +840,6 @@ requires:
 
 provides: Core.Slider
 
-todo: fix progress width and height mode change, implement range at some point
 ...
 ###
 Core.Slider = new Class {
@@ -849,6 +857,8 @@ Core.Slider = new Class {
       setter: (value, old) ->
         @base.removeClass old
         @base.addClass value
+        @base.set 'style', ''
+        @base.setStyle 'position', 'relative'
         switch value
           when 'horizontal'
             @minSize = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'min-width')
@@ -858,11 +868,13 @@ Core.Slider = new Class {
             if not @size?
               size = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'width')
             @set 'size', size
-            @base.setStyle 'height', Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'height')
+            @progress.set 'style', ''
             @progress.setStyles {
+              position: 'absolute'
               top: 0
-              right: 'auto'
-            }
+              bottom: 0
+              left: 0
+            } 
           when 'vertical'
             @minSize = Number.from getCSS("/\\.#{@get('class')}.vertical$/",'min-hieght')
             @modifier = 'height'
@@ -871,11 +883,15 @@ Core.Slider = new Class {
             if not @size?
               size = Number.from getCSS("/\\.#{@class}.vertical$/",'height')
             @set 'size', size
-            @base.setStyle 'width', Number.from getCSS("/\\.#{@class}.vertical$/",'width')
+            @progress.set 'style', ''
             @progress.setStyles {
+              position: 'absolute'
+              bottom: 0
+              left: 0
               right: 0
-              top: 'auto'
             }
+        if @base.isVisible()
+          @set 'value', @value
         value
     }
     bar: {
@@ -921,13 +937,8 @@ Core.Slider = new Class {
     }
   }
   create: ->
-    @base.setStyle 'position', 'relative'
     @progress = new Element "div"
-    @progress.setStyles {
-      position: 'absolute'
-      bottom: 0
-      left: 0
-    }      
+         
     @base.adopt @progress
     
     @drag = new Drag @progress, {handle:@base}
@@ -1133,12 +1144,15 @@ Core.Picker = new Class {
   delegate: ->
     if @attachedTo?
       @attachedTo.fireEvent 'change', arguments
-  show: (e) ->
+  show: (e,auto) ->
+    auto = if auto? then auto else true
+    console.log auto
     document.body.grab @base
     if @attachedTo?
       @attachedTo.addClass @picking
     if e? then if e.stop? then e.stop()
-    @base.addEvent 'outerClick', @hide
+    if auto
+      @base.addEvent 'outerClick', @hide
   hide: (e,force) ->
     if force?
       if @attachedTo?
@@ -1487,6 +1501,7 @@ license: MIT-style license.
 requires:
   - GDotUI
   - Core.Abstract
+  - Interfaces.Controls
   - Interfaces.Enabled
 
 provides: Core.Overlay
@@ -1495,7 +1510,10 @@ provides: Core.Overlay
 ###
 Core.Overlay = new Class {
   Extends: Core.Abstract
-  Impelments: Interfaces.Enabled
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Controls
+  ]
   Attributes: {
     class: {
       value: GDotUI.Theme.Overlay.class
@@ -1518,15 +1536,6 @@ Core.Overlay = new Class {
       bottom:0
     }
     @hide()
-  show: ->
-    if @enabled
-      @base.show()
-  hide: ->
-    if @enabled
-      @base.hide()
-  toggle: ->
-    if @enabled
-      @base.toggle()
     
 }
 
@@ -1864,7 +1873,7 @@ Data.Select = new Class {
     Interfaces.Children]
   Attributes: {
     class: {
-      value: 'select'
+      value: GDotUI.Theme.Select.class
     }
     default: {
       value: ''
@@ -1895,6 +1904,35 @@ Data.Select = new Class {
         if li?
           li.label
     }
+    textClass: {
+      value: GDotUI.Theme.Select.textClass
+      setter: (value, old) ->
+        @text.removeClass old
+        @text.addClass value
+        value 
+    }
+    removeClass: {
+      value: GDotUI.Theme.Select.removeClass
+      setter: (value, old) ->
+        @removeIcon.base.removeClass old
+        @removeIcon.base.addClass value
+        value 
+    }
+    addClass: {
+      value: GDotUI.Theme.Select.addClass
+      setter: (value, old) ->
+        @addIcon.base.removeClass old
+        @addIcon.base.addClass value
+        value 
+    }
+    listClass: {
+      value: GDotUI.Theme.Select.listClass
+      setter: (value) ->
+        @list.set 'class', value
+    }
+    listItemClass: {
+      value: GDotUI.Theme.Select.listItemClass
+    }
   }
   ready: ->
     @set 'size', @size
@@ -1905,7 +1943,7 @@ Data.Select = new Class {
     ).bind @
     
     @base.setStyle 'position', 'relative'
-    @text = new Element('div.text')
+    @text = new Element 'div'
     @text.setStyles {
       position: 'absolute'
       top: 0
@@ -1915,12 +1953,17 @@ Data.Select = new Class {
       'z-index': 0
       overflow: 'hidden'
     }
+    @text.addEvent 'mousewheel', ((e)->
+      e.stop()
+      index = @list.items.indexOf(@list.selected)+e.wheel
+      if index < 0 then index = @list.items.length-1
+      if index is @list.items.length then index = 0
+      @list.set 'selected', @list.items[index]
+    ).bind @
     @addIcon = new Core.Icon()
-    @addIcon.base.addClass 'add'
     @addIcon.base.set 'text', '+'
     @removeIcon = new Core.Icon()
     @removeIcon.base.set 'text', '-'
-    @removeIcon.base.addClass 'remove'
     $$(@addIcon.base,@removeIcon.base).setStyles {
       'z-index': '1'
       'position': 'relative'
@@ -1943,7 +1986,7 @@ Data.Select = new Class {
       if @enabled
         @picker.show e
     ).bind @
-    @list = new Iterable.List({class:'select-list'})
+    @list = new Iterable.List()
     @picker.set 'content', @list
     @base.adopt @text
     
@@ -1967,7 +2010,7 @@ Data.Select = new Class {
     @update()
     
   addItem: (item) ->
-    item.base.set 'class', 'select-item'
+    item.base.set 'class', @listItemClass
     @list.addItem item
   removeItem: (item) ->
     @list.removeItem item
@@ -3448,7 +3491,6 @@ Pickers.Base = new Class {
     @
 }
 Pickers.Color = new Pickers.Base {type:'Color'}
-###
 Pickers.Number = new Pickers.Base {type:'Number'}
 Pickers.Time = new Pickers.Base {type:'Time'}
 Pickers.Text = new Pickers.Base {type:'Text'}
@@ -3456,7 +3498,6 @@ Pickers.Date = new Pickers.Base {type:'Date'}
 Pickers.DateTime = new Pickers.Base {type:'DateTime'}
 Pickers.Table = new Pickers.Base {type:'Table'}
 Pickers.Unit = new Pickers.Base {type:'Unit'}
-#Pickers.Select = new Pickers.Base {type:'Select'}
+Pickers.Select = new Pickers.Base {type:'Select'}
 Pickers.List = new Pickers.Base {type:'List'}
-###
 

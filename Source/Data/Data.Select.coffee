@@ -30,7 +30,7 @@ Data.Select = new Class {
     Interfaces.Children]
   Attributes: {
     class: {
-      value: 'select'
+      value: GDotUI.Theme.Select.class
     }
     default: {
       value: ''
@@ -61,6 +61,35 @@ Data.Select = new Class {
         if li?
           li.label
     }
+    textClass: {
+      value: GDotUI.Theme.Select.textClass
+      setter: (value, old) ->
+        @text.removeClass old
+        @text.addClass value
+        value 
+    }
+    removeClass: {
+      value: GDotUI.Theme.Select.removeClass
+      setter: (value, old) ->
+        @removeIcon.base.removeClass old
+        @removeIcon.base.addClass value
+        value 
+    }
+    addClass: {
+      value: GDotUI.Theme.Select.addClass
+      setter: (value, old) ->
+        @addIcon.base.removeClass old
+        @addIcon.base.addClass value
+        value 
+    }
+    listClass: {
+      value: GDotUI.Theme.Select.listClass
+      setter: (value) ->
+        @list.set 'class', value
+    }
+    listItemClass: {
+      value: GDotUI.Theme.Select.listItemClass
+    }
   }
   ready: ->
     @set 'size', @size
@@ -71,7 +100,7 @@ Data.Select = new Class {
     ).bind @
     
     @base.setStyle 'position', 'relative'
-    @text = new Element('div.text')
+    @text = new Element 'div'
     @text.setStyles {
       position: 'absolute'
       top: 0
@@ -81,12 +110,17 @@ Data.Select = new Class {
       'z-index': 0
       overflow: 'hidden'
     }
+    @text.addEvent 'mousewheel', ((e)->
+      e.stop()
+      index = @list.items.indexOf(@list.selected)+e.wheel
+      if index < 0 then index = @list.items.length-1
+      if index is @list.items.length then index = 0
+      @list.set 'selected', @list.items[index]
+    ).bind @
     @addIcon = new Core.Icon()
-    @addIcon.base.addClass 'add'
     @addIcon.base.set 'text', '+'
     @removeIcon = new Core.Icon()
     @removeIcon.base.set 'text', '-'
-    @removeIcon.base.addClass 'remove'
     $$(@addIcon.base,@removeIcon.base).setStyles {
       'z-index': '1'
       'position': 'relative'
@@ -109,7 +143,7 @@ Data.Select = new Class {
       if @enabled
         @picker.show e
     ).bind @
-    @list = new Iterable.List({class:'select-list'})
+    @list = new Iterable.List()
     @picker.set 'content', @list
     @base.adopt @text
     
@@ -133,7 +167,7 @@ Data.Select = new Class {
     @update()
     
   addItem: (item) ->
-    item.base.set 'class', 'select-item'
+    item.base.set 'class', @listItemClass
     @list.addItem item
   removeItem: (item) ->
     @list.removeItem item

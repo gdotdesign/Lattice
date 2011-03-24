@@ -464,26 +464,6 @@ Core.Abstract = new Class({
 /*
 ---
 
-name: Interfaces.Controls
-
-description: Some control functions.
-
-license: MIT-style license.
-
-provides: Interfaces.Controls
-
-requires: [GDotUI]
-
-...
-*/
-Interfaces.Controls = new Class({
-  Delegates: {
-    base: ['hide', 'show', 'toggle']
-  }
-});
-/*
----
-
 name: Interfaces.Enabled
 
 description: Provides enable and disable function to elements.
@@ -545,6 +525,41 @@ Interfaces.Enabled = new Class({
     this.enabled = false;
     this.base.addClass('disabled');
     return this.fireEvent('disabled');
+  }
+});
+/*
+---
+
+name: Interfaces.Controls
+
+description: Some control functions.
+
+license: MIT-style license.
+
+provides: Interfaces.Controls
+
+requires:
+  - GDotUI
+  - Interfaces.Enabled
+
+...
+*/
+Interfaces.Controls = new Class({
+  Implements: Interfaces.Enabled,
+  show: function() {
+    if (this.enabled) {
+      return this.base.show();
+    }
+  },
+  hide: function() {
+    if (this.enabled) {
+      return this.base.hide();
+    }
+  },
+  toggle: function() {
+    if (this.enabled) {
+      return this.base.toggle();
+    }
   }
 });
 /*
@@ -1016,7 +1031,6 @@ requires:
 
 provides: Core.Slider
 
-todo: fix progress width and height mode change, implement range at some point
 ...
 */
 Core.Slider = new Class({
@@ -1032,6 +1046,8 @@ Core.Slider = new Class({
         var size;
         this.base.removeClass(old);
         this.base.addClass(value);
+        this.base.set('style', '');
+        this.base.setStyle('position', 'relative');
         switch (value) {
           case 'horizontal':
             this.minSize = Number.from(getCSS("/\\." + (this.get('class')) + ".horizontal$/", 'min-width'));
@@ -1045,10 +1061,12 @@ Core.Slider = new Class({
               size = Number.from(getCSS("/\\." + (this.get('class')) + ".horizontal$/", 'width'));
             }
             this.set('size', size);
-            this.base.setStyle('height', Number.from(getCSS("/\\." + (this.get('class')) + ".horizontal$/", 'height')));
+            this.progress.set('style', '');
             this.progress.setStyles({
+              position: 'absolute',
               top: 0,
-              right: 'auto'
+              bottom: 0,
+              left: 0
             });
             break;
           case 'vertical':
@@ -1063,11 +1081,16 @@ Core.Slider = new Class({
               size = Number.from(getCSS("/\\." + this["class"] + ".vertical$/", 'height'));
             }
             this.set('size', size);
-            this.base.setStyle('width', Number.from(getCSS("/\\." + this["class"] + ".vertical$/", 'width')));
+            this.progress.set('style', '');
             this.progress.setStyles({
-              right: 0,
-              top: 'auto'
+              position: 'absolute',
+              bottom: 0,
+              left: 0,
+              right: 0
             });
+        }
+        if (this.base.isVisible()) {
+          this.set('value', this.value);
         }
         return value;
       }
@@ -1125,13 +1148,7 @@ Core.Slider = new Class({
     }
   },
   create: function() {
-    this.base.setStyle('position', 'relative');
     this.progress = new Element("div");
-    this.progress.setStyles({
-      position: 'absolute',
-      bottom: 0,
-      left: 0
-    });
     this.base.adopt(this.progress);
     this.drag = new Drag(this.progress, {
       handle: this.base
@@ -1359,7 +1376,9 @@ Core.Picker = new Class({
       return this.attachedTo.fireEvent('change', arguments);
     }
   },
-  show: function(e) {
+  show: function(e, auto) {
+    auto = auto != null ? auto : true;
+    console.log(auto);
     document.body.grab(this.base);
     if (this.attachedTo != null) {
       this.attachedTo.addClass(this.picking);
@@ -1369,7 +1388,9 @@ Core.Picker = new Class({
         e.stop();
       }
     }
-    return this.base.addEvent('outerClick', this.hide);
+    if (auto) {
+      return this.base.addEvent('outerClick', this.hide);
+    }
   },
   hide: function(e, force) {
     if (force != null) {
@@ -1774,6 +1795,7 @@ license: MIT-style license.
 requires:
   - GDotUI
   - Core.Abstract
+  - Interfaces.Controls
   - Interfaces.Enabled
 
 provides: Core.Overlay
@@ -1782,7 +1804,7 @@ provides: Core.Overlay
 */
 Core.Overlay = new Class({
   Extends: Core.Abstract,
-  Impelments: Interfaces.Enabled,
+  Implements: [Interfaces.Enabled, Interfaces.Controls],
   Attributes: {
     "class": {
       value: GDotUI.Theme.Overlay["class"]
@@ -1807,21 +1829,6 @@ Core.Overlay = new Class({
       bottom: 0
     });
     return this.hide();
-  },
-  show: function() {
-    if (this.enabled) {
-      return this.base.show();
-    }
-  },
-  hide: function() {
-    if (this.enabled) {
-      return this.base.hide();
-    }
-  },
-  toggle: function() {
-    if (this.enabled) {
-      return this.base.toggle();
-    }
   }
 });
 /*
@@ -2180,7 +2187,7 @@ Data.Select = new Class({
   Implements: [Interfaces.Controls, Interfaces.Enabled, Interfaces.Size, Interfaces.Children],
   Attributes: {
     "class": {
-      value: 'select'
+      value: GDotUI.Theme.Select["class"]
     },
     "default": {
       value: '',
@@ -2219,6 +2226,39 @@ Data.Select = new Class({
           return li.label;
         }
       }
+    },
+    textClass: {
+      value: GDotUI.Theme.Select.textClass,
+      setter: function(value, old) {
+        this.text.removeClass(old);
+        this.text.addClass(value);
+        return value;
+      }
+    },
+    removeClass: {
+      value: GDotUI.Theme.Select.removeClass,
+      setter: function(value, old) {
+        this.removeIcon.base.removeClass(old);
+        this.removeIcon.base.addClass(value);
+        return value;
+      }
+    },
+    addClass: {
+      value: GDotUI.Theme.Select.addClass,
+      setter: function(value, old) {
+        this.addIcon.base.removeClass(old);
+        this.addIcon.base.addClass(value);
+        return value;
+      }
+    },
+    listClass: {
+      value: GDotUI.Theme.Select.listClass,
+      setter: function(value) {
+        return this.list.set('class', value);
+      }
+    },
+    listItemClass: {
+      value: GDotUI.Theme.Select.listItemClass
     }
   },
   ready: function() {
@@ -2229,7 +2269,7 @@ Data.Select = new Class({
       return this.list.base.setStyle('width', this.size < this.minSize ? this.minSize : this.size);
     }).bind(this));
     this.base.setStyle('position', 'relative');
-    this.text = new Element('div.text');
+    this.text = new Element('div');
     this.text.setStyles({
       position: 'absolute',
       top: 0,
@@ -2239,12 +2279,22 @@ Data.Select = new Class({
       'z-index': 0,
       overflow: 'hidden'
     });
+    this.text.addEvent('mousewheel', (function(e) {
+      var index;
+      e.stop();
+      index = this.list.items.indexOf(this.list.selected) + e.wheel;
+      if (index < 0) {
+        index = this.list.items.length - 1;
+      }
+      if (index === this.list.items.length) {
+        index = 0;
+      }
+      return this.list.set('selected', this.list.items[index]);
+    }).bind(this));
     this.addIcon = new Core.Icon();
-    this.addIcon.base.addClass('add');
     this.addIcon.base.set('text', '+');
     this.removeIcon = new Core.Icon();
     this.removeIcon.base.set('text', '-');
-    this.removeIcon.base.addClass('remove');
     $$(this.addIcon.base, this.removeIcon.base).setStyles({
       'z-index': '1',
       'position': 'relative'
@@ -2275,9 +2325,7 @@ Data.Select = new Class({
         return this.picker.show(e);
       }
     }).bind(this));
-    this.list = new Iterable.List({
-      "class": 'select-list'
-    });
+    this.list = new Iterable.List();
     this.picker.set('content', this.list);
     this.base.adopt(this.text);
     this.prompt = new Dialog.Prompt();
@@ -2306,7 +2354,7 @@ Data.Select = new Class({
     return this.update();
   },
   addItem: function(item) {
-    item.base.set('class', 'select-item');
+    item.base.set('class', this.listItemClass);
     return this.list.addItem(item);
   },
   removeItem: function(item) {
@@ -4057,14 +4105,30 @@ Pickers.Base = new Class({
 Pickers.Color = new Pickers.Base({
   type: 'Color'
 });
-/*
-Pickers.Number = new Pickers.Base {type:'Number'}
-Pickers.Time = new Pickers.Base {type:'Time'}
-Pickers.Text = new Pickers.Base {type:'Text'}
-Pickers.Date = new Pickers.Base {type:'Date'}
-Pickers.DateTime = new Pickers.Base {type:'DateTime'}
-Pickers.Table = new Pickers.Base {type:'Table'}
-Pickers.Unit = new Pickers.Base {type:'Unit'}
-#Pickers.Select = new Pickers.Base {type:'Select'}
-Pickers.List = new Pickers.Base {type:'List'}
-*/
+Pickers.Number = new Pickers.Base({
+  type: 'Number'
+});
+Pickers.Time = new Pickers.Base({
+  type: 'Time'
+});
+Pickers.Text = new Pickers.Base({
+  type: 'Text'
+});
+Pickers.Date = new Pickers.Base({
+  type: 'Date'
+});
+Pickers.DateTime = new Pickers.Base({
+  type: 'DateTime'
+});
+Pickers.Table = new Pickers.Base({
+  type: 'Table'
+});
+Pickers.Unit = new Pickers.Base({
+  type: 'Unit'
+});
+Pickers.Select = new Pickers.Base({
+  type: 'Select'
+});
+Pickers.List = new Pickers.Base({
+  type: 'List'
+});

@@ -10,6 +10,7 @@ license: MIT-style license.
 requires:
   - GDotUI
   - Core.Abstract
+  - Interfaces.Controls
   - Interfaces.Enabled
 
 provides: Core.Overlay
@@ -18,7 +19,10 @@ provides: Core.Overlay
 ###
 Core.Overlay = new Class {
   Extends: Core.Abstract
-  Impelments: Interfaces.Enabled
+  Implements: [
+    Interfaces.Enabled
+    Interfaces.Controls
+  ]
   Attributes: {
     class: {
       value: GDotUI.Theme.Overlay.class
@@ -41,14 +45,5 @@ Core.Overlay = new Class {
       bottom:0
     }
     @hide()
-  show: ->
-    if @enabled
-      @base.show()
-  hide: ->
-    if @enabled
-      @base.hide()
-  toggle: ->
-    if @enabled
-      @base.toggle()
     
 }
