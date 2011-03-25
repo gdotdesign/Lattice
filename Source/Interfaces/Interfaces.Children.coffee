@@ -28,8 +28,9 @@ Interfaces.Children = new Class {
     @base.grab el
   removeChild: (el) ->
     if @children.contains(el)
-      @children.erease el
-      el.dispose()
+      @children.erase el
+      document.id(el).dispose()
+      delete el
   empty: ->
     @children.each (child) ->
       @removeChild child

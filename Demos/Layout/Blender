@@ -1,5 +1,31 @@
 ---JS
+asd = new Class({
+  Extends: Core.Abstract,
+  create: function(){
+    this.base.setStyles({
+      'background-image':'url(/Themes/Chrome/images/grid5.png)',
+      'width':'100%',
+      'height':'100%'
+    })
+  }
+});
+asd1 = new Class({
+  Extends: Core.Abstract,
+  create: function(){
+    this.base.setStyles({
+      'background-color':'#ffffff',
+      'width':'100%',
+      'height':'100%'
+    })
+  }
+});
 window.addEvent('domready', function(){
   slider = new Layout.Blender();
+  slider.addToStack('node editor',asd)
+  slider.addToStack('preview',asd1)
+  slider.addToStack('info',Core.Abstract)
+  slider.addToStack('Data.Color',Data.Color)
+  slider.addToStack('Data.DateTime',Data.DateTime)
+  slider.addToStack('Data.Unit',Data.Unit)
   document.body.grab(slider);
 });

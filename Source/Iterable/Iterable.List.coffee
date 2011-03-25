@@ -67,11 +67,8 @@ Iterable.List = new Class {
     if @options.search
       @sinput.set 'value', ''
     @selected = null
-    @items.each ( (item) ->
-      @removeItem item
-      ).bind @
-    delete @items
-    @items = []
+    @base.empty()
+    @items.empty()
   toggleEdit: ->
     bases = @items.map (item) ->
       return item.base
