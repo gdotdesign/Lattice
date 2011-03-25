@@ -1,3 +1,4 @@
+#viewStack
 Layout.Blender = new Class {
   Extends: Core.Abstract
   Implements: Interfaces.Children
@@ -6,13 +7,87 @@ Layout.Blender = new Class {
       value: 'blender-layout'
     }
   }
+  splitView: (view,mode)->
+    view2 = new Layout.Blender.View()
+    @addView view2
+    if mode is 'vertical'
+      if view.restrains.bottom
+        view.restrains.bottom = no
+        view2.restrains.bottom = yes
+      else
+        if view.hooks.bottom?
+          view.hooks.bottom.replaceView view, view2
+      hook = new Layout.Blender.Hook {ob: view, prop: 'bottom'}, {ob: view2, prop: 'top'}
+      view.hooks.bottom = hook
+      view2.hooks.top = hook
+      top = view.get('top')
+      bottom = view.get('bottom')
+      view2.set 'top', Math.floor(top+((bottom-top)/2))
+      view2.set 'bottom', bottom
+      view2.set 'left', view.get('left')
+      view2.set 'right', view.get('right')
+      
+      
+      if view.restrains.right
+        view2.restrains.right = yes
+      else
+        new Layout.Blender.Hook {ob: view, prop: 'right'}, {ob: view2, prop: 'right'}
+        view.hooks.right = hook
+        view2.hooks.right = hook
+      if view.restrains.left
+        view2.restrains.left = yes
+      else
+        new Layout.Blender.Hook {ob: view,prop: 'left'}, {ob: view2,prop: 'left'}
+        view.hooks.left = hook
+        view2.hooks.left = hook
+        
+    if mode is 'horizontal'
+      if view.restrains.right
+        view.restrains.right = no
+        view2.restrains.right = yes
+      if view.hooks.right?
+        view.hooks.right.replaceView view, view2
+      hook = new Layout.Blender.Hook {ob: view, prop: 'right'}, {ob: view2, prop: 'left'}
+      view.hooks.right = hook
+      view2.hooks.left = hook
+      left =  view.get('left')
+      right = view.get('right')
+      view2.set 'top', view.get('top')
+      view2.set 'bottom', view.get('bottom')
+      view2.set 'left', Math.floor(left+((right-left)/2))
+      view2.set 'right', right
+      if view.restrains.top
+        view2.restrains.top = yes
+      else
+        new Layout.Blender.Hook {ob: view,prop: 'top' }, {ob: view2,prop: 'top'}
+        view.hooks.top = hook
+        view2.hooks.top = hook
+      if view.restrains.bottom
+        view2.restrains.bottom = yes
+      else
+        hook = new Layout.Blender.Hook {ob: view, prop: 'bottom'}, {ob: view2, prop: 'bottom'}
+        view.hooks.bottom = hook
+        view2.hooks.bottom = hook
   create: ->
     @views = []
+    @addView new Layout.Blender.View({top:0,left:0,right:"100%",bottom:"100%"
+      ,restrains: {top:yes,left:yes,right:yes,bottom:yes}
+    })
+    
+    #@splitView view,'horizontal'
+    #@splitView view,'vertical'
+    #@views.push view
+    ###
     view = new Layout.Blender.View({top:30,left:0,right:"80%",bottom:300})
     view.base.setStyle 'background-image', 'url(/Themes/Chrome/images/grid5.png)'
     view1 = new Layout.Blender.View({top:300,left:0,right:"100%",bottom:"100%"})
     view2 = new Layout.Blender.View({top:0,left:"80%",right:"100%",bottom:150})
     view3 = new Layout.Blender.View({top:150,left:"80%",right:"100%",bottom:300})
+    pg = new Core.PushGroup()
+    list = ['html','css','values']
+    list.each (item)->
+      pg.addItem new Core.Push({label:item,removeable:false,draggable:false})
+    view3.addChild pg
     view4 = new Layout.Blender.View({top:0,left:0,right:"80%",bottom:30})
     view2.addChild new Element 'div.dialog-prompt-label', {text:'Value'}
     view2.addChild new Data.Number();
@@ -79,16 +154,43 @@ Layout.Blender = new Class {
       @addChild new Layout.Blender.View()
     ).bind @
     @adoptChildren view, view1, view2, view3, view4
+    ###
     console.log 'Blender Layout engine!'
   getView: (e) ->
-  
+  addView: (view) ->
+    @views.push
+    @addChild view
+    view.addEvent 'split', @splitView.bind @
 }
 Layout.Blender.Hook = new Class {
   initialize: (side1,side2) ->
-    side1.ob.addEvent "#{side1.prop}Change", (obj) ->
-      side2.ob.set side2.prop, obj.newVal
-    side2.ob.addEvent "#{side2.prop}Change", (obj) ->
-      side1.ob.set side1.prop, obj.newVal
+    @side1 = side1
+    @side2 = side2
+    @attach()
+    @
+  getOther: (view)->
+    if view is @side1.ob
+      @side2.ob
+    else
+      @side1.ob
+  attach: ->
+    @side1.ob.addEvent "#{@side1.prop}Change",((obj) ->
+      @side2.ob.set @side2.prop, obj.newVal
+    ).bind @
+    @side2.ob.addEvent "#{@side2.prop}Change",((obj) ->
+      @side1.ob.set @side1.prop, obj.newVal
+    ).bind @
+  detach: ->
+    @side1.ob.removeEvents "#{@side1.prop}Change"
+    @side2.ob.removeEvents "#{@side2.prop}Change"
+  replaceView: (view,replacement)->
+    @detach()
+    if view is @side1.ob
+      @side1.ob = replacement
+    if view is @side2.ob
+      @side2.ob = replacement  
+    @attach()
+    
   
 }
 Layout.Blender.View = new Class {
@@ -100,7 +202,7 @@ Layout.Blender.View = new Class {
     }
     top: {
       setter: (value) ->
-        @base.setStyle 'top', value
+        @base.setStyle 'top', value+1
         value
     }
     left: {
@@ -114,14 +216,17 @@ Layout.Blender.View = new Class {
       setter: (value) ->
         if String.from(value).test(/%$/)
           value = window.getScrollSize().x*Number.from(value)/100
-        @base.setStyle 'right',  window.getSize().x-value+1
+        @base.setStyle 'right',  window.getScrollSize().x-value+1
         value
+    }
+    restrains: {
+      value: {top: no, left: no, right: no, bottom: no}
     }
     bottom: {
       setter: (value) ->
         if String.from(value).test(/%$/)
           value = window.getScrollSize().y*Number.from(value)/100
-        @base.setStyle 'bottom', window.getSize().y-value+1
+        @base.setStyle 'bottom', window.getScrollSize().y-value
         value
     }
   }
@@ -135,25 +240,12 @@ Layout.Blender.View = new Class {
     else
       @slider.hide()
   create: ->
+    @hooks = {top: null, left: null, right: null, bottom: null}
     @slider = new Core.Slider({steps:100,mode:'vertical'})
     @toolbar = new Layout.Blender.ViewToolbar()
     console.log @toolbar
     @base.adopt @slider, @toolbar
-    @restrains = {top: no, left: no, right: no, bottom: no}
-    @hooks = {
-      left:{
-        view: null
-      }
-      top:{
-      
-      }
-      right:{
-      
-      }
-      bottom:{
-      
-      }
-    }
+
     @position = {x:0,y:0}
     @size = {w:0,h:0}
     @topLeftCorner = new Layout.Blender.Corner({class:'topleft'})
@@ -163,11 +255,15 @@ Layout.Blender.View = new Class {
         @drag.options.modifiers = {x:null,y:'top'}
         @drag.options.invert = true
         @drag.start(e)
+      if (dir is 'bottom' or dir is 'top') and e.control
+        @fireEvent 'split',[@,'vertical']
       if (dir is 'left' or dir is 'right') and !@restrains.right
         @drag.startpos = {x:Number.from(@get('right'))}
         @drag.options.modifiers = {x:'right',y:null}
         @drag.options.invert = true
         @drag.start(e)
+      if (dir is 'left' or dir is 'right') and e.control
+        @fireEvent 'split',[@,'horizontal']
     ).bind @
     @bottomRightCorner = new Layout.Blender.Corner({class:'bottomleft'})
     @bottomRightCorner.addEvent 'directionChange',((dir,e) ->

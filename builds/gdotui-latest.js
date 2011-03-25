@@ -4119,133 +4119,248 @@ Layout.Blender = new Class({
       value: 'blender-layout'
     }
   },
+  splitView: function(view, mode) {
+    var bottom, hook, left, right, top, view2;
+    view2 = new Layout.Blender.View();
+    this.addView(view2);
+    if (mode === 'vertical') {
+      if (view.restrains.bottom) {
+        view.restrains.bottom = false;
+        view2.restrains.bottom = true;
+      } else {
+        if (view.hooks.bottom != null) {
+          view.hooks.bottom.replaceView(view, view2);
+        }
+      }
+      hook = new Layout.Blender.Hook({
+        ob: view,
+        prop: 'bottom'
+      }, {
+        ob: view2,
+        prop: 'top'
+      });
+      view.hooks.bottom = hook;
+      view2.hooks.top = hook;
+      top = view.get('top');
+      bottom = view.get('bottom');
+      view2.set('top', Math.floor(top + ((bottom - top) / 2)));
+      view2.set('bottom', bottom);
+      view2.set('left', view.get('left'));
+      view2.set('right', view.get('right'));
+      if (view.restrains.right) {
+        view2.restrains.right = true;
+      } else {
+        new Layout.Blender.Hook({
+          ob: view,
+          prop: 'right'
+        }, {
+          ob: view2,
+          prop: 'right'
+        });
+        view.hooks.right = hook;
+        view2.hooks.right = hook;
+      }
+      if (view.restrains.left) {
+        view2.restrains.left = true;
+      } else {
+        new Layout.Blender.Hook({
+          ob: view,
+          prop: 'left'
+        }, {
+          ob: view2,
+          prop: 'left'
+        });
+        view.hooks.left = hook;
+        view2.hooks.left = hook;
+      }
+    }
+    if (mode === 'horizontal') {
+      if (view.restrains.right) {
+        view.restrains.right = false;
+        view2.restrains.right = true;
+      }
+      if (view.hooks.right != null) {
+        view.hooks.right.replaceView(view, view2);
+      }
+      hook = new Layout.Blender.Hook({
+        ob: view,
+        prop: 'right'
+      }, {
+        ob: view2,
+        prop: 'left'
+      });
+      view.hooks.right = hook;
+      view2.hooks.left = hook;
+      left = view.get('left');
+      right = view.get('right');
+      view2.set('top', view.get('top'));
+      view2.set('bottom', view.get('bottom'));
+      view2.set('left', Math.floor(left + ((right - left) / 2)));
+      view2.set('right', right);
+      if (view.restrains.top) {
+        view2.restrains.top = true;
+      } else {
+        new Layout.Blender.Hook({
+          ob: view,
+          prop: 'top'
+        }, {
+          ob: view2,
+          prop: 'top'
+        });
+        view.hooks.top = hook;
+        view2.hooks.top = hook;
+      }
+      if (view.restrains.bottom) {
+        return view2.restrains.bottom = true;
+      } else {
+        hook = new Layout.Blender.Hook({
+          ob: view,
+          prop: 'bottom'
+        }, {
+          ob: view2,
+          prop: 'bottom'
+        });
+        view.hooks.bottom = hook;
+        return view2.hooks.bottom = hook;
+      }
+    }
+  },
   create: function() {
-    var list, select, tip, view, view1, view2, view3, view4;
     this.views = [];
-    view = new Layout.Blender.View({
-      top: 30,
-      left: 0,
-      right: "80%",
-      bottom: 300
-    });
-    view.base.setStyle('background-image', 'url(/Themes/Chrome/images/grid5.png)');
-    view1 = new Layout.Blender.View({
-      top: 300,
-      left: 0,
-      right: "100%",
-      bottom: "100%"
-    });
-    view2 = new Layout.Blender.View({
-      top: 0,
-      left: "80%",
-      right: "100%",
-      bottom: 150
-    });
-    view3 = new Layout.Blender.View({
-      top: 150,
-      left: "80%",
-      right: "100%",
-      bottom: 300
-    });
-    view4 = new Layout.Blender.View({
+    this.addView(new Layout.Blender.View({
       top: 0,
       left: 0,
-      right: "80%",
-      bottom: 30
-    });
-    view2.addChild(new Element('div.dialog-prompt-label', {
-      text: 'Value'
+      right: "100%",
+      bottom: "100%",
+      restrains: {
+        top: true,
+        left: true,
+        right: true,
+        bottom: true
+      }
     }));
-    view2.addChild(new Data.Number());
-    view2.addChild(new Element('div.dialog-prompt-label', {
-      text: 'Value'
-    }));
-    tip = new Core.Tip({
-      label: 'Heey youuu!',
-      zindex: 100,
-      location: {
-        x: 'auto',
-        y: 'auto'
-      },
-      offset: 10
-    });
+    /*
+    view = new Layout.Blender.View({top:30,left:0,right:"80%",bottom:300})
+    view.base.setStyle 'background-image', 'url(/Themes/Chrome/images/grid5.png)'
+    view1 = new Layout.Blender.View({top:300,left:0,right:"100%",bottom:"100%"})
+    view2 = new Layout.Blender.View({top:0,left:"80%",right:"100%",bottom:150})
+    view3 = new Layout.Blender.View({top:150,left:"80%",right:"100%",bottom:300})
+    pg = new Core.PushGroup()
+    list = ['html','css','values']
+    list.each (item)->
+      pg.addItem new Core.Push({label:item,removeable:false,draggable:false})
+    view3.addChild pg
+    view4 = new Layout.Blender.View({top:0,left:0,right:"80%",bottom:30})
+    view2.addChild new Element 'div.dialog-prompt-label', {text:'Value'}
+    view2.addChild new Data.Number();
+    view2.addChild new Element 'div.dialog-prompt-label', {text:'Value'}
+    tip = new Core.Tip({label:'Heey youuu!',zindex:100,location:{x:'auto',y:'auto'},offset:10});
     select = new Data.Select();
-    tip.attach(select);
-    view2.addChild(select);
-    list = [' bounding-box', 'each-box', 'continuous', 'border-box', 'padding-box', 'content-box', 'no-clip'];
-    list.each(function(item) {
-      return select.addItem(new Iterable.ListItem({
-        label: item,
-        removeable: false,
-        draggable: false
-      }));
-    });
-    new Layout.Blender.Hook({
-      ob: view4,
+    tip.attach select
+    view2.addChild select
+    list = [' bounding-box','each-box','continuous','border-box','padding-box','content-box','no-clip']
+    list.each (item)->
+      select.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
+
+    new Layout.Blender.Hook {
+      ob: view4
       prop: 'bottom'
     }, {
-      ob: view,
+      ob: view
       prop: 'top'
-    });
-    new Layout.Blender.Hook({
-      ob: view4,
+    }
+    new Layout.Blender.Hook {
+      ob: view4
       prop: 'right'
     }, {
-      ob: view,
+      ob: view
       prop: 'right'
-    });
-    new Layout.Blender.Hook({
-      ob: view,
+    }
+    new Layout.Blender.Hook {
+      ob: view
       prop: 'bottom'
     }, {
-      ob: view1,
+      ob: view1
       prop: 'top'
-    });
-    new Layout.Blender.Hook({
-      ob: view2,
+    }
+    new Layout.Blender.Hook {
+      ob: view2
       prop: 'left'
     }, {
-      ob: view3,
+      ob: view3
       prop: 'left'
-    });
-    new Layout.Blender.Hook({
-      ob: view2,
+    }
+    new Layout.Blender.Hook {
+      ob: view2
       prop: 'bottom'
     }, {
-      ob: view3,
+      ob: view3
       prop: 'top'
-    });
-    new Layout.Blender.Hook({
-      ob: view,
+    }
+    new Layout.Blender.Hook {
+      ob: view
       prop: 'bottom'
     }, {
-      ob: view3,
+      ob: view3
       prop: 'bottom'
-    });
-    new Layout.Blender.Hook({
-      ob: view,
+    }
+    new Layout.Blender.Hook {
+      ob: view
       prop: 'right'
     }, {
-      ob: view2,
+      ob: view2
       prop: 'left'
-    });
-    view.addEvent('topleft-bottom', (function(e) {
-      console.log('hehe?');
-      return this.addChild(new Layout.Blender.View());
-    }).bind(this));
-    this.adoptChildren(view, view1, view2, view3, view4);
+    }
+    view.addEvent 'topleft-bottom', ((e) ->
+      console.log 'hehe?'
+      @addChild new Layout.Blender.View()
+    ).bind @
+    @adoptChildren view, view1, view2, view3, view4
+    */
     return console.log('Blender Layout engine!');
   },
-  getView: function(e) {}
+  getView: function(e) {},
+  addView: function(view) {
+    this.views.push;
+    this.addChild(view);
+    return view.addEvent('split', this.splitView.bind(this));
+  }
 });
 Layout.Blender.Hook = new Class({
   initialize: function(side1, side2) {
-    side1.ob.addEvent("" + side1.prop + "Change", function(obj) {
-      return side2.ob.set(side2.prop, obj.newVal);
-    });
-    return side2.ob.addEvent("" + side2.prop + "Change", function(obj) {
-      return side1.ob.set(side1.prop, obj.newVal);
-    });
+    this.side1 = side1;
+    this.side2 = side2;
+    this.attach();
+    return this;
+  },
+  getOther: function(view) {
+    if (view === this.side1.ob) {
+      return this.side2.ob;
+    } else {
+      return this.side1.ob;
+    }
+  },
+  attach: function() {
+    this.side1.ob.addEvent("" + this.side1.prop + "Change", (function(obj) {
+      return this.side2.ob.set(this.side2.prop, obj.newVal);
+    }).bind(this));
+    return this.side2.ob.addEvent("" + this.side2.prop + "Change", (function(obj) {
+      return this.side1.ob.set(this.side1.prop, obj.newVal);
+    }).bind(this));
+  },
+  detach: function() {
+    this.side1.ob.removeEvents("" + this.side1.prop + "Change");
+    return this.side2.ob.removeEvents("" + this.side2.prop + "Change");
+  },
+  replaceView: function(view, replacement) {
+    this.detach();
+    if (view === this.side1.ob) {
+      this.side1.ob = replacement;
+    }
+    if (view === this.side2.ob) {
+      this.side2.ob = replacement;
+    }
+    return this.attach();
   }
 });
 Layout.Blender.View = new Class({
@@ -4257,7 +4372,7 @@ Layout.Blender.View = new Class({
     },
     top: {
       setter: function(value) {
-        this.base.setStyle('top', value);
+        this.base.setStyle('top', value + 1);
         return value;
       }
     },
@@ -4275,8 +4390,16 @@ Layout.Blender.View = new Class({
         if (String.from(value).test(/%$/)) {
           value = window.getScrollSize().x * Number.from(value) / 100;
         }
-        this.base.setStyle('right', window.getSize().x - value + 1);
+        this.base.setStyle('right', window.getScrollSize().x - value + 1);
         return value;
+      }
+    },
+    restrains: {
+      value: {
+        top: false,
+        left: false,
+        right: false,
+        bottom: false
       }
     },
     bottom: {
@@ -4284,7 +4407,7 @@ Layout.Blender.View = new Class({
         if (String.from(value).test(/%$/)) {
           value = window.getScrollSize().y * Number.from(value) / 100;
         }
-        this.base.setStyle('bottom', window.getSize().y - value + 1);
+        this.base.setStyle('bottom', window.getScrollSize().y - value);
         return value;
       }
     }
@@ -4301,6 +4424,12 @@ Layout.Blender.View = new Class({
     }
   },
   create: function() {
+    this.hooks = {
+      top: null,
+      left: null,
+      right: null,
+      bottom: null
+    };
     this.slider = new Core.Slider({
       steps: 100,
       mode: 'vertical'
@@ -4308,20 +4437,6 @@ Layout.Blender.View = new Class({
     this.toolbar = new Layout.Blender.ViewToolbar();
     console.log(this.toolbar);
     this.base.adopt(this.slider, this.toolbar);
-    this.restrains = {
-      top: false,
-      left: false,
-      right: false,
-      bottom: false
-    };
-    this.hooks = {
-      left: {
-        view: null
-      },
-      top: {},
-      right: {},
-      bottom: {}
-    };
     this.position = {
       x: 0,
       y: 0
@@ -4345,6 +4460,9 @@ Layout.Blender.View = new Class({
         this.drag.options.invert = true;
         this.drag.start(e);
       }
+      if ((dir === 'bottom' || dir === 'top') && e.control) {
+        this.fireEvent('split', [this, 'vertical']);
+      }
       if ((dir === 'left' || dir === 'right') && !this.restrains.right) {
         this.drag.startpos = {
           x: Number.from(this.get('right'))
@@ -4354,7 +4472,10 @@ Layout.Blender.View = new Class({
           y: null
         };
         this.drag.options.invert = true;
-        return this.drag.start(e);
+        this.drag.start(e);
+      }
+      if ((dir === 'left' || dir === 'right') && e.control) {
+        return this.fireEvent('split', [this, 'horizontal']);
       }
     }).bind(this));
     this.bottomRightCorner = new Layout.Blender.Corner({

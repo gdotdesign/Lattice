@@ -12,6 +12,8 @@
 
 .blender-view {
   position: absolute;
+  min-height: 30px;
+  min-width: 30px;
   top: 0;
   right: 0;
   left: 0;
