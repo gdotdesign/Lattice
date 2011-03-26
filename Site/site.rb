@@ -76,6 +76,11 @@ class Gdotui < Sinatra::Application
     @stuff = parse lines
     haml :demo
   end
+  get "/blender" do
+    lines = IO.readlines "../Demos/Layout/Blender"
+    @stuff = parse lines
+    haml :blenderdemo
+  end
   get "/docs/:package/:class" do
     @stuff = YAML::load(File.new("../Docs/#{params[:package]}/#{params[:class]}"))
     haml :docs

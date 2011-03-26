@@ -9,6 +9,7 @@ license: MIT-style license.
 
 requires:
   - GDotUI
+  - Core.Picker
   - Data.Abstract
   - Dialog.Prompt
   - Interfaces.Controls

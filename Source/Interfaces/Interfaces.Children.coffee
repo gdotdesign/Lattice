@@ -23,9 +23,9 @@ Interfaces.Children = new Class {
     children = Array.from arguments 
     @children.append children
     @base.adopt arguments
-  addChild: (el) ->
+  addChild: (el, where) ->
     @children.push el
-    @base.grab el
+    @base.grab el, where
   removeChild: (el) ->
     if @children.contains(el)
       @children.erase el

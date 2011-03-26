@@ -7,7 +7,7 @@
     %script{:src=>"../mootools/mootools-more-1.3.1.1.js", :type=>"text/javascript"}
     - if request.path_info =~ /^\/build/
       %script{:src=>"/Packager.js", :type=>"text/javascript"}
-    - if request.path_info =~ /^\/demos/ or request.path_info =~ /^\/themes/
+    - if request.path_info =~ /^\/demos/ or request.path_info =~ /^\/themes/ or request.path_info =~ /^\/blender/
       %script{:src=>"../Themes/Chrome/theme.js", :type=>"text/javascript"}
       %link{:href => "../Themes/Blender/theme.css", :rel => "stylesheet", :type => "text/css", :media=>"screen"}/
       %script{:src=>"../builds/gdotui-latest.js", :type=>"text/javascript"}
