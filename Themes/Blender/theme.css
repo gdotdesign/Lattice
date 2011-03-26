@@ -133,6 +133,7 @@
   .date-time .slot:first-child {
     width: 45px; }
 
+@import url(http://fonts.googleapis.com/css?family=Ubuntu:regular,bold,italic);
 dl {
   clear: both;
   height: 30px;
