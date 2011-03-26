@@ -7,7 +7,9 @@ description: Select Element
 
 license: MIT-style license.
 
-requires: [Core.Abstract]
+requires: 
+  - Core.Abstract
+  - Core.Button
 
 provides: Dialog.Prompt
 
