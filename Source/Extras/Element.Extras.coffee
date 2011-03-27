@@ -102,7 +102,6 @@ Element.Properties.checked = {
       
       
       ofa = {x:0,y:0}
-      console.log options.position             
       switch options.position.x
         when 'center'
           if options.position.y isnt 'center'
@@ -120,7 +119,6 @@ Element.Properties.checked = {
         when 'bottom'
           ofa.y = options.offset
        options.offset = ofa
-       console.log ofa
        @oldPosition.attempt options, @
     removeTransition: ->
       @store 'transition', @getStyle( '-webkit-transition-duration' )

@@ -64,6 +64,9 @@
   -moz-box-shadow: 0 0 0 0;
   -webkit-box-shadow: 0 0 0 0; }
 
+.slotcontrol {
+  width: 200px; }
+
 .color {
   width: 200px;
   min-width: 85px;
@@ -400,6 +403,11 @@ textarea, input[type=text] {
     -webkit-border-radius: 0 5px 5px 0;
     -khtml-border-radius: 0 5px 5px 0;
     border-radius: 0 5px 5px 0; }
+    .unit-pick .select .text {
+      -moz-border-radius: 0 5px 5px 0;
+      -webkit-border-radius: 0 5px 5px 0;
+      -khtml-border-radius: 0 5px 5px 0;
+      border-radius: 0 5px 5px 0; }
 
 .tip {
   color: #f5f5f5;

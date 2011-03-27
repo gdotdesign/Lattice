@@ -63,7 +63,6 @@ Data.Unit = new Class {
           match = value.match(/(-?\d*)(.*)/)
           value = match[1]
           unit = match[2]
-          console.log unit, value
           @sel.set 'value', unit
           @number.set 'value', value
       getter: ->

@@ -30,7 +30,7 @@
   
 ---JS
 window.addEvent('domready', function(){
-  color = new Data.ColorWheel();
+  color = new Data.Color();
   color.base.setStyle('float','left');
   
   slider = new Data.Number({label:'Size'})

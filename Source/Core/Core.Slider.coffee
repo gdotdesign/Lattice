@@ -36,12 +36,12 @@ Core.Slider = new Class {
         @base.setStyle 'position', 'relative'
         switch value
           when 'horizontal'
-            @minSize = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'min-width')
+            @minSize = Number.from GDotUI.selectors[".#{@get('class')}.horizontal"]['min-width']
             @modifier = 'width'
             @drag.options.modifiers = {x: 'width',y:''}
             @drag.options.invert = false
             if not @size?
-              size = Number.from getCSS("/\\.#{@get('class')}.horizontal$/",'width')
+              size = Number.from GDotUI.selectors[".#{@get('class')}.horizontal"]['width']
             @set 'size', size
             @progress.set 'style', ''
             @progress.setStyles {
@@ -51,12 +51,12 @@ Core.Slider = new Class {
               left: 0
             } 
           when 'vertical'
-            @minSize = Number.from getCSS("/\\.#{@get('class')}.vertical$/",'min-hieght')
+            @minSize = Number.from GDotUI.selectors[".#{@get('class')}.vertical"]['min-height']
             @modifier = 'height'
             @drag.options.modifiers = {x: '',y: 'height'}
             @drag.options.invert = true
             if not @size?
-              size = Number.from getCSS("/\\.#{@class}.vertical$/",'height')
+              size = Number.from GDotUI.selectors[".#{@get('class')}.vertical"]['height']
             @set 'size', size
             @progress.set 'style', ''
             @progress.setStyles {

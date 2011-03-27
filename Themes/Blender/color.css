@@ -3,6 +3,9 @@
   -moz-box-shadow: 0 0 0 0;
   -webkit-box-shadow: 0 0 0 0; }
 
+.slotcontrol {
+  width: 200px; }
+
 .color {
   width: 200px;
   min-width: 85px;

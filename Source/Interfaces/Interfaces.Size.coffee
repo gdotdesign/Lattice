@@ -14,8 +14,8 @@ requires: [GDotUI]
 ###
 Interfaces.Size = new Class {
   _$Size: ->
-    @size = Number.from getCSS("/\\.#{@get('class')}$/",'width')
-    @minSize = Number.from(getCSS("/\\.#{@get('class')}$/",'min-width')) or 0
+    @size = Number.from GDotUI.selectors[".#{@get('class')}"]['width']
+    @minSize = Number.from(GDotUI.selectors[".#{@get('class')}"]['min-width']) or 0
     @addAttribute 'minSize', {
       value: null
       setter: (value,old) ->
