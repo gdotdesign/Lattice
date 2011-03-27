@@ -1211,8 +1211,16 @@ requires: [GDotUI]
 */
 Interfaces.Size = new Class({
   _$Size: function() {
-    this.size = Number.from(GDotUI.selectors["." + (this.get('class'))]['width']);
-    this.minSize = Number.from(GDotUI.selectors["." + (this.get('class'))]['min-width']) || 0;
+    if (GDotUI.selectors["." + (this.get('class'))]) {
+      this.size = Number.from(GDotUI.selectors["." + (this.get('class'))]['width']);
+    } else {
+      this.size = 0;
+    }
+    if (GDotUI.selectors["." + (this.get('class'))]) {
+      this.minSize = Number.from(GDotUI.selectors["." + (this.get('class'))]['min-width']);
+    } else {
+      this.minSize = 0;
+    }
     this.addAttribute('minSize', {
       value: null,
       setter: function(value, old) {
