@@ -76,14 +76,17 @@ Data.Color = new Class {
           @col.active.label
     }
     value: {
+      value: new Color(GDotUI.selectors['.color']['color'])
       setter: (value) ->
-        @set 'hue', value.color.hsb[0]
-        @set 'saturation', value.color.hsb[1]
-        @set 'lightness', value.color.hsb[2]
+        @set 'hue', value.hsb[0]
+        @set 'saturation', value.hsb[1]
+        @set 'lightness', value.hsb[2]
         @set 'type', value.type
         @set 'alpha', value.alpha
     }
   }
+  ready: ->
+    @update()
   update: ->
     hue = @get 'hue'
     saturation = @get 'saturation'

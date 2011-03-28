@@ -30,7 +30,7 @@
   
 ---JS
 window.addEvent('domready', function(){
-  color = new Data.Color();
+  color = new Data.Color({value:new Color("#578453")});
   color.base.setStyle('float','left');
   
   slider = new Data.Number({label:'Size'})
@@ -40,10 +40,10 @@ window.addEvent('domready', function(){
   slider.set('value',200)
   
   $("options").adopt(slider);
-  
-  $(color).inject($("cpick"),'after')
   color.addEvent('change', function(e){
     $("cpick").setStyle('background-color',e.format());
     $("cpick").setStyle('color',e.hsb[2] < 50?'#fff':'#333');
   });
+  
+  $(color).inject($("cpick"),'after')
 });

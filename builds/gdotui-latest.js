@@ -31,7 +31,7 @@ Element.Properties.checked = {
 (function() {
   return Color.implement({
     type: 'hex',
-    alpha: '',
+    alpha: 100,
     setType: function(type) {
       return this.type = type;
     },
@@ -2560,14 +2560,18 @@ Data.Color = new Class({
       }
     },
     value: {
+      value: new Color(GDotUI.selectors['.color']['color']),
       setter: function(value) {
-        this.set('hue', value.color.hsb[0]);
-        this.set('saturation', value.color.hsb[1]);
-        this.set('lightness', value.color.hsb[2]);
+        this.set('hue', value.hsb[0]);
+        this.set('saturation', value.hsb[1]);
+        this.set('lightness', value.hsb[2]);
         this.set('type', value.type);
         return this.set('alpha', value.alpha);
       }
     }
+  },
+  ready: function() {
+    return this.update();
   },
   update: function() {
     var alpha, hue, lightness, ret, saturation, type;

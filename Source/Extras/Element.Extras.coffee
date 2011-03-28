@@ -26,7 +26,7 @@ Element.Properties.checked = {
 ( ->
   Color.implement {
     type: 'hex'
-    alpha: ''
+    alpha: 100
     setType: (type) ->
       @type = type
     setAlpha: (alpha) ->
