@@ -72,7 +72,7 @@ Interfaces.Draggable = new Class {
 			if @handle == null
 				@handle = @base
 			if @options.ghost
-				@drag = new Drag.Ghost @base, {target:@handle, handle:@handle, remove:@options.removeClasses, droppables: @options.droppables, precalculate: on, pos:true}
+				@drag = new Drag.Ghost @base, {target:@handle, handle:@handle, remove:@options.removeClasses, droppables: @options.droppables, precalculate: on, pos:false}
 			else
 				@drag = new Drag.Float @base, {target:@handle, handle:@handle}
 			@drag.addEvent 'drop', (->

@@ -28,7 +28,9 @@ Forms.Fieldset = new Class {
     @legend = new Element 'legend', {text: @options.name}
     @base.grab @legend
     @options.inputs.each ( (item) ->
-      @base.grab new Forms.Field(item)
+      input = new Forms.Field(item)
+      @inputs.push input
+      @base.grab input
     ).bind @
     @
   toElement: ->

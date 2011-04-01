@@ -52,10 +52,10 @@ Element.Properties.checked = {
           String.from "rgba(#{@rgb[0]}, #{@rgb[1]}, #{@rgb[2]}, #{@alpha/100})"
         when "hsl"
           @hsl = @hsvToHsl()
-          String.from "hsl(#{@hsl[0]}, #{@hsl[1]}%, #{@hsl[2]}%)"
+          String.from "hsl(#{@hsl[0]}, #{Math.round(@hsl[1])}%, #{Math.round(@hsl[2])}%)"
         when "hsla"
           @hsl = @hsvToHsl()
-          String.from "hsla(#{@hsl[0]}, #{@hsl[1]}%, #{@hsl[2]}%, #{@alpha/100})"
+          String.from "hsla(#{@hsl[0]}, #{Math.round(@hsl[1])}%, #{Math.round(@hsl[2])}%, #{@alpha/100})"
         when "hex"
           String.from @hex
   }

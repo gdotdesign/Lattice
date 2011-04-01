@@ -63,7 +63,7 @@ Core.Toggler = new Class {
     checked: {
       value: on
       setter: (value) ->
-        @base.fireEvent 'change', value
+        @fireEvent 'change', value
         value
     }
   }

@@ -17,12 +17,9 @@ Pickers.Base = new Class {
   Delegates:{
     picker:['attach'
             'detach'
-            'attachAndShow'
+            'show'
             ]
-    data: ['setValue'
-          'getValue'
-          'disable'
-          'enable']
+    data: ['set']
   }
   Attributes: {
     type: {
@@ -37,8 +34,7 @@ Pickers.Base = new Class {
     @picker.set 'content', @data
     @
 }
-###
-Pickers.Color = new Pickers.Base {type:'Color'}
+Pickers.Color = new Pickers.Base {type:'ColorWheel'}
 Pickers.Number = new Pickers.Base {type:'Number'}
 Pickers.Time = new Pickers.Base {type:'Time'}
 Pickers.Text = new Pickers.Base {type:'Text'}
@@ -48,4 +44,3 @@ Pickers.Table = new Pickers.Base {type:'Table'}
 Pickers.Unit = new Pickers.Base {type:'Unit'}
 Pickers.Select = new Pickers.Base {type:'Select'}
 Pickers.List = new Pickers.Base {type:'List'}
-###

@@ -17,7 +17,8 @@ requires: [GDotUI, Interfaces.Draggable]
 Iterable.ListItem = new Class {
   Extends:Core.Abstract
   Implements: [Interfaces.Draggable
-               Interfaces.Enabled ]
+               Interfaces.Enabled 
+               Options]
   Attributes: {
     label: {
       value: ''
@@ -47,6 +48,7 @@ Iterable.ListItem = new Class {
     dropppables: ''
   }
   initialize: (options) ->
+    @setOptions options
     @parent options
   create: ->
     @base.setStyle 'position','relative'

@@ -50,6 +50,12 @@ Core.PushGroup = new Class {
     if button isnt @active
       @set 'active', button
       @fireEvent 'change', button
+  emptyItems: ->
+    @children.each (child) ->
+      console.log child
+      child.removeEvents 'invoked'
+    , @
+    @empty()
   removeItem: (item) ->
     if @hasChild item
       item.removeEvents 'invoked'

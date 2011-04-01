@@ -21,8 +21,9 @@ Interfaces.Children = new Class {
     if @children.indexOf child is -1 then no else yes
   adoptChildren: ->
     children = Array.from arguments 
-    @children.append children
-    @base.adopt arguments
+    children.each (child) ->
+      @addChild child
+    , @
   addChild: (el, where) ->
     @children.push el
     @base.grab el, where
@@ -33,6 +34,6 @@ Interfaces.Children = new Class {
       delete el
   empty: ->
     @children.each (child) ->
-      @removeChild child
-    , @
+      document.id(child).dispose()
+    @children.empty()
 }

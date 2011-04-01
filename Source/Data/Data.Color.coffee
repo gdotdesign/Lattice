@@ -76,8 +76,9 @@ Data.Color = new Class {
           @col.active.label
     }
     value: {
-      value: new Color(GDotUI.selectors['.color']['color'])
+      value: new Color('#fff')
       setter: (value) ->
+        console.log value.hsb[0], value.hsb[1], value.hsb[2]
         @set 'hue', value.hsb[0]
         @set 'saturation', value.hsb[1]
         @set 'lightness', value.hsb[2]
@@ -122,6 +123,7 @@ Data.Color = new Class {
     @lightnessData.addEvent 'change', @update
     @alphaData.addEvent 'change',  @update
     @col.addEvent 'change',  @update
+    
     
     @adoptChildren @hueData, @saturationData, @lightnessData, @alphaData, @col
 }
