@@ -24,6 +24,19 @@ Element.Properties.checked = {
         @off()
 }
 ( ->
+  Number.implement {
+    inRange: (center,range) ->
+      if center-range < @ < center+range
+        true
+      else
+        false
+  }
+  Number.eval = (string,size) ->
+    Number.from(eval(String.from(string).replace /(\d*)\%/g, (match,str) ->
+      (Number.from(str)/100)*size
+    ))
+)()
+( ->
   Color.implement {
     type: 'hex'
     alpha: 100
