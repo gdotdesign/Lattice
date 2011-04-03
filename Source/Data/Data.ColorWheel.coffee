@@ -153,7 +153,8 @@ Data.ColorWheel = new Class {
     @background.set 'width', @size
     @background.set 'height', @size
     @wrapper.setStyle 'height', @size
-    @drawHSLACone @size
+    if @size > 0
+      @drawHSLACone @size
     @colorData.set 'size', @size
     
     @knobSize = @knob.getSize()

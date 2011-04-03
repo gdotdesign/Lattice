@@ -28,11 +28,10 @@ Iterable.List = new Class {
           if item.base.hasClass @options.selected then true else false
         ).bind(@))[0]
       setter: (value, old) ->
+        if old
+          old.base.removeClass @options.selected
         if value?
-          if old != value
-            if old
-              old.base.removeClass @options.selected
-            value.base.addClass @options.selected
+          value.base.addClass @options.selected
         value
         
     }

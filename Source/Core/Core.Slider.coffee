@@ -98,6 +98,7 @@ Core.Slider = new Class {
     value: {
       value: 0
       setter: (value) ->
+        value = Number.from value
         if !@reset
           percent = Math.round((value/@steps)*100)
           if value < 0
@@ -109,6 +110,11 @@ Core.Slider = new Class {
           if not(value < 0) and not(value > @steps)
             @progress.setStyle @modifier, (percent/100)*@size
         value
+      getter: ->
+        if @reset
+          @value
+        else
+          Number.from(@progress.getStyle(@modifier))/@size*@steps
     }
   }
   create: ->

@@ -161,8 +161,11 @@ Data.Select = new Class {
     
     @list.addEvent 'selectedChange', ( ->
       item = @list.selected
-      @text.set 'text', item.label
-      @fireEvent 'change', item.label
+      if item?
+        @text.set 'text', item.label
+        @fireEvent 'change', item.label
+      else
+        @text.set 'text', ''
       @picker.hide null, yes
     ).bind @
     @update()
