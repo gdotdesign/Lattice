@@ -15,7 +15,7 @@ events:
   - :
     description:
 functions:
-  - :
+  :
     description:
     arguments:
       - :
