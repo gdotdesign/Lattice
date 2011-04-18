@@ -1,31 +1,26 @@
 ###
 ---
 
-name: Interfaces.Size
+name: Interfaces.Size 
 
-description: Size minsize from css....
+description: Size minsize from css
 
 license: MIT-style license.
 
-provides: Interfaces.Size
+provides: Interfaces.Size 
 
-requires: [GDotUI]
 ...
 ###
 Interfaces.Size = new Class {
   _$Size: ->
-    if GDotUI.selectors[".#{@get('class')}"]
-      @size = Number.from GDotUI.selectors[".#{@get('class')}"]['width']
-    else 
-      @size = 0
-    if GDotUI.selectors[".#{@get('class')}"]
-      @minSize = Number.from(GDotUI.selectors[".#{@get('class')}"]['min-width'])
-    else
-      @minSize = 0
+    @size = Number.from Lattice.getCSS ".#{@get('class')}", 'width' or 0
+    @minSize = Number.from Lattice.getCSS ".#{@get('class')}", 'min-width' or 0
     @addAttribute 'minSize', {
       value: null
       setter: (value,old) ->
         @base.setStyle 'min-width', value
+        if @size < value
+          @set 'size', value
         value      
     }
     @addAttribute 'size', {

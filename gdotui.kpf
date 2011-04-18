@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!-- Komodo Project File - DO NOT EDIT -->
-<project id="e4968390-4571-4dba-aa17-6f27fb690bad" kpf_version="4" name="gdotui.kpf">
-<livefolder id="e4968390-4571-4dba-aa17-6f27fb690bad/mootools/Docs" idref="e4968390-4571-4dba-aa17-6f27fb690bad/mootools" name="Docs" url="Docs">
-</livefolder>
-<preference-set idref="e4968390-4571-4dba-aa17-6f27fb690bad">
-  <boolean id="import_live">1</boolean>
-</preference-set>
-</project>

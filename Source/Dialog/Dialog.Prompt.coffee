@@ -8,21 +8,23 @@ description: Select Element
 license: MIT-style license.
 
 requires: 
-  - Core.Abstract
-  - Core.Button
+  - Dialog.Abstract
+  - Buttons.Abstract
+  - Data.Text
 
 provides: Dialog.Prompt
 
 ...
 ###
 Dialog.Prompt = new Class {
-  Extends:Core.Abstract
-  Delegates: {
-    picker: ['show','hide','attach']
-  }
+  Extends: Dialog.Abstract
   Attributes: {
     class: {
-      value: 'dialog-prompt'
+      value: Lattice.buildClass 'dialog-prompt'
+      setter: (value, old, self) ->
+        self::parent.call @, value, old
+        @labelDiv.replaceClass "#{value}-label", "#{old}-label"
+        value
     }
     label: {
       value: ''
@@ -34,25 +36,19 @@ Dialog.Prompt = new Class {
       setter: (value) ->
         @button.set 'label', value
     }
-    labelClass: {
-      value: 'dialog-prompt-label'
-      setter: (value, old) ->
-        value = String.from value
-        @labelDiv.removeClass old
-        @labelDiv.addClass value
-        value
-    }
   }
-  initialize: (options) ->
-    @parent options
+  update: ->
+    @labelDiv.setStyle 'width', @size
+    @button.set 'size', @size
+    @input.set 'size', @size
+    @base.setStyle 'width', 'auto'
   create: ->
+    @parent()
     @labelDiv = new Element 'div'
-    @input = new Element 'input',{type:'text'}
-    @button = new Core.Button()
+    @input = new Data.Text()
+    @button = new Buttons.Abstract()
     @base.adopt @labelDiv, @input, @button
-    @picker = new Core.Picker()
-    @picker.set 'content', @base
-    @button.addEvent 'invoked', ((el,e)->
+    @button.addEvent 'invoked', (el,e) =>
       @fireEvent 'invoked', @input.get('value')
-    ).bind @
+      @hide(e,true)
 }

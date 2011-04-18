@@ -10,8 +10,7 @@ authors:
   - Perrin Westrich
   - Maksim Horbachevsky
 provides:
-  - Class.Delegates
-  - Class.Attributes
+  - Class.Extras
 ...
 ###
 Class.Singleton = new Class {
@@ -29,13 +28,39 @@ Class.Mutators.Delegates = (delegations) ->
     , @
   , @
 
+
+mergeOneNew = (source, key, current) ->
+	switch typeOf(current)
+		when 'object'
+			if (typeOf(source[key]) == 'object') 
+			  Object.mergeNew(source[key], current)
+			else 
+			  source[key] = Object.clone(current)
+		when 'array'
+		  source[key] = current.clone()
+		when 'function'
+		  current::parent = source[key]
+		  source[key] = current
+		else
+		  source[key] = current
+	source
+	
+Object.extend {
+	mergeNew: (source, k, v) ->
+		if typeOf(k) == 'string'
+		  return mergeOneNew(source, k, v)
+		for i in [1..arguments.length-1]
+			object = arguments[i]
+			Object.each object, (value,key) ->
+			  mergeOneNew(source, key, value)
+		source
+}
 Class.Mutators.Attributes = (attributes) ->
     $setter = attributes.$setter
     $getter = attributes.$getter
     
     if @::$attributes
-      attributes = Object.merge @::$attributes, attributes
-
+      attributes = Object.mergeNew @::$attributes, attributes
     delete attributes.$setter
     delete attributes.$getter
 
@@ -55,7 +80,6 @@ Class.Mutators.Attributes = (attributes) ->
             return attr.value
         else
           return if $getter then $getter.call(@, name) else undefined
-
       set: (name, value) ->
         attr = @$attributes[name]
         if attr
@@ -63,7 +87,7 @@ Class.Mutators.Attributes = (attributes) ->
             oldVal = attr.value
             if !attr.validator or attr.validator.call(@, value)
               if attr.setter
-                newVal = attr.setter.attempt [value, oldVal], @
+                newVal = attr.setter.call @, value, oldVal, attr.setter
               else
                 newVal = value             
               attr.value = newVal

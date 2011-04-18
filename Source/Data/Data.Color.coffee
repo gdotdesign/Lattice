@@ -3,16 +3,17 @@
 
 name: Data.Color
 
-description: Color data element. ( color picker )
+description: Color data element.
 
 license: MIT-style license.
 
 requires: 
-  - GDotUI
   - Data.Abstract
   - Data.Number
-  - Interfaces.Enabled
+  - Buttons.Toggle
+  - Groups.Toggles
   - Interfaces.Children
+  - Interfaces.Enabled
   - Interfaces.Size
 
 provides: Data.Color
@@ -23,13 +24,13 @@ Data.Color = new Class {
   Extends:Data.Abstract
   Binds: ['update']
   Implements: [
-    Interfaces.Enabled
     Interfaces.Children
+    Interfaces.Enabled
     Interfaces.Size
   ]
   Attributes: {
     class: {
-      value: GDotUI.Theme.Color.controls.class
+      value: Lattice.buildClass 'color'
     }
     hue: {
       value: 0
@@ -100,23 +101,20 @@ Data.Color = new Class {
       ret.setType type
       @fireEvent 'change', new Hash(ret)
   create: ->
-    @addEvent 'sizeChange',( ->
-      @col.set 'size', @size
+    @addEvent 'sizeChange', =>
       @hueData.set 'size', @size
       @saturationData.set 'size', @size
       @lightnessData.set 'size', @size
       @alphaData.set 'size', @size
-    ).bind @
-    
+      @col.set 'size', @size
     @hueData = new Data.Number {range:[0,360],reset: off, steps: 360, label:'Hue'}
     @saturationData = new Data.Number {range:[0,100],reset: off, steps: 100 , label:'Saturation'}
     @lightnessData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Value'}
     @alphaData = new Data.Number {range:[0,100],reset: off, steps: 100, label:'Alpha'}
     
-    @col = new Core.PushGroup()
-    ['rgb','rgba','hsl','hsla','hex'].each ((item) ->
-      @col.addItem new Core.Push({label:item})
-    ).bind @
+    @col = new Groups.Toggles()
+    ['rgb','rgba','hsl','hsla','hex'].each (item) =>
+      @col.addItem new Buttons.Toggle({label:item})
     
     @hueData.addEvent 'change',  @update
     @saturationData.addEvent 'change',  @update

@@ -1,14 +1,44 @@
-.box
+.box.docindex
+  .legend
+    %h3
+      Legend
+    %p
+      %span.extends >
+      Extends
+    %p
+      %span.implements +
+      Implements
+    %p
+      %span.function ~
+      Function
+    %p
+      %span.attribute #
+      Attribute
+    %p
+      %span.event ×
+      Event
+    %p.inherited
+      %span.function ~
+      Inherited Function
+    %p.inherited
+      %span.attribute #
+      Inherited Attribute
+    %p.inherited
+      %span.event ×
+      Inherited Event
+      
   %ul
-    - Dir.entries('../Docs').each do |dir|
-      - if not dir =~ /^\./
+    - Dir.entries('Docs').sort.each do |dir|
+      - if not dir =~ /^\./ and File.directory? 'Docs/'+dir
         %li.dir
-          %span
-            = dir
           %ul
-            - Dir.entries("../Docs/#{dir}").each do |file|
+            %li.file
+              %span
+                = dir
+            - Dir.entries("Docs/#{dir}").sort.each do |file|
               - if not file =~ /^\./
                 %li.file
-                  %a{:href=>"/docs/#{dir}/#{file}"} 
+                  %a{:href=>"/reference/#{dir}/#{file}"} 
                     = file
     .clear
+

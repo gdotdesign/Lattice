@@ -8,13 +8,12 @@ description: Color data element. ( color picker )
 license: MIT-style license.
 
 requires: 
-  - GDotUI
   - Data.Abstract
   - Data.Number
   - Data.Select 
   - Interfaces.Children
-  - Interfaces.Size
   - Interfaces.Enabled
+  - Interfaces.Size
 
 provides: Data.Unit
 
@@ -48,14 +47,14 @@ UnitList = {
 Data.Unit = new Class {
   Extends:Data.Abstract
   Implements: [
-    Interfaces.Enabled
     Interfaces.Children 
+    Interfaces.Enabled
     Interfaces.Size
   ]
   Binds: ['update']
   Attributes: {
     class: {
-      value: GDotUI.Theme.Unit.class
+      value: Lattice.buildClass 'unit'
     }
     value: {
       setter: (value) ->
@@ -72,14 +71,12 @@ Data.Unit = new Class {
   update: ->
     @fireEvent 'change', String.from @number.value+@sel.get('value')
   create: ->
-    @addEvent 'sizeChange', ( ->
+    @addEvent 'sizeChange', =>
       @number.set 'size', @size-@sel.get('size')
-    ).bind @
     @number = new Data.Number {range:[-50,50],reset: on, steps: [100]}
     @sel = new Data.Select({size: 80})
-    Object.each UnitList,((item) ->
+    Object.each UnitList, (item) =>
       @sel.addItem new Iterable.ListItem({label:item,removeable:false,draggable:false})
-    ).bind @
     @sel.set 'value', 'px'
 
     @number.addEvent 'change', @update

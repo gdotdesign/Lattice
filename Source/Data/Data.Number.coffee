@@ -7,7 +7,9 @@ description: Number data element.
 
 license: MIT-style license.
 
-requires: [Data.Abstract, Core.Slider, GDotUI]
+requires: 
+  - Data.Abstract
+  - Core.Slider
 
 provides: Data.Number
 
@@ -17,26 +19,20 @@ Data.Number = new Class {
   Extends: Core.Slider
   Attributes: {
     class: {
-      value: GDotUI.Theme.Number.classes.base
-    }
-    bar: {
-      value: GDotUI.Theme.Number.classes.bar
-    }
-    text: {
-      value: GDotUI.Theme.Number.classes.text
-      setter: (value, old) ->
-        @textLabel.removeClass old
-        @textLabel.addClass value
+      value: Lattice.buildClass 'number'
+      setter: (value, old, self) ->
+        self::parent.call @, value, old, self::parent
+        @textLabel.replaceClass "#{value}-text", "#{old}-text"
         value
     }
     range: {
-      value: GDotUI.Theme.Number.range
+      value: 0
     }
     reset: {
-      value: GDotUI.Theme.Number.reset
+      value: true
     }
     steps: {
-      value: GDotUI.Theme.Number.steps
+      value: 100
     }
     label: {
       value: null
@@ -53,9 +49,8 @@ Data.Number = new Class {
       top: 0
     }
     @base.grab @textLabel
-    @addEvent 'step',( (e) ->
+    @addEvent 'step', (e) =>
       @fireEvent 'change', e
-    ).bind @
   update: ->
     @textLabel.set 'text', if @label? then @label + " : " + @value else @value
 }

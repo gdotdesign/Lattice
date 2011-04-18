@@ -7,18 +7,22 @@ description: Pickers for Data classes.
 
 license: MIT-style license.
 
-requires: [Core.Picker, Data.Color, Data.Number, Data.Text, Data.Date, Data.Time, Data.DateTime, GDotUI]
+requires: 
+  - Core.Picker
+  - Data.Color
+  - Data.Number
+  - Data.Text
+  - Data.Date
+  - Data.Time
+  - Data.DateTime
 
 provides: [Pickers.Base, Pickers.Color, Pickers.Number, Pickers.Text, Pickers.Time, Pickers.Date, Pickers.DateTime ] 
 
 ...
 ###
 Pickers.Base = new Class {
+  Extends: Core.Picker
   Delegates:{
-    picker:['attach'
-            'detach'
-            'show'
-            ]
     data: ['set']
   }
   Attributes: {
@@ -26,13 +30,11 @@ Pickers.Base = new Class {
       value: null
     }
   }
-  update: ->
-  initialize: (options) ->
-    @setAttributes options
-    @picker = new Core.Picker()
-    @data = new Data[@type]()
-    @picker.set 'content', @data
-    @
+  show: (e,auto) ->
+    if @data is undefined
+      @data = new Data[@type]()
+      @set 'content', @data
+    @parent e, auto
 }
 Pickers.Color = new Pickers.Base {type:'ColorWheel'}
 Pickers.Number = new Pickers.Base {type:'Number'}

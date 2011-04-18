@@ -8,7 +8,6 @@ description: ColorWheel data element. ( color picker )
 license: MIT-style license.
 
 requires: 
-  - GDotUI
   - Data.Abstract
   - Data.Color
   - Interfaces.Children
@@ -22,30 +21,28 @@ provides: Data.ColorWheel
 Data.ColorWheel = new Class {
   Extends: Data.Abstract
   Implements: [
-    Interfaces.Enabled
     Interfaces.Children
+    Interfaces.Enabled
     Interfaces.Size
   ]
   Attributes: {
     class: {
-      value: GDotUI.Theme.Color.class
+      value: Lattice.buildClass 'color'
     }
     value: {
       setter: (value) ->
         @colorData.set 'value', value
     }
     wrapperClass: {
-      value: GDotUI.Theme.Color.wrapper
+      value: 'wrapper'
       setter: (value, old) ->
-        @wrapper.removeClass old
-        @wrapper.addClass value
+        @wrapper.replaceClass "#{@class}-#{value}", "#{@class}-#{old}"
         value
     }
     knobClass: {
       value: 'xyknob'
       setter: (value, old) ->
-        @knob.removeClass old
-        @knob.addClass value
+        @knob.replaceClass "#{@class}-#{value}", "#{@class}-#{old}"
         value
     }
   }
@@ -63,21 +60,19 @@ Data.ColorWheel = new Class {
       }
       
     @colorData = new Data.Color()
-    @colorData.addEvent 'change', ( (e)->
+    @colorData.addEvent 'change', (e) =>
       @fireEvent 'change', e
-    ).bind @
     
     @base.adopt @wrapper
 
-    @colorData.lightnessData.addEvent 'change',( (step) ->
+    @colorData.lightnessData.addEvent 'change', (step) =>
       @hslacone.setStyle 'opacity',step/100
-    ).bind @
-    @colorData.hueData.addEvent 'change', ((value) ->
+
+    @colorData.hueData.addEvent 'change', (value) =>
       @positionKnob value, @colorData.get('saturation')
-    ).bind @  
-    @colorData.saturationData.addEvent 'change', ((value) ->
+
+    @colorData.saturationData.addEvent 'change', (value) =>
       @positionKnob @colorData.get('hue'), value
-    ).bind @
     
     @background.setStyles {
       'position': 'absolute'
@@ -90,10 +85,9 @@ Data.ColorWheel = new Class {
     }
     
     @xy = new Drag.Move @knob
-    @xy.addEvent 'beforeStart',((el,e) ->
-        @lastPosition = el.getPosition(@wrapper)
-      ).bind @
-    @xy.addEvent 'drag', ((el,e) ->
+    @xy.addEvent 'beforeStart', (el,e) =>
+      @lastPosition = el.getPosition(@wrapper)
+    @xy.addEvent 'drag', (el,e) =>
       if @enabled
         position = el.getPosition(@wrapper)
         
@@ -117,7 +111,6 @@ Data.ColorWheel = new Class {
         @colorData.set 'saturation', @saturation
       else
         el.setPosition @lastPosition
-    ).bind @
     
     @wrapper.adopt @background, @hslacone, @knob
     @addChild @colorData

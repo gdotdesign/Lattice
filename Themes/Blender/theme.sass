@@ -1,229 +1,240 @@
-@import ../Chrome/_mixins.sass
-@import blender-layout.sass
-@import _rules.sass
-@import color.sass
-@import date.sass
 @import url(http://fonts.googleapis.com/css?family=Ubuntu:regular,bold,italic)
 
-$width: 200px
-$minWidth: 85px
-dl
-  :clear both
-  :height 30px
-  :margin 0
-dt
-  :width 200px
-  :float left
-dt
-  :margin-top 10px
-dd
-  :float right
-  :margin 0
-  :padding 0
-  :text-align left
-label
-  :margin 5px
-  :font-size 12px
-  :color #333
-fieldset
-  +basic_style
-  :margin-bottom 10px
-  :text-align left
-  :border-color #666
-  legend
-    :font-size 14px
-    :font-weight bold
-    :color #333
-    :padding 0 15px 0 15px
+@import _mixins.sass
+@import _rules.sass
+@import _buttons.sass
+@import _slider&number.sass
+@import _color.sass
+@import _dialogs.sass
+@import _layout.sass
 
-.table, .data-list
-  tr:nth-child(odd) 
-    :background-color #D3DCED
-  tr:nth-child(even) 
-    :background-color #C8CFDE
-  tr:first-child
-    td
-      :font-weight bold
-      :background-color #eee
-      > input
-        :font-weight bold
-  tr
-    td:first-child
-      :border none
-  tr
-    td
-      :border-left 1px solid #999
-      :width 60px
-      :height 20px
-      :text-align center
-      > input
-        :width inherit
-        :height inherit
-        :outline none
-        :border none !important
-        +round_full(0)
-        :margin 0
-        :padding 0
-        :min-width 0
-        +box_shadow(0,0,0,transparent)
-        :background-color transparent
-
-.slot .selected, .select .text, .pushgroup, .button:hover, .float .handle, .float .bottom, .push, .toggler .sep
-  +linear_gradient(#535353,#373737)
+.#{$prefix}-table-add, .#{$prefix}-table-remove
+  @extend .#{$prefix}-icon
+  :line-height 15px
+  :text-align center
+  :font-size 22px
+  :text-shadow 0 1px 3px rgba(0,0,0,0.4)
+  :color $colorLight
   
-.slider.horizontal .progress
-  +linear_gradient(#979797,#7b7b7b)
-.slider.vertical .progress
-  +linear_gradient_hor(#7b7b7b,#979797)
-.slider.horizontal
-  +linear_gradient(#565656,#5c5c5c)
-.slider.vertical
-  +linear_gradient_hor(#5c5c5c,#565656)
-.number.horizontal
-  +linear_gradient(#979797,#7b7b7b)
-.select .text:active 
-  +linear_gradient(#373737,#535353)
-.select .text:hover, .icon:hover
-  +linear_gradient(#696969,#454545)
-.button, .icon, .number .progress
-  +linear_gradient(#898989,#6a6a6a)
-.select-item:hover, .icon:active, .push.pushed, .button:active, .toggler .on, .toggler .off
-  +linear_gradient(#638dcf,#4771b3)
-
-.select.disabled
-  :cursor auto
-.select.disabled .text
-  +linear_gradient_imp(#535353,#373737)
-
-.dialog-prompt
-  :background-color #626262
+.#{$prefix}-table
+  @extend .basic
+  :padding 2px
+  :border-spacing 1px
   input
-    +basic_style
-    :width $width
-    :-webkit-user-select auto
-    :background-color #A3A3A3
-    :font-family Sans
-    :font-size 12px
-    :height 22px
-    :color #1c1c1c
-.dialog-prompt-label
-  :color #1c1c1c
-  :margin
-    :left 7px
-    :bottom 2px
-    :top 7px
-  :font-size 12px
-
-.button.disabled, .icon.disabled, .icon.supressed
-  +linear_gradient_imp(#898989,#6a6a6a)
-.button.disabled
-  :color #212121 !important
-
-.slot, textarea, input[type=text], .select, .icon, .pushgroup, .push, .toggler, .button, .number, .slider, .unit-pick, .dialog-prompt
-  +basic_style
-
-.picker > div:first-child
-  +box_shadow(0,0,0,transparent)
-  :margin-bottom 5px
-
-.unit-pick .select, .select .icon, .pushgroup .push
-  :margin 0
-  :border none
-  +box_shadow(0,0,0,transparent)  
-
-.button
-  :overflow hidden
-  :white-space nowrap
-  :width $width
-  :min-width $minWidth
-  :height 22px
-  :line-height 22px
-  :text-align center
-  :cursor pointer
-  &:hover
-    :color #eee
-  :color #212121
-.slot
-  :height 100px
-  :width 40px
-  .list
-    .list-item
-      :color #555
-    :-webkit-transition-duration 0.3s
-  .selected
-    :border
-      :top 1px solid #212121
-      :bottom 1px solid #212121
-    :color #f5f5f5 !important
-    :background-color #333
+    :text-align center
+    :border 0
+    :margin 0
+    :padding 0
+    :line-height $height
+  td
+    :width 85px
+    :overflow hidden
+    :height $height
+    :text-align center
+    :line-height $height
+    :background-color $colorLight
+    :overflow hidden
+    input
+      :font-family Ubuntu
+      :font-size 12px
     
-.list-item
-  :padding 5px
-  :text-align center
+.#{$prefix}-icon-group    
+  .#{$prefix}-icon
+    :margin 0
+    
+.#{$prefix}-list-group
+  @extend .basicSize
+  @extend .basic
+  .#{$prefix}-list
+    @extend .nobasic
+  .#{$prefix}-list:first-child
+    :border none
+    +round(5px,0,5px,0)
+  .#{$prefix}-list:last-child
+    +round(0,5px,0,5px)
 
-
-textarea, input[type=text]
-  :min-width $minWidth
+.#{$prefix}-time, .#{$prefix}-date, .#{$prefix}-date-time
   :width $width
-  :background-color #A3A3A3
-  :font-family Sans
+  @extend .basic
+  :height 100px
+  :cursor pointer
+  .#{$prefix}-slot
+    @extend .nobasic
+    :background-color transparent
+    .#{$prefix}-list
+      :background-color transparent
+    +round_full($borderRadius)
+    :float left
+
+.#{$prefix}-slot
+  @extend .basic
+  :height 100px
+  :width $width
+  .#{$prefix}-list
+    :width auto
+    .#{$prefix}-list-item
+      :color $colorDark
+      :text-align center
+    @extend .nobasic
+    :-webkit-transition-duration 0.3s
+    
+.#{$prefix}-list-selected
+  @extend .blue-gradient
+  :background-color $blue
+  :border
+    :top 1px solid $border
+    :bottom 1px solid $border
+  :color $colorLight !important
+
+.#{$prefix}-checkbox
+  @extend .basicSize
   :font-size 12px
-  :padding 6px
-  :color #1c1c1c
-  :resize none
-  -webkit-box-sizing: border-box 
-  -moz-box-sizing: border-box  
-  box-sizing: border-box
-  :-webkit-user-select auto
+  :cursor pointer
+  :-webkit-user-select none
+  &.checked
+    :color $colorLight
+    .#{$prefix}-checkbox-sign
+      &:before
+        :content '\00A0\221A'
+  .#{$prefix}-checkbox-sign
+    :width $height - 7px
+    :height $height - 7px
+    @extend .basic
+    @extend .dark-on-light
+    :margin 2px 5px
+    :float left
+    &:before
+      :content ''
+      :font-weight bold
+      :font-size 18px
+      :position relative
+      :top -6px
+      :left -2px
+      :color $colorLight
+      
+.#{$prefix}-icon
+  @extend .basic
+  @extend .light-on-dark
+  @extend .light-gradient
+  &:hover
+    @extend .lighter-gradient
+  &:active
+    @extend .darker-gradient
+  :width $height
+  :height $height
+  :background-repeat no-repeat
+  :background-position center center
+  :cursor pointer
 
-.overlay
-  :background-color rgba(0,0,0,0.6)
+.#{$prefix}-list-item, .#{$prefix}-menu-list-item
+  :clear both
+  :height 20px
+  :color $colorLight
+  :font-size 12px
+  :line-height 20px
+  :cursor pointer 
+  .#{$prefix}-list-item-title, .#{$prefix}-menu-list-item-title
+    :margin-left 5px
+  &:hover
+    :background-color $blue
+    @extend .blue-gradient
+    :color $colorDark
+    
+.#{$prefix}-menu-list-item  
+  .#{$prefix}-menu-list-item-title
+    :margin-right 10px
+  > div:last-child
+    :margin-right 5px
 
-.unit-pick
+.#{$prefix}-menu-list-item-icon
+  :width 20px
+  :height 20px
+  :background-repeat no-repeat
+  :background-position center center
+    
+.#{$prefix}-list
+  @extend .basic
+  :width $width
+  
+.#{$prefix}-picker > *:first-child
+  @extend .nobasic
+
+.#{$prefix}-textarea
+  @extend .basic
+  @extend .light-igradient
+  @extend .basicSize
+  :background-color $light
+  :color $colorDark
+  textarea
+    :font-size 12px
+    :font-family Ubuntu
+    :padding 0 5px
+    :line-height $height
+    :border none
+    :background-color transparent
+    :-webkit-user-select auto
+    :-webkit-background-clip padding-box
+    :resize none
+    :display block
+    :margin 0
+
+.#{$prefix}-overlay
+  :background-color rgba(0,0,0,0.3)
+
+.#{$prefix}-toggle-group
+  @extend .basic
+  @extend .basicSize
+  .#{$prefix}-button-toggle:first-child
+    +round($borderRadius,0,$borderRadius,0)
+  .#{$prefix}-button-toggle:last-child
+    +round(0,$borderRadius,0,$borderRadius)
+  .#{$prefix}-button-toggle:last-child
+    :border-right none
+  .#{$prefix}-button-toggle
+    @extend .nobasic
+    :float left
+    +round_full(0)
+  
+
+.#{$prefix}-picker
+  :z-index 99
+  :padding 1px
+  :background-color $darker
+  +box_shadow(0,0,8px,rgba(0,0,0,0.6))
+  :background-color rgba(0,0,0,0.8)
+
+.#{$prefix}-unit
+  @extend .basic
   :width $width
   :min-width 170px
-  :height 20px
-  .number, .select
+  :height $height
+  .#{$prefix}-number, .#{$prefix}-select
     :float left
-  .number
-    :margin 0
-    +round(5px,0,5px,0)
-    .text
-      :border none
+    :height $height
+  .#{$prefix}-number
+    @extend .nobasic
+    +round($borderRadius,0,$borderRadius,0)
+    .#{$prefix}-number-text
+      @extend .nobasic
     +box_shadow(0,0,0,transparent)
-    .progress
-      +round(5px,0,5px,0)
-  .select
-    +round(0,5px,0,5px)
-    .text
-      +round(0,5px,0,5px)
-.tip
-  :color #f5f5f5
-  :padding 6px
-  :font-size 12px
+    .#{$prefix}-slider-progress
+      +round($borderRadius,0,$borderRadius,0)
+  .#{$prefix}-select
+    @extend .nobasic
+    +round(0,$borderRadius,0,$borderRadius)
+    .#{$prefix}-select-text
+      +round(0,$borderRadius,0,$borderRadius)
 
-
-.picker, .tip
-  :z-index 99
-  :background-color rgba(20,20,20,0.7)
-  +round_full(5px)
-  +box_shadow(0,0,8px,rgba(0,0,0,0.6))
-
-
-
-.select-list
-  :margin-top 5px
-.select-item
-  :margin 0 1px
-  :cursor pointer
-  :text-align left
-  :height 12px
-  :padding 4px 6px
-  :color #f5f5f5
-  :font-size 12px
+.#{$prefix}-select
+  @extend .basic
+  @extend .basicSize
+  @extend .dark-on-light
+  @extend .darker-gradient
   &:hover
-    :color #1c1c1c
-.select
+    @extend .dark-gradient
+  &:active
+    @extend .darker-igradient
+    :color $colorLight
   :min-width 80px
   &:after
     :content ''
@@ -235,7 +246,7 @@ textarea, input[type=text]
     height: 0
     border-left: 4px solid transparent
     border-right: 4px solid transparent
-    border-bottom: 4px solid #A3A3A3
+    border-bottom: 4px solid $colorLight
   &:before
     :content ''
     :z-index 1
@@ -246,170 +257,24 @@ textarea, input[type=text]
     height: 0
     border-left: 4px solid transparent
     border-right: 4px solid transparent
-    border-top: 4px solid #A3A3A3
-  .text
-    +round_full(5px)
+    border-top: 4px solid $colorLight
+  .#{$prefix}-select-text
+    +round_full($borderRadius)
     :padding-left 15px
   :cursor pointer
   :line-height 21px
-  :color #f5f5f5
-  .icon
+  :color $colorLight
+  .#{$prefix}-select-add, .#{$prefix}-select-remove
+    @extend .#{$prefix}-icon
+    @extend .nobasic
     :line-height 15px
     :text-align center
     :font-size 22px
-    :color #fff
-    +round_full(0)
-    &.remove
-      +round(0,5px,0,5px)   
+    :color $colorLight
+    &.#{$prefix}-select-remove
+      +round(0,$borderRadius,0,$borderRadius)   
     :float right
-    :width 20px
-    :height 20px
+    :width $height
+    :height $height
     :border none
-    :border-left 1px solid #1c1c1c
-  :height 20px
-  :width $width
-  :min-width $minWidth
-
-.icon
-  :background-color #898989
-  :background-repeat no-repeat
-  :background-position center center
-  :width 30px
-  :height 30px
-  :cursor pointer
-  &.disabled
-    :background-color #898989 !important
-  &:hover
-    :background-color #9E9E9E
-  &:active
-    :background-color #696969
-
-.float
-  +round_full(5px)
-  +box_shadow(0,0,8px,rgba(0,0,0,0.6))
-  .handle, .bottom
-    :height 20px
-  .controls
-    :position absolute
-    :top 0
-    :right 0
-  .icongroup
-    :width 40px !important
-  .icon
-    :border none
-    +box_shadow(0,0,0,0)
-    :margin 0
-    :float left
-    :width 20px
-    :height 20px
-  .slider
-    :position absolute !important
-    :right -20px
-    :top -6px
-    :height 100px
-
-.disabled
-  :opacity 0.5
-
-.pushgroup
-  :width $width
-  :min-width $minWidth
-  :height 22px
-  .push:first-child
-    +round(5px,0,5px,0)
-  .push:last-child
-    +round(0,5px,0,5px)
-  .push:last-child
-    :border-right none
-  .push
-    :float left
-    +round_full(0)
-.push
-  :width $width
-  :min-width $minWidth
-  :color #f5f5f5
-  :height 22px
-  :text-align center
-  :line-height 22px
-  :cursor pointer
-  &.pushed
-    :color #1c1c1c
-
-.toggler
-  :width $width
-  :min-width $minWidth
-  :height 22px
-  :overflow hidden
-  :cursor pointer
-  .on
-    +round(5px,0,5px,0)
-  .off
-    +round(0,5px,0,5px)
-  .on, .off, .sep
-    :font-size 12px
-    :line-height 22px
-    :text-align center
-    :width 50px
-    :color #1c1c1c
-  .sep
-    +round_full(5px)
-  
-.number
-  &:after
-    :content ''
-    :z-index 1
-    :position absolute
-    :top 6px
-    :left 5px
-    width: 0
-    height: 0
-    border-top: 4px solid transparent
-    border-bottom: 4px solid transparent
-    border-right: 4px solid #494949
-  &:before
-    :content ''
-    :z-index 1
-    :position absolute
-    :top 6px
-    :right 5px
-    width: 0
-    height: 0
-    border-top: 4px solid transparent
-    border-bottom: 4px solid transparent
-    border-left: 4px solid #494949
-  :border none
-  &.horizontal
-    :width $width
-    :min-width $minWidth
-    :height 20px
-  &.vertical
-    :width 20px
-    :height $width
-    :min-height $minWidth
-
-.slider
-  &.horizontal
-    :width $width
-    :min-width $minWidth
-    :height 11px
-  &.vertical
-    :width 11px
-    :height $width
-    :min-height $minWidth
-    
-.slider, .number
-  :background-color #565656
-  :cursor move
-  :overflow hidden
-  .progress
-    +round_full(5px)
-  .text, input
-    :color #1c1c1c
-    :font-size 12px
-    :text-align center
-    :line-height 20px
-    +round_full(5px)
-    :border 1px solid #555
-  input
-    +round_full(10px)
-    :background-color rgba(0,0,0,0.5)
+    :border-left 1px solid $border

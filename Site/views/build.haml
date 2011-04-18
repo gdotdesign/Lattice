@@ -1,13 +1,13 @@
-- p = Packager.new("../package.yml")
+- p = Packager.new("package.yml")
 .box
   %h1
     Download
   %p
-    You are downloading G.UI.
+    You are downloading Lattice.
   %p
     This page will generate a single JavaScript file, containing the chosen components.
   %hr
-  %form#packager{:method=>"post", :action=>"/build"}
+  %form#packager{:method=>"post", :action=>"/download"}
     .package{:id=>"package-G.UI"}
       %table
         %tr
@@ -22,6 +22,7 @@
           %tr.check
             %td.chekk
               .checkbox
+                .sign
               %input{:type=>"checkbox", :style=>"display:none", :value=>comp.name, :"data-depends"=>comp.requires.join(', '), :name=>"files[]"}
             %td.name
               = comp.name

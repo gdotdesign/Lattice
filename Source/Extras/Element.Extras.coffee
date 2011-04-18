@@ -93,46 +93,55 @@ Element.Properties.checked = {
       window.removeEvent 'outer', fn
   }
   Element.implement {
+    replaceClass: (newClass,oldClass) ->
+      @removeClass oldClass
+      @addClass newClass
     oldGrab: Element::grab
     oldInject: Element::inject
     oldAdopt: Element::adopt
     oldPosition: Element::position
     position: (options) ->
-      op = {
-        relativeTo: document.body
-        position: {x:'center',y:'center'}
-      }
-      options = Object.merge op, options
-      winsize = window.getSize()
-      winscroll = window.getScroll()
-      asize = options.relativeTo.getSize()
-      position = options.relativeTo.getPosition()
-      size = @getSize()
-      if options.position.x is 'auto' 
-        if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then options.position.x = 'left' else options.position.x = 'right'          
-      if options.position.y is 'auto'
-        if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then options.position.y = 'top' else options.position.y = 'bottom'
-      
-      
-      ofa = {x:0,y:0}
-      switch options.position.x
-        when 'center'
-          if options.position.y isnt 'center'
-            ofa.x = -size.x/2
-        when 'left'
-          ofa.x = -(options.offset+size.x)
-        when 'right'
-          ofa.x = options.offset
-      switch options.position.y
-        when 'center'
-          if options.position.x isnt 'center'
-            ofa.y = -size.y/2
-        when 'top'
-          ofa.y = -(options.offset+size.y)
-        when 'bottom'
-          ofa.y = options.offset
-       options.offset = ofa
-       @oldPosition.attempt options, @
+      if options.relativeTo isnt undefined
+        op = {
+          relativeTo: document.body
+          position: {x:'center',y:'center'}
+        }
+        options = Object.merge op, options
+        winsize = window.getSize()
+        winscroll = window.getScroll()
+        asize = options.relativeTo.getSize()
+        position = options.relativeTo.getPosition()
+        size = @getSize()
+        if options.position.x is 'auto' 
+          if (position.x+size.x+asize.x) > (winsize.x-winscroll.x) then options.position.x = 'left' else options.position.x = 'right'          
+        if options.position.y is 'auto'
+          if (position.y+size.y+asize.y) > (winsize.y-winscroll.y) then options.position.y = 'top' else options.position.y = 'bottom'
+        
+        
+        ofa = {x:0,y:0}
+        switch options.position.x
+          when 'center'
+            if options.position.y isnt 'center'
+              ofa.x = -size.x/2
+          when 'left'
+            ofa.x = -(options.offset+size.x)
+          when 'right'
+            ofa.x = options.offset
+        switch options.position.y
+          when 'center'
+            if options.position.x isnt 'center'
+              ofa.y = -size.y/2
+          when 'top'
+            ofa.y = -(options.offset+size.y)
+          when 'bottom'
+            ofa.y = options.offset
+         options.offset = ofa
+        else
+          options.relativeTo = document.body
+          options.position = {x:'center',y:'center'}
+          if typeOf options.offset isnt 'object'
+            options.offset = {x:0,y:0}
+        @oldPosition.attempt options, @
     removeTransition: ->
       @store 'transition', @getStyle( '-webkit-transition-duration' )
       @setStyle '-webkit-transition-duration', '0'

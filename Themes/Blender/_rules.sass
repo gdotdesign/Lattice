@@ -1,9 +1,108 @@
-=basic_style()
-  :border 1px solid #555
+$width: 200px
+$minWidth: 85px
+$height: 20px
+$height2: 10px
+
+$colorDark: #212121
+$colorLight: #FDFDFD
+
+$dark: #3E4D5E
+$darker: darken($dark,8%)
+$middle: lighten($dark,15%)
+$light: lighten($dark,25%)
+$lighter: lighten($light,10%)
+$blue: #059F00
+$blue: #FF7F00
+$blue: #5680c2
+
+$red: #cb4b16
+
+$border: darken($dark,8%)
+$border: darken($dark,20%)
+$borderRadius: 3px
+
+$prefix: blender
+
+.disabled
+  *.disabled
+    :opacity 1 
+  :opacity 0.4    
+    
+.basicSize
+  :width $width
+  :min-width $minWidth
+  :height $height
+  :line-height $height
+  
+.basic
+  :border 1px solid $border
   :font-size 12px
   :margin 5px
   :color #666
-  :background-color #727272
-  +round_full(5px)
-  +box_shadow(0,1px,2px,#878787)
+  :background-color $dark
+  +round_full($borderRadius)
+  +box_shadow(0,1px,2px,rgba(0,0,0,0.15))
   :-webkit-user-select none
+  :-webkit-background-clip padding-box
+
+.nobasic
+  :margin 0
+  :border none
+  +round_full(0)
+  +box_shadow(0,0,0,transparent)
+
+.dark-on-light
+  :color $colorLight
+  :background-color $darker
+  &:hover
+    :background-color $dark
+  &:active
+    :background-color $light
+    :color $colorDark
+    
+.light-on-dark
+  :color $colorDark
+  :background-color $light
+  &:hover
+    :background-color $lighter
+  &:active
+    :background-color $dark
+    :color $colorLight
+
+.blue-gradient
+  +linear_gradient(lighten($blue,3%), darken($blue,3%))
+.blue-igradient
+  +linear_gradient(darken($blue,3%), lighten($blue,3%))
+
+.red-gradient
+  +linear_gradient(lighten($red,3%), darken($red,3%))
+.red-darker-gradient
+  +linear_gradient(darken($red,6%), darken($red,12%))
+.red-darker-igradient
+  +linear_gradient(darken($red,12%), darken($red,6%))
+
+.light-gradient
+  +linear_gradient($lighter, $light)
+.lighter-gradient
+  +linear_gradient(lighten($lighter,3%), lighten($light,3%))
+
+.lighter-igradient
+  +linear_gradient(lighten($light,3%), lighten($lighter,3%))
+.light-igradient
+  +linear_gradient($light, $lighter)
+
+.middle-gradient
+  +linear_gradient(lighten($middle,3%), darken($middle,3%))
+.middle-igradient
+  +linear_gradient(darken($middle,3%), lighten($middle,3%))
+  
+.darker-gradient
+  +linear_gradient($dark, $darker)
+.dark-gradient
+  +linear_gradient(lighten($dark,5%), lighten($darker,5%))
+    
+.darker-igradient
+  +linear_gradient($darker, $dark)
+.dark-igradient
+  +linear_gradient(lighten($darker,5%), lighten($dark,5%))
+

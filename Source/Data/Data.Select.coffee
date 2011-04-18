@@ -8,7 +8,6 @@ description: Select Element
 license: MIT-style license.
 
 requires:
-  - GDotUI
   - Core.Picker
   - Data.Abstract
   - Dialog.Prompt
@@ -26,12 +25,20 @@ Data.Select = new Class {
   Extends: Data.Abstract
   Implements:[
     Interfaces.Controls
+    Interfaces.Children
     Interfaces.Enabled
     Interfaces.Size
-    Interfaces.Children]
+  ]
   Attributes: {
     class: {
-      value: GDotUI.Theme.Select.class
+      value: Lattice.buildClass 'select'
+      setter: (value, old, self) ->
+        self::parent.call @, value, old
+        @text.replaceClass "#{value}-text", "#{old}-text"
+        @removeIcon.set 'class', value+"-remove"
+        @addIcon.set 'class', value+"-add"
+        @list.set 'class', value+"-list"
+        value
     }
     default: {
       value: ''
@@ -50,55 +57,24 @@ Data.Select = new Class {
         if value
           @adoptChildren  @removeIcon, @addIcon
         else
-          document.id(@removeIcon).dispose()
-          document.id(@addIcon).dispose()
+          @removeChild @removeIcon
+          @removeChild @addIcon
         value
     }
     value: {
       setter: (value) ->
-        @list.set 'selected', @list.getItemFromTitle(value)
+        @list.set 'selected', @list.getItemFromLabel(value)
       getter: ->
         li = @list.get('selected')
         if li?
           li.label
     }
-    textClass: {
-      value: GDotUI.Theme.Select.textClass
-      setter: (value, old) ->
-        @text.removeClass old
-        @text.addClass value
-        value 
-    }
-    removeClass: {
-      value: GDotUI.Theme.Select.removeClass
-      setter: (value, old) ->
-        @removeIcon.base.removeClass old
-        @removeIcon.base.addClass value
-        value 
-    }
-    addClass: {
-      value: GDotUI.Theme.Select.addClass
-      setter: (value, old) ->
-        @addIcon.base.removeClass old
-        @addIcon.base.addClass value
-        value 
-    }
-    listClass: {
-      value: GDotUI.Theme.Select.listClass
-      setter: (value) ->
-        @list.set 'class', value
-    }
-    listItemClass: {
-      value: GDotUI.Theme.Select.listItemClass
-    }
   }
   ready: ->
     @set 'size', @size
   create: ->
-    
-    @addEvent 'sizeChange', ( ->
-      @list.base.setStyle 'width', if @size < @minSize then @minSize else @size
-    ).bind @
+    @addEvent 'sizeChange', =>
+      @list.setStyle 'width', if @size < @minSize then @minSize else @size
     
     @base.setStyle 'position', 'relative'
     @text = new Element 'div'
@@ -111,13 +87,13 @@ Data.Select = new Class {
       'z-index': 0
       overflow: 'hidden'
     }
-    @text.addEvent 'mousewheel', ((e)->
+    @text.addEvent 'mousewheel', (e) =>
       e.stop()
       index = @list.items.indexOf(@list.selected)+e.wheel
       if index < 0 then index = @list.items.length-1
       if index is @list.items.length then index = 0
       @list.set 'selected', @list.items[index]
-    ).bind @
+
     @addIcon = new Core.Icon()
     @addIcon.base.set 'text', '+'
     @removeIcon = new Core.Icon()
@@ -126,40 +102,36 @@ Data.Select = new Class {
       'z-index': '1'
       'position': 'relative'
     }
-    @removeIcon.addEvent 'invoked',( (el,e)->
+    @removeIcon.addEvent 'invoked', (el,e) =>
       e.stop()
       if @enabled
         @removeItem @list.get('selected')
         @text.set 'text', @default or ''
-    ).bind @
-    @addIcon.addEvent 'invoked',( (el,e)->
+    @addIcon.addEvent 'invoked', (el,e) =>
       e.stop()
       if @enabled
         @prompt.show()
-    ).bind @
     
     @picker = new Core.Picker({offset:0,position:{x:'center',y:'auto'}})
     @picker.attach @base, false
-    @base.addEvent 'click', ((e) ->
+    @base.addEvent 'click', (e) =>
       if @enabled
         @picker.show e
-    ).bind @
-    @list = new Iterable.List()
+    @list = new Iterable.List({class:Lattice.buildClass 'select-list'})
     @picker.set 'content', @list
     @base.adopt @text
     
     @prompt = new Dialog.Prompt();
     @prompt.set 'label', 'Add item:'
     @prompt.attach @base, false
-    @prompt.addEvent 'invoked', ((value) ->
+    @prompt.addEvent 'invoked', (value) =>
       if value
         item = new Iterable.ListItem {label:value,removeable:false,draggable:false}
         @addItem item
         @list.set 'selected', item
       @prompt.hide null, yes
-    ).bind @
     
-    @list.addEvent 'selectedChange', ( ->
+    @list.addEvent 'selectedChange', =>
       item = @list.selected
       if item?
         @text.set 'text', item.label
@@ -167,11 +139,10 @@ Data.Select = new Class {
       else
         @text.set 'text', ''
       @picker.hide null, yes
-    ).bind @
+
     @update()
     
   addItem: (item) ->
-    item.base.set 'class', @listItemClass
     @list.addItem item
   removeItem: (item) ->
     @list.removeItem item

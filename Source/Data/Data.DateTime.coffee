@@ -8,7 +8,6 @@ description:  Date & Time picker elements with Core.Slot-s
 license: MIT-style license.
 
 requires: 
-  - GDotUI
   - Core.Slot
   - Data.Abstract
   - Interfaces.Children
@@ -25,12 +24,13 @@ provides:
 Data.DateTime = new Class {
   Extends:Data.Abstract
   Implements: [
-    Interfaces.Enabled
     Interfaces.Children
+    Interfaces.Enabled
+    Interfaces.Size
   ]
   Attributes: {
     class: {
-      value: GDotUI.Theme.Date.DateTime.class
+      value: Lattice.buildClass 'date-time'
     }
     value: {
       value: new Date()
@@ -49,7 +49,7 @@ Data.DateTime = new Class {
     }
   }
   create: ->
-    @yearFrom = GDotUI.Theme.Date.yearFrom
+    @yearFrom = 1950
     if @get('date')
       @days = new Core.Slot()
       @month = new Core.Slot()
@@ -59,27 +59,22 @@ Data.DateTime = new Class {
       @minutes = new Core.Slot()
     @populate()
     if @get('time')
-      @hours.addEvent 'change', ( (item) ->
+      @hours.addEvent 'change', (item) =>
         @value.set 'hours', item.value
         @update()
-      ).bind @
-      @minutes.addEvent 'change', ( (item) ->
+      @minutes.addEvent 'change', (item) =>
         @value.set 'minutes', item.value
         @update()
-      ).bind @
     if @get('date')
-      @years.addEvent 'change', ( (item) ->
+      @years.addEvent 'change', (item) =>
         @value.set 'year', item.value
         @update()
-      ).bind @
-      @month.addEvent 'change', ( (item) ->
+      @month.addEvent 'change', (item) =>
         @value.set 'month', item.value
         @update()
-      ).bind @
-      @days.addEvent 'change', ( (item) ->
+      @days.addEvent 'change', (item) =>
         @value.set 'date', item.value
         @update()
-      ).bind @
     @
   populate: ->
     if @get('time')
@@ -98,13 +93,13 @@ Data.DateTime = new Class {
     if @get('date')
       i = 0
       while i < 30
-        item = new Iterable.ListItem {label:i+1,removeable:false}
+        item = new Iterable.ListItem {label:(if i<10 then '0'+i else i),removeable:false}
         item.value = i+1
         @days.addItem item
         i++
       i = 0
       while i < 12
-        item = new Iterable.ListItem {label:i+1,removeable:false}
+        item = new Iterable.ListItem {label:(if i<10 then '0'+i else i),removeable:false}
         item.value = i
         @month.addItem item
         i++
@@ -116,15 +111,22 @@ Data.DateTime = new Class {
         i++
   update: ->
     @fireEvent 'change', @value
+    buttonwidth = Math.floor(@size / @children.length)
+    @children.each (btn) ->
+      btn.set 'size', buttonwidth
+    if last = @children.getLast()
+      last.set 'size', @size-buttonwidth*(@children.length-1)
+    @updateSlots()
   ready: ->
     if @get('date')
       @adoptChildren @years, @month, @days
     if @get('time')
       @adoptChildren @hours, @minutes
+    @update()
   updateSlots: ->
-    if @get('date')
+    if @get('date') and @value
       cdays = @value.get 'lastdayofmonth'
-      listlength = @days.list.items.length
+      listlength = @days.list.children.length
       if cdays > listlength
         i = listlength+1
         while i <= cdays
@@ -135,20 +137,20 @@ Data.DateTime = new Class {
       else if cdays < listlength
         i = listlength
         while i > cdays
-          @days.list.removeItem @days.list.items[i-1]
+          @days.list.removeItem @days.list.children[i-1]
           i--
-      @days.list.set 'selected', @days.list.items[@value.get('date')-1]
-      @month.list.set 'selected', @month.list.items[@value.get('month')]
-      @years.list.set 'selected', @years.list.getItemFromTitle(@value.get('year'))
-    if @get('time')
-      @hours.list.set 'selected', @hours.list.items[@value.get('hours')]
-      @minutes.list.set 'selected', @minutes.list.items[@value.get('minutes')]
+      @days.list.set 'selected', @days.list.children[@value.get('date')-1]
+      @month.list.set 'selected', @month.list.children[@value.get('month')]
+      @years.list.set 'selected', @years.list.getItemFromLabel(@value.get('year'))
+    if @get('time') and @value
+      @hours.list.set 'selected', @hours.list.children[@value.get('hours')]
+      @minutes.list.set 'selected', @minutes.list.children[@value.get('minutes')]
 }
 Data.Time = new Class {
   Extends:Data.DateTime
   Attributes: {
     class: {
-      value: GDotUI.Theme.Date.Time.class
+      value: Lattice.buildClass 'time'
     }
     date: {
       value: no
@@ -159,7 +161,7 @@ Data.Date = new Class {
   Extends:Data.DateTime
   Attributes: {
     class: {
-      value: GDotUI.Theme.Date.class
+      value: Lattice.buildClass 'date'
     }
     time: {
       value: no

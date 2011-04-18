@@ -7,9 +7,6 @@ description:
 
 license: MIT-style license.
 
-requires: 
-  - GDotUI
-
 provides: Interfaces.Children
 
 ...
@@ -18,7 +15,7 @@ Interfaces.Children = new Class {
   _$Children: ->
     @children = []
   hasChild: (child) ->
-    if @children.indexOf child is -1 then no else yes
+    if @children.indexOf(child) >= 0 then yes else no
   adoptChildren: ->
     children = Array.from arguments 
     children.each (child) ->

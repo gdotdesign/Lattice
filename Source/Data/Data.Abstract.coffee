@@ -8,7 +8,6 @@ description: Abstract base class for data elements.
 license: MIT-style license.
 
 requires: 
-  - GDotUI
   - Core.Abstract
 
 provides: Data.Abstract

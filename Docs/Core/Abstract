@@ -1,23 +1,19 @@
 ---
 class: Core.Abstract
-description: |
-  "Abstract" class for Core elements to extend upon.
+description: Abstract base class for elements. This can be used by itself, but it should be extended.
+demo: false
 implements:
   - Events
-  - Options
   - Interfaces.Mux
 functions:
-  - initialize(options):
-    description: 'Initializez the class'
-    arguments:
-      - options:
-        description: 'options...'
-        type: object
-  - create():
-    description: 'reserved'
-  - ready():
-    description: 'Runs when the element is ready to make changes to it'
-  - toElement():
-    description: 'reserved'
+  create:
+    description: Runs after the interfaces are initialized. This function is for creating the child elements and for general setup of the class. This should be used it istead of initialize().
+  ready:
+    description: |
+      Runs after the base element insterted into the DOM. In this function the elements dimensions can be determined (i.e.: Element.getSize() won't return 0). It removes the domReady event from the element, this can be overriden by not calling parent().
+  update:
+    description: Runs each time one of the class attributes changes.
+  toElement:
+    description: Returns the "base" (Element) property of the class. This is for Mootools so $() and document.id can work.
 ...
 

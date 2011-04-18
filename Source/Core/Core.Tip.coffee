@@ -3,13 +3,13 @@
 
 name: Core.Tip
 
-description: Tip class
+description: Tip.
 
 license: MIT-style license.
 
 requires: 
   - Core.Abstract
-  - GDotUI
+  - Interfaces.Enabled
 
 provides: Core.Tip
 
@@ -24,7 +24,7 @@ Core.Tip = new Class {
   ]
   Attributes: {
     class: {
-      value: GDotUI.Theme.Tip.class
+      value: Lattice.buildClass 'tip'
     }
     label: {
       value: ''
@@ -73,11 +73,12 @@ Core.Tip = new Class {
       @over = false
       @hide()
   ready: ->
-    @base.position {
-      relativeTo: @attachedTo
-      position: @location
-      offset: @offset
-    }
+    if @attachedTo?
+      @base.position {
+        relativeTo: @attachedTo
+        position: @location
+        offset: @offset
+      }
   hide: ->
     @base.dispose()
   show: ->

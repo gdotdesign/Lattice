@@ -10,7 +10,6 @@ license: MIT-style license.
 provides: Interfaces.Controls
 
 requires: 
-  - GDotUI
   - Interfaces.Enabled
 
 ...

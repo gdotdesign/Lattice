@@ -1,33 +1,179 @@
 = haml :docindex, :layout=>false
+- if @class.demo != false
+  .box#demo
+    #demoleft
+      %h3
+        Demo
+    #demoright
+      %h3
+        Attributes
+    .clear
+  - if @class.demo == nil
+    - @class.demo = {}
+    - @class.demo["children"] = []
+  :javascript
+    window.addEvent('domready',function(){
+      el = new #{@class.name}()
+      $('demoleft').adopt(el)
+      a = #{@class.attributes.to_json}
+      children = #{@class.demo["children"].to_json}
+      children.each(function(item){
+        cls = eval(Object.keys(item)[0])
+        args = {}
+        Object.values(item)[0].each(function(it){
+          Object.merge(args,it)
+        })
+        el.addItem(new cls(args))
+      })
+      Object.each(a,function(value,key){  
+        if(value.show == undefined){
+          type = value.dtype || value.type
+          if(type == 'Select'){
+            d = new Data.Select({editable:false})
+            value.values.each(function(item){
+              d.addItem(new Iterable.ListItem({label:item}))
+            })
+            d.addEvent('change',function(e,v){
+              el.set(key,e);
+            })
+            d.set('value',value.default)
+            el.set(key,value.default)
+          }
+          if(type == 'Number'){
+            d = new Data.Number({label:key.capitalize()});
+            d.addEvent('change',function(e,v){
+              el.set(key,e);
+            })
+            d.set('value',value.default)
+            el.set(key,value.default)
+          }
+          if(type == 'String'){
+            d = new Data.Text();
+            d.addEvent('change',function(e,v){
+              el.set(key,e);
+            })
+            d.set('value',value.default)
+            el.set(key,value.default)
+          }
+          if(type == 'Boolean'){
+            d = new Core.Checkbox({label:key.capitalize()});
+            d.addEvent('invoked',function(e,v){
+              el.set(key,v);
+            })
+            d.set('state',value.default)
+            el.set(key,value.default)
+          }
+          $('demoright').adopt(d)
+        }
+      });
+    });
 .doc.box
-  %h1.class
-    = @stuff["class"]
-  %p
-    = @stuff["description"]
-  - if @stuff["implements"]
-    %h2.implements
-      Implements
-    %ul.imp
-      - @stuff["implements"].each do |imp|
-        %li
+  .classLegend
+    - if @class.extends
+      %p
+        %span.extends >
+        = @class.extends
+    - if @class.implements
+      - @class.implements.each do |imp|
+        %p
+          %span.implements +
           = imp
-  - if @stuff['functions']
+    - if @class.functions
+      - @class.functions.each do |imp|
+        %p{:class=>if imp[1]["inherited"] then 'inherited' end}
+          %span.function ~
+          = imp[0]
+    - if @class.events
+      - @class.events.each do |imp|
+        %p
+          %span.event ×
+          = imp.key(nil)
+    - if @class.attributes
+      - @class.attributes.each do |imp|
+        %p{:class=>if imp[1]["inherited"] then 'inherited' end}
+          %span.attribute #
+          = imp[0]
+  %h1.class
+    = @class.name
+  %p
+    = @class.description
+  - if @class.functions
     %ul
-      - @stuff["functions"].each do |func|
-        %li.function
-          %h3
-            Function:
+      - @class.functions.each do |func|
+        - args = ''
+        - if func[1]['arguments']
+          - func[1]['arguments'].each do |arg|
+            - args += ", #{arg.key(nil)}"
+        %li.function{:class=>if func[1]["inherited"] then 'inherited' end}
+          %h2
+            %span ~
+            #{func[0]}(#{args[2..args.length]})
+          %p
+            = func[1]['description']
+          -if func[1]['arguments']
+            %h4
+              Arguments
+            %ul.arguments
+              - func[1]['arguments'].each do |arg|
+                %li
+                  = arg.key(nil)
+                  :plain
+                    -
+                  %span.type
+                    ="(#{arg['type']})"
+                  = arg['description']
+  - if @class.events
+    %ul
+      - @class.events.each do |func|
+        - args = ''
+        - if func['arguments']
+          - func['arguments'].each do |arg|
+            - args += ", #{arg.key(nil)}" 
+        %li.event
+          %h2
+            %span × 
             = func.key(nil)
+            - if args != ''
+              \/ #{args[2..args.length]}
           %p
             = func['description']
           -if func['arguments']
             %h4
               Arguments
-            %ul.argument
+            %ul.arguments
               - func['arguments'].each do |arg|
                 %li
                   = arg.key(nil)
                   :plain
                     -
-                  ="(#{arg['type']})"
+                  %span.type
+                    ="(#{arg['type']})"
                   = arg['description']
+  - if @class.attributes
+    %ul
+      - @class.attributes.each do |imp|
+        %li.attribute{:class=>if imp[1]["inherited"] then 'inherited' end}
+          %h2
+            - if imp[1]["readonly"]
+              %span.readonly #
+            - else
+              %span #
+            #{imp[0]}
+          %p
+            %span.type 
+              (#{imp[1]["type"]})
+            =imp[1]["description"]
+:javascript
+  window.addEvent('domready',function(){
+    $$('li.inherited').each(function(el){
+      el.store('lastHeight', el.getSize().y)
+      el.setStyle('height',35)
+      el.addEvent('click',function(){
+        if(Number.from(this.getStyle('height')) == 35){
+          this.setStyle('height',this.retrieve('lastHeight'))
+        }else{
+          el.setStyle('height',35)
+        }
+      });
+    });
+  });

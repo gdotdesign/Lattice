@@ -1,5 +1,0 @@
----JS
-window.addEvent('domready', function(){
-  slider = new Core.Slider();
-  $$(".demo").grab(slider);
-});

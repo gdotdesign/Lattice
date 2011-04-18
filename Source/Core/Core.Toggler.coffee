@@ -3,12 +3,11 @@
 
 name: Core.Toggler
 
-description: iOs style checkboxes
+description: iOs style checkbox element.
 
 license: MIT-style license.
 
 requires: 
-  - GDotUI
   - Core.Abstract
   - Interfaces.Controls
   - Interfaces.Enabled
@@ -27,43 +26,28 @@ Core.Toggler = new Class {
   ]
   Attributes: {
     class: {
-      value: GDotUI.Theme.Toggler.class
+      value: Lattice.buildClass 'toggler'
+      setter: (value, old, self) ->
+        self::parent.call @, value, old
+        @onDiv.replaceClass "#{value}-on", "#{old}-on"
+        @offDiv.replaceClass "#{value}-off", "#{old}-off"
+        @separator.replaceClass "#{value}-separator", "#{old}-separator"
+        value
     }
     onLabel: {
-      value: GDotUI.Theme.Toggler.onText
+      value: 'ON'
       setter: (value) ->
         @onDiv.set 'text', value
     }
     offLabel: {
-      value: GDotUI.Theme.Toggler.offText
+      value: 'OFF'
       setter: (value) ->
         @offDiv.set 'text', value
-    }
-    onClass: {
-      value: GDotUI.Theme.Toggler.onClass
-      setter: (value, old) ->
-        @onDiv.removeClass old
-        @onDiv.addClass value
-        value
-    }
-    offClass: {
-      value: GDotUI.Theme.Toggler.offClass
-      setter: (value, old) ->
-        @offDiv.removeClass old
-        @offDiv.addClass value
-        value
-    }
-    separatorClass: {
-      value: GDotUI.Theme.Toggler.separatorClass
-      setter: (value, old) ->
-        @separator.removeClass old
-        @separator.addClass value
-        value
     }
     checked: {
       value: on
       setter: (value) ->
-        @fireEvent 'change', value
+        @fireEvent 'invoked', [@,value]
         value
     }
   }
@@ -91,12 +75,11 @@ Core.Toggler = new Class {
       'left': 0
     }
     
-    @base.addEvent 'click', ( ->
+    @base.addEvent 'click', =>
        if @enabled
          if @checked
           @set 'checked', no
          else
           @set 'checked', yes
-    ).bind @
     
 }

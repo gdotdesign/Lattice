@@ -3,13 +3,12 @@
 
 name: Interfaces.Draggable
 
-description: Porived dragging for elements that implements it.
+description: Provides dragging for elements that implements it.
 
 license: MIT-style license.
 
 provides: [Interfaces.Draggable, Drag.Float, Drag.Ghost]
 
-requires: [GDotUI]
 ...
 ###
 Drag.Float = new Class {
