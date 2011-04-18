@@ -1,0 +1,26 @@
+---
+class: Dialog.Prompt
+description: Promp dialog with a label, a text input and a button.
+extends: Dialog.Abstract
+attributes:
+  label: 
+    type: String
+    description: Label of the dialog.
+    default: Write something!
+  buttonLabel: 
+    type: String 
+    description: Label of the button on the dialog.
+    default: OK
+  class: 
+    show: false
+    type: String 
+    description: CSS Class of the element. 
+events:
+  - invoked:
+    description: Fires when the button is clicked.
+    arguments:
+      - value:
+        description: The value of the text input.
+        type: String
+...
+

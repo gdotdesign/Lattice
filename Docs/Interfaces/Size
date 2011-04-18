@@ -1,0 +1,15 @@
+---
+class: Interfaces.Size
+description: Adds size and minSize attributes to the elements, which are determined from the loaded CSS files with the elements CSS class.
+demo: false
+attributes:
+  minSize:
+    type: Number
+    description: Minimum size of the element
+    default: 85
+  size: 
+    type: Number
+    description: Size of the element
+    default: 200
+...
+

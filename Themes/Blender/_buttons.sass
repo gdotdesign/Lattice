@@ -1,0 +1,59 @@
+.#{$prefix}-button-key, .#{$prefix}-button, .#{$prefix}-button-toggle
+  @extend .basic
+  @extend .basicSize
+  :overflow hidden
+  :white-space nowrap
+  :text-align center
+  :cursor pointer
+
+.#{$prefix}-button-key, .#{$prefix}-button
+  @extend .light-on-dark
+
+.#{$prefix}-button
+  @extend .light-gradient
+  &:hover
+    @extend .lighter-gradient
+  &:active
+    @extend .darker-igradient
+  
+.#{$prefix}-button-toggle
+  :background-color $darker
+  :color $colorLight
+  @extend .darker-gradient
+  &:hover:not(.pushed)
+    :background-color $dark
+    @extend .dark-gradient
+  &.pushed
+    :color $colorDark
+    :background-color $blue
+    @extend .blue-igradient
+
+.#{$prefix}-toggler
+  @extend .basic
+  @extend .basicSize
+  @extend .darker-gradient
+  :cursor pointer
+  .#{$prefix}-toggler-on
+    +round($borderRadius,0,$borderRadius,0)
+  .#{$prefix}-toggler-off
+    +round(0,$borderRadius,0,$borderRadius)
+  .#{$prefix}-toggler-on, .#{$prefix}-toggler-off, .#{$prefix}-toggler-sep
+    :font-size 12px
+    :text-align center
+    :width $width/2
+    :color $colorLight
+  .#{$prefix}-toggler-separator
+    +round_full($borderRadius)
+    :background-color $light
+    @extend .light-gradient
+
+.#{$prefix}-button-key
+  @extend .light-igradient
+  &:hover
+    @extend .lighter-igradient
+  &.active
+    @extend .darker-igradient
+    :background-color $darker
+    :color $colorLight
+      
+

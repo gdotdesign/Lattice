@@ -1,0 +1,11 @@
+---
+class: Interfaces.Controls
+description: Adds show and hide methods to the element.
+demo: false
+functions:
+  show:
+    description: Shows the element.
+  hide:
+    description: Hides the element.
+...
+

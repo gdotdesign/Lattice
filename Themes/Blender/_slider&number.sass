@@ -1,0 +1,74 @@
+.#{$prefix}-slider
+  :background-color $dark
+  &.horizontal
+    @extend .darker-igradient
+    :width $width
+    :min-width $minWidth
+    :height $height2
+    .#{$prefix}-slider-progress
+      @extend .light-gradient
+  &.vertical
+    :width $height2
+    :height $width
+    :min-height $minWidth
+  .#{$prefix}-slider-progress
+    :background-color $light
+    +box_shadow(0,0,14px,rgba(0,0,0,0.5))
+    
+.#{$prefix}-number
+  .#{$prefix}-slider-progress
+    :background-color transparent
+  :background-color $light
+  @extend .light-igradient
+  &:hover
+    :background-color $lighter
+    @extend .lighter-igradient
+  &:active
+    :background-color $middle
+    @extend .middle-igradient
+  &:after
+    :content ''
+    :z-index 1
+    :position absolute
+    :top 6px
+    :left 5px
+    width: 0
+    height: 0
+    border-top: 4px solid transparent
+    border-bottom: 4px solid transparent
+    border-right: 4px solid $dark
+  &:before
+    :content ''
+    :z-index 1
+    :position absolute
+    :top 6px
+    :right 5px
+    width: 0
+    height: 0
+    border-top: 4px solid transparent
+    border-bottom: 4px solid transparent
+    border-left: 4px solid $dark
+  &.horizontal
+    :width $width
+    :height $height
+    :min-width $minWidth
+  &.vertical
+    :width $height
+    :height $width
+    :min-height $minWidth
+  
+.#{$prefix}-slider, .#{$prefix}-number
+  @extend .basic
+  :cursor move
+  :overflow hidden
+  .#{$prefix}-slider-progress
+    +round_full($borderRadius)
+  .#{$prefix}-number-text, input
+    :color $colorDark
+    :font-size 12px
+    :text-align center
+    :line-height $height
+  input
+    +round_full($borderRadius)
+    :-webkit-background-clip padding-box
+    :background-color rgba(0,0,0,0.5)
