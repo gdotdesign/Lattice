@@ -55,73 +55,74 @@ Object.extend {
 			  mergeOneNew(source, key, value)
 		source
 }
-Class.Mutators.Attributes = (attributes) ->
-    $setter = attributes.$setter
-    $getter = attributes.$getter
-    
-    if @::$attributes
-      attributes = Object.mergeNew @::$attributes, attributes
-    delete attributes.$setter
-    delete attributes.$getter
+define null, "Class.Mutators.Attributes", ->
+  (attributes) ->
+      $setter = attributes.$setter
+      $getter = attributes.$getter
+      
+      if @::$attributes
+        attributes = Object.mergeNew @::$attributes, attributes
+      delete attributes.$setter
+      delete attributes.$getter
 
-    @implement new Events
+      @implement new Events
 
-    @implement {
-      $attributes: attributes
-      get: (name) ->
-        attr = @$attributes[name]
-        if attr 
-          if attr.valueFn && !attr.initialized
-            attr.initialized = true
-            attr.value = attr.valueFn.call @
-          if attr.getter
-            return attr.getter.call @, attr.value
+      @implement {
+        $attributes: attributes
+        get: (name) ->
+          attr = @$attributes[name]
+          if attr 
+            if attr.valueFn && !attr.initialized
+              attr.initialized = true
+              attr.value = attr.valueFn.call @
+            if attr.getter
+              return attr.getter.call @, attr.value
+            else
+              return attr.value
           else
-            return attr.value
-        else
-          return if $getter then $getter.call(@, name) else undefined
-      set: (name, value) ->
-        attr = @$attributes[name]
-        if attr
-          if !attr.readOnly
-            oldVal = attr.value
-            if !attr.validator or attr.validator.call(@, value)
-              if attr.setter
-                newVal = attr.setter.call @, value, oldVal, attr.setter
-              else
-                newVal = value             
-              attr.value = newVal
-              @[name] = newVal
-              #if attr.update
-              @update()
-              if oldVal isnt newVal
-                  @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
-              newVal
-        else if $setter
-          $setter.call @, name, value
+            return if $getter then $getter.call(@, name) else undefined
+        set: (name, value) ->
+          attr = @$attributes[name]
+          if attr
+            if !attr.readOnly
+              oldVal = attr.value
+              if !attr.validator or attr.validator.call(@, value)
+                if attr.setter
+                  newVal = attr.setter.call @, value, oldVal, attr.setter
+                else
+                  newVal = value             
+                attr.value = newVal
+                @[name] = newVal
+                #if attr.update
+                @update()
+                if oldVal isnt newVal
+                    @fireEvent name + 'Change', { newVal: newVal, oldVal: oldVal }
+                newVal
+          else if $setter
+            $setter.call @, name, value
 
-      setAttributes: (attributes) ->
-        attributes = Object.merge {}, attributes
-        Object.each @$attributes, (value,name) ->
-          if attributes[name]?
-            @set name, attributes[name]
-          else if value.value?
-            @set name, value.value
-        , @
+        setAttributes: (attributes) ->
+          attributes = Object.merge {}, attributes
+          Object.each @$attributes, (value,name) ->
+            if attributes[name]?
+              @set name, attributes[name]
+            else if value.value?
+              @set name, value.value
+          , @
 
-      getAttributes: () ->
-        attributes = {}
-        $each(@$attributes, (value, name) ->
-          attributes[name] = @get(name)
-        , @)
-        attributes
+        getAttributes: () ->
+          attributes = {}
+          $each(@$attributes, (value, name) ->
+            attributes[name] = @get(name)
+          , @)
+          attributes
 
-      addAttributes: (attributes) ->
-        $each(attributes, (value, name) ->
-            @addAttribute(name, value)
-        , @)
+        addAttributes: (attributes) ->
+          $each(attributes, (value, name) ->
+              @addAttribute(name, value)
+          , @)
 
-      addAttribute: (name, value) ->
-        @$attributes[name] = value
-        @
-  }
+        addAttribute: (name, value) ->
+          @$attributes[name] = value
+          @
+    }

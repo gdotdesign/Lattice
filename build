@@ -5,11 +5,12 @@ require 'yaml'
 require 'coffee-script'
 require 'pathname'
 
-load 'Site/include/packager.rb'
-
-p = Packager.new("package.yml")
-contents = p.build
-
+contents = File.readlines("./Source/Stash.coffee").join()
+Dir.glob("./Source/**/*.coffee").each do |file|
+  if File.basename(file) != "Stash.coffee"
+    contents += IO.readlines(file).join("")
+  end
+end
 cfile = File.new "Build/lattice-latest.coffee", "w"
 cfile.write contents
 afile = File.new "Build/lattice-latest.js", "w"
